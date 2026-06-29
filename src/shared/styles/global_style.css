@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@theme {
+  /* 색상 토큰 — 디자인 확정 후 업데이트 */
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+
+  /* 폰트 */
+  --font-sans: "Pretendard", ui-sans-serif, system-ui, sans-serif;
+}
