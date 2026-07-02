@@ -1,20 +1,69 @@
+// src/app/router.tsx
 import { createBrowserRouter } from "react-router-dom";
 import { MainLayout } from "@/shared/layout/MainLayout";
 import { AuthLayout } from "@/shared/layout/AuthLayout";
-import { HomePage } from "@/features/guest-explore/pages/HomePage";
+
+// 인증
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 
+// 1번 팀원 (레아 - 공간탐색/상세/찜)
+// import { ExplorePage } from "@/features/guest-explore/pages/ExplorePage"
+// import { SpaceDetailPage } from "@/features/guest-explore/pages/SpaceDetailPage"
+
+// 2번 팀원 (텬 - AI추천/3D/예약)
+import { HomePage } from "@/features/guest-explore/pages/HomePage";
+// import { RecommendPage } from "@/features/guest-recommend/pages/RecommendPage"
+// import { SpaceViewPage } from "@/features/guest-recommend/pages/SpaceViewPage"
+
+// 3번 팀원 (사라 - 공간등록)
+// import { RegisterPage } from "@/features/host-register/pages/RegisterPage"
+
+// 4번 팀원 (챈 - 내공간관리/예약관리/로그인)
+// import { MySpacePage } from "@/features/host-manage/pages/MySpacePage"
+// import { HostReservationPage } from "@/features/host-manage/pages/HostReservationPage"
+// import { MyReservationPage } from "@/features/host-manage/pages/MyReservationPage"
+
 export const router = createBrowserRouter([
+  /*
+   * AuthLayout:
+   * Header/Footer 없이 중앙 정렬만 하는 레이아웃
+   * 로그인/회원가입 같이 헤더가 필요 없는 페이지들이 들어옴
+   */
   {
     element: <AuthLayout />,
     children: [
       { path: "/login", element: <LoginPage /> },
+      // { path: "/signup", element: <SignupPage /> },
     ],
   },
+
+  /*
+   * MainLayout:
+   * Header + Footer가 자동으로 붙는 레이아웃
+   * 서비스 내부 페이지 전부 여기 들어옴
+   * 각 팀원이 페이지 완성하면 주석 해제하고 import 추가
+   */
   {
     element: <MainLayout />,
     children: [
+      // 홈
       { path: "/", element: <HomePage /> },
+
+      // 1번 팀원 - 공간탐색/상세/찜
+      { path: "/explore", element: <div>공간탐색 - 1번</div> },
+      { path: "/spaces/:spaceId", element: <div>공간상세 - 1번</div> },
+
+      // 2번 팀원 - AI추천/3D/예약
+      { path: "/recommend", element: <div>AI추천 - 2번</div> },
+      { path: "/spaces/:spaceId/view", element: <div>3D뷰어 - 2번</div> },
+
+      // 3번 팀원 - 공간등록
+      { path: "/host/register", element: <div>공간등록 - 3번</div> },
+
+      // 4번 팀원 - 내공간관리/예약관리
+      { path: "/reservations", element: <div>나의예약 - 4번</div> },
+      { path: "/host/spaces", element: <div>내공간 - 4번</div> },
+      { path: "/host/reservations", element: <div>예약관리 - 4번</div> },
     ],
   },
 ]);
