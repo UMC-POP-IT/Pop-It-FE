@@ -7,7 +7,7 @@ import { AuthLayout } from "@/shared/layout/AuthLayout";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 
 // 1번 팀원 (레아 - 공간탐색/상세/찜)
-// import { ExplorePage } from "@/features/guest-explore/pages/ExplorePage"
+import { ExplorePage } from "@/features/guest-explore/pages/ExplorePage";
 // import { SpaceDetailPage } from "@/features/guest-explore/pages/SpaceDetailPage"
 
 // 2번 팀원 (텬 - AI추천/3D/예약)
@@ -50,7 +50,7 @@ export const router = createBrowserRouter([
       { path: "/", element: <HomePage /> },
 
       // 1번 팀원 - 공간탐색/상세/찜
-      { path: "/explore", element: <div>공간탐색 - 1번</div> },
+      { path: "/explore", element: <ExplorePage /> },
       { path: "/spaces/:spaceId", element: <div>공간상세 - 1번</div> },
 
       // 2번 팀원 - AI추천/3D/예약

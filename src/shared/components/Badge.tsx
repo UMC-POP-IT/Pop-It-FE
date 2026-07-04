@@ -1,4 +1,4 @@
-type BadgeVariant = "success" | "pending" | "category";
+type BadgeVariant = "success" | "pending" | "category" | "highlight";
 
 interface BadgeProps {
   variant: BadgeVariant;
@@ -9,6 +9,7 @@ const variantStyles: Record<BadgeVariant, string> = {
   success: "bg-badge-success-bg text-badge-success-text",
   pending: "bg-badge-pending-bg text-badge-pending-text",
   category: "bg-black/50 text-white",
+  highlight: "bg-primary-light text-primary",
 };
 
 const Badge = ({ variant, label }: BadgeProps) => (
