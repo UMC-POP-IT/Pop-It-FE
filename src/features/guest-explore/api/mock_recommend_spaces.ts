@@ -1,5 +1,4 @@
 import { Space } from "@/types";
-import { RealtimeRecommend } from "@/features/guest-explore/types/realtime_recommend_type";
 
 /** 예약 내역 */
 export interface Reservation {
@@ -114,25 +113,6 @@ export const recommendSpaces: Space[] = [
     keywords: ['모던', '고급', '갤러리', '프라이빗'],
     description: '모던하고 고급스러운 분위기의 한남동 프라이빗 갤러리룸입니다.',
     createdAt: '2026-04-01T09:00:00.000Z',
-  },
-];
-
-/** 실시간 추천 공간 (하단 배너) - RealtimeRecommendSpace.tsx */
-export const realtimeRecommends: RealtimeRecommend[] = [
-  {
-    img: 'https://picsum.photos/seed/realtime01/600/400',
-    title: '이번 주, 놓치면 아쉬운',
-    subtitle: '강남 팝업 특가',
-  },
-  {
-    img: 'https://picsum.photos/seed/realtime02/600/400',
-    title: '주말 촬영 예약 급상승',
-    subtitle: '성수 스튜디오 모음전',
-  },
-  {
-    img: 'https://picsum.photos/seed/realtime03/600/400',
-    title: '지금 가장 인기 있는',
-    subtitle: '한남 프라이빗 공간',
   },
 ];
 
