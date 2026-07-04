@@ -3,11 +3,13 @@ import { Space } from "@/types";
 /** 예약 내역 */
 export interface Reservation {
   isApproved: boolean; // 승인 여부 (완료: true, 대기: false)
+  isContracted: boolean; // 계약 완료 여부 (승인 후 계약까지 마쳐야 "사용 중"으로 전환)
   name: string; // 건물명
   total_cost: number; // 총 금액 (원 단위)
   start: DateInfo; // 시작 날짜
   end: DateInfo; // 마감 날짜
   isDone: boolean; // 마감 여부
+  isPhotoVerified?: boolean; // 퇴실 사진 인증 완료 여부 (isDone === true 인 경우에만 의미 있음)
 }
 
 /** 날짜 */
@@ -173,14 +175,26 @@ export const likedSpaces: Space[] = [
  * 내 예약 내역
  *
  * [상태 분류 기준]
- *  - isApproved === false                     → 예약 예정 (승인 대기)
- *  - isApproved === true  && isDone === false → 사용 중
- *  - isApproved === true  && isDone === true  → 지난 예약
+ *  - isDone === true                                     → 지난 예약
+ *  - isApproved === true  && isContracted === true       → 사용 중
+ *  - isApproved === true  && isContracted === false      → 예약 예정 (승인 완료 · 계약 대기)
+ *  - isApproved === false                                 → 예약 예정 (승인 대기)
  */
 export const reservations: Reservation[] = [
+  // 예약 예정 (승인 완료 · 계약 대기 → 계약 하기 버튼 노출)
+  {
+    isApproved: true,
+    isContracted: false,
+    name: '한남 갤러리룸',
+    total_cost: 360000,
+    start: { year: 2026, month: 7, day: 10, day_type: '금' },
+    end: { year: 2026, month: 7, day: 12, day_type: '일' },
+    isDone: false,
+  },
   // 예약 예정 (승인 대기)
   {
     isApproved: false,
+    isContracted: false,
     name: '신사 라운지홀',
     total_cost: 240000,
     start: { year: 2026, month: 7, day: 18, day_type: '토' },
@@ -189,37 +203,43 @@ export const reservations: Reservation[] = [
   },
   {
     isApproved: false,
+    isContracted: false,
     name: '한남 갤러리룸',
     total_cost: 120000,
     start: { year: 2026, month: 7, day: 25, day_type: '토' },
     end: { year: 2026, month: 7, day: 25, day_type: '토' },
     isDone: false,
   },
-  // 사용 중 (승인 완료, 아직 마감 전)
+  // 사용 중 (승인 완료 + 계약 완료, 아직 마감 전)
   {
     isApproved: true,
+    isContracted: true,
     name: '성수 브릭스튜디오',
     total_cost: 300000,
     start: { year: 2026, month: 6, day: 30, day_type: '화' },
     end: { year: 2026, month: 7, day: 3, day_type: '금' },
     isDone: false,
   },
-  // 지난 예약 (승인 완료, 마감 완료)
+  // 지난 예약 (마감 완료)
   {
     isApproved: true,
+    isContracted: true,
     name: '신사 미팅랩',
     total_cost: 60000,
     start: { year: 2026, month: 6, day: 12, day_type: '금' },
     end: { year: 2026, month: 6, day: 12, day_type: '금' },
     isDone: true,
+    isPhotoVerified: false,
   },
   {
     isApproved: true,
+    isContracted: true,
     name: '신사 아뜰리에',
     total_cost: 160000,
     start: { year: 2026, month: 5, day: 24, day_type: '토' },
     end: { year: 2026, month: 5, day: 25, day_type: '일' },
     isDone: true,
+    isPhotoVerified: true,
   },
 ];
 
@@ -230,6 +250,6 @@ export const reservations: Reservation[] = [
 export type ReservationStatus = '예약 예정' | '사용 중' | '지난 예약';
 
 export function getReservationStatus(r: Reservation): ReservationStatus {
-  if (!r.isApproved) return '예약 예정';
-  return r.isDone ? '지난 예약' : '사용 중';
+  if (r.isDone) return '지난 예약';
+  return r.isApproved && r.isContracted ? '사용 중' : '예약 예정';
 }
