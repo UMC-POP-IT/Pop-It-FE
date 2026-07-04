@@ -1,7 +1,8 @@
 # POP-IT (팝잇) 🛍️
 
 > 비어있는 공간을, 더 가치있는 공간으로
-> **단기 임대 전용 플랫폼 — POP UP 잇다**
+**단기 임대 전용 플랫폼 — POP UP 잇다**
+> 
 
 방치된 유휴 공간(상가, 스튜디오, 사무실 등)을 단기로 필요한 사람과 연결해주는 매칭 플랫폼입니다. AI 맞춤 추천, 3D/360 공간 큐레이션, 에스크로 기반 안전 거래 시스템을 통해 임대인과 임차인 모두에게 안전하고 편리한 단기 공간 매칭 경험을 제공합니다.
 
@@ -20,29 +21,30 @@
 
 ## 👥 팀원 및 프론트엔드 역할 분담
 
-| 역할 | 담당자 | 담당 기능                                             |
-| ---- | ------ | ----------------------------------------------------- |
-| 1번  | 강민경 | 공간탐색, 공간 상세, 찜하기                           |
-| 2번  | 고태현 | AI 맞춤추천, 3D/360 공간 큐레이션, 나의 예약          |
-| 3번  | 이수빈 | 공간 등록 (5단계 플로우)                              |
-| 4번  | 임채은 | 내 공간 관리, 게스트 소통, 공통 레이아웃/디자인시스템 |
+| 역할 | 담당자 | 담당 기능 |
+| --- | --- | --- |
+| 1번 | 강민경 | 공간탐색, 공간 상세, 찜하기 |
+| 2번 | 고태현 | AI 맞춤추천(추천 공간), 3D/360 공간 큐레이션, 나의 예약 |
+| 3번 | 이수빈 | 공간 등록 (5단계 플로우), 호스트 등록 (2단계 플로우) |
+| 4번 | 임채은 | 내 공간 관리, 게스트 소통, 공통 레이아웃/디자인시스템 |
 
 > 4명 모두 디자인 확정 → 화면설계서 기반 병렬 개발을 진행하며, 디자인/백엔드 개발과 함께 진행됩니다.
+> 
 
 ---
 
 ## 🛠️ 기술 스택
 
-| 분류              | 스택                                            |
-| ----------------- | ----------------------------------------------- |
-| Language          | TypeScript                                      |
-| Library/Framework | React, Vite                                     |
-| Styling           | (예: Tailwind CSS / styled-components)          |
-| State Management  | (예: React Query, Zustand)                      |
-| Form              | (예: react-hook-form)                           |
-| 3D/360            | Three.js, @react-three/fiber, @react-three/drei |
-| 협업 도구         | GitHub, Notion, Figma                           |
-| 배포              | (예: Vercel)                                    |
+| 분류 | 스택 |
+| --- | --- |
+| Language | TypeScript |
+| Library/Framework | React, Vite |
+| Styling | (예: Tailwind CSS / styled-components) |
+| State Management | (예: React Query, Zustand) |
+| Form | (예: react-hook-form) |
+| 3D/360 | Three.js, @react-three/fiber, @react-three/drei |
+| 협업 도구 | GitHub, Notion, Figma |
+| 배포 | (예: Vercel) |
 
 ---
 
@@ -82,8 +84,9 @@ src/
 - `main` : 배포 브랜치 (항상 배포 가능한 상태 유지)
 - `dev` : 통합 개발 브랜치
 - `feature/{기능명}` : 기능 단위 작업 브랜치
-
-  예) `feature/guest-explore`, `feature/host-register`, `feature/3d-viewer`
+    
+    예) `feature/guest-explore`, `feature/host-register`, `feature/3d-viewer`
+    
 
 **작업 흐름**: `feature/*` 브랜치에서 작업 → `dev`로 PR → 리뷰 후 머지 → 일정 주기로 `dev` → `main` 머지
 
@@ -103,14 +106,14 @@ docs: README 업데이트
 chore: 패키지 설치 및 설정
 ```
 
-| 타입     | 설명                                |
-| -------- | ----------------------------------- |
-| feat     | 새로운 기능 추가                    |
-| fix      | 버그 수정                           |
-| style    | 스타일/마크업 변경 (로직 변경 없음) |
-| refactor | 코드 리팩토링                       |
-| docs     | 문서 수정                           |
-| chore    | 빌드/설정 등 기타 변경              |
+| 타입 | 설명 |
+| --- | --- |
+| feat | 새로운 기능 추가 |
+| fix | 버그 수정 |
+| style | 스타일/마크업 변경 (로직 변경 없음) |
+| refactor | 코드 리팩토링 |
+| docs | 문서 수정 |
+| chore | 빌드/설정 등 기타 변경 |
 
 ---
 
@@ -164,27 +167,28 @@ npm run build
    → 게스트 소통
 ```
 
-| 화면 이름           | 페이지 ID         | 진입 경로        | 담당자 |
-| ------------------- | ----------------- | ---------------- | ------ |
-| 로그인/회원가입     | LoginPage         | 최초 진입        | 임채은 |
-| AI 맞춤추천         | RecommendPage     | 로그인 후 메인   | 고태현 |
-| 공간탐색            | ExplorePage       | 메인 탭          | 강민경 |
-| 공간 상세           | DetailPage        | 리스트 클릭      | 강민경 |
-| 3D 큐레이션         | SpaceViewPage     | 상세 내 진입     | 고태현 |
-| 나의 예약           | MyReservationPage | 메인 탭          | 고태현 |
-| 공간 등록 (1~5단계) | RegisterStep1~5   | 호스트 모드 진입 | 이수빈 |
-| 내 공간 관리        | MySpacePage       | 호스트 모드      | 임채은 |
-| 게스트 소통         | ChatPage          | 내공간관리 내    | 임채은 |
+| 화면 이름 | 페이지 ID | 진입 경로 | 담당자 |
+| --- | --- | --- | --- |
+| 로그인/회원가입 | LoginPage | 최초 진입 | 임채은 |
+| 추천 공간 | ExplorePage - AiRecommendSpace, RealTimeRecommendSpace | 로그인 후 메인 | 고태현 |
+| 공간 탐색 | ExplorePage | 메인 탭 | 강민경 |
+| 공간 상세 | DetailPage | 리스트 클릭 | 강민경 |
+| 3D 큐레이션 | SpaceViewPage | 상세 내 진입 | 고태현 |
+| 나의 예약 | MyReservationPage | 메인 탭 | 고태현 |
+| 공간 등록 (1~5단계) | SpaceRegisterStep1~5 | 호스트 모드 진입 | 이수빈 |
+| 호스트 등록 (1~5단계) | HostRegisterStep1~5 | 호스트 모드 진입 | 이수빈 |
+| 내 공간 관리 | MySpacePage | 호스트 모드 | 임채은 |
+| 게스트 소통 | ChatPage | 내공간관리 내 | 임채은 |
 
 ---
 
 ## 📋 협업 그라운드 룰
 
-| 구분         | 규칙                                       |
-| ------------ | ------------------------------------------ |
+| 구분 | 규칙 |
+| --- | --- |
 | 커뮤니케이션 | 변경사항은 Notion 또는 GitHub Issue로 공유 |
-| 일정         | 작업 지연 시 사전 공유                     |
-| Git          | 작업 전 브랜치 생성 및 PR 필수             |
-| 코드 스타일  | ESLint/Prettier 설정 준수                  |
+| 일정 | 작업 지연 시 사전 공유 |
+| Git | 작업 전 브랜치 생성 및 PR 필수 |
+| 코드 스타일 | ESLint/Prettier 설정 준수 |
 
 자세한 트러블슈팅 기록, 공용 컴포넌트 관리, 개발 일정, KPT 회고는 팀 노션 페이지에서 관리합니다.
