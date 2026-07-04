@@ -1,3 +1,4 @@
+// 상단 위치 클래스
 const TOP_POSITION_CLASS = {
   "1/4": "top-1/4",
   "1/2": "top-1/2",
