@@ -18,7 +18,7 @@ import { SpaceViewPage } from "@/features/guest-explore/pages/SpaceViewPage";
 import { MyReservationPage } from "@/features/guest-explore/pages/MyReservationPage";
 
 // 3번 팀원 (사라 - 공간등록)
-// import { RegisterPage } from "@/features/host-register/pages/RegisterPage"
+import { RegisterStep1 } from "@/features/host-register/pages/RegisterStep1";
 
 // 4번 팀원 (챈 - 내공간관리/예약관리/로그인)
 // import { MySpacePage } from "@/features/host-manage/pages/MySpacePage"
@@ -61,7 +61,7 @@ export const router = createBrowserRouter([
       { path: "/spaces/:spaceId/view", element: <SpaceViewPage /> },
 
       // 3번 팀원 - 공간등록
-      { path: "/host/register", element: <div>공간등록 - 3번</div> },
+      { path: "/host/register", element: <RegisterStep1 /> },
 
       // 4번 팀원 - 내공간관리/예약관리
       { path: "/host/spaces", element: <div>내공간 - 4번</div> },
