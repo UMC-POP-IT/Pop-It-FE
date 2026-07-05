@@ -15,28 +15,28 @@ Copilot must follow these instructions when generating code or performing code r
 
 ## 3. File Naming Conventions
 
-| Type | Case | Example |
-| --- | --- | --- |
+| Type                   | Case       | Example                            |
+| ---------------------- | ---------- | ---------------------------------- |
 | **Pages & Components** | PascalCase | `LoginPage.tsx`, `SidebarItem.tsx` |
-| **Hooks** | camelCase | `useAuth.ts` |
-| **Utilities/Others** | snake_case | `auth_api.ts`, `data_utils.ts` |
+| **Hooks**              | camelCase  | `useAuth.ts`                       |
+| **Utilities/Others**   | snake_case | `auth_api.ts`, `data_utils.ts`     |
 
 ## 4. Code Writing Conventions
 
-| Type | Case | Example |
-| --- | --- | --- |
-| **Variables** | camelCase | `const userInfo = ...`, `const isLoggedIn = true` |
-| **Functions** | camelCase | `const getUserData = () => {}`, `const handleClick = () => {}` |
-| **Component Funcs** | PascalCase | `export const LoginPage = () => {}` |
+| Type                | Case       | Example                                                        |
+| ------------------- | ---------- | -------------------------------------------------------------- |
+| **Variables**       | camelCase  | `const userInfo = ...`, `const isLoggedIn = true`              |
+| **Functions**       | camelCase  | `const getUserData = () => {}`, `const handleClick = () => {}` |
+| **Component Funcs** | PascalCase | `export const LoginPage = () => {}`                            |
 
 ## 5. Naming Rules (Detailed)
 
-| Data Type | Rule | Good Example (✅) | Bad Example (❌) |
-| --- | --- | --- | --- |
-| **Array** | Plural (-s) or `List` suffix | `const users = []`, `const mediaList = []` | `const user = []`, `const medias` |
-| **Object / Single** | Singular | `const currentUser = {...}`, `const selectedId = 1` | `const users = {...}` |
-| **Boolean** | Prefix: `is`, `has`, `should` | `const isLoading = true`, `const hasError = false` | `const loading = true`, `const check = false` |
-| **Function** | Verb + Noun | `getUserData()`, `handleClick()` | `userData()`, `process()` |
+| Data Type           | Rule                          | Good Example (✅)                                   | Bad Example (❌)                              |
+| ------------------- | ----------------------------- | --------------------------------------------------- | --------------------------------------------- |
+| **Array**           | Plural (-s) or `List` suffix  | `const users = []`, `const mediaList = []`          | `const user = []`, `const medias`             |
+| **Object / Single** | Singular                      | `const currentUser = {...}`, `const selectedId = 1` | `const users = {...}`                         |
+| **Boolean**         | Prefix: `is`, `has`, `should` | `const isLoading = true`, `const hasError = false`  | `const loading = true`, `const check = false` |
+| **Function**        | Verb + Noun                   | `getUserData()`, `handleClick()`                    | `userData()`, `process()`                     |
 
 ## 6. Code Style Guide
 
