@@ -1,4 +1,4 @@
-# POP-IT (팝잇) 🛍️
+# POP-IT (팝잇)
 
 > 비어있는 공간을, 더 가치있는 공간으로
 **단기 임대 전용 플랫폼 — POP UP 잇다**
@@ -79,16 +79,16 @@ src/
 
 ---
 
-## 🌿 브랜치 전략
+## 🌿 브랜치 컨벤션
 
 - `main` : 배포 브랜치 (항상 배포 가능한 상태 유지)
 - `dev` : 통합 개발 브랜치
-- `feature/{기능명}` : 기능 단위 작업 브랜치
+- `feat/이슈번호-기능명` : 기능 단위 작업 브랜치
     
-    예) `feature/guest-explore`, `feature/host-register`, `feature/3d-viewer`
+    예) `feat/3-guest-explore`, `feat/4-host-register`, `feat/5-3d-viewer`
     
 
-**작업 흐름**: `feature/*` 브랜치에서 작업 → `dev`로 PR → 리뷰 후 머지 → 일정 주기로 `dev` → `main` 머지
+**작업 흐름**: `feat/*` 브랜치에서 작업 → `dev`로 PR → 리뷰 후 머지 → 일정 주기로 `dev` → `main` 머지
 
 ---
 
@@ -176,7 +176,7 @@ npm run build
 | 3D 큐레이션 | SpaceViewPage | 상세 내 진입 | 고태현 |
 | 나의 예약 | MyReservationPage | 메인 탭 | 고태현 |
 | 공간 등록 (1~5단계) | SpaceRegisterStep1~5 | 호스트 모드 진입 | 이수빈 |
-| 호스트 등록 (1~5단계) | HostRegisterStep1~5 | 호스트 모드 진입 | 이수빈 |
+| 호스트 등록 (1~2단계) | HostRegisterStep1~2 | 호스트 모드 진입 | 이수빈 |
 | 내 공간 관리 | MySpacePage | 호스트 모드 | 임채은 |
 | 게스트 소통 | ChatPage | 내공간관리 내 | 임채은 |
 
