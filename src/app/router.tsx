@@ -14,6 +14,8 @@ import { ExplorePage } from "@/features/guest-explore/pages/ExplorePage";
 import { HomePage } from "@/features/guest-explore/pages/HomePage";
 import { SpaceViewPage } from "@/features/guest-explore/pages/SpaceViewPage";
 // import { RecommendPage } from "@/features/guest-recommend/pages/RecommendPage"
+// import { SpaceViewPage } from "@/features/guest-recommend/pages/SpaceViewPage"
+import { MyReservationPage } from "@/features/guest-explore/pages/MyReservationPage";
 
 // 3번 팀원 (사라 - 공간등록)
 // import { RegisterPage } from "@/features/host-register/pages/RegisterPage"
@@ -55,13 +57,13 @@ export const router = createBrowserRouter([
 
       // 2번 팀원 - AI추천/3D/예약
       { path: "/recommend", element: <div>AI추천 - 2번</div> },
+      { path: "/reservations", element: <MyReservationPage /> },
       { path: "/spaces/:spaceId/view", element: <SpaceViewPage /> },
 
       // 3번 팀원 - 공간등록
       { path: "/host/register", element: <div>공간등록 - 3번</div> },
 
       // 4번 팀원 - 내공간관리/예약관리
-      { path: "/reservations", element: <div>나의예약 - 4번</div> },
       { path: "/host/spaces", element: <div>내공간 - 4번</div> },
       { path: "/host/reservations", element: <div>예약관리 - 4번</div> },
     ],
