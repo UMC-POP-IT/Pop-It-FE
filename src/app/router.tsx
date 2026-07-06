@@ -20,6 +20,7 @@ import { MyReservationPage } from "@/features/guest-explore/pages/MyReservationP
 // 3번 팀원 (사라 - 공간등록)
 import { RegisterStep1 } from "@/features/host-register/pages/RegisterStep1";
 import { RegisterStep2 } from "@/features/host-register/pages/RegisterStep2";
+import { RegisterStep3 } from "@/features/host-register/pages/RegisterStep3";
 
 // 4번 팀원 (챈 - 내공간관리/예약관리/로그인)
 // import { MySpacePage } from "@/features/host-manage/pages/MySpacePage"
@@ -64,6 +65,7 @@ export const router = createBrowserRouter([
       // 3번 팀원 - 공간등록
       { path: "/host/register", element: <RegisterStep1 /> },
       { path: "/host/register/step2", element: <RegisterStep2 /> },
+      { path: "/host/register/step3", element: <RegisterStep3 /> },
 
       // 4번 팀원 - 내공간관리/예약관리
       { path: "/host/spaces", element: <div>내공간 - 4번</div> },
