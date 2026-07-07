@@ -1,0 +1,117 @@
+import StepIndicator from "@/shared/components/StepIndicator";
+import Input from "@/shared/components/Input";
+import Button from "@/shared/components/Button";
+import FileUploadRow from "@/features/host-register/components/FileUploadRow";
+
+// 호스트 등록 2단계 진행바 라벨
+const STEPS = ["사업자 정보", "계좌 정보"];
+
+// 은행 목록 (드롭다운 선택지)
+// TODO: 실제 지원 은행 목록으로 확정
+const BANK_OPTIONS = [
+  "국민은행",
+  "신한은행",
+  "우리은행",
+  "하나은행",
+  "농협은행",
+  "기업은행",
+  "카카오뱅크",
+  "토스뱅크",
+];
+
+export const HostRegisterStep2 = () => {
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
+      {/* 페이지 제목 (가운데) */}
+      <h1 className="text-text-primary text-center text-2xl font-bold">
+        호스트 등록
+      </h1>
+
+      {/* 진행바 — 1 = 두 번째 단계(계좌 정보) */}
+      <StepIndicator
+        steps={STEPS}
+        currentStep={1}
+      />
+
+      {/* 섹션: 정산 계좌 정보 */}
+      <div className="flex flex-col gap-6">
+        {/* 섹션 제목 + 안내문 */}
+        <div className="border-border flex flex-col gap-1 border-b pb-6">
+          <h2 className="text-text-primary text-lg font-bold">
+            정산 계좌 정보
+          </h2>
+          <p className="text-text-secondary text-sm">
+            정산 및 세금계산서 발행에 사용됩니다.
+          </p>
+        </div>
+
+        {/* 통장 사본 (파일 첨부) */}
+        <FileUploadRow
+          label="통장 사본"
+          placeholder="통장 사본 파일을 첨부해주세요"
+          hint="* JPG, PNG, PDF 최대 10MB"
+        />
+
+        {/* 은행 (드롭다운)
+            공통 Select 컴포넌트 없어 raw select로 임시 구현 → 챈(4번)과 협의 예정 */}
+        <div className="flex flex-col gap-2">
+          <span className="text-text-primary text-sm font-bold">은행</span>
+          <select
+            defaultValue=""
+            className="text-text-primary border-border focus:border-primary w-full rounded-lg border bg-white px-4 py-2.5 text-sm transition-colors focus:outline-none"
+          >
+            <option
+              value=""
+              disabled
+            >
+              은행을 선택해주세요
+            </option>
+            {BANK_OPTIONS.map((bank) => (
+              <option
+                key={bank}
+                value={bank}
+              >
+                {bank}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* 정산 입금 계좌 번호 */}
+        <div className="flex flex-col gap-2">
+          <span className="text-text-primary text-sm font-bold">
+            정산 입금 계좌 번호
+          </span>
+          <Input placeholder="- 없이 숫자만 입력" />
+        </div>
+
+        {/* 예금주 */}
+        <div className="flex flex-col gap-2">
+          <span className="text-text-primary text-sm font-bold">예금주</span>
+          <Input placeholder="예금주 이름을 입력해주세요" />
+          <span className="text-text-disabled text-xs">
+            * 사업자 등록증(대표자명)과 일치해야 합니다.
+          </span>
+        </div>
+      </div>
+
+      {/* 이전 / 다음으로 버튼 (우측 정렬)
+          '이전'은 디자인상 회색 채움인데 공통 Button에 해당 variant 없어 outline 사용 → 챈(4번)과 협의 예정
+          정적: '다음으로' 활성 상태로 표시. TODO: 유효성 검사 통과 시 활성화 + 완료 화면 이동 */}
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          size="md"
+        >
+          이전
+        </Button>
+        <Button
+          variant="primary"
+          size="md"
+        >
+          다음으로
+        </Button>
+      </div>
+    </div>
+  );
+};
