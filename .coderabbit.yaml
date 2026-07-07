@@ -1,0 +1,82 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# POP-IT Frontend (Pop-It-FE) — CodeRabbit 설정
+# 스택: React + TypeScript + Vite + TailwindCSS + TanStack Query
+#
+# 리뷰 언어를 한국어로 설정해서 팀원 모두가 이해하기 쉽게 함.
+# 참고 문서: https://docs.coderabbit.ai/getting-started/configure-coderabbit
+
+language: "ko-KR"
+
+# 팀 전체 톤을 부드럽게. 사소한 스타일 지적으로 PR이 시끄러워지는 걸 방지.
+# 리뷰 강도를 높이고 싶으면 "assertive"로 변경.
+tone_instructions: "친절하고 구체적으로 설명해줘. 초보 기여자도 이해할 수 있게, 왜 그렇게 고쳐야 하는지 이유와 예시를 함께 알려줘."
+
+reviews:
+  profile: "chill"                # "chill"(관대) 또는 "assertive"(엄격)
+  request_changes_workflow: false # true면 미해결 코멘트가 있을 때 승인 차단. 학생 프로젝트라 우선 false.
+  high_level_summary: true        # PR 상단에 변경사항 요약 자동 작성
+  high_level_summary_placeholder: "@coderabbitai summary"
+  poem: false                     # 리뷰 끝에 붙는 시(장난 기능) 비활성화
+  review_status: true
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: true         # 복잡한 로직 흐름을 다이어그램으로 보여줌 (예약/추천 로직에 유용)
+
+  auto_review:
+    enabled: true
+    drafts: false                 # 드래프트 PR은 리뷰 안 함. 조기 피드백 원하면 true.
+    base_branches:
+      - "main"
+      - "dev"
+
+  # 리뷰에서 제외할 경로 (빌드 산출물, 락파일, 자동생성물 등)
+  # "!" 접두사가 제외 의미. 락파일은 프로젝트에서 쓰는 것만 남기고 나머지 지워도 됨.
+  path_filters:
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/node_modules/**"
+    - "!**/*.min.js"
+    - "!**/*.min.css"
+    - "!package-lock.json"
+    - "!pnpm-lock.yaml"
+    - "!yarn.lock"
+    - "!public/**"
+    - "!**/*.svg"
+
+  # 경로별 맞춤 리뷰 지침
+  path_instructions:
+    - path: "src/**/*.{ts,tsx}"
+      instructions: |
+        - TypeScript 타입 안정성을 우선 확인해줘. any 남용, 불필요한 non-null(!) 단언, 타입 단언(as) 오용을 지적해줘.
+        - 컴포넌트는 단일 책임을 지키는지, 과도하게 커지면 분리를 제안해줘.
+        - useEffect 의존성 배열 누락/오작성, 클린업 누락으로 인한 메모리 누수 가능성을 확인해줘.
+        - 접근성(a11y): 버튼/이미지/폼 요소의 alt, aria, 키보드 접근성을 체크해줘.
+    - path: "src/**/*api*/**"
+      instructions: |
+        - API 호출 시 에러 처리와 로딩/실패 상태 대응이 되어 있는지 확인해줘.
+        - 환경변수(import.meta.env)로 관리해야 할 값이 하드코딩되어 있지 않은지 봐줘.
+    - path: "src/**/{hooks,queries}/**"
+      instructions: |
+        - TanStack Query 사용 시 queryKey 설계가 일관적인지, 캐시 무효화(invalidation)가 적절한지 확인해줘.
+        - useMutation의 optimistic update 사용 시 onError 롤백 처리가 있는지 봐줘.
+    - path: "**/*.{css,scss}"
+      instructions: |
+        - TailwindCSS를 쓰는 프로젝트이므로, 별도 CSS 작성보다 유틸리티 클래스로 대체 가능한지 제안해줘.
+
+  # CodeRabbit이 함께 돌리는 정적 분석 도구
+  tools:
+    eslint:
+      enabled: true
+    biome:
+      enabled: true
+    gitleaks:
+      enabled: true               # 커밋에 시크릿(API 키 등) 유출 방지
+
+chat:
+  auto_reply: true                # PR 코멘트에서 @coderabbitai 로 질문하면 자동 응답
+
+# 지식 베이스: 팀 리뷰에서 배운 규칙을 학습해 노이즈를 줄임
+knowledge_base:
+  learnings:
+    scope: "auto"
