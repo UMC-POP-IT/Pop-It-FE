@@ -47,7 +47,10 @@ export const RegisterStep5 = () => {
         <div className="flex flex-wrap gap-3">
           {/* 업로드 버튼 타일 (카메라 아이콘 + 매수 카운트)
               정적: 파일 input은 숨김 처리만. TODO: onChange로 실제 업로드/미리보기 처리 */}
-          <label className="border-border text-text-secondary flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border">
+          <label
+            aria-label="사진 추가"
+            className="border-border text-text-secondary flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border"
+          >
             <CameraIcon />
             {/* 정적: 목업 매수 표시. TODO: 업로드 매수 실시간 카운팅 */}
             <span className="text-xs">{MOCK_PHOTOS.length}/10장</span>
