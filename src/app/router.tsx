@@ -24,9 +24,8 @@ import { RegisterStep3 } from "@/features/host-register/pages/RegisterStep3";
 import { RegisterStep4 } from "@/features/host-register/pages/RegisterStep4";
 
 // 4번 팀원 (챈 - 내공간관리/예약관리/로그인)
-// import { MySpacePage } from "@/features/host-manage/pages/MySpacePage"
-// import { HostReservationPage } from "@/features/host-manage/pages/HostReservationPage"
-// import { MyReservationPage } from "@/features/host-manage/pages/MyReservationPage"
+import { MySpacePage } from "@/features/host-manage/pages/MySpacePage";
+import { HostReservationPage } from "@/features/host-manage/pages/HostReservationPage";
 
 export const router = createBrowserRouter([
   /*
@@ -70,8 +69,8 @@ export const router = createBrowserRouter([
       { path: "/host/register/step4", element: <RegisterStep4 /> },
 
       // 4번 팀원 - 내공간관리/예약관리
-      { path: "/host/spaces", element: <div>내공간 - 4번</div> },
-      { path: "/host/reservations", element: <div>예약관리 - 4번</div> },
+      { path: "/host/spaces", element: <MySpacePage /> },
+      { path: "/host/reservations", element: <HostReservationPage /> },
     ],
   },
 ]);

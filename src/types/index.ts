@@ -31,6 +31,6 @@ export interface Reservation {
   guestId: number;
   startDate: string;
   endDate: string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED";
+  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "IN_USE" | "COMPLETED";
   totalPrice: number;
 }
