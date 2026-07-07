@@ -7,10 +7,6 @@ const Header = () => {
   const navigate = useNavigate();
 
   const handleModeToggle = () => {
-    if (!user) {
-      openLoginModal();
-      return;
-    }
     if (mode === "GUEST") {
       setMode("HOST");
       navigate("/host/spaces");
@@ -31,30 +27,61 @@ const Header = () => {
         </NavLink>
 
         <nav className="flex gap-6">
-          <NavLink
-            to="/explore"
-            className={({ isActive }) =>
-              `pb-0.5 text-sm font-medium transition-colors ${
-                isActive
-                  ? "text-primary border-primary border-b-2"
-                  : "text-text-secondary hover:text-text-primary"
-              }`
-            }
-          >
-            공간탐색
-          </NavLink>
-          <NavLink
-            to="/reservations"
-            className={({ isActive }) =>
-              `pb-0.5 text-sm font-medium transition-colors ${
-                isActive
-                  ? "text-primary border-primary border-b-2"
-                  : "text-text-secondary hover:text-text-primary"
-              }`
-            }
-          >
-            나의 예약
-          </NavLink>
+          {mode === "HOST" ? (
+            <>
+              <NavLink
+                to="/host/spaces"
+                className={({ isActive }) =>
+                  `pb-0.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "text-primary border-primary border-b-2"
+                      : "text-text-secondary hover:text-text-primary"
+                  }`
+                }
+              >
+                내 공간
+              </NavLink>
+              <NavLink
+                to="/host/reservations"
+                className={({ isActive }) =>
+                  `pb-0.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "text-primary border-primary border-b-2"
+                      : "text-text-secondary hover:text-text-primary"
+                  }`
+                }
+              >
+                예약 관리
+              </NavLink>
+            </>
+          ) : (
+            <>
+              <NavLink
+                to="/explore"
+                className={({ isActive }) =>
+                  `pb-0.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "text-primary border-primary border-b-2"
+                      : "text-text-secondary hover:text-text-primary"
+                  }`
+                }
+              >
+                공간탐색
+              </NavLink>
+              <NavLink
+                to="/reservations"
+                className={({ isActive }) =>
+                  `pb-0.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "text-primary border-primary border-b-2"
+                      : "text-text-secondary hover:text-text-primary"
+                  }`
+                }
+              >
+                나의 예약
+              </NavLink>
+            </>
+          )}
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
@@ -63,7 +90,7 @@ const Header = () => {
             onClick={handleModeToggle}
             className="text-text-secondary border-border hover:bg-primary-light rounded-lg border px-3 py-1.5 text-sm transition-colors"
           >
-            {mode === "GUEST" ? "호스트 센터 >" : "게스트 전환 >"}
+            {mode === "GUEST" ? "호스트 센터 >" : "게스트 홈 >"}
           </button>
 
           {/* 로그인 상태에 따라 분기 */}
