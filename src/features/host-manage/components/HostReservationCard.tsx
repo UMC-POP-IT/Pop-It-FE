@@ -20,7 +20,8 @@ interface HostReservationCardProps {
 const STATUS_LABEL: Record<HostReservation["status"], string> = {
   PENDING: "승인 대기",
   CONFIRMED: "계약 대기",
-  IN_USE: "사용중",
+  CONTRACTED: "계약 완료",
+  IN_USE: "사용 중",
   COMPLETED: "사용 완료",
   REJECTED: "승인 취소",
 };
@@ -42,6 +43,7 @@ export const HostReservationCard = ({
   onPhotoView,
 }: HostReservationCardProps) => {
   const { status, startDate, endDate, totalPrice } = reservation;
+  const hasCheckoutPhoto = (reservation.checkoutPhotoUrls?.length ?? 0) > 0;
 
   return (
     <div>
@@ -60,7 +62,7 @@ export const HostReservationCard = ({
               {guest.nickname}
             </span>
           </div>
-          <p className="text-text-tag line-clamp-1 text-base">
+          <p className="text-text-tag line-clamp-1 text-base font-medium">
             {guest.businessDescription}
           </p>
         </div>
@@ -104,15 +106,23 @@ export const HostReservationCard = ({
                 </p>
               </div>
             </div>
-            <p className="text-text-primary text-lg">
+            <p className="text-text-primary text-lg font-medium">
               총 금액:{" "}
-              <span className="font-bold">{totalPrice.toLocaleString()}</span>원
+              <span className="font-bold">{totalPrice.toLocaleString()}</span>
+              원
             </p>
           </div>
         </div>
 
         {/* 버튼 */}
-        <div className="flex h-[190px] flex-shrink-0 flex-col items-end justify-end">
+        <div className="flex h-[190px] flex-shrink-0 flex-col items-end justify-end gap-2">
+          {/* 사용 완료 · 퇴실 사진 미등록 안내 */}
+          {status === "COMPLETED" && !hasCheckoutPhoto && (
+            <p className="text-primary text-base font-medium">
+              퇴실 사진이 아직 등록되지 않았습니다.
+            </p>
+          )}
+
           <div className="flex items-center gap-1">
             {status === "PENDING" && (
               <>
@@ -137,7 +147,9 @@ export const HostReservationCard = ({
               </>
             )}
 
-            {(status === "CONFIRMED" || status === "IN_USE") && (
+            {(status === "CONFIRMED" ||
+              status === "CONTRACTED" ||
+              status === "IN_USE") && (
               <button
                 onClick={onDetail}
                 className="bg-surface-blue text-text-primary h-10 rounded-lg px-6 py-1.5 text-base font-bold"
@@ -156,7 +168,12 @@ export const HostReservationCard = ({
                 </button>
                 <button
                   onClick={onPhotoView}
-                  className="bg-primary-hover h-10 rounded-lg px-6 py-1.5 text-base font-bold text-white"
+                  disabled={!hasCheckoutPhoto}
+                  className={
+                    hasCheckoutPhoto
+                      ? "bg-primary-hover h-10 rounded-lg px-6 py-1.5 text-base font-bold text-white"
+                      : "bg-surface-blue h-10 cursor-not-allowed rounded-lg px-6 py-1.5 text-base font-bold text-[#8cb8fa]"
+                  }
                 >
                   퇴실 사진 보기
                 </button>

@@ -28,8 +28,15 @@ export interface HostReservation {
   guestId: number;
   startDate: string;
   endDate: string;
-  status: "PENDING" | "CONFIRMED" | "IN_USE" | "COMPLETED" | "REJECTED";
+  status:
+    | "PENDING" // 승인 대기
+    | "CONFIRMED" // 계약 대기
+    | "CONTRACTED" // 계약 완료
+    | "IN_USE" // 사용 중
+    | "COMPLETED" // 사용 완료
+    | "REJECTED"; // 승인 취소
   totalPrice: number;
+  checkoutPhotoUrls?: string[]; // 사용 완료 시 게스트가 등록한 퇴실 사진
 }
 
 // 호스트가 등록한 공간들
@@ -160,28 +167,56 @@ export const mockHostReservations: HostReservation[] = [
   {
     id: 104,
     spaceId: 1,
-    guestId: 13,
-    startDate: "2026-06-20",
-    endDate: "2026-06-25",
-    status: "IN_USE",
+    guestId: 10,
+    startDate: "2026-06-23",
+    endDate: "2026-06-23",
+    status: "CONFIRMED", // 계약 대기
     totalPrice: 25000000,
   },
   {
     id: 105,
     spaceId: 2,
-    guestId: 10,
-    startDate: "2026-06-01",
-    endDate: "2026-06-05",
-    status: "COMPLETED",
+    guestId: 11,
+    startDate: "2026-07-01",
+    endDate: "2026-07-05",
+    status: "CONTRACTED", // 계약 완료
     totalPrice: 2500000,
   },
   {
     id: 106,
     spaceId: 3,
+    guestId: 12,
+    startDate: "2026-07-10",
+    endDate: "2026-07-15",
+    status: "CONTRACTED", // 계약 완료
+    totalPrice: 4500000,
+  },
+  {
+    id: 107,
+    spaceId: 1,
+    guestId: 13,
+    startDate: "2026-06-20",
+    endDate: "2026-06-25",
+    status: "IN_USE", // 사용 중
+    totalPrice: 25000000,
+  },
+  {
+    id: 108,
+    spaceId: 2,
+    guestId: 10,
+    startDate: "2026-06-01",
+    endDate: "2026-06-05",
+    status: "COMPLETED", // 사용 완료 (퇴실 사진 등록됨)
+    totalPrice: 2500000,
+    checkoutPhotoUrls: ["/mock/checkout-1.jpg"],
+  },
+  {
+    id: 109,
+    spaceId: 3,
     guestId: 11,
     startDate: "2026-05-20",
     endDate: "2026-05-25",
-    status: "COMPLETED",
+    status: "COMPLETED", // 사용 완료 (퇴실 사진 미등록)
     totalPrice: 4500000,
   },
 ];
