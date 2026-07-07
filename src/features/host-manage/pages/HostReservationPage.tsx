@@ -52,7 +52,7 @@ export const HostReservationPage = () => {
   };
 
   const handleReject = () => {
-    if (!rejectTargetId) return;
+    if (rejectTargetId === null) return;
     setReservations((prev) =>
       prev.map((r) =>
         r.id === rejectTargetId ? { ...r, status: "REJECTED" } : r,

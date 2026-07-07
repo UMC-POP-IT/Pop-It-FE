@@ -1,11 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "@/shared/components/Modal";
-import { mockHostSpaces } from "@/features/host-manage/api/mock_host_data";
+import {
+  mockHostSpaces,
+  type MockHostSpace,
+} from "@/features/host-manage/api/mock_host_data";
+
+const SPACE_STATUS_LABEL: Record<MockHostSpace["status"], string> = {
+  REGISTERED: "등록 완료",
+  PENDING_REVIEW: "심사중",
+};
 import iconPlus from "@/assets/icons/icon_plus.svg";
 
 const formatDate = (dateStr: string) => {
-  const d = new Date(dateStr);
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const d = new Date(year, month - 1, day);
   const days = ["일", "월", "화", "수", "목", "금", "토"];
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")} (${days[d.getDay()]})`;
 };
@@ -64,7 +73,7 @@ export const MySpacePage = () => {
                 {/* 공간 정보 */}
                 <div className="flex flex-col items-start gap-2">
                   <span className="text-primary text-base font-bold">
-                    등록 완료
+                    {SPACE_STATUS_LABEL[space.status]}
                   </span>
                   <div className="flex flex-col items-start gap-1">
                     <p className="text-xl font-bold text-black">{space.name}</p>
