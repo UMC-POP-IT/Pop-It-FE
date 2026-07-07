@@ -14,13 +14,13 @@ const FileUploadRow = ({ label, placeholder, hint }: FileUploadRowProps) => (
       <div className="border-border text-text-disabled flex flex-1 items-center rounded-lg border bg-white px-4 py-2.5 text-sm">
         {placeholder}
       </div>
-      {/* 첨부 버튼: 공통 Button에 검정 variant가 없어 label+hidden input으로 임시 구현 → 챈(4번)과 협의 예정
-          ⚠️ 디자인엔 '다음으로'로 표기됐으나 파일 첨부 버튼이라 '첨부'로 표기함 (디자인 확인 필요) */}
+      {/* 파일 찾기 버튼: 공통 Button에 검정 variant가 없어 label+hidden input으로 임시 구현 → 챈(4번)과 협의 예정
+          ⚠️ 디자인엔 '다음으로'로 표기됐으나 파일 선택 버튼이라 '파일 찾기'로 표기함 (디자인 확인 필요) */}
       <label
-        aria-label={`${label} 첨부`}
-        className="bg-text-primary flex shrink-0 cursor-pointer items-center rounded-lg px-5 text-sm font-medium text-white"
+        aria-label={`${label} 파일 찾기`}
+        className="bg-text-primary flex shrink-0 cursor-pointer items-center rounded-lg px-5 text-sm font-medium whitespace-nowrap text-white"
       >
-        첨부
+        파일 찾기
         <input
           type="file"
           accept=".jpg,.jpeg,.png,.pdf"
