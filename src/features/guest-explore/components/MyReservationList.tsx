@@ -36,7 +36,7 @@ export const MyReservationList = () => {
         ) : (
           activeReservations.map((reservation, i) => (
             <ReservationCard
-              key={`${reservation.name}-${reservation.start.year}-${reservation.start.month}-${reservation.start.day}-${i}`}
+              key={`${reservation.space.name}-${reservation.start.year}-${reservation.start.month}-${reservation.start.day}-${i}`}
               reservation={reservation}
             />
           ))

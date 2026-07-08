@@ -51,11 +51,15 @@ export const ReservationCard = ({ reservation }: ReservationCardProps) => {
 
   return (
     <div className="border-border flex flex-col gap-4 border-b py-4 last:border-none sm:flex-row">
-      <div className="flex items-center justify-center bg-tag-bg h-40 w-full flex-none rounded-lg sm:h-28 sm:w-36">대표 이미지</div>
+      <img
+        src={reservation.space.imageUrls[0]}
+        alt={reservation.space.name}
+        className="flex items-center justify-center bg-tag-bg h-40 w-full flex-none rounded-lg sm:h-28 sm:w-36"
+      />
 
       <div className="flex flex-1 flex-col gap-1.5">
         <Badge variant="pending" label={label} />
-        <span className="ml-2 text-text-primary text-base font-bold">{reservation.name}</span>
+        <span className="ml-2 text-text-primary text-base font-bold">{reservation.space.name}</span>
         <span className="ml-2 text-text-secondary text-sm">
           {formatDate(reservation.start)} ~ {formatDate(reservation.end)}
         </span>
@@ -104,7 +108,7 @@ export const ReservationCard = ({ reservation }: ReservationCardProps) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setIsCancelModalOpen(false)} />
           <div className="relative z-10 flex w-80 flex-col items-center gap-2 rounded-2xl bg-white p-6 text-center shadow-xl">
-            <h3 className="text-text-primary text-base font-bold">"{reservation.name}"</h3>
+            <h3 className="text-text-primary text-base font-bold">"{reservation.space.name}"</h3>
             <p className="text-text-primary text-base font-bold">예약을 취소하시겠습니까?</p>
             {/* 수수료 미발생 안내는 승인 대기 상태에서만 유효하므로 승인 완료 건에는 노출하지 않음 */}
             {!reservation.isApproved && (
@@ -140,7 +144,7 @@ export const ReservationCard = ({ reservation }: ReservationCardProps) => {
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-text-secondary">공간</span>
-                <span className="text-text-primary font-medium">{reservation.name}</span>
+                <span className="text-text-primary font-medium">{reservation.space.name}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-text-secondary">기간</span>
