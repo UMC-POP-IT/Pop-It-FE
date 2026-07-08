@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import SpaceCard from "@/shared/components/SpaceCard";
-import { recommendSpaces } from "@/features/guest-explore/api/mock_recommend_spaces";
+import { recommendSpaces } from "@/features/guest-explore/api/mock_spaces";
 import { ScrollButton } from "@/features/guest-explore/components/ScrollButton";
 
 export const WishedSpace = () => {
