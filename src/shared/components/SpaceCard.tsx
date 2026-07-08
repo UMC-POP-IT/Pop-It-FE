@@ -22,7 +22,7 @@ const SpaceCard = ({
 }: SpaceCardProps) => (
   <div
     onClick={onClick}
-    className="border-border border-transparent cursor-pointer overflow-hidden border bg-white transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl"
+    className="border-border cursor-pointer overflow-hidden border border-transparent bg-white transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl"
   >
     {/* 이미지 */}
     <div className="bg-bg relative aspect-[4/3]">
@@ -50,24 +50,42 @@ const SpaceCard = ({
       </button>
       {categoryTag && (
         <div className="absolute right-2 bottom-2">
-          <Badge variant="category" label={"팝업 스토어"} /> {/* categoryTag 유형을 정해놓은 게 없어서, 임시로 figma에 맞춘 값 */}
+          <Badge
+            variant="category"
+            label={"팝업 스토어"}
+          />{" "}
+          {/* categoryTag 유형을 정해놓은 게 없어서, 임시로 figma에 맞춘 값 */}
         </div>
       )}
     </div>
 
     {/* 텍스트 */}
-    <div className="flex flex-col gap-1.5 py-3 mx-1">
-      {matchReason && (
+    <div className="mx-1 flex flex-col gap-1.5 py-3">
+      {matchReason ? ( // AI 추천 이유가 있으면(AI 맞춤형 공간) Badge+하트, 없으면(찜한 공간) 이름+하트 나란히
+        <>
+          <div className="flex items-center justify-between gap-2">
+            <Badge
+              variant="highlight"
+              label={matchReason}
+            />
+            <span className="text-text-secondary flex shrink-0 items-center gap-0.5 text-xs">
+              ♡ {space.heartCount}
+            </span>
+          </div>
+          <span className="text-text-primary truncate text-sm font-semibold">
+            {space.name}
+          </span>
+        </>
+      ) : (
         <div className="flex items-center justify-between gap-2">
-          <Badge variant="highlight" label={matchReason} />
+          <span className="text-text-primary truncate text-sm font-semibold">
+            {space.name}
+          </span>
           <span className="text-text-secondary flex shrink-0 items-center gap-0.5 text-xs">
             ♡ {space.heartCount}
           </span>
         </div>
       )}
-      <span className="text-text-primary truncate text-sm font-semibold">
-        {space.name}
-      </span>
       <span className="text-text-secondary truncate text-xs">
         {space.address}
       </span>
@@ -80,7 +98,7 @@ const SpaceCard = ({
           {space.keywords.slice(0, 2).map((keyword) => (
             <span
               key={keyword}
-              className="bg-tag-bg text-tag rounded-full px-2 py-0.5 text-xs"
+              className="bg-tag-bg text-text-tag rounded-full px-2 py-0.5 text-xs"
             >
               #{keyword}
             </span>

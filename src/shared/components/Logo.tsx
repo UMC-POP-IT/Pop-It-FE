@@ -20,23 +20,23 @@ const config: Record<
   header: {
     showIcon: false,
     iconSize: 0,
-    textHeight: 20,
+    textHeight: 26,
     direction: "flex-row",
     gap: "gap-0",
   },
   footer: {
     showIcon: true,
-    iconSize: 24,
-    textHeight: 20,
+    iconSize: 28,
+    textHeight: 24,
     direction: "flex-row",
-    gap: "gap-2",
+    gap: "gap-4",
   },
   login: {
     showIcon: true,
-    iconSize: 48,
-    textHeight: 36,
-    direction: "flex-col",
-    gap: "gap-3",
+    iconSize: 60,
+    textHeight: 52,
+    direction: "flex-row",
+    gap: "gap-[30px]",
   },
 };
 
