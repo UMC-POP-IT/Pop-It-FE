@@ -4,7 +4,7 @@ import {
   reservations,
   getReservationStatus,
   type ReservationStatus,
-} from "@/features/guest-explore/api/mock_recommend_spaces";
+} from "@/features/guest-explore/api/mock_spaces";
 import { ReservationCard } from "@/features/guest-explore/components/ReservationCard";
 
 const TAB_STATUSES: ReservationStatus[] = ["예약 예정", "사용 중", "지난 예약"];

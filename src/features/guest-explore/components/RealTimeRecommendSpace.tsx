@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import RealTimeBanner from "@/features/guest-explore/components/RealTimeBanner";
-import { recommendSpaces } from "@/features/guest-explore/api/mock_recommend_spaces";
+import { recommendSpaces } from "@/features/guest-explore/api/mock_spaces";
 import type { Space } from "@/types";
 import { ScrollButton } from "./ScrollButton";
 

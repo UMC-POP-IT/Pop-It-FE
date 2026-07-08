@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Badge from "@/shared/components/Badge";
 import Button from "@/shared/components/Button";
-import type { DateInfo, Reservation } from "@/features/guest-explore/api/mock_recommend_spaces";
+import type { DateInfo, Reservation } from "@/features/guest-explore/api/mock_spaces";
 
 interface ReservationCardProps {
   reservation: Reservation;
