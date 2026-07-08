@@ -12,12 +12,13 @@ export const LoginModal = () => {
         className="absolute inset-0 bg-black/40"
         onClick={closeLoginModal}
       />
-      <div className="relative z-10 flex w-[1200px] items-center gap-5 rounded-xl bg-white px-[102px] py-20">
+      <div className="relative z-10 flex w-full max-w-[1200px] items-center gap-5 rounded-xl bg-white px-6 py-20 md:px-[102px]">
         <div className="bg-divider h-[505px] w-[488px] shrink-0" />
 
         <div className="flex w-[488px] flex-col items-end gap-15">
           <button
             onClick={closeLoginModal}
+            aria-label="닫기"
             className="text-text-secondary hover:text-text-primary size-12 text-2xl"
           >
             ✕

@@ -98,6 +98,7 @@ const Header = () => {
               height="24"
               viewBox="0 0 24 24"
               fill="none"
+              aria-hidden="true"
             >
               <path
                 d="M9 6L15 12L9 18"
@@ -118,6 +119,7 @@ const Header = () => {
                   height="20"
                   viewBox="0 0 24 24"
                   fill="none"
+                  aria-hidden="true"
                 >
                   <circle
                     cx="12"

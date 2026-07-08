@@ -50,11 +50,7 @@ const SpaceCard = ({
       </button>
       {categoryTag && (
         <div className="absolute right-2 bottom-2">
-          <Badge
-            variant="category"
-            label={"팝업 스토어"}
-          />{" "}
-          {/* categoryTag 유형을 정해놓은 게 없어서, 임시로 figma에 맞춘 값 */}
+          <Badge variant="category" label={categoryTag} />
         </div>
       )}
     </div>
