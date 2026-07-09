@@ -55,8 +55,14 @@ export const HostRegisterStep2 = () => {
         {/* 은행 (드롭다운)
             공통 Select 컴포넌트 없어 raw select로 임시 구현 → 챈(4번)과 협의 예정 */}
         <div className="flex flex-col gap-2">
-          <span className="text-text-primary text-sm font-bold">은행</span>
+          <label
+            htmlFor="bank"
+            className="text-text-primary text-sm font-bold"
+          >
+            은행
+          </label>
           <select
+            id="bank"
             defaultValue=""
             className="text-text-primary border-border focus:border-primary w-full rounded-lg border bg-white px-4 py-2.5 text-sm transition-colors focus:outline-none"
           >
@@ -79,16 +85,30 @@ export const HostRegisterStep2 = () => {
 
         {/* 정산 입금 계좌 번호 */}
         <div className="flex flex-col gap-2">
-          <span className="text-text-primary text-sm font-bold">
+          <label
+            htmlFor="account-number"
+            className="text-text-primary text-sm font-bold"
+          >
             정산 입금 계좌 번호
-          </span>
-          <Input placeholder="- 없이 숫자만 입력" />
+          </label>
+          <Input
+            id="account-number"
+            placeholder="- 없이 숫자만 입력"
+          />
         </div>
 
         {/* 예금주 */}
         <div className="flex flex-col gap-2">
-          <span className="text-text-primary text-sm font-bold">예금주</span>
-          <Input placeholder="예금주 이름을 입력해주세요" />
+          <label
+            htmlFor="account-holder"
+            className="text-text-primary text-sm font-bold"
+          >
+            예금주
+          </label>
+          <Input
+            id="account-holder"
+            placeholder="예금주 이름을 입력해주세요"
+          />
           <span className="text-text-disabled text-xs">
             * 사업자 등록증(대표자명)과 일치해야 합니다.
           </span>

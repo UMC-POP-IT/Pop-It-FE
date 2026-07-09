@@ -24,7 +24,7 @@ const FileUploadRow = ({ label, placeholder, hint }: FileUploadRowProps) => (
         <input
           type="file"
           accept=".jpg,.jpeg,.png,.pdf"
-          className="hidden"
+          className="sr-only"
         />
       </label>
     </div>

@@ -43,13 +43,19 @@ export const HostRegisterStep1 = () => {
           <span className="text-text-primary text-sm font-bold">
             과세자 등록
           </span>
-          <div className="grid grid-cols-2 gap-3">
+          <div
+            className="grid grid-cols-2 gap-3"
+            role="radiogroup"
+            aria-label="과세자 유형 선택"
+          >
             {TAXPAYER_OPTIONS.map((opt, i) => {
               const isSelected = i === 0;
               return (
                 <button
                   key={opt.title}
                   type="button"
+                  role="radio"
+                  aria-checked={isSelected}
                   className={`flex flex-col gap-1 rounded-lg border px-4 py-3 text-left transition-colors ${
                     isSelected ? "border-primary" : "border-border"
                   }`}
@@ -70,10 +76,16 @@ export const HostRegisterStep1 = () => {
 
         {/* 사업자 등록 번호 */}
         <div className="flex flex-col gap-2">
-          <span className="text-text-primary text-sm font-bold">
+          <label
+            htmlFor="business-number"
+            className="text-text-primary text-sm font-bold"
+          >
             사업자 등록 번호
-          </span>
-          <Input placeholder="000-00-00000" />
+          </label>
+          <Input
+            id="business-number"
+            placeholder="000-00-00000"
+          />
         </div>
 
         {/* 사업자 등록증 사본 (파일 첨부) */}
@@ -85,18 +97,32 @@ export const HostRegisterStep1 = () => {
 
         {/* 상호명 */}
         <div className="flex flex-col gap-2">
-          <span className="text-text-primary text-sm font-bold">상호명</span>
-          <Input placeholder="예: OO 갤러리, 카페 등" />
+          <label
+            htmlFor="business-name"
+            className="text-text-primary text-sm font-bold"
+          >
+            상호명
+          </label>
+          <Input
+            id="business-name"
+            placeholder="예: OO 갤러리, 카페 등"
+          />
         </div>
 
         {/* 사업장 주소 + 주소 찾기 + 상세주소 */}
         <div className="flex flex-col gap-2">
-          <span className="text-text-primary text-sm font-bold">
+          <label
+            htmlFor="business-address"
+            className="text-text-primary text-sm font-bold"
+          >
             사업장 주소
-          </span>
+          </label>
           <div className="flex gap-2">
             <div className="flex-1">
-              <Input placeholder="주소를 검색해주세요" />
+              <Input
+                id="business-address"
+                placeholder="주소를 검색해주세요"
+              />
             </div>
             {/* 주소 찾기: 공통 Button에 검정 variant 없어 임시 raw button → 챈(4번)과 협의 예정
                 TODO: 주소 검색 API(다음 우편번호 등) 연결 */}
@@ -107,7 +133,10 @@ export const HostRegisterStep1 = () => {
               주소 찾기
             </button>
           </div>
-          <Input placeholder="상세 주소를 입력해주세요" />
+          <Input
+            placeholder="상세 주소를 입력해주세요"
+            aria-label="상세 주소"
+          />
         </div>
       </div>
 
