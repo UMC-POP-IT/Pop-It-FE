@@ -1,4 +1,5 @@
 import { Space } from "@/types";
+import { isUsing } from "../components/ReservationCard";
 
 /** 예약 내역 */
 export interface Reservation {
@@ -252,7 +253,31 @@ export const reservations: Reservation[] = [
     end: { year: 2026, month: 7, day: 25, day_type: '토' },
     isDone: false,
   },
-  // 사용 중 (승인 완료 + 계약 완료, 아직 마감 전)
+  // 계약 완료 (승인 완료 + 계약 완료, 계약 기간 전)
+  {
+    isApproved: true,
+    isContracted: true,
+    space: {
+      id: 1005,
+      hostId: 2005,
+      imageUrls: [
+        'https://picsum.photos/seed/space1009/400/300',
+        'https://picsum.photos/seed/space1009b/400/300',
+      ],
+      heartCount: 64,
+      name: '임시 장소',
+      address: '서울 성동구 연무장길 45',
+      cost: { day: 100000, month: 2400000, year: 26400000 },
+      keywords: ['노출콘크리트', '넓은공간', '전시', '팝업스토어'],
+      description: '노출콘크리트 인테리어가 매력적인 성수동 전시 및 팝업스토어 전용 공간입니다.',
+      createdAt: '2026-03-18T09:00:00.000Z',
+    },
+    total_cost: 300000,
+    start: { year: 2026, month: 6, day: 30, day_type: '화' },
+    end: { year: 2026, month: 7, day: 7, day_type: '금' },
+    isDone: false,
+  },
+  // 사용 중 (승인 완료 + 계약 완료, 계약 기간 내)
   {
     isApproved: true,
     isContracted: true,
@@ -273,7 +298,7 @@ export const reservations: Reservation[] = [
     },
     total_cost: 300000,
     start: { year: 2026, month: 6, day: 30, day_type: '화' },
-    end: { year: 2026, month: 7, day: 3, day_type: '금' },
+    end: { year: 2026, month: 7, day: 11, day_type: '금' },
     isDone: false,
   },
   // 지난 예약 (마감 완료)
@@ -335,8 +360,11 @@ export type ReservationStatus = '예약 예정' | '승인 완료' | '계약 완�
 
 export function getReservationStatus(r: Reservation): ReservationStatus {
   if (r.isDone) return '지난 예약';
-  if (r.isApproved && r.isContracted) return '사용 중';
+  if (r.isApproved && r.isContracted){
+    if (isUsing(r.start, r.end))
+      return '사용 중';
+    return '계약 완료';
+  }
   if (r.isApproved) return '승인 완료';
-  if (r.isContracted) return '계약 완료';
   return '예약 예정';
 }
