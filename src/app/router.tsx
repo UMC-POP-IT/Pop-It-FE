@@ -23,6 +23,10 @@ import { RegisterStep2 } from "@/features/host-register/pages/RegisterStep2";
 import { RegisterStep3 } from "@/features/host-register/pages/RegisterStep3";
 import { RegisterStep4 } from "@/features/host-register/pages/RegisterStep4";
 import { RegisterStep5 } from "@/features/host-register/pages/RegisterStep5";
+import { HostRegisterStart } from "@/features/host-register/pages/HostRegisterStart";
+import { HostRegisterStep1 } from "@/features/host-register/pages/HostRegisterStep1";
+import { HostRegisterStep2 } from "@/features/host-register/pages/HostRegisterStep2";
+import { HostRegisterComplete } from "@/features/host-register/pages/HostRegisterComplete";
 
 // 4번 팀원 (챈 - 내공간관리/예약관리/로그인)
 import { MySpacePage } from "@/features/host-manage/pages/MySpacePage";
@@ -69,6 +73,15 @@ export const router = createBrowserRouter([
       { path: "/host/register/step3", element: <RegisterStep3 /> },
       { path: "/host/register/step4", element: <RegisterStep4 /> },
       { path: "/host/register/step5", element: <RegisterStep5 /> },
+
+      // 3번 팀원 - 호스트 등록 (게스트 → 호스트 전환)
+      { path: "/host/host-register", element: <HostRegisterStart /> },
+      { path: "/host/host-register/step1", element: <HostRegisterStep1 /> },
+      { path: "/host/host-register/step2", element: <HostRegisterStep2 /> },
+      {
+        path: "/host/host-register/complete",
+        element: <HostRegisterComplete />,
+      },
 
       // 4번 팀원 - 내공간관리/예약관리
       { path: "/host/spaces", element: <MySpacePage /> },

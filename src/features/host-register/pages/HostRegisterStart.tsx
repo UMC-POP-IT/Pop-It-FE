@@ -1,0 +1,65 @@
+import StepIndicator from "@/shared/components/StepIndicator";
+import Button from "@/shared/components/Button";
+import Logo from "@/shared/components/Logo";
+
+// 호스트 등록 2단계 진행바 라벨
+const STEPS = ["사업자 정보", "계좌 정보"];
+
+// 호스트 등록 시작 모달 (인트로)
+// 정적: 항상 열린 상태로 표시. TODO: 열림/닫힘 상태 + 액션 연결
+//  - [등록 시작하기] → step1(사업자 정보) 화면으로 이동
+//  - [X] → 모달 닫고 이전 화면(게스트홈)으로 복귀
+export const HostRegisterStart = () => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* 딤 배경 */}
+      <div className="absolute inset-0 bg-black/40" />
+
+      {/* 모달 카드 */}
+      <div className="relative z-10 flex w-[720px] gap-8 rounded-2xl bg-white p-8 shadow-xl">
+        {/* X 닫기 (공통 X 컴포넌트 없어 LoginModal과 동일하게 raw button 사용)
+            TODO: onClick → 게스트홈(/)으로 복귀 */}
+        <button
+          type="button"
+          aria-label="닫기"
+          className="text-text-secondary hover:text-text-primary absolute top-4 right-4 text-xl"
+        >
+          ✕
+        </button>
+
+        {/* 왼쪽: 대표 이미지 (정적 목업 — 회색 박스)
+            TODO: 실제 이미지 에셋으로 교체 */}
+        <div className="bg-tag-bg aspect-square w-1/2 shrink-0 rounded-lg" />
+
+        {/* 오른쪽: 안내 + 진행바 + 시작 버튼 */}
+        <div className="flex flex-1 flex-col gap-4">
+          <Logo variant="footer" />
+
+          <div className="flex flex-col gap-1">
+            <h1 className="text-text-primary text-2xl font-bold">
+              호스트 등록
+            </h1>
+            <p className="text-text-secondary text-sm">
+              안전한 거래를 위해 호스트 등록을 마친 후 팝잇을 이용해주세요
+            </p>
+          </div>
+
+          {/* 진행바 — 아직 시작 전이라 두 단계 모두 비활성(currentStep=-1) */}
+          <StepIndicator
+            steps={STEPS}
+            currentStep={-1}
+          />
+
+          {/* 등록 시작하기 → step1(사업자 정보)로 이동 (TODO) */}
+          <Button
+            variant="primary"
+            size="md"
+            className="self-start"
+          >
+            등록 시작하기
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
