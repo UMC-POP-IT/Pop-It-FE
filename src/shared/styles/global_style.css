@@ -13,7 +13,7 @@
   --color-primary: #0564f5; /* Blue/blue-500 | 메인 버튼, 활성 링크, 강조 텍스트 */
   --color-primary-hover: #3783f7; /* Blue/blue-400 | 버튼 hover 상태 */
   --color-primary-light: #e6f0fe; /* Blue/blue-50  | 연한 파란 배경, 선택된 탭 하이라이트 */
-  --color-primary-100: #b2cffc; /* Blue/blue-100 | 프로필 아이콘 배경색 */
+  --color-primary-100: #b2cffc; /* Blue/blue-100 | 편의시설 칩 아이콘 배경색 */
 
   /* ────────────────────────────────
      배경
@@ -32,6 +32,7 @@
   --color-text-body: #808080; /* Grey/grey-500  | text-secondary 와 동일 (별칭) */
   --color-text-tag: #363636; /* Grey/grey-900  | 해시태그 텍스트 */
   --color-text-disabled: #c4c4c4; /* Grey 계열      | 비활성화된 placeholder, 안내 텍스트 */
+  --color-text-placeholder: #aaaaaa; /* Grey/grey-300 | 인풋·드롭다운 placeholder 텍스트 */
 
   /* ────────────────────────────────
      테두리 / 구분선
@@ -72,7 +73,7 @@
   /* ────────────────────────────────
      소셜 로그인
   ──────────────────────────────── */
-  --color-kakao: #fee500; /* 카카오 공식 컬러 | 카카오 버튼 배경 */
+  --color-kakao: #FEE500; /* 카카오 공식 컬러 | 카카오 버튼 배경 */
   --color-kakao-text: #363636; /* Grey/grey-900   | 카카오 버튼 텍스트 */
   --color-naver: #00cb4b; /* 네이버 공식 컬러 | 네이버 버튼 배경 */
   --color-naver-text: #ffffff; /* Grey/white       | 네이버 버튼 텍스트 */
