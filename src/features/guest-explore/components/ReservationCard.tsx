@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Badge from "@/shared/components/Badge";
 import Button from "@/shared/components/Button";
+import Modal from "@/shared/components/Modal";
 import type { DateInfo, Reservation } from "@/features/guest-explore/api/mock_spaces";
 
 interface ReservationCardProps {
@@ -26,7 +27,7 @@ const getCardMeta = (r: Reservation): CardMeta => {
   if (r.isApproved && r.isContracted)
     return { label: "사용 중", showCancel: false, showContract: false, needsPhotoVerification: false };
   if (r.isApproved) return { label: "승인 완료", showCancel: true, showContract: true, needsPhotoVerification: false };
-  return { label: "승인대기", showCancel: true, showContract: false, needsPhotoVerification: false };
+  return { label: "승인 대기", showCancel: true, showContract: false, needsPhotoVerification: false };
 };
 
 const formatDate = (d: DateInfo) =>
@@ -54,7 +55,7 @@ export const ReservationCard = ({ reservation }: ReservationCardProps) => {
       <img
         src={reservation.space.imageUrls[0]}
         alt={reservation.space.name}
-        className="flex items-center justify-center bg-tag-bg h-40 w-full flex-none rounded-lg sm:h-28 sm:w-36"
+        className="flex items-center justify-center bg-tag-bg h-40 w-full flex-none sm:h-45 sm:w-45"
       />
 
       <div className="flex flex-1 flex-col gap-1.5">
@@ -103,37 +104,16 @@ export const ReservationCard = ({ reservation }: ReservationCardProps) => {
           </div>
         </div>
       </div>
-
-      {isCancelModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setIsCancelModalOpen(false)} />
-          <div className="relative z-10 flex w-80 flex-col items-center gap-2 rounded-2xl bg-white p-6 text-center shadow-xl">
-            <h3 className="text-text-primary text-base font-bold">"{reservation.space.name}"</h3>
-            <p className="text-text-primary text-base font-bold">예약을 취소하시겠습니까?</p>
-            {/* 수수료 미발생 안내는 승인 대기 상태에서만 유효하므로 승인 완료 건에는 노출하지 않음 */}
-            {!reservation.isApproved && (
-              <p className="text-text-secondary text-xs">
-                현재 승인 대기 상태로, 취소 시
-                <br />
-                별도의 수수료가 발생하지 않습니다
-              </p>
-            )}
-            <div className="mt-4 flex w-full gap-2">
-              <Button
-                variant="outline"
-                size="md"
-                className="!border-none !bg-gray-200 !text-black flex-1"
-                onClick={() => setIsCancelModalOpen(false)}
-              >
-                돌아가기
-              </Button>
-              <Button variant="primary" size="md" className="flex-1" onClick={handleCancelReservation}>
-                예약 취소
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      
+      <Modal
+        isOpen={isCancelModalOpen}
+        title={`${reservation.space.name}\n예약을 취소하시겠습니까?`}
+        description={'현재 승인 대기 상태로, 취소 시\n별도의 수수료가 발생하지 않습니다'}
+        confirmLabel="예약 취소"
+        cancelLabel="돌아가기"
+        onConfirm={() => setIsCancelModalOpen(false)}
+        onCancel={handleCancelReservation}
+      />
 
       {isContractModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">

@@ -331,9 +331,12 @@ export const reservations: Reservation[] = [
 // (참고) 예약 상태 계산 헬퍼
 // ------------------------------------------------------------
 
-export type ReservationStatus = '예약 예정' | '사용 중' | '지난 예약';
+export type ReservationStatus = '예약 예정' | '승인 완료' | '계약 완료' | '사용 중' | '지난 예약';
 
 export function getReservationStatus(r: Reservation): ReservationStatus {
   if (r.isDone) return '지난 예약';
-  return r.isApproved && r.isContracted ? '사용 중' : '예약 예정';
+  if (r.isApproved && r.isContracted) return '사용 중';
+  if (r.isApproved) return '승인 완료';
+  if (r.isContracted) return '계약 완료';
+  return '예약 예정';
 }
