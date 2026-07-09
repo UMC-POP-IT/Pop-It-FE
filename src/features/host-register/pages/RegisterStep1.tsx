@@ -81,7 +81,7 @@ export const RegisterStep1 = () => {
         </div>
 
         {/* 건물 유형 — 칩 버튼 (여러 개 중 택1)
-            ⚠️ 공통 Chip 없어 임시 구현 → 챈(4번)과 협의 예정 */}
+            공통 Chip으로 수정 완료 */}
         <div className="flex flex-col gap-2">
           <span className="text-text-primary text-sm font-bold">건물 유형</span>
           <div className="flex flex-wrap gap-2">
@@ -141,18 +141,18 @@ export const RegisterStep1 = () => {
             </label>
           </div>
 
-          {/* 주소 입력 + 주소 찾기 버튼
-              ⚠️ 검은 버튼 variant가 공통 Button에 없어 임시 스타일 → 챈(4번)과 협의 예정 */}
+          {/* 주소 입력 + 주소 찾기 버튼*/}
+
           <div className="flex items-start gap-2">
             <div className="flex-1">
               <Input placeholder="주소" />
             </div>
-            <button
-              type="button"
-              className="bg-text-primary rounded-lg px-4 py-2.5 text-sm font-medium whitespace-nowrap text-white"
+            <Button
+              variant="black"
+              size="md"
             >
               주소 찾기
-            </button>
+            </Button>
           </div>
 
           {/* 상세 주소 */}

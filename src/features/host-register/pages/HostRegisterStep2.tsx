@@ -116,15 +116,9 @@ export const HostRegisterStep2 = () => {
       </div>
 
       {/* 이전 / 다음으로 버튼 (우측 정렬)
-          '이전'은 디자인상 회색 채움인데 공통 Button에 해당 variant 없어 outline 사용 → 챈(4번)과 협의 예정
           정적: '다음으로' 활성 상태로 표시. TODO: 유효성 검사 통과 시 활성화 + 완료 화면 이동 */}
       <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          size="md"
-        >
-          이전
-        </Button>
+        <Button variant="gray">이전</Button>
         <Button
           variant="primary"
           size="md"

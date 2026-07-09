@@ -5,8 +5,14 @@ import Button from "@/shared/components/Button";
 // 5단계 진행바 라벨
 const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
 
-// 칩 그룹 선택지 
-const USAGE_OPTIONS = ["팝업스토어", "전시/갤러리", "복합공간", "쇼룸", "카페/F&B"]; // 기본 정보(택1)
+// 칩 그룹 선택지
+const USAGE_OPTIONS = [
+  "팝업스토어",
+  "전시/갤러리",
+  "복합공간",
+  "쇼룸",
+  "카페/F&B",
+]; // 기본 정보(택1)
 const STRUCTURE_OPTIONS = ["오픈형 홀", "가벽 분리형", "룸 분리형"]; // 공간 구조(택1)
 const FLOOR_TYPE_OPTIONS = ["일반 층", "반지층", "지하", "옥탑"]; // 층수 유형(택1)
 const HEATING_OPTIONS = [
@@ -36,7 +42,10 @@ export const RegisterStep3 = () => {
       </h1>
 
       {/* 상단 진행바 — 2 = 세 번째 단계(공간 정보) */}
-      <StepIndicator steps={STEPS} currentStep={2} />
+      <StepIndicator
+        steps={STEPS}
+        currentStep={2}
+      />
 
       {/* 섹션: 공간 정보 */}
       <div className="flex flex-col gap-6">
@@ -45,7 +54,11 @@ export const RegisterStep3 = () => {
         </h2>
 
         {/* 기본 정보 / 공간 구조 (택1) */}
-        <ChipGroup label="기본 정보" options={USAGE_OPTIONS} selected={["팝업스토어"]} />
+        <ChipGroup
+          label="기본 정보"
+          options={USAGE_OPTIONS}
+          selected={["팝업스토어"]}
+        />
         <ChipGroup
           label="공간 정보"
           options={STRUCTURE_OPTIONS}
@@ -57,7 +70,10 @@ export const RegisterStep3 = () => {
           <span className="text-text-primary text-sm font-bold">면적</span>
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
-              <Input type="number" placeholder="전용 면적" />
+              <Input
+                type="number"
+                placeholder="전용 면적"
+              />
               <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
                 ㎡
               </span>
@@ -82,7 +98,10 @@ export const RegisterStep3 = () => {
           selected={["일반 층"]}
         />
         <div className="relative">
-          <Input type="number" placeholder="층수 입력" />
+          <Input
+            type="number"
+            placeholder="층수 입력"
+          />
           <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
             층
           </span>
@@ -104,16 +123,26 @@ export const RegisterStep3 = () => {
           options={HEATING_OPTIONS}
           selected={["개별 난방"]}
         />
-        <ChipGroup label="보안" options={SECURITY_OPTIONS} selected={["현관 보안"]} />
-        <ChipGroup label="기타" options={ETC_OPTIONS} selected={["화재 경보기"]} />
+        <ChipGroup
+          label="보안"
+          options={SECURITY_OPTIONS}
+          selected={["현관 보안"]}
+        />
+        <ChipGroup
+          label="기타"
+          options={ETC_OPTIONS}
+          selected={["화재 경보기"]}
+        />
       </div>
 
       {/* 이전 / 다음으로 (다음으로는 초기 비활성) */}
       <div className="flex justify-end gap-2">
-        <Button variant="outline" size="md">
-          이전
-        </Button>
-        <Button variant="primary" size="md" disabled>
+        <Button variant="gray">이전</Button>
+        <Button
+          variant="primary"
+          size="md"
+          disabled
+        >
           다음으로
         </Button>
       </div>

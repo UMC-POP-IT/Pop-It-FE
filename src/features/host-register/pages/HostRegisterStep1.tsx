@@ -124,14 +124,13 @@ export const HostRegisterStep1 = () => {
                 placeholder="주소를 검색해주세요"
               />
             </div>
-            {/* 주소 찾기: 공통 Button에 검정 variant 없어 임시 raw button → 챈(4번)과 협의 예정
-                TODO: 주소 검색 API(다음 우편번호 등) 연결 */}
-            <button
-              type="button"
-              className="bg-text-primary shrink-0 rounded-lg px-5 text-sm font-medium text-white"
+            {/*TODO: 주소 검색 API(다음 우편번호 등) 연결 */}
+            <Button
+              variant="black"
+              size="md"
             >
               주소 찾기
-            </button>
+            </Button>
           </div>
           <Input
             placeholder="상세 주소를 입력해주세요"

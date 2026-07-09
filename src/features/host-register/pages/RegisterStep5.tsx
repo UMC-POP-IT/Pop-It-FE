@@ -92,16 +92,10 @@ export const RegisterStep5 = () => {
       </div>
 
       {/* 이전 / 완료 버튼 (우측 정렬)
-          '이전'은 디자인상 회색 채움인데 공통 Button에 해당 variant 없어 outline 사용 → 챈(4번)과 협의 예정
           정적: 목업 사진 3장 기준이라 '완료' 활성 상태로 표시.
           TODO: 실제 업로드 3장 이상일 때만 활성화 + 최종 제출(POST /spaces) 연결 */}
       <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          size="md"
-        >
-          이전
-        </Button>
+        <Button variant="gray">이전</Button>
         <Button
           variant="primary"
           size="md"
