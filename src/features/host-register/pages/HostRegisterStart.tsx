@@ -1,6 +1,7 @@
 import StepIndicator from "@/shared/components/StepIndicator";
 import Button from "@/shared/components/Button";
 import Logo from "@/shared/components/Logo";
+import iconClose from "@/assets/icons/icon_close.svg";
 
 // 호스트 등록 2단계 진행바 라벨
 const STEPS = ["사업자 정보", "계좌 정보"];
@@ -24,7 +25,11 @@ export const HostRegisterStart = () => {
           aria-label="닫기"
           className="text-text-secondary hover:text-text-primary absolute top-4 right-4 text-xl"
         >
-          ✕
+          <img
+            src={iconClose}
+            alt=""
+            className="h-4 w-4"
+          />
         </button>
 
         {/* 왼쪽: 대표 이미지 (정적 목업 — 회색 박스)

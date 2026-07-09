@@ -1,6 +1,7 @@
 import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
+import iconOwner from "@/assets/icons/icon_owner.svg";
 
 // 5단계 진행바 라벨 (피그마 기준)
 const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
@@ -50,34 +51,16 @@ export const RegisterStep1 = () => {
           위치/구조
         </h2>
 
-        {/* 등록자 유형 — 원형 아이콘 + 라벨
-            ⚠️ 공통 컴포넌트 없어 임시 구현 → 챈(4번)과 협의 예정 */}
+        {/* 등록자 유형 — 원형 아이콘 + 라벨*/}
         <div className="flex flex-col gap-2">
           <span className="text-text-primary text-sm font-bold">
             등록자 유형
           </span>
-          <div className="flex w-fit flex-col items-center gap-1">
-            <button
-              type="button"
-              className="bg-tag-bg text-text-secondary flex h-16 w-16 items-center justify-center rounded-full"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              >
-                <circle
-                  cx="12"
-                  cy="8"
-                  r="4"
-                />
-                <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
-              </svg>
-            </button>
-            <span className="text-text-secondary text-xs">소유자</span>
-          </div>
+          <img
+            src={iconOwner}
+            alt="소유자"
+            className="h-20 w-20"
+          />
         </div>
 
         {/* 건물 유형 — 칩 버튼 (여러 개 중 택1)
