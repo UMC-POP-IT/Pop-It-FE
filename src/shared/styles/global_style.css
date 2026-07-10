@@ -69,6 +69,8 @@
   --color-info-bg: #f6faff; /* 예약자 정보 카드 배경 (연한 파랑) */
   --color-surface-blue: #f0f6fe; /* Blue/blue-30 | bg-footer 와 동일 (별칭) | 보조 버튼 배경 */
   --color-thumbnail-bg: #ededed; /* 공간·예약 썸네일 이미지 자리표시 배경 */
+  --color-secure-payment-bg: #f2f2f2; /* Grey/grey-200 | 안전 결제 안내 배경 */
+  --color-contract-guide-bg: #f2f2f2; /* Grey/grey-200 | 계약서 안내 배경 */
 
   /* ────────────────────────────────
      소셜 로그인
