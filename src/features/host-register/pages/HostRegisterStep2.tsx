@@ -2,6 +2,8 @@ import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import FileUploadRow from "@/features/host-register/components/FileUploadRow";
+import { useState } from "react";
+import Select from "@/shared/components/Select";
 
 // 호스트 등록 2단계 진행바 라벨
 const STEPS = ["사업자 정보", "계좌 정보"];
@@ -20,6 +22,7 @@ const BANK_OPTIONS = [
 ];
 
 export const HostRegisterStep2 = () => {
+  const [selectBank, setSelectBank] = useState("");
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -61,26 +64,13 @@ export const HostRegisterStep2 = () => {
           >
             은행
           </label>
-          <select
+          <Select
             id="bank"
-            defaultValue=""
-            className="text-text-primary border-border focus:border-primary w-full rounded-lg border bg-white px-4 py-2.5 text-sm transition-colors focus:outline-none"
-          >
-            <option
-              value=""
-              disabled
-            >
-              은행을 선택해주세요
-            </option>
-            {BANK_OPTIONS.map((bank) => (
-              <option
-                key={bank}
-                value={bank}
-              >
-                {bank}
-              </option>
-            ))}
-          </select>
+            options={BANK_OPTIONS.map((bank) => ({ value: bank, label: bank }))}
+            value={selectBank}
+            onChange={(e) => setSelectBank(e.target.value)}
+            placeholder="은행을 선택해주세요"
+          />
         </div>
 
         {/* 정산 입금 계좌 번호 */}

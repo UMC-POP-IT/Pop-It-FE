@@ -1,6 +1,8 @@
 import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
+import { useState } from "react";
+import Chip from "@/shared/components/Chip";
 
 // 5단계 진행바 라벨
 const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
@@ -122,16 +124,19 @@ export const RegisterStep3 = () => {
           label="냉난방"
           options={HEATING_OPTIONS}
           selected={["개별 난방"]}
+          multiple
         />
         <ChipGroup
           label="보안"
           options={SECURITY_OPTIONS}
           selected={["현관 보안"]}
+          multiple
         />
         <ChipGroup
           label="기타"
           options={ETC_OPTIONS}
           selected={["화재 경보기"]}
+          multiple
         />
       </div>
 
@@ -150,37 +155,44 @@ export const RegisterStep3 = () => {
   );
 };
 
-// 칩 그룹 (선택 버튼 묶음)
-// 공통 Chip 컴포넌트 없어 임시 로컬 구현 → 챈(4번)과 협의 예정
+// 칩 그룹 (공통 Chip · 택1/다중)
 // 정적: selected로 선택 상태만 표시. 실제 선택/해제 로직은 이후 RHF로 연결
 const ChipGroup = ({
   label,
   options,
   selected,
+  multiple = false,
 }: {
   label: string;
   options: string[];
   selected: string[];
-}) => (
-  <div className="flex flex-col gap-2">
-    <span className="text-text-primary text-sm font-bold">{label}</span>
-    <div className="flex flex-wrap gap-2">
-      {options.map((option) => {
-        const isSelected = selected.includes(option);
-        return (
-          <button
+  multiple?: boolean;
+}) => {
+  const [selectedList, setSelectedList] = useState<string[]>(selected);
+
+  const toggle = (option: string) => {
+    setSelectedList((prev) =>
+      multiple
+        ? prev.includes(option)
+          ? prev.filter((item) => item !== option)
+          : [...prev, option]
+        : [option],
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-text-primary text-sm font-bold">{label}</span>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => (
+          <Chip
             key={option}
-            type="button"
-            className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
-              isSelected
-                ? "border-primary text-primary font-medium"
-                : "border-border text-text-secondary"
-            }`}
-          >
-            {option}
-          </button>
-        );
-      })}
+            label={option}
+            selected={selectedList.includes(option)}
+            onClick={() => toggle(option)}
+          />
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
