@@ -103,15 +103,9 @@ export const RegisterStep2 = () => {
 
       {/* 이전 / 다음으로 버튼 (우측 정렬)
           정적: 다음으로는 초기 비활성(회색) 상태.
-          ⚠️ '이전'은 디자인상 회색 채움인데 공통 Button에 해당 variant 없어 outline 사용 → 챈(4번)과 협의 예정
           TODO: 유효성 검사 통과 시 활성화 + 단계 이동 (RHF 붙일 때) */}
       <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          size="md"
-        >
-          이전
-        </Button>
+        <Button variant="gray">이전</Button>
         <Button
           variant="primary"
           size="md"

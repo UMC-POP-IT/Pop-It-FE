@@ -1,5 +1,7 @@
 import StepIndicator from "@/shared/components/StepIndicator";
 import Button from "@/shared/components/Button";
+import iconCamera from "@/assets/icons/icon_camera.svg";
+import iconInfo from "@/assets/icons/icon_info.svg";
 
 // 5단계 진행바 라벨 (Step1~4와 동일 — 현재 단계만 다름)
 const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
@@ -51,7 +53,11 @@ export const RegisterStep5 = () => {
             aria-label="사진 추가"
             className="border-border text-text-secondary flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border"
           >
-            <CameraIcon />
+            <img
+              src={iconCamera}
+              alt=""
+              className="h-6 w-6"
+            />
             {/* 정적: 목업 매수 표시. TODO: 업로드 매수 실시간 카운팅 */}
             <span className="text-xs">{MOCK_PHOTOS.length}/10장</span>
             <input
@@ -80,8 +86,13 @@ export const RegisterStep5 = () => {
 
         {/* 사진 촬영 가이드 박스 */}
         <div className="bg-tag-bg flex flex-col gap-2 rounded-lg p-4">
-          <span className="text-text-primary text-sm font-bold">
-            ⓘ 사진 촬영 가이드
+          <span className="text-text-primary flex items-center gap-1 text-sm font-bold">
+            <img
+              src={iconInfo}
+              alt=""
+              className="h-4 w-4"
+            />
+            사진 촬영 가이드
           </span>
           <ul className="text-text-secondary flex flex-col gap-1 text-sm">
             {GUIDE_ITEMS.map((item) => (
@@ -92,16 +103,10 @@ export const RegisterStep5 = () => {
       </div>
 
       {/* 이전 / 완료 버튼 (우측 정렬)
-          '이전'은 디자인상 회색 채움인데 공통 Button에 해당 variant 없어 outline 사용 → 챈(4번)과 협의 예정
           정적: 목업 사진 3장 기준이라 '완료' 활성 상태로 표시.
           TODO: 실제 업로드 3장 이상일 때만 활성화 + 최종 제출(POST /spaces) 연결 */}
       <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          size="md"
-        >
-          이전
-        </Button>
+        <Button variant="gray">이전</Button>
         <Button
           variant="primary"
           size="md"
@@ -112,26 +117,3 @@ export const RegisterStep5 = () => {
     </div>
   );
 };
-
-// 카메라 아이콘 (프로젝트에 아이콘 라이브러리 없어 인라인 SVG로 구현)
-const CameraIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-    <circle
-      cx="12"
-      cy="13"
-      r="3"
-    />
-  </svg>
-);
