@@ -8,8 +8,8 @@ interface ModalProps {
   singleButton?: boolean;
   /** true면 상단에 파란 체크 아이콘 표시 */
   showCheckIcon?: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
+  onConfirm?: () => void;
+  onCancel?: () => void;
 }
 
 const Modal = ({
@@ -60,7 +60,7 @@ const Modal = ({
             </h3>
 
             {description && (
-              <p className="text-text-tertiary text-base font-medium">
+              <p className="text-text-tertiary whitespace-pre-line text-base font-medium">
                 {description}
               </p>
             )}
