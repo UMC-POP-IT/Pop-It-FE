@@ -8,8 +8,8 @@ interface ModalProps {
   singleButton?: boolean;
   /** true면 상단에 파란 체크 아이콘 표시 */
   showCheckIcon?: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
+  onConfirm?: () => void;
+  onCancel?: () => void;
 }
 
 const Modal = ({
@@ -60,7 +60,7 @@ const Modal = ({
             </h3>
 
             {description && (
-              <p className="text-text-tertiary text-base font-medium">
+              <p className="text-text-tertiary whitespace-pre-line text-base font-medium">
                 {description}
               </p>
             )}
@@ -68,26 +68,32 @@ const Modal = ({
         </div>
 
         {singleButton ? (
-          <button
-            onClick={onConfirm}
-            className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white"
-          >
-            {confirmLabel}
-          </button>
-        ) : (
-          <div className="flex items-center gap-5">
-            <button
-              onClick={onCancel}
-              className="bg-tag-bg text-text-tertiary h-14 w-[184px] rounded-lg text-lg font-medium"
-            >
-              {cancelLabel}
-            </button>
+          onConfirm && (
             <button
               onClick={onConfirm}
               className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white"
             >
               {confirmLabel}
             </button>
+          )
+        ) : (
+          <div className="flex items-center gap-5">
+            {onCancel && (
+              <button
+                onClick={onCancel}
+                className="bg-tag-bg text-text-tertiary h-14 w-[184px] rounded-lg text-lg font-medium"
+              >
+                {cancelLabel}
+              </button>
+            )}
+            {onConfirm && (
+              <button
+                onClick={onConfirm}
+                className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white"
+              >
+                {confirmLabel}
+              </button>
+            )}
           </div>
         )}
       </div>
