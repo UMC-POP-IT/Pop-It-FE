@@ -2,6 +2,7 @@ import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import FileUploadRow from "@/features/host-register/components/FileUploadRow";
+import { useNavigate } from "react-router-dom";
 
 // 호스트 등록 2단계 진행바 라벨
 const STEPS = ["사업자 정보", "계좌 정보"];
@@ -14,6 +15,7 @@ const TAXPAYER_OPTIONS = [
 ];
 
 export const HostRegisterStep1 = () => {
+  const navigate = useNavigate();
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -145,6 +147,7 @@ export const HostRegisterStep1 = () => {
         <Button
           variant="primary"
           size="md"
+          onClick={() => navigate("/host/host-register/step2")}
         >
           다음으로
         </Button>

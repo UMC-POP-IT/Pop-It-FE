@@ -1,8 +1,11 @@
 import Button from "@/shared/components/Button";
 import iconCheckCircle from "@/assets/icons/icon_check_circle.svg";
+import { useNavigate } from "react-router-dom";
+
 // 호스트 등록 완료 화면
 // TODO: [호스트 홈으로] 클릭 시 호스트 홈으로 이동
 export const HostRegisterComplete = () => {
+  const navigate = useNavigate();
   return (
     <div className="mx-auto flex min-h-[60vh] w-full max-w-2xl flex-col items-center justify-center gap-4 px-4 py-6 text-center">
       <span className="text-primary">
@@ -23,6 +26,7 @@ export const HostRegisterComplete = () => {
       <Button
         variant="primary"
         size="md"
+        onClick={() => navigate("/host/spaces")}
       >
         호스트 홈으로
       </Button>

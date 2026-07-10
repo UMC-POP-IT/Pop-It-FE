@@ -3,6 +3,7 @@ import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import { useState } from "react";
 import Chip from "@/shared/components/Chip";
+import { useNavigate } from "react-router-dom";
 
 // 5단계 진행바 라벨
 const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
@@ -36,6 +37,7 @@ const SECURITY_OPTIONS = [
 const ETC_OPTIONS = ["화재 경보기", "소화기", "WIFI", "화장실"]; // 기타(다중)
 
 export const RegisterStep3 = () => {
+  const navigate = useNavigate();
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -109,9 +111,7 @@ export const RegisterStep3 = () => {
           </span>
         </div>
 
-        {/* 주차 — 주차 가능 / 주차 불가능 (택1)
-            ⚠️ 피그마 '주차 가능' 칩에 날짜(2026.06.24)가 들어가 있음 → 의도인지 디자인 확인 필요.
-            일단 데이터 모델(hasParking boolean) 기준 가능/불가 칩으로 구현 */}
+        {/* 주차 — 주차 가능 / 주차 불가능 (택1)*/}
         <ChipGroup
           label="주차"
           options={["주차 가능", "주차 불가능"]}
@@ -142,11 +142,16 @@ export const RegisterStep3 = () => {
 
       {/* 이전 / 다음으로 (다음으로는 초기 비활성) */}
       <div className="flex justify-end gap-2">
-        <Button variant="gray">이전</Button>
+        <Button
+          variant="gray"
+          onClick={() => navigate("/host/register/step2")}
+        >
+          이전
+        </Button>
         <Button
           variant="primary"
           size="md"
-          disabled
+          onClick={() => navigate("/host/register/step4")}
         >
           다음으로
         </Button>

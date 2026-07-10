@@ -5,6 +5,7 @@ import iconOwner from "@/assets/icons/icon_owner.svg";
 import { useState } from "react";
 import Chip from "@/shared/components/Chip";
 import Select from "@/shared/components/Select";
+import { useNavigate } from "react-router-dom";
 
 // 5단계 진행바 라벨 (피그마 기준)
 const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
@@ -35,6 +36,7 @@ export const RegisterStep1 = () => {
   // 정적 화면: 선택된 값 표시용 하드코딩 (실제 선택 로직은 이후 RHF로 연결)
   const [selectedBuilding, setSelectedBuilding] = useState("대형 사무실");
   const [selectedDistrict, setSelectedDistrict] = useState("");
+  const navigate = useNavigate();
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -133,7 +135,7 @@ export const RegisterStep1 = () => {
         <Button
           variant="primary"
           size="md"
-          disabled
+          onClick={() => navigate("/host/register/step2")}
         >
           다음으로
         </Button>
