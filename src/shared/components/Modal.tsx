@@ -68,26 +68,32 @@ const Modal = ({
         </div>
 
         {singleButton ? (
-          <button
-            onClick={onConfirm}
-            className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white"
-          >
-            {confirmLabel}
-          </button>
-        ) : (
-          <div className="flex items-center gap-5">
-            <button
-              onClick={onCancel}
-              className="bg-tag-bg text-text-tertiary h-14 w-[184px] rounded-lg text-lg font-medium"
-            >
-              {cancelLabel}
-            </button>
+          onConfirm && (
             <button
               onClick={onConfirm}
               className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white"
             >
               {confirmLabel}
             </button>
+          )
+        ) : (
+          <div className="flex items-center gap-5">
+            {onCancel && (
+              <button
+                onClick={onCancel}
+                className="bg-tag-bg text-text-tertiary h-14 w-[184px] rounded-lg text-lg font-medium"
+              >
+                {cancelLabel}
+              </button>
+            )}
+            {onConfirm && (
+              <button
+                onClick={onConfirm}
+                className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white"
+              >
+                {confirmLabel}
+              </button>
+            )}
           </div>
         )}
       </div>
