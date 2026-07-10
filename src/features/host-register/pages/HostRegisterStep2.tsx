@@ -4,6 +4,7 @@ import Button from "@/shared/components/Button";
 import FileUploadRow from "@/features/host-register/components/FileUploadRow";
 import { useState } from "react";
 import Select from "@/shared/components/Select";
+import { useNavigate } from "react-router-dom";
 
 // 호스트 등록 2단계 진행바 라벨
 const STEPS = ["사업자 정보", "계좌 정보"];
@@ -23,6 +24,7 @@ const BANK_OPTIONS = [
 
 export const HostRegisterStep2 = () => {
   const [selectBank, setSelectBank] = useState("");
+  const navigate = useNavigate();
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -55,8 +57,8 @@ export const HostRegisterStep2 = () => {
           hint="* JPG, PNG, PDF 최대 10MB"
         />
 
-        {/* 은행 (드롭다운)
-            공통 Select 컴포넌트 없어 raw select로 임시 구현 → 챈(4번)과 협의 예정 */}
+        {/* 은행 (공통 select) */}
+
         <div className="flex flex-col gap-2">
           <label
             htmlFor="bank"
@@ -108,10 +110,16 @@ export const HostRegisterStep2 = () => {
       {/* 이전 / 다음으로 버튼 (우측 정렬)
           정적: '다음으로' 활성 상태로 표시. TODO: 유효성 검사 통과 시 활성화 + 완료 화면 이동 */}
       <div className="flex justify-end gap-2">
-        <Button variant="gray">이전</Button>
+        <Button
+          variant="gray"
+          onClick={() => navigate("/host/host-register/step1")}
+        >
+          이전
+        </Button>
         <Button
           variant="primary"
           size="md"
+          onClick={() => navigate("/host/host-register/complete")}
         >
           다음으로
         </Button>

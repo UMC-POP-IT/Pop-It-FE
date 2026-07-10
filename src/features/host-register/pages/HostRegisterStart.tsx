@@ -2,6 +2,7 @@ import StepIndicator from "@/shared/components/StepIndicator";
 import Button from "@/shared/components/Button";
 import Logo from "@/shared/components/Logo";
 import iconClose from "@/assets/icons/icon_close.svg";
+import { useNavigate } from "react-router-dom";
 
 // 호스트 등록 2단계 진행바 라벨
 const STEPS = ["사업자 정보", "계좌 정보"];
@@ -11,6 +12,7 @@ const STEPS = ["사업자 정보", "계좌 정보"];
 //  - [등록 시작하기] → step1(사업자 정보) 화면으로 이동
 //  - [X] → 모달 닫고 이전 화면(게스트홈)으로 복귀
 export const HostRegisterStart = () => {
+  const navigate = useNavigate();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* 딤 배경 */}
@@ -23,6 +25,7 @@ export const HostRegisterStart = () => {
         <button
           type="button"
           aria-label="닫기"
+          onClick={() => navigate("/")}
           className="text-text-secondary hover:text-text-primary absolute top-4 right-4 text-xl"
         >
           <img
@@ -60,6 +63,7 @@ export const HostRegisterStart = () => {
             variant="primary"
             size="md"
             className="self-start"
+            onClick={() => navigate("/host/host-register/step1")}
           >
             등록 시작하기
           </Button>

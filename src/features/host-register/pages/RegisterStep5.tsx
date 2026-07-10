@@ -2,6 +2,9 @@ import StepIndicator from "@/shared/components/StepIndicator";
 import Button from "@/shared/components/Button";
 import iconCamera from "@/assets/icons/icon_camera.svg";
 import iconInfo from "@/assets/icons/icon_info.svg";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import Modal from "@/shared/components/Modal";
 
 // 5단계 진행바 라벨 (Step1~4와 동일 — 현재 단계만 다름)
 const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
@@ -18,6 +21,9 @@ const GUIDE_ITEMS = [
 const MOCK_PHOTOS = ["photo-1", "photo-2", "photo-3"];
 
 export const RegisterStep5 = () => {
+  const navigate = useNavigate();
+  const [modal, setModal] = useState<"confirm" | "success" | null>(null);
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -106,10 +112,34 @@ export const RegisterStep5 = () => {
           정적: 목업 사진 3장 기준이라 '완료' 활성 상태로 표시.
           TODO: 실제 업로드 3장 이상일 때만 활성화 + 최종 제출(POST /spaces) 연결 */}
       <div className="flex justify-end gap-2">
-        <Button variant="gray">이전</Button>
+        <Modal
+          isOpen={modal === "confirm"}
+          title="공간을 등록 하시겠습니까?"
+          cancelLabel="돌아가기"
+          confirmLabel="공간 등록하기"
+          onCancel={() => setModal(null)}
+          onConfirm={() => setModal("success")}
+        />
+        <Modal
+          isOpen={modal === "success"}
+          title="공간이 성공적으로 등록되었습니다!"
+          confirmLabel="확인"
+          singleButton
+          showCheckIcon
+          onCancel={() => navigate("/host/spaces")}
+          onConfirm={() => navigate("/host/spaces")}
+        />
+
+        <Button
+          variant="gray"
+          onClick={() => navigate("/host/register/step4")}
+        >
+          이전
+        </Button>
         <Button
           variant="primary"
           size="md"
+          onClick={() => setModal("confirm")}
         >
           완료
         </Button>
