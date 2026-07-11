@@ -167,7 +167,7 @@ const ExploreDetailInfo = ({
             </span>
           </div>
           <p className="text-base text-[#464646]">
-            이 공간에서 식음료 영업을 계획을 계획하시는 경우, 반드시 해당
+            이 공간에서 식음료 영업을 계획하시는 경우, 반드시 해당
             공간의 영업허가 가능 여부를 사전에 확인해주세요.
           </p>
         </div>
