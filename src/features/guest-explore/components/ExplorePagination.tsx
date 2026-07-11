@@ -10,7 +10,10 @@ const ExplorePagination = ({
   onPageChange,
 }: ExplorePaginationProps) => {
   return (
-    <div className="mt-16 mb-20 flex justify-center gap-4 text-sm text-text-primary">
+    <nav
+      aria-label="공간 목록 페이지 탐색"
+      className="mt-16 mb-20 flex justify-center gap-4 text-sm text-text-primary"
+    >
       {Array.from({ length: totalPages }, (_, index) => index + 1).map(
         (page) => (
           <button
@@ -26,7 +29,7 @@ const ExplorePagination = ({
           </button>
         ),
       )}
-    </div>
+    </nav>
   );
 };
 
