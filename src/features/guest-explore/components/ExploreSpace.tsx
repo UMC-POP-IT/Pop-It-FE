@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import SpaceCard from "@/shared/components/SpaceCard";
-import ExploreSearchFilterBar from "./ExploreSearchFilterBar.tsx";
-import ExplorePagination from "./ExplorePagination.tsx";
+import ExploreSearchFilterBar from "./ExploreSearchFilterBar";
+import ExplorePagination from "./ExplorePagination";
 import { exploreSpaces } from "@/features/guest-explore/api/mock_recommend_spaces";
 
 const ExploreSpace = () => {
