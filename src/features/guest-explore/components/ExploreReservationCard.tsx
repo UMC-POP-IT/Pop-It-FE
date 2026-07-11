@@ -36,7 +36,7 @@ const ExploreReservationCard = ({ dayCost }: ExploreReservationCardProps) => {
     const startOffset = new Date(year, month, 1).getDay();
     const gridStart = new Date(year, month, 1 - startOffset);
 
-    return Array.from({ length: 35 }, (_, index) => {
+    return Array.from({ length: 42 }, (_, index) => {
       const date = new Date(gridStart);
       date.setDate(gridStart.getDate() + index);
       return date;
