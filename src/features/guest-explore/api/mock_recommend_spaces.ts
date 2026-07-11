@@ -119,6 +119,60 @@ export const recommendSpaces: Space[] = [
 ];
 
 // ============================================================
+// b. SpaceDetailPage
+// ============================================================
+
+/**
+ * 공간 탐색(목록) + 공간 상세에서 함께 쓰는 확장 타입
+ * (공간 상세 화면설계서 기준으로 목록용 Space에는 없는 필드를 추가)
+ */
+export interface ExploreSpaceDetail extends Space {
+  category: string; // 카테고리 태그 (ex. 팝업스토어)
+  area: number; // 전용면적 (m²)
+  weekCost: number; // 주 단가
+  monthCostText: string; // 월 단가 (금액이 아닌 "협의 후 결정" 등 텍스트로 노출되는 케이스가 있어 별도 필드로 분리)
+  facilities: string[]; // 시설정보
+  spaceInfo: string[]; // 공간정보
+}
+
+/**
+ * 공간 탐색(목록) + 공간 상세 - ExploreSpace.tsx / SpaceDetailPage.tsx
+ * TODO: 백엔드 연동 전까지 Figma 화면설계서 목업 값을 그대로 사용 (모든 카드가 동일한 값)
+ */
+export const exploreSpaces: ExploreSpaceDetail[] = Array.from(
+  { length: 36 },
+  (_, index) => ({
+    id: index + 1,
+    hostId: 1,
+    name: "신사 어반빌딩",
+    address: "서울 강남구 역삼동 130-5",
+    imageUrls: [
+      `https://picsum.photos/seed/explore${index + 1}main/692/372`,
+      `https://picsum.photos/seed/explore${index + 1}sub1/240/180`,
+      `https://picsum.photos/seed/explore${index + 1}sub2/240/180`,
+      `https://picsum.photos/seed/explore${index + 1}sub3/240/180`,
+      `https://picsum.photos/seed/explore${index + 1}sub4/240/180`,
+    ],
+    heartCount: 20,
+    keywords: ["키워드", "키워드"],
+    cost: {
+      day: 700000,
+      month: 4900000,
+      year: 4900000 * 12,
+    },
+    category: "팝업스토어",
+    area: 66,
+    weekCost: 4900000,
+    monthCostText: "협의 후 결정",
+    description:
+      "강남역 도보 3분 거리의 1층 코너 매장입니다.\n유동인구가 매우 많으며, 대형 쇼윈도우가 있어 팝업 스토어에 최적화되어 있습니다.",
+    facilities: ["에어컨", "에어컨", "에어컨"], // TODO: 실제 시설 데이터 연동 전까지 Figma 목업 값 그대로 사용
+    spaceInfo: ["에어컨", "에어컨", "에어컨"],
+    createdAt: "2026-07-01T00:00:00.000Z",
+  }),
+);
+
+// ============================================================
 // c. MyReservationPage
 // ============================================================
 
