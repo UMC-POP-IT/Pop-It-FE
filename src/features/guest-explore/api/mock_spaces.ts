@@ -156,10 +156,12 @@ export const exploreSpaces: ExploreSpaceDetail[] = Array.from(
     ],
     heartCount: 20,
     keywords: ["키워드", "키워드"],
+    // month/year는 화면에 노출되지 않는 값(실제 노출은 monthCostText)이라
+    // weekCost를 재사용하지 않고 일 단가 기준 추정치로 채워둠
     cost: {
       day: 700000,
-      month: 4900000,
-      year: 4900000 * 12,
+      month: 700000 * 30,
+      year: 700000 * 365,
     },
     category: "팝업스토어",
     area: 66,

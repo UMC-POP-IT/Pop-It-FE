@@ -1,16 +1,18 @@
-import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { exploreSpaces } from "@/features/guest-explore/api/mock_spaces";
 import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDetailGallery";
 import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetailInfo";
 import ExploreReservationCard from "@/features/guest-explore/components/ExploreReservationCard";
+import { useWishStore } from "@/store/wishStore";
 
 export const SpaceDetailPage = () => {
   const { spaceId } = useParams<{ spaceId: string }>();
   const navigate = useNavigate();
-  const [isWished, setIsWished] = useState(false);
+  const wishedSpaces = useWishStore((state) => state.wishedSpaces);
+  const toggleWish = useWishStore((state) => state.toggleWish);
 
   const space = exploreSpaces.find((item) => item.id === Number(spaceId));
+  const isWished = !!space && wishedSpaces.some((s) => s.id === space.id);
 
   if (!space) {
     return (
@@ -37,7 +39,7 @@ export const SpaceDetailPage = () => {
         <ExploreDetailInfo
           space={space}
           isWished={isWished}
-          onWishToggle={() => setIsWished((prev) => !prev)}
+          onWishToggle={() => toggleWish(space)}
         />
         <ExploreReservationCard dayCost={space.cost.day} />
       </div>

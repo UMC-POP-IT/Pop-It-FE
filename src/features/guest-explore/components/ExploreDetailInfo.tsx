@@ -8,11 +8,9 @@ interface ExploreDetailInfoProps {
   onWishToggle: () => void;
 }
 
-const SectionTitle = ({ children }: { children: ReactNode }) => (
-  <div className="border-primary flex w-fit items-center justify-center border-b py-1">
-    <h3 className="text-text-primary text-xl font-bold">{children}</h3>
-  </div>
-);
+interface SectionTitleProps {
+  children: ReactNode;
+}
 
 const ExploreDetailInfo = ({
   space,
@@ -38,7 +36,8 @@ const ExploreDetailInfo = ({
           <div className="flex shrink-0 items-center">
             <button
               type="button"
-              aria-label="찜하기"
+              aria-label={isWished ? "찜 해제하기" : "찜하기"}
+              aria-pressed={isWished}
               onClick={onWishToggle}
               className="flex items-center justify-center p-3"
             >
@@ -175,5 +174,11 @@ const ExploreDetailInfo = ({
     </div>
   );
 };
+
+const SectionTitle = ({ children }: SectionTitleProps) => (
+  <div className="border-primary flex w-fit items-center justify-center border-b py-1">
+    <h3 className="text-text-primary text-xl font-bold">{children}</h3>
+  </div>
+);
 
 export default ExploreDetailInfo;
