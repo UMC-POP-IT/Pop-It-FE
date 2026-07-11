@@ -11,7 +11,7 @@ const Input = ({ label, error, className = "", ...props }: InputProps) => (
       <label className="text-text-primary text-sm font-medium">{label}</label>
     )}
     <input
-      className={`text-text-primary placeholder:text-text-disabled focus:border-primary w-full rounded-lg border bg-white px-4 py-2.5 text-sm transition-colors focus:outline-none ${error ? "border-danger" : "border-border"} ${props.disabled ? "bg-bg cursor-not-allowed opacity-40" : ""} ${className} `}
+      className={`text-text-primary placeholder:text-text-placeholder h-14 w-full rounded-lg border-2 bg-white px-5 text-lg transition-colors focus:outline-none focus:ring-2 ${error ? "border-danger focus:ring-danger" : "border-divider focus:border-primary focus:ring-primary"} ${props.disabled ? "bg-bg cursor-not-allowed opacity-40" : ""} ${className} `}
       {...props}
     />
     {error && <span className="text-danger text-xs">{error}</span>}

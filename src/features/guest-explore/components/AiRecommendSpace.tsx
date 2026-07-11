@@ -1,8 +1,9 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import SpaceCard from "@/shared/components/SpaceCard";
-import { recommendSpaces } from "@/features/guest-explore/api/mock_recommend_spaces";
+import { recommendSpaces } from "@/features/guest-explore/api/mock_spaces";
 import type { Space } from "@/types";
 import { ScrollButton } from "./ScrollButton";
+import { useWishStore } from "@/store/wishStore";
 
 const avgDayCost =
   recommendSpaces.reduce((sum, space) => sum + space.cost.day, 0) /
@@ -26,6 +27,8 @@ const AiRecommendSpace = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+  const wishedSpaces = useWishStore((state) => state.wishedSpaces);
+  const toggleWish = useWishStore((state) => state.toggleWish);
 
   // 좌/우 스크롤 버튼 활성화 여부 업데이트
   const updateScrollButtons = () => {
@@ -78,6 +81,8 @@ const AiRecommendSpace = () => {
                 space={space}
                 categoryTag={space.keywords[0]}
                 matchReason={getMatchReason(space)}
+                isWished={wishedSpaces.some((s) => s.id === space.id)}
+                onWishToggle={() => toggleWish(space)}
               />
             </div>
           ))}

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_recommend_spaces";
+import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
 
 interface ExploreDetailInfoProps {
   space: ExploreSpaceDetail;

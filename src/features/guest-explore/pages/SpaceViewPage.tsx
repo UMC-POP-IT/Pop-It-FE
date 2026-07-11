@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { recommendSpaces } from "@/features/guest-explore/api/mock_recommend_spaces";
+import { recommendSpaces } from "@/features/guest-explore/api/mock_spaces";
 import type { Space } from "@/types";
 import Button from "@/shared/components/Button";
 

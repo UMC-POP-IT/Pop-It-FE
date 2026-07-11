@@ -23,7 +23,7 @@
 
 | 역할 | 담당자 | 담당 기능 |
 | --- | --- | --- |
-| 1번 | 강민경 | 공간탐색, 공간 상세, 찜하기 |
+| 1번 | 강민경 | 공간탐색, 공간 상세(호스트, 게스트 모두), 찜하기 |
 | 2번 | 고태현 | AI 맞춤추천(추천 공간), 3D/360 공간 큐레이션, 나의 예약 |
 | 3번 | 이수빈 | 공간 등록 (5단계 플로우), 호스트 등록 (2단계 플로우) |
 | 4번 | 임채은 | 내 공간 관리, 게스트 소통, 공통 레이아웃/디자인시스템 |
@@ -104,6 +104,8 @@ style: 공통 버튼 컴포넌트 스타일 수정
 refactor: API 호출 로직 분리
 docs: README 업데이트
 chore: 패키지 설치 및 설정
+
+그 외는 생략
 ```
 
 | 타입 | 설명 |
@@ -114,13 +116,17 @@ chore: 패키지 설치 및 설정
 | refactor | 코드 리팩토링 |
 | docs | 문서 수정 |
 | chore | 빌드/설정 등 기타 변경 |
+| ci | CI/CD 설정 (Github actions 등) |
+| deploy | 배포 (dev -> main으로 merge 할 때) |
+| perf | 성능 개선 (쿼리 최적화, 동시성 개선 등) |
+| test | 테스트 추가/수정 |
 
 ---
 
 ## 🔀 PR 컨벤션
 
 - 작업 시작 전 이슈 생성 → 해당 이슈 기준으로 브랜치 생성
-- PR 제목: `[타입] 작업 내용`
+- PR 제목: `타입: 작업 내용 (#이슈번호)`
 - PR 본문에 작업 내용, 스크린샷(UI 변경 시), 관련 이슈 번호(`closes #이슈번호`) 포함
 - 최소 1인 이상 리뷰 후 머지
 - 머지 방식: Squash and Merge 권장
@@ -131,7 +137,7 @@ chore: 패키지 설치 및 설정
 
 ```bash
 # 저장소 클론
-git clone https://github.com/{팀저장소}/pop-it-frontend.git
+git clone https://github.com/UMC-POP-IT/Pop-It-FE.git
 cd pop-it-frontend
 
 # 패키지 설치
@@ -189,6 +195,8 @@ npm run build
 | 커뮤니케이션 | 변경사항은 Notion 또는 GitHub Issue로 공유 |
 | 일정 | 작업 지연 시 사전 공유 |
 | Git | 작업 전 브랜치 생성 및 PR 필수 |
+| Git | PR 작성 꼼꼼히 (Assignees, labels 등 꼼꼼히 체크) |
+| Git | PR merge 전 절차 필히 준수 ~ kakaotalk 참고 |
 | 코드 스타일 | ESLint/Prettier 설정 준수 |
 
 자세한 트러블슈팅 기록, 공용 컴포넌트 관리, 개발 일정, KPT 회고는 팀 노션 페이지에서 관리합니다.

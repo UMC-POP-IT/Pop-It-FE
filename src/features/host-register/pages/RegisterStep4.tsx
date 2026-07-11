@@ -1,6 +1,7 @@
 import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
+import { useNavigate } from "react-router-dom";
 
 // 5단계 진행바 라벨 (Step1과 동일 — 현재 단계만 다름)
 const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
@@ -14,6 +15,7 @@ const TIP_ITEMS = [
 ];
 
 export const RegisterStep4 = () => {
+  const navigate = useNavigate();
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -77,19 +79,18 @@ export const RegisterStep4 = () => {
 
       {/* 이전 / 다음으로 버튼 (우측 정렬)
           정적: 다음으로는 초기 비활성(회색) 상태.
-          '이전'은 디자인상 회색 채움인데 공통 Button에 해당 variant 없어 outline 사용 → 챈(4번)과 협의 예정
           TODO: 유효성 검사 통과 시 활성화 + 단계 이동 (RHF 붙일 때) */}
       <div className="flex justify-end gap-2">
         <Button
-          variant="outline"
-          size="md"
+          variant="gray"
+          onClick={() => navigate("/host/register/step3")}
         >
           이전
         </Button>
         <Button
           variant="primary"
           size="md"
-          disabled
+          onClick={() => navigate("/host/register/step5")}
         >
           다음으로
         </Button>

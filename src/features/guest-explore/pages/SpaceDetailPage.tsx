@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { exploreSpaces } from "@/features/guest-explore/api/mock_recommend_spaces";
+import { exploreSpaces } from "@/features/guest-explore/api/mock_spaces";
 import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDetailGallery";
 import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetailInfo";
 import ExploreReservationCard from "@/features/guest-explore/components/ExploreReservationCard";

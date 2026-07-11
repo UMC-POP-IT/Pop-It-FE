@@ -1,4 +1,4 @@
-import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_recommend_spaces";
+import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
 
 interface ExploreDetailGalleryProps {
   space: ExploreSpaceDetail;
