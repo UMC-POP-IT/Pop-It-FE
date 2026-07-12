@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Modal from "@/shared/components/Modal";
 import { STEPS, GUIDE_ITEMS } from "@/features/host-register/api/mock_register";
+import { useRegisterStore } from "@/store/registerStore";
 
 // 정적: 업로드된 사진 목업 (첫 장이 대표 사진)
 // TODO: 실제 File[] 업로드 미리보기로 교체 (파일 input state / RHF 붙일 때)
@@ -14,6 +15,18 @@ const MOCK_PHOTOS = ["photo-1", "photo-2", "photo-3"];
 export const RegisterStep5 = () => {
   const navigate = useNavigate();
   const [modal, setModal] = useState<"confirm" | "success" | null>(null);
+  const form = useRegisterStore((s) => s.form);
+  const reset = useRegisterStore((s) => s.reset);
+  // 최종 제출 (지금은 Mock: 콘솔 출력. 실제 POST /spaces는 2차 API 때)
+  const handleSubmit = () => {
+    console.log("공간 등록 제출 데이터:", form);
+    setModal("success");
+  };
+  // 성공 확인 → 보관함 비우고 '내 공간'으로 이동
+  const handleDone = () => {
+    reset();
+    navigate("/host/spaces");
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
@@ -109,7 +122,7 @@ export const RegisterStep5 = () => {
           cancelLabel="돌아가기"
           confirmLabel="공간 등록하기"
           onCancel={() => setModal(null)}
-          onConfirm={() => setModal("success")}
+          onConfirm={handleSubmit}
         />
         <Modal
           isOpen={modal === "success"}
@@ -117,8 +130,8 @@ export const RegisterStep5 = () => {
           confirmLabel="확인"
           singleButton
           showCheckIcon
-          onCancel={() => navigate("/host/spaces")}
-          onConfirm={() => navigate("/host/spaces")}
+          onCancel={handleDone}
+          onConfirm={handleDone}
         />
 
         <Button

@@ -11,6 +11,12 @@ export const HostRegisterStep2 = () => {
   const navigate = useNavigate();
   const form = useHostRegisterStore((s) => s.form);
   const setValues = useHostRegisterStore((s) => s.setValues);
+  //최종 제출 (Mock: 콘솔 출력, 실제 POST /hosts는 2차)
+  const handleSubmit = () => {
+    console.log("호스트 등록 제출 데이터", form);
+    navigate("/host/host-register/complete");
+  };
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -109,7 +115,7 @@ export const HostRegisterStep2 = () => {
         <Button
           variant="primary"
           size="md"
-          onClick={() => navigate("/host/host-register/complete")}
+          onClick={handleSubmit}
         >
           다음으로
         </Button>
