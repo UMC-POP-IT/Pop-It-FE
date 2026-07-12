@@ -2,17 +2,7 @@ import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import { useNavigate } from "react-router-dom";
-
-// 5단계 진행바 라벨 (Step1과 동일 — 현재 단계만 다름)
-const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
-
-//Tip 박스 안내 문구
-const TIP_ITEMS = [
-  "주변 교통 및 유동인구 특징",
-  "추천하는 팝업/전시 업종",
-  "공간 내 이용 가능한 가구 및 비품 정보",
-  "입출입 절차 및 주의사항",
-];
+import { STEPS, TIP_ITEMS } from "@/features/host-register/api/mock_register";
 
 export const RegisterStep4 = () => {
   const navigate = useNavigate();

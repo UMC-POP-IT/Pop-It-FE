@@ -2,12 +2,7 @@ import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import { useNavigate } from "react-router-dom";
-
-// 5단계 진행바 라벨 (Step1과 동일 — 현재 단계만 다름)
-const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
-
-// 금액(대여료) 단위별 입력 (일/주/월)
-const PRICE_ROWS = ["만원/일", "만원/주", "만원/월"];
+import { STEPS, PRICE_ROWS } from "@/features/host-register/api/mock_register";
 
 export const RegisterStep2 = () => {
   const navigate = useNavigate();

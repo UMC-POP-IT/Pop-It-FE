@@ -5,22 +5,7 @@ import FileUploadRow from "@/features/host-register/components/FileUploadRow";
 import { useState } from "react";
 import Select from "@/shared/components/Select";
 import { useNavigate } from "react-router-dom";
-
-// 호스트 등록 2단계 진행바 라벨
-const STEPS = ["사업자 정보", "계좌 정보"];
-
-// 은행 목록 (드롭다운 선택지)
-// TODO: 실제 지원 은행 목록으로 확정
-const BANK_OPTIONS = [
-  "국민은행",
-  "신한은행",
-  "우리은행",
-  "하나은행",
-  "농협은행",
-  "기업은행",
-  "카카오뱅크",
-  "토스뱅크",
-];
+import { HOST_STEPS, BANK_OPTIONS } from "../api/mock_register";
 
 export const HostRegisterStep2 = () => {
   const [selectBank, setSelectBank] = useState("");
@@ -34,7 +19,7 @@ export const HostRegisterStep2 = () => {
 
       {/* 진행바 — 1 = 두 번째 단계(계좌 정보) */}
       <StepIndicator
-        steps={STEPS}
+        steps={HOST_STEPS}
         currentStep={1}
       />
 

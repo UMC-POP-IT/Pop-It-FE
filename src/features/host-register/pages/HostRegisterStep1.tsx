@@ -3,16 +3,7 @@ import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import FileUploadRow from "@/features/host-register/components/FileUploadRow";
 import { useNavigate } from "react-router-dom";
-
-// 호스트 등록 2단계 진행바 라벨
-const STEPS = ["사업자 정보", "계좌 정보"];
-
-// 과세자 유형 (택1)
-// TODO: 문구·기준 금액은 디자인/실제 세법 기준 확인
-const TAXPAYER_OPTIONS = [
-  { title: "개인사업자 - 간이과세자", desc: "연 매출 8,000만원 미만" },
-  { title: "개인사업자 - 일반과세자", desc: "연 매출 8,000만원 이상" },
-];
+import { HOST_STEPS, TAXPAYER_OPTIONS } from "../api/mock_register";
 
 export const HostRegisterStep1 = () => {
   const navigate = useNavigate();
@@ -25,7 +16,7 @@ export const HostRegisterStep1 = () => {
 
       {/* 진행바 — 0 = 첫 번째 단계(사업자 정보) */}
       <StepIndicator
-        steps={STEPS}
+        steps={HOST_STEPS}
         currentStep={0}
       />
 

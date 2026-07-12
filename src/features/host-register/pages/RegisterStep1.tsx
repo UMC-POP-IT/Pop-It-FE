@@ -6,31 +6,11 @@ import { useState } from "react";
 import Chip from "@/shared/components/Chip";
 import Select from "@/shared/components/Select";
 import { useNavigate } from "react-router-dom";
-
-// 5단계 진행바 라벨 (피그마 기준)
-const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
-
-// 건물 유형 칩 선택지 (피그마 기준)
-const BUILDING_TYPES = [
-  "대형 사무실",
-  "중소형 사무실",
-  "오피스텔 형",
-  "단지내 상가",
-  "일반 상가",
-  "복합 상가",
-];
-
-// 구 드롭다운 선택지 (Mock — API 연동 전 임시값)
-const DISTRICTS = [
-  "강남구",
-  "강동구",
-  "마포구",
-  "서초구",
-  "송파구",
-  "영등포구",
-  "종로구",
-  "중구",
-];
+import {
+  STEPS,
+  BUILDING_TYPES,
+  DISTRICTS,
+} from "@/features/host-register/api/mock_register";
 
 export const RegisterStep1 = () => {
   // 정적 화면: 선택된 값 표시용 하드코딩 (실제 선택 로직은 이후 RHF로 연결)
