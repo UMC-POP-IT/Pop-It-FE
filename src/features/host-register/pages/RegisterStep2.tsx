@@ -2,10 +2,14 @@ import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import { useNavigate } from "react-router-dom";
-import { STEPS, PRICE_ROWS } from "@/features/host-register/api/mock_register";
+import { STEPS } from "@/features/host-register/api/mock_register";
+import { useRegisterStore } from "@/store/registerStore";
 
 export const RegisterStep2 = () => {
   const navigate = useNavigate();
+  const form = useRegisterStore((s) => s.form);
+  const setValues = useRegisterStore((s) => s.setValues);
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -36,7 +40,11 @@ export const RegisterStep2 = () => {
                 보증금
               </span>
               <div className="relative">
-                <Input type="number" />
+                <Input
+                  type="number"
+                  value={form.deposit}
+                  onChange={(e) => setValues({ deposit: e.target.value })}
+                />
                 <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
                   만원
                 </span>
@@ -52,18 +60,38 @@ export const RegisterStep2 = () => {
                 금액
               </span>
               <div className="flex flex-col gap-2">
-                {PRICE_ROWS.map((unit) => (
-                  <div
-                    key={unit}
-                    className="relative"
-                  >
-                    <Input type="number" />
-                    <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
-                      {unit}
-                    </span>
-                  </div>
-                ))}
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={form.priceDay}
+                    onChange={(e) => setValues({ priceDay: e.target.value })}
+                  />
+                  <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
+                    만원/일
+                  </span>
+                </div>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={form.priceWeek}
+                    onChange={(e) => setValues({ priceWeek: e.target.value })}
+                  />
+                  <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
+                    만원/주
+                  </span>
+                </div>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={form.priceMonth}
+                    onChange={(e) => setValues({ priceMonth: e.target.value })}
+                  />
+                  <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
+                    만원/월
+                  </span>
+                </div>
               </div>
+
               <span className="text-text-disabled text-xs">
                 제출하지 않는 대여 단위는 공란으로 남겨주세요
               </span>
@@ -82,6 +110,8 @@ export const RegisterStep2 = () => {
             <Input
               label="시작일"
               type="date"
+              value={form.startDate}
+              onChange={(e) => setValues({ startDate: e.target.value })}
             />
 
             {/* 종료일 */}
@@ -89,6 +119,8 @@ export const RegisterStep2 = () => {
               <Input
                 label="종료일"
                 type="date"
+                value={form.endDate}
+                onChange={(e) => setValues({ endDate: e.target.value })}
               />
               <span className="text-text-disabled text-xs">
                 최대 3개월 신청 가능

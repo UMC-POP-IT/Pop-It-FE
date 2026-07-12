@@ -28,6 +28,7 @@ export interface SpaceRegisterForm {
   securityList: string[];
   etcList: string[];
   // Step4 상세정보
+  buildingName: string; // 공간명
   description: string;
   // Step5 사진
   photoList: File[];
@@ -62,6 +63,7 @@ const initialForm: SpaceRegisterForm = {
   heatingList: [],
   securityList: [],
   etcList: [],
+  buildingName: "",
   description: "",
   photoList: [],
 };

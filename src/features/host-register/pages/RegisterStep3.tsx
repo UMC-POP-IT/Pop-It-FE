@@ -1,7 +1,6 @@
 import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
-import { useState } from "react";
 import Chip from "@/shared/components/Chip";
 import { useNavigate } from "react-router-dom";
 import {
@@ -13,9 +12,12 @@ import {
   SECURITY_OPTIONS,
   ETC_OPTIONS,
 } from "@/features/host-register/api/mock_register";
+import { useRegisterStore } from "@/store/registerStore";
 
 export const RegisterStep3 = () => {
   const navigate = useNavigate();
+  const form = useRegisterStore((s) => s.form);
+  const setValues = useRegisterStore((s) => s.setValues);
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -39,12 +41,14 @@ export const RegisterStep3 = () => {
         <ChipGroup
           label="기본 정보"
           options={USAGE_OPTIONS}
-          selected={["팝업스토어"]}
+          selected={form.usage ? [form.usage] : []}
+          onChange={(next) => setValues({ usage: next[0] ?? "" })}
         />
         <ChipGroup
           label="공간 정보"
           options={STRUCTURE_OPTIONS}
-          selected={["오픈형 홀"]}
+          selected={form.spaceStructure ? [form.spaceStructure] : []}
+          onChange={(next) => setValues({ spaceStructure: next[0] ?? "" })}
         />
 
         {/* 면적 — ㎡ = 평 (자동 환산은 이후 로직) */}
@@ -55,6 +59,8 @@ export const RegisterStep3 = () => {
               <Input
                 type="number"
                 placeholder="전용 면적"
+                value={form.area}
+                onChange={(e) => setValues({ area: e.target.value })}
               />
               <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
                 ㎡
@@ -62,6 +68,7 @@ export const RegisterStep3 = () => {
             </div>
             <span className="text-text-secondary">=</span>
             <div className="relative flex-1">
+              {/* 평 = ㎡ 자동 환산 표시용 (store 저장 X) */}
               <Input type="number" />
               <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
                 평
@@ -77,23 +84,35 @@ export const RegisterStep3 = () => {
         <ChipGroup
           label="층수"
           options={FLOOR_TYPE_OPTIONS}
-          selected={["일반 층"]}
+          selected={form.floorType ? [form.floorType] : []}
+          onChange={(next) => setValues({ floorType: next[0] ?? "" })}
         />
         <div className="relative">
           <Input
             type="number"
             placeholder="층수 입력"
+            value={form.floor}
+            onChange={(e) => setValues({ floor: e.target.value })}
           />
           <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
             층
           </span>
         </div>
 
-        {/* 주차 — 주차 가능 / 주차 불가능 (택1)*/}
+        {/* 주차 — 주차 가능 / 주차 불가능 (택1) */}
         <ChipGroup
           label="주차"
           options={["주차 가능", "주차 불가능"]}
-          selected={["주차 가능"]}
+          selected={
+            form.hasParking === true
+              ? ["주차 가능"]
+              : form.hasParking === false
+                ? ["주차 불가능"]
+                : []
+          }
+          onChange={(next) =>
+            setValues({ hasParking: next[0] === "주차 가능" })
+          }
         />
 
         {/* 시설 정보 (다중 선택) */}
@@ -101,19 +120,22 @@ export const RegisterStep3 = () => {
         <ChipGroup
           label="냉난방"
           options={HEATING_OPTIONS}
-          selected={["개별 난방"]}
+          selected={form.heatingList}
+          onChange={(next) => setValues({ heatingList: next })}
           multiple
         />
         <ChipGroup
           label="보안"
           options={SECURITY_OPTIONS}
-          selected={["현관 보안"]}
+          selected={form.securityList}
+          onChange={(next) => setValues({ securityList: next })}
           multiple
         />
         <ChipGroup
           label="기타"
           options={ETC_OPTIONS}
-          selected={["화재 경보기"]}
+          selected={form.etcList}
+          onChange={(next) => setValues({ etcList: next })}
           multiple
         />
       </div>
@@ -138,29 +160,27 @@ export const RegisterStep3 = () => {
   );
 };
 
-// 칩 그룹 (공통 Chip · 택1/다중)
-// 정적: selected로 선택 상태만 표시. 실제 선택/해제 로직은 이후 RHF로 연결
+// 칩 그룹 (공통 Chip · 택1/다중) — 선택값은 부모(store)가 관리 (controlled)
 const ChipGroup = ({
   label,
   options,
   selected,
+  onChange,
   multiple = false,
 }: {
   label: string;
   options: string[];
   selected: string[];
+  onChange: (next: string[]) => void;
   multiple?: boolean;
 }) => {
-  const [selectedList, setSelectedList] = useState<string[]>(selected);
-
   const toggle = (option: string) => {
-    setSelectedList((prev) =>
-      multiple
-        ? prev.includes(option)
-          ? prev.filter((item) => item !== option)
-          : [...prev, option]
-        : [option],
-    );
+    const next = multiple
+      ? selected.includes(option)
+        ? selected.filter((item) => item !== option) // 이미 있으면 제거
+        : [...selected, option] // 없으면 추가
+      : [option]; // 택1: 이거 하나로 교체
+    onChange(next);
   };
 
   return (
@@ -171,7 +191,7 @@ const ChipGroup = ({
           <Chip
             key={option}
             label={option}
-            selected={selectedList.includes(option)}
+            selected={selected.includes(option)}
             onClick={() => toggle(option)}
           />
         ))}
