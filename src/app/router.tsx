@@ -8,7 +8,7 @@ import { LoginPage } from "@/features/auth/pages/LoginPage";
 
 // 1번 팀원 (레아 - 공간탐색/상세/찜)
 import { ExplorePage } from "@/features/guest-explore/pages/ExplorePage";
-// import { SpaceDetailPage } from "@/features/guest-explore/pages/SpaceDetailPage"
+import { SpaceDetailPage } from "@/features/guest-explore/pages/SpaceDetailPage";
 
 // 2번 팀원 (텬 - AI추천/3D/예약)
 import { HomePage } from "@/features/guest-explore/pages/HomePage";
@@ -60,7 +60,7 @@ export const router = createBrowserRouter([
 
       // 1번 팀원 - 공간탐색/상세/찜
       { path: "/explore", element: <ExplorePage /> },
-      { path: "/spaces/:spaceId", element: <div>공간상세 - 1번</div> },
+      { path: "/spaces/:spaceId", element: <SpaceDetailPage /> },
 
       // 2번 팀원 - AI추천/3D/예약
       { path: "/recommend", element: <div>AI추천 - 2번</div> },
