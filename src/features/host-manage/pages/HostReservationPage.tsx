@@ -12,7 +12,7 @@ import {
 // 탭 순서와 매칭되는 예약 상태
 const TAB_STATUS: HostReservation["status"][] = [
   "PENDING", // 승인 대기
-  "CONFIRMED", // 계약 대기
+  "APPROVED", // 계약 대기
   "CONTRACTED", // 계약 완료
   "IN_USE", // 사용 중
   "COMPLETED", // 사용 완료
@@ -34,7 +34,7 @@ export const HostReservationPage = () => {
 
   const tabs = [
     { label: "승인 대기", count: countByStatus("PENDING") },
-    { label: "계약 대기", count: countByStatus("CONFIRMED") },
+    { label: "계약 대기", count: countByStatus("APPROVED") },
     { label: "계약 완료", count: countByStatus("CONTRACTED") },
     { label: "사용 중", count: countByStatus("IN_USE") },
     { label: "사용 완료", count: countByStatus("COMPLETED") },
@@ -47,7 +47,7 @@ export const HostReservationPage = () => {
 
   const handleApprove = (id: number) => {
     setReservations((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "CONFIRMED" } : r)),
+      prev.map((r) => (r.id === id ? { ...r, status: "APPROVED" } : r)),
     );
   };
 
@@ -55,7 +55,7 @@ export const HostReservationPage = () => {
     if (rejectTargetId === null) return;
     setReservations((prev) =>
       prev.map((r) =>
-        r.id === rejectTargetId ? { ...r, status: "REJECTED" } : r,
+        r.id === rejectTargetId ? { ...r, status: "CANCELLED" } : r,
       ),
     );
     setRejectTargetId(null);
