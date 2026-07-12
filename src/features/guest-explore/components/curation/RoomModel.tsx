@@ -10,5 +10,5 @@ interface RoomModelProps {
  */
 export const RoomModel = ({ modelUrl }: RoomModelProps) => {
   const { scene } = useGLTF(modelUrl);
-  return <primitive object={scene} />;
+  return <primitive object={scene} dispose={null} />;
 };

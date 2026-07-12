@@ -3,7 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { Loader } from "@react-three/drei";
 import type { Hotspot, Property } from "@/features/guest-explore/api/mock_3dcuration";
 import { getSceneById } from "@/features/guest-explore/api/mock_3dcuration";
-import { SceneStage } from "./SceneStage";
+import { SceneStage } from "@/features/guest-explore/components/curation/SceneStage";
 
 interface CurationViewerProps {
   property: Property;

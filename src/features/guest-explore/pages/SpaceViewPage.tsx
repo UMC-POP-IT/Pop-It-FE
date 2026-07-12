@@ -12,7 +12,7 @@ export const SpaceViewPage = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={() => navigate(-1)} />
+      <div className="absolute inset-0 bg-black/40" onClick={() => navigate(`/spaces/${spaceId}`)} />
       <div className="relative z-10 h-7/8 w-3/4 overflow-hidden bg-tag-bg shadow-xl">
         {property && (
           <div className="absolute top-6 left-1/2 z-20 -translate-x-1/2 rounded-3xl bg-white py-2 px-3" key={property.id}>

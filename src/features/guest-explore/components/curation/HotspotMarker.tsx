@@ -12,6 +12,7 @@ export const HotspotMarker = ({ hotspot, active, onSelect }: HotspotMarkerProps)
     <Html position={hotspot.position} center distanceFactor={8} zIndexRange={[10, 0]} occlude={false}>
       <button
         type="button"
+        aria-pressed={active}
         onClick={(event) => {
           event.stopPropagation();
           onSelect(hotspot);
