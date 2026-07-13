@@ -73,6 +73,7 @@ export const RegisterStep1 = () => {
           <div className="flex gap-3">
             <Input
               label="시"
+              aria-label="시"
               placeholder="서울특별시"
               value={form.city}
               onChange={(e) => setValues({ city: e.target.value })}
@@ -97,6 +98,7 @@ export const RegisterStep1 = () => {
           <div className="flex items-start gap-2">
             <div className="flex-1">
               <Input
+                aria-label="주소"
                 placeholder="주소"
                 value={form.address}
                 onChange={(e) => setValues({ address: e.target.value })}
@@ -112,6 +114,7 @@ export const RegisterStep1 = () => {
 
           {/* 상세 주소 */}
           <Input
+            aria-label="상세 주소"
             placeholder="상세 주소를 입력해주세요"
             value={form.detailAddress}
             onChange={(e) => setValues({ detailAddress: e.target.value })}

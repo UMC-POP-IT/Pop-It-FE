@@ -3,7 +3,10 @@ import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import FileUploadRow from "@/features/host-register/components/FileUploadRow";
 import { useNavigate } from "react-router-dom";
-import { HOST_STEPS, TAXPAYER_OPTIONS } from "../api/mock_register";
+import {
+  HOST_STEPS,
+  TAXPAYER_OPTIONS,
+} from "@/features/host-register/api/mock_register";
 import { useHostRegisterStore } from "@/store/registerStore";
 
 export const HostRegisterStep1 = () => {

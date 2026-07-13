@@ -4,7 +4,10 @@ import Button from "@/shared/components/Button";
 import FileUploadRow from "@/features/host-register/components/FileUploadRow";
 import Select from "@/shared/components/Select";
 import { useNavigate } from "react-router-dom";
-import { HOST_STEPS, BANK_OPTIONS } from "../api/mock_register";
+import {
+  HOST_STEPS,
+  BANK_OPTIONS,
+} from "@/features/host-register/api/mock_register";
 import { useHostRegisterStore } from "@/store/registerStore";
 
 export const HostRegisterStep2 = () => {
@@ -13,7 +16,7 @@ export const HostRegisterStep2 = () => {
   const setValues = useHostRegisterStore((s) => s.setValues);
   //최종 제출 (Mock: 콘솔 출력, 실제 POST /hosts는 2차)
   const handleSubmit = () => {
-    console.log("호스트 등록 제출 데이터", form);
+    if (import.meta.env.DEV) console.log("호스트 등록 제출 데이터", form);
     navigate("/host/host-register/complete");
   };
 

@@ -19,7 +19,7 @@ export const RegisterStep5 = () => {
   const reset = useRegisterStore((s) => s.reset);
   // 최종 제출 (지금은 Mock: 콘솔 출력. 실제 POST /spaces는 2차 API 때)
   const handleSubmit = () => {
-    console.log("공간 등록 제출 데이터:", form);
+    if (import.meta.env.DEV) console.log("공간 등록 제출 데이터:", form);
     setModal("success");
   };
   // 성공 확인 → 보관함 비우고 '내 공간'으로 이동

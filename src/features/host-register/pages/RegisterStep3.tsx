@@ -161,19 +161,21 @@ export const RegisterStep3 = () => {
 };
 
 // 칩 그룹 (공통 Chip · 택1/다중) — 선택값은 부모(store)가 관리 (controlled)
+interface ChipGroupProps {
+  label: string;
+  options: string[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+  multiple?: boolean;
+}
+
 const ChipGroup = ({
   label,
   options,
   selected,
   onChange,
   multiple = false,
-}: {
-  label: string;
-  options: string[];
-  selected: string[];
-  onChange: (next: string[]) => void;
-  multiple?: boolean;
-}) => {
+}: ChipGroupProps) => {
   const toggle = (option: string) => {
     const next = multiple
       ? selected.includes(option)

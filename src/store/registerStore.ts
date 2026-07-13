@@ -42,7 +42,7 @@ interface RegisterState {
 
 // 처음엔 전부 빈 값
 const initialForm: SpaceRegisterForm = {
-  ownerType: "",
+  ownerType: "소유자",
   buildingType: "",
   city: "",
   district: "",
