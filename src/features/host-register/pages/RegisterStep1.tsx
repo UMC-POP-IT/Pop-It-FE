@@ -2,40 +2,21 @@ import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import iconOwner from "@/assets/icons/icon_owner.svg";
-import { useState } from "react";
 import Chip from "@/shared/components/Chip";
 import Select from "@/shared/components/Select";
 import { useNavigate } from "react-router-dom";
-
-// 5단계 진행바 라벨 (피그마 기준)
-const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
-
-// 건물 유형 칩 선택지 (피그마 기준)
-const BUILDING_TYPES = [
-  "대형 사무실",
-  "중소형 사무실",
-  "오피스텔 형",
-  "단지내 상가",
-  "일반 상가",
-  "복합 상가",
-];
-
-// 구 드롭다운 선택지 (Mock — API 연동 전 임시값)
-const DISTRICTS = [
-  "강남구",
-  "강동구",
-  "마포구",
-  "서초구",
-  "송파구",
-  "영등포구",
-  "종로구",
-  "중구",
-];
+import {
+  STEPS,
+  BUILDING_TYPES,
+  DISTRICTS,
+} from "@/features/host-register/api/mock_register";
+import { useRegisterStore } from "@/store/registerStore";
 
 export const RegisterStep1 = () => {
-  // 정적 화면: 선택된 값 표시용 하드코딩 (실제 선택 로직은 이후 RHF로 연결)
-  const [selectedBuilding, setSelectedBuilding] = useState("대형 사무실");
-  const [selectedDistrict, setSelectedDistrict] = useState("");
+  //보관함에서 폼 값 + 값 바꾸는 함수 꺼내기
+  const form = useRegisterStore((s) => s.form);
+  const setValues = useRegisterStore((s) => s.setValues);
+
   const navigate = useNavigate();
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
@@ -77,8 +58,8 @@ export const RegisterStep1 = () => {
               <Chip
                 key={type}
                 label={type}
-                selected={type === selectedBuilding}
-                onClick={() => setSelectedBuilding(type)}
+                selected={type === form.buildingType}
+                onClick={() => setValues({ buildingType: type })}
               />
             ))}
           </div>
@@ -92,7 +73,10 @@ export const RegisterStep1 = () => {
           <div className="flex gap-3">
             <Input
               label="시"
+              aria-label="시"
               placeholder="서울특별시"
+              value={form.city}
+              onChange={(e) => setValues({ city: e.target.value })}
             />
 
             <label className="flex w-full flex-col gap-1">
@@ -102,8 +86,8 @@ export const RegisterStep1 = () => {
                   value: district,
                   label: district,
                 }))}
-                value={selectedDistrict}
-                onChange={(e) => setSelectedDistrict(e.target.value)}
+                value={form.district}
+                onChange={(e) => setValues({ district: e.target.value })}
                 placeholder="구 선택"
               />
             </label>
@@ -113,7 +97,12 @@ export const RegisterStep1 = () => {
 
           <div className="flex items-start gap-2">
             <div className="flex-1">
-              <Input placeholder="주소" />
+              <Input
+                aria-label="주소"
+                placeholder="주소"
+                value={form.address}
+                onChange={(e) => setValues({ address: e.target.value })}
+              />
             </div>
             <Button
               variant="black"
@@ -124,7 +113,12 @@ export const RegisterStep1 = () => {
           </div>
 
           {/* 상세 주소 */}
-          <Input placeholder="상세 주소를 입력해주세요" />
+          <Input
+            aria-label="상세 주소"
+            placeholder="상세 주소를 입력해주세요"
+            value={form.detailAddress}
+            onChange={(e) => setValues({ detailAddress: e.target.value })}
+          />
         </div>
       </div>
 

@@ -5,16 +5,8 @@ import iconInfo from "@/assets/icons/icon_info.svg";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Modal from "@/shared/components/Modal";
-
-// 5단계 진행바 라벨 (Step1~4와 동일 — 현재 단계만 다름)
-const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
-
-// 사진 촬영 가이드 안내 문구
-const GUIDE_ITEMS = [
-  "밝고 선명한 공간 사진을 권장합니다.",
-  "공간의 전체적인 모습과 세부 시설이 잘 보이게 찍어주세요",
-  "수평이 잘 맞은 사진이 게스트의 신뢰도를 높입니다.",
-];
+import { STEPS, GUIDE_ITEMS } from "@/features/host-register/api/mock_register";
+import { useRegisterStore } from "@/store/registerStore";
 
 // 정적: 업로드된 사진 목업 (첫 장이 대표 사진)
 // TODO: 실제 File[] 업로드 미리보기로 교체 (파일 input state / RHF 붙일 때)
@@ -23,6 +15,18 @@ const MOCK_PHOTOS = ["photo-1", "photo-2", "photo-3"];
 export const RegisterStep5 = () => {
   const navigate = useNavigate();
   const [modal, setModal] = useState<"confirm" | "success" | null>(null);
+  const form = useRegisterStore((s) => s.form);
+  const reset = useRegisterStore((s) => s.reset);
+  // 최종 제출 (지금은 Mock: 콘솔 출력. 실제 POST /spaces는 2차 API 때)
+  const handleSubmit = () => {
+    if (import.meta.env.DEV) console.log("공간 등록 제출 데이터:", form);
+    setModal("success");
+  };
+  // 성공 확인 → 보관함 비우고 '내 공간'으로 이동
+  const handleDone = () => {
+    reset();
+    navigate("/host/spaces");
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
@@ -118,7 +122,7 @@ export const RegisterStep5 = () => {
           cancelLabel="돌아가기"
           confirmLabel="공간 등록하기"
           onCancel={() => setModal(null)}
-          onConfirm={() => setModal("success")}
+          onConfirm={handleSubmit}
         />
         <Modal
           isOpen={modal === "success"}
@@ -126,8 +130,8 @@ export const RegisterStep5 = () => {
           confirmLabel="확인"
           singleButton
           showCheckIcon
-          onCancel={() => navigate("/host/spaces")}
-          onConfirm={() => navigate("/host/spaces")}
+          onCancel={handleDone}
+          onConfirm={handleDone}
         />
 
         <Button

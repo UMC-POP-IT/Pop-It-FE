@@ -3,19 +3,16 @@ import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import FileUploadRow from "@/features/host-register/components/FileUploadRow";
 import { useNavigate } from "react-router-dom";
-
-// 호스트 등록 2단계 진행바 라벨
-const STEPS = ["사업자 정보", "계좌 정보"];
-
-// 과세자 유형 (택1)
-// TODO: 문구·기준 금액은 디자인/실제 세법 기준 확인
-const TAXPAYER_OPTIONS = [
-  { title: "개인사업자 - 간이과세자", desc: "연 매출 8,000만원 미만" },
-  { title: "개인사업자 - 일반과세자", desc: "연 매출 8,000만원 이상" },
-];
+import {
+  HOST_STEPS,
+  TAXPAYER_OPTIONS,
+} from "@/features/host-register/api/mock_register";
+import { useHostRegisterStore } from "@/store/registerStore";
 
 export const HostRegisterStep1 = () => {
   const navigate = useNavigate();
+  const form = useHostRegisterStore((s) => s.form);
+  const setValues = useHostRegisterStore((s) => s.setValues);
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -25,7 +22,7 @@ export const HostRegisterStep1 = () => {
 
       {/* 진행바 — 0 = 첫 번째 단계(사업자 정보) */}
       <StepIndicator
-        steps={STEPS}
+        steps={HOST_STEPS}
         currentStep={0}
       />
 
@@ -50,14 +47,15 @@ export const HostRegisterStep1 = () => {
             role="radiogroup"
             aria-label="과세자 유형 선택"
           >
-            {TAXPAYER_OPTIONS.map((opt, i) => {
-              const isSelected = i === 0;
+            {TAXPAYER_OPTIONS.map((opt) => {
+              const isSelected = form.taxpayerType === opt.title;
               return (
                 <button
                   key={opt.title}
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
+                  onClick={() => setValues({ taxpayerType: opt.title })}
                   className={`flex flex-col gap-1 rounded-lg border px-4 py-3 text-left transition-colors ${
                     isSelected ? "border-primary" : "border-border"
                   }`}
@@ -87,6 +85,8 @@ export const HostRegisterStep1 = () => {
           <Input
             id="business-number"
             placeholder="000-00-00000"
+            value={form.businessNumber}
+            onChange={(e) => setValues({ businessNumber: e.target.value })}
           />
         </div>
 
@@ -108,6 +108,8 @@ export const HostRegisterStep1 = () => {
           <Input
             id="business-name"
             placeholder="예: OO 갤러리, 카페 등"
+            value={form.storeName}
+            onChange={(e) => setValues({ storeName: e.target.value })}
           />
         </div>
 
@@ -124,6 +126,8 @@ export const HostRegisterStep1 = () => {
               <Input
                 id="business-address"
                 placeholder="주소를 검색해주세요"
+                value={form.businessAddress}
+                onChange={(e) => setValues({ businessAddress: e.target.value })}
               />
             </div>
             {/*TODO: 주소 검색 API(다음 우편번호 등) 연결 */}
@@ -137,6 +141,10 @@ export const HostRegisterStep1 = () => {
           <Input
             placeholder="상세 주소를 입력해주세요"
             aria-label="상세 주소"
+            value={form.businessDetailAddress}
+            onChange={(e) =>
+              setValues({ businessDetailAddress: e.target.value })
+            }
           />
         </div>
       </div>

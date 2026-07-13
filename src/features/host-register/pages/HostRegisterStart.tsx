@@ -3,9 +3,7 @@ import Button from "@/shared/components/Button";
 import Logo from "@/shared/components/Logo";
 import iconClose from "@/assets/icons/icon_close.svg";
 import { useNavigate } from "react-router-dom";
-
-// 호스트 등록 2단계 진행바 라벨
-const STEPS = ["사업자 정보", "계좌 정보"];
+import { HOST_STEPS } from "@/features/host-register/api/mock_register";
 
 // 호스트 등록 시작 모달 (인트로)
 // 정적: 항상 열린 상태로 표시. TODO: 열림/닫힘 상태 + 액션 연결
@@ -54,7 +52,7 @@ export const HostRegisterStart = () => {
 
           {/* 진행바 — 아직 시작 전이라 두 단계 모두 비활성(currentStep=-1) */}
           <StepIndicator
-            steps={STEPS}
+            steps={HOST_STEPS}
             currentStep={-1}
           />
 

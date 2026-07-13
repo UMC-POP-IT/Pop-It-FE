@@ -2,29 +2,24 @@ import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import FileUploadRow from "@/features/host-register/components/FileUploadRow";
-import { useState } from "react";
 import Select from "@/shared/components/Select";
 import { useNavigate } from "react-router-dom";
-
-// 호스트 등록 2단계 진행바 라벨
-const STEPS = ["사업자 정보", "계좌 정보"];
-
-// 은행 목록 (드롭다운 선택지)
-// TODO: 실제 지원 은행 목록으로 확정
-const BANK_OPTIONS = [
-  "국민은행",
-  "신한은행",
-  "우리은행",
-  "하나은행",
-  "농협은행",
-  "기업은행",
-  "카카오뱅크",
-  "토스뱅크",
-];
+import {
+  HOST_STEPS,
+  BANK_OPTIONS,
+} from "@/features/host-register/api/mock_register";
+import { useHostRegisterStore } from "@/store/registerStore";
 
 export const HostRegisterStep2 = () => {
-  const [selectBank, setSelectBank] = useState("");
   const navigate = useNavigate();
+  const form = useHostRegisterStore((s) => s.form);
+  const setValues = useHostRegisterStore((s) => s.setValues);
+  //최종 제출 (Mock: 콘솔 출력, 실제 POST /hosts는 2차)
+  const handleSubmit = () => {
+    if (import.meta.env.DEV) console.log("호스트 등록 제출 데이터", form);
+    navigate("/host/host-register/complete");
+  };
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -34,7 +29,7 @@ export const HostRegisterStep2 = () => {
 
       {/* 진행바 — 1 = 두 번째 단계(계좌 정보) */}
       <StepIndicator
-        steps={STEPS}
+        steps={HOST_STEPS}
         currentStep={1}
       />
 
@@ -69,8 +64,8 @@ export const HostRegisterStep2 = () => {
           <Select
             id="bank"
             options={BANK_OPTIONS.map((bank) => ({ value: bank, label: bank }))}
-            value={selectBank}
-            onChange={(e) => setSelectBank(e.target.value)}
+            value={form.bankName}
+            onChange={(e) => setValues({ bankName: e.target.value })}
             placeholder="은행을 선택해주세요"
           />
         </div>
@@ -86,6 +81,8 @@ export const HostRegisterStep2 = () => {
           <Input
             id="account-number"
             placeholder="- 없이 숫자만 입력"
+            value={form.accountNumber}
+            onChange={(e) => setValues({ accountNumber: e.target.value })}
           />
         </div>
 
@@ -100,6 +97,8 @@ export const HostRegisterStep2 = () => {
           <Input
             id="account-holder"
             placeholder="예금주 이름을 입력해주세요"
+            value={form.accountHolder}
+            onChange={(e) => setValues({ accountHolder: e.target.value })}
           />
           <span className="text-text-disabled text-xs">
             * 사업자 등록증(대표자명)과 일치해야 합니다.
@@ -119,7 +118,7 @@ export const HostRegisterStep2 = () => {
         <Button
           variant="primary"
           size="md"
-          onClick={() => navigate("/host/host-register/complete")}
+          onClick={handleSubmit}
         >
           다음으로
         </Button>
