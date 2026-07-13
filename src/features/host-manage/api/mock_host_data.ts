@@ -30,11 +30,11 @@ export interface HostReservation {
   endDate: string;
   status:
     | "PENDING" // 승인 대기
-    | "CONFIRMED" // 계약 대기
+    | "APPROVED" // 계약 대기 (승인 완료)
     | "CONTRACTED" // 계약 완료
     | "IN_USE" // 사용 중
     | "COMPLETED" // 사용 완료
-    | "REJECTED"; // 승인 취소
+    | "CANCELLED"; // 거절/취소
   totalPrice: number;
   checkoutPhotoUrls?: string[]; // 사용 완료 시 게스트가 등록한 퇴실 사진
 }
@@ -170,7 +170,7 @@ export const mockHostReservations: HostReservation[] = [
     guestId: 10,
     startDate: "2026-06-23",
     endDate: "2026-06-23",
-    status: "CONFIRMED", // 계약 대기
+    status: "APPROVED", // 계약 대기
     totalPrice: 25000000,
   },
   {

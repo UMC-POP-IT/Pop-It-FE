@@ -19,11 +19,11 @@ interface HostReservationCardProps {
 
 const STATUS_LABEL: Record<HostReservation["status"], string> = {
   PENDING: "승인 대기",
-  CONFIRMED: "계약 대기",
+  APPROVED: "계약 대기",
   CONTRACTED: "계약 완료",
   IN_USE: "사용 중",
   COMPLETED: "사용 완료",
-  REJECTED: "승인 취소",
+  CANCELLED: "취소됨",
 };
 
 const formatDate = (dateStr: string) => {
@@ -131,7 +131,7 @@ export const HostReservationCard = ({
                   onClick={onDetail}
                   className="bg-surface-blue text-text-primary h-10 rounded-lg px-6 py-1.5 text-base font-bold"
                 >
-                  예약 상세
+                  공간 상세
                 </button>
                 <button
                   onClick={onReject}
@@ -148,14 +148,14 @@ export const HostReservationCard = ({
               </>
             )}
 
-            {(status === "CONFIRMED" ||
+            {(status === "APPROVED" ||
               status === "CONTRACTED" ||
               status === "IN_USE") && (
               <button
                 onClick={onDetail}
                 className="bg-surface-blue text-text-primary h-10 rounded-lg px-6 py-1.5 text-base font-bold"
               >
-                예약 상세
+                공간 상세
               </button>
             )}
 
@@ -165,7 +165,7 @@ export const HostReservationCard = ({
                   onClick={onDetail}
                   className="bg-surface-blue text-text-primary h-10 rounded-lg px-6 py-1.5 text-base font-bold"
                 >
-                  예약 상세
+                  공간 상세
                 </button>
                 <button
                   onClick={onPhotoView}
