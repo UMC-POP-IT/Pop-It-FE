@@ -4,6 +4,7 @@ import Button from "@/shared/components/Button";
 import { useNavigate } from "react-router-dom";
 import { STEPS } from "@/features/host-register/api/mock_register";
 import { useRegisterStore } from "@/store/registerStore";
+import DateRangePicker from "@/features/host-register/components/DateRangePicker";
 
 export const RegisterStep2 = () => {
   const navigate = useNavigate();
@@ -99,34 +100,29 @@ export const RegisterStep2 = () => {
           </div>
         </div>
 
-        {/* 계약 가능 기간 (시작일 / 종료일) */}
+        {/* 계약 가능 기간 */}
         <div className="flex flex-col gap-3">
           <span className="text-text-primary text-sm font-bold">
             계약 가능 기간
           </span>
 
-          <div className="grid grid-cols-2 gap-6">
-            {/* 시작일 */}
-            <Input
-              label="시작일"
-              type="date"
-              value={form.startDate}
-              onChange={(e) => setValues({ startDate: e.target.value })}
-            />
+          {/* 달력에서 범위 선택 → 확인 누르면 store에 저장 */}
+          <DateRangePicker
+            onConfirm={(start, end) =>
+              setValues({ startDate: start, endDate: end })
+            }
+          />
 
-            {/* 종료일 */}
-            <div className="flex flex-col gap-1">
-              <Input
-                label="종료일"
-                type="date"
-                value={form.endDate}
-                onChange={(e) => setValues({ endDate: e.target.value })}
-              />
-              <span className="text-text-disabled text-xs">
-                최대 3개월 신청 가능
-              </span>
-            </div>
-          </div>
+          {/* 선택된 기간 표시 (store 값) */}
+          {form.startDate && form.endDate && (
+            <span className="text-text-primary text-sm">
+              선택: {form.startDate} ~ {form.endDate}
+            </span>
+          )}
+
+          <span className="text-text-disabled text-xs">
+            최대 3개월 신청 가능
+          </span>
         </div>
       </div>
 
