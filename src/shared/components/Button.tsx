@@ -2,7 +2,7 @@ import { type ButtonHTMLAttributes } from "react";
 
 type ButtonVariant =
   "primary" | "outline" | "danger" | "kakao" | "naver" | "ghost" | "black" | "gray";
-type ButtonSize = "sm" | "md" | "lg";
+type ButtonSize = "sm" | "md" | "lg" | "nav";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -24,6 +24,7 @@ const sizeStyles: Record<ButtonSize, string> = {
   sm: "h-10 px-6 text-base font-bold rounded-lg",
   md: "h-12 px-4 text-base font-bold rounded-lg",
   lg: "h-14 w-full text-lg font-medium rounded-lg",
+  nav: "h-14 w-[184px] text-lg font-medium rounded-lg",
 };
 
 const Button = ({
