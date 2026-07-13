@@ -1,3 +1,7 @@
+import sceneStoreModelUrl from './curation_model/scene-store.glb?url';
+import sceneFittingModelUrl from './curation_model/scene-fitting.glb?url';
+import sceneStorageModelUrl from './curation_model/scene-storage.glb?url';
+
 /** 장면 위의 정보/이동 핫스팟 */
 export interface Hotspot {
   id: string;
@@ -57,9 +61,108 @@ export const mockProperty: Property = {
   createdAt: '2026-06-30T09:00:00Z',
   scenes: [
     {
+      id: 'scene-storage',
+      name: '창고',
+      modelUrl: sceneStorageModelUrl,
+      thumbnail: 'https://picsum.photos/seed/prop-sinsa-001-store-thumb/400/500',
+      images: [],
+      camera: {
+        position: [6, 6, 6],
+        target: [0, 0.5, 0],
+        minDistance: 4,
+        maxDistance: 12,
+        minPolarAngle: 0.3,   // 거의 위에서
+        maxPolarAngle: 1.4,   // 수평 살짝 위까지 (≈ π/2.2)
+      },
+      hotspots: [
+        {
+          id: 'h-shelf',
+          position: [-1.0, 1.3, -0.5],
+          label: '창고 선반',
+          type: 'info',
+          description: '재고 물품 보관 용도, 박스 몇 개 쌓여있으니 건들지 않았으면 함.',
+        }, 
+        {
+          id: 'h-curtain',
+          position: [1.3, 1, 1.2],
+          label: '서랍장',
+          type: 'info',
+          description: '절대 건들지 마시오',
+        }, 
+        {
+          id: 'door-to-store',
+          position: [0.5, 1, -2.],
+          label: '창고 문',
+          type: 'link',
+          description: '창고 밖으로 나가는 문',
+          targetSceneId: 'scene-store'
+        }, 
+      ]
+    },
+    {
+      id: 'scene-fitting',
+      name: '피팅 룸',
+      modelUrl: sceneFittingModelUrl,
+      thumbnail: 'https://picsum.photos/seed/prop-sinsa-001-store-thumb/400/500',
+      images: [
+        'https://picsum.photos/seed/prop-sinsa-001-store-1/1400/800',
+        'https://picsum.photos/seed/prop-sinsa-001-store-2/1400/800',
+        'https://picsum.photos/seed/prop-sinsa-001-store-3/1400/800',
+        'https://picsum.photos/seed/prop-sinsa-001-store-4/1400/800',
+      ],
+      camera: {
+        position: [6, 6, 6],
+        target: [0, 0.5, 0],
+        minDistance: 4,
+        maxDistance: 12,
+        minPolarAngle: 0.3,   // 거의 위에서
+        maxPolarAngle: 1.4,   // 수평 살짝 위까지 (≈ π/2.2)
+      },
+      hotspots: [
+        {
+          id: 'h-curtain',
+          position: [0, 1, 1.0],
+          label: '커튼',
+          type: 'info',
+          description: '옷 갈아입으실 때 이용하시면 됩니다.',
+        }, 
+        {
+          id: 'h-built-in-table',
+          position: [1.0 , 0.5, -1.5],
+          label: '빌트인 테이블',
+          type: 'info',
+          description: '옷 갈아입으실 때, 본인 소지품 놓아주시면 됩니다.',
+        },
+        {
+          id: 'h-built-in-hanger',
+          position: [1.0 , 1.7, -1.5],
+          label: '빌트인 행거',
+          type: 'info',
+          description: '본인이 입고 온 외투 걸어놓아주시면 됩니다.',
+        },
+        {
+          id: 'h-whole-body-mirror',
+          position: [-1.0 , 1.0, 0],
+          label: '전신 거울',
+          type: 'info',
+          description: '전신 거울',
+        },
+        {
+          id: 'door-to-store',
+          position: [-0.5, 1.0, -1.5],
+          label: '피팅룸 문',
+          type: 'link',
+          description: '피팅 룸 밖으로 나가는 문',
+          targetSceneId: 'scene-store'
+        }
+        // 다른 방이 생기면 link 타입으로 연결
+        // { id: 'h-to-storage', position: [...], label: '창고로', type: 'link', targetSceneId: 'scene-storage' }
+      ],
+    },
+    {
       id: 'scene-store',
       name: '매장 전체',
-      modelUrl: 'https://cdn.example.com/prop-sinsa-001/store.glb',
+      modelUrl: sceneStoreModelUrl,
       thumbnail: 'https://picsum.photos/seed/prop-sinsa-001-store-thumb/400/300',
       images: [
         'https://picsum.photos/seed/prop-sinsa-001-store-1/1200/800',
@@ -86,10 +189,10 @@ export const mockProperty: Property = {
         },
         {
           id: 'h-rack-wall',
-          position: [-2.5, 1.8, -2.5],
+          position: [1.0, 1.7, -3.5],
           label: '벽면 의류 행거',
           type: 'info',
-          description: '상부 선반 + 행거 일체형 디스플레이',
+          description: '약 30벌 정도 걸어놓을 수 있음.',
         },
         {
           id: 'h-lounge',
@@ -100,17 +203,34 @@ export const mockProperty: Property = {
         },
         {
           id: 'h-mirror',
-          position: [2.8, 1.2, -2.0],
+          position: [-3.5, 1.0, -1.5],
           label: '전신 거울',
           type: 'info',
+          description: '전신 거울'
         },
         {
           id: 'h-shelf',
           position: [3.0, 1.5, -0.5],
           label: '진열 선반',
           type: 'info',
-          description: '식물·소품 디스플레이',
+          description: '식물·소품 디스플레이 용도 (ex. 화분)',
         },
+        {
+          id: 'door-to-fitting',
+          position: [-3, 1, 1.5],
+          label: '피팅 룸 문',
+          type: 'link',
+          description: '피팅 룸으로 향하는 문',
+          targetSceneId: 'scene-fitting'
+        },
+        {
+          id: 'door-to-storage',
+          position: [-3, 1, -3.5],
+          label: '창고 문',
+          type: 'link',
+          description: '창고로 향하는 문',
+          targetSceneId: 'scene-storage'
+        }
         // 다른 방이 생기면 link 타입으로 연결
         // { id: 'h-to-storage', position: [...], label: '창고로', type: 'link', targetSceneId: 'scene-storage' }
       ],
