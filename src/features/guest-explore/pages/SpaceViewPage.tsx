@@ -12,8 +12,20 @@ export const SpaceViewPage = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={() => navigate(`/spaces/${spaceId}`)} />
-      <div className="relative z-10 h-7/8 w-3/4 overflow-hidden bg-tag-bg shadow-xl">
+      <div
+        className="absolute inset-0 bg-black/40"
+        role="button"
+        tabIndex={0}
+        aria-label="닫기"
+        onClick={() => navigate(`/spaces/${spaceId}`)}
+        onKeyDown={(e) => { // keyboard로도 제어 가능하게끔 변경
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault(); // 현재 이벤트의 기본동작 중단
+            navigate(`/spaces/${spaceId}`);
+          }
+        }}
+      />
+      <div className="relative aria-hidden z-10 h-7/8 w-3/4 overflow-hidden bg-tag-bg shadow-xl">
         {property && (
           <div className="absolute top-6 left-1/2 z-20 -translate-x-1/2 rounded-3xl bg-white py-2 px-3" key={property.id}>
             <span>{property.name} | {property.area}</span>
