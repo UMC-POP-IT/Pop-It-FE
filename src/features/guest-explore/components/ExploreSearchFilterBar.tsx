@@ -29,7 +29,8 @@ const ExploreSearchFilterBar = () => {
         <input
           type="text"
           placeholder="공간, 지역 이름, 정보로 검색"
-          className="w-full rounded-lg bg-[#F2F2F2] py-3 pr-[10px] pl-11 text-lg text-[#808080] placeholder:text-[#808080] focus:outline-none"
+          aria-label="공간, 지역 이름, 정보로 검색"
+          className="w-full rounded-lg bg-[#F2F2F2] py-3 pr-[10px] pl-11 text-lg text-[#808080] placeholder:text-[#808080] focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -39,7 +40,7 @@ const ExploreSearchFilterBar = () => {
             <button
               key={label}
               type="button"
-              className="flex items-center justify-center gap-5 rounded-lg bg-[#F2F2F2] px-4 py-3 text-lg text-[#121212]"
+              className="flex items-center justify-center gap-5 rounded-lg bg-[#F2F2F2] px-4 py-3 text-lg text-[#121212] hover:bg-[#E8E8E8]"
             >
               <span>{label}</span>
               <svg
@@ -63,7 +64,7 @@ const ExploreSearchFilterBar = () => {
 
         <button
           type="button"
-          className="flex items-center justify-center gap-[6px] rounded-full bg-[#E6F0FE] px-4 py-[10px] text-lg text-[#121212]"
+          className="flex items-center justify-center gap-[6px] rounded-full bg-[#E6F0FE] px-4 py-[10px] text-lg text-[#121212] hover:bg-[#D0E4FD]"
         >
           <span>🗺</span>
           <span>지도</span>

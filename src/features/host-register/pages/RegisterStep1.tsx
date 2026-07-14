@@ -115,6 +115,7 @@ export const RegisterStep1 = () => {
             <div className="flex-1">
               <Input placeholder="주소" />
             </div>
+            {/* TODO: 주소 검색 API 연동 */}
             <Button
               variant="black"
               size="nav"
