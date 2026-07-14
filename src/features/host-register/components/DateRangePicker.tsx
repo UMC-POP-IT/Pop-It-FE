@@ -59,6 +59,16 @@ export const DateRangePicker = ({
     initialEnd ? new Date(initialEnd) : null,
   );
 
+  // 시작일 기준 '최대 3개월'을 넘는 날짜인지 (계약 한도)
+  const isOverLimit = (date: Date) =>
+    !!startDate &&
+    date >
+      new Date(
+        startDate.getFullYear(),
+        startDate.getMonth() + 3,
+        startDate.getDate(),
+      );
+
   const handleSelectDate = (date: Date) => {
     // 시작이 없거나 이미 범위를 다 골랐으면 → 새로 시작
     if (!startDate || endDate) {
@@ -72,6 +82,7 @@ export const DateRangePicker = ({
       setEndDate(null);
       return;
     }
+    if (isOverLimit(date)) return; // 3개월 초과면 종료일로 못 고름
     setEndDate(date);
   };
 
@@ -128,16 +139,21 @@ export const DateRangePicker = ({
       </div>
       {/* 날짜 42칸 */}
       <div className="grid grid-cols-7">
-        {getCalendarDays(base).map((date) => (
-          <button
-            type="button"
-            key={date.toISOString()}
-            onClick={() => handleSelectDate(date)}
-            className={`flex h-9 w-9 items-center justify-center text-sm ${getDayClassName(date, base)}`}
-          >
-            {date.getDate()}
-          </button>
-        ))}
+        {getCalendarDays(base).map((date) => {
+          // 종료일 고르는 중 + 3개월 초과 → 비활성
+          const disabled = !!startDate && !endDate && isOverLimit(date);
+          return (
+            <button
+              type="button"
+              key={date.toISOString()}
+              disabled={disabled}
+              onClick={() => handleSelectDate(date)}
+              className={`flex h-9 w-9 items-center justify-center text-sm ${getDayClassName(date, base)} ${disabled ? "cursor-not-allowed opacity-30" : ""}`}
+            >
+              {date.getDate()}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
