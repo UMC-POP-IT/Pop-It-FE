@@ -77,10 +77,45 @@ export const MySpacePage = () => {
           {spaces.map((space, index) => (
             <div
               key={space.id}
-              className={`flex items-end justify-between gap-7 py-5 ${
+              className={`relative flex items-end justify-between gap-7 py-5 ${
                 index !== spaces.length - 1 ? "border-b border-divider" : ""
               }`}
             >
+              {/* ... 드롭다운 — 카드 오른쪽 상단 */}
+              <div className="absolute top-5 right-0" ref={openMenuId === space.id ? menuRef : null}>
+                <button
+                  onClick={() =>
+                    setOpenMenuId((prev) => (prev === space.id ? null : space.id))
+                  }
+                  className="text-text-secondary hover:text-text-primary flex h-10 w-10 items-center justify-center rounded-lg text-xl"
+                  aria-label="더보기"
+                >
+                  ···
+                </button>
+                {openMenuId === space.id && (
+                  <div className="absolute top-12 right-0 z-10 flex flex-col overflow-hidden rounded-lg border border-divider bg-white shadow-md">
+                    <button
+                      onClick={() => {
+                        setEditTargetId(space.id);
+                        setOpenMenuId(null);
+                      }}
+                      className="hover:bg-tag-bg text-text-primary px-6 py-3 text-base font-medium whitespace-nowrap"
+                    >
+                      공간수정
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDeleteTargetId(space.id);
+                        setOpenMenuId(null);
+                      }}
+                      className="hover:bg-tag-bg text-danger px-6 py-3 text-base font-medium whitespace-nowrap"
+                    >
+                      공간삭제
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="flex items-start gap-7">
                 {/* 공간 이미지 */}
                 <div className="bg-thumbnail-bg h-[190px] w-[190px] flex-shrink-0 overflow-hidden">
@@ -107,51 +142,13 @@ export const MySpacePage = () => {
                 </div>
               </div>
 
-              {/* 우측 버튼 영역 */}
-              <div className="flex flex-shrink-0 items-center gap-2">
-                {/* ... 드롭다운 */}
-                <div className="relative" ref={openMenuId === space.id ? menuRef : null}>
-                  <button
-                    onClick={() =>
-                      setOpenMenuId((prev) => (prev === space.id ? null : space.id))
-                    }
-                    className="text-text-secondary hover:text-text-primary flex h-10 w-10 items-center justify-center rounded-lg text-xl"
-                    aria-label="더보기"
-                  >
-                    ···
-                  </button>
-                  {openMenuId === space.id && (
-                    <div className="absolute top-12 right-0 z-10 flex flex-col overflow-hidden rounded-lg border border-divider bg-white shadow-md">
-                      <button
-                        onClick={() => {
-                          setEditTargetId(space.id);
-                          setOpenMenuId(null);
-                        }}
-                        className="hover:bg-tag-bg text-text-primary px-6 py-3 text-base font-medium whitespace-nowrap"
-                      >
-                        공간수정
-                      </button>
-                      <button
-                        onClick={() => {
-                          setDeleteTargetId(space.id);
-                          setOpenMenuId(null);
-                        }}
-                        className="hover:bg-tag-bg text-danger px-6 py-3 text-base font-medium whitespace-nowrap"
-                      >
-                        공간삭제
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* 공간 상세 버튼 */}
-                <button
-                  onClick={() => navigate(`/host/spaces/${space.id}`)}
-                  className="bg-surface-blue text-text-primary h-10 rounded-lg px-6 py-1.5 text-base font-bold"
-                >
-                  공간 상세
-                </button>
-              </div>
+              {/* 공간 상세 버튼 */}
+              <button
+                onClick={() => navigate(`/host/spaces/${space.id}`)}
+                className="bg-surface-blue text-text-primary h-10 flex-shrink-0 rounded-lg px-6 py-1.5 text-base font-bold"
+              >
+                공간 상세
+              </button>
             </div>
           ))}
         </div>
