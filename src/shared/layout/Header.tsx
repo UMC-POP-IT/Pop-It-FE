@@ -1,10 +1,12 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import Logo from "@/shared/components/Logo";
 import { useAuthStore } from "@/store/authStore";
 
 const Header = () => {
   const { user, mode, setMode, openLoginModal } = useAuthStore();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
 
   const handleModeToggle = () => {
     if (mode === "GUEST") {
@@ -85,8 +87,8 @@ const Header = () => {
         </nav>
 
         <div className="ml-auto flex items-center gap-5">
-          {/* 모드 전환 버튼 */}
-          <button
+          {/* 모드 전환 버튼 — 게스트 모드 나의 예약 탭에서는 숨김 */}
+          {!hideModeToggle && <button
             onClick={handleModeToggle}
             className="bg-primary-light text-text-primary flex items-center gap-1 rounded p-1 pl-1 text-base transition-colors"
           >
@@ -108,7 +110,7 @@ const Header = () => {
                 strokeLinejoin="round"
               />
             </svg>
-          </button>
+          </button>}
 
           {/* 로그인 상태에 따라 분기 */}
           {user ? (

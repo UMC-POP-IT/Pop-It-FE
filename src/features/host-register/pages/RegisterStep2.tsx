@@ -2,18 +2,19 @@ import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import { useNavigate } from "react-router-dom";
-import { STEPS } from "@/features/host-register/api/mock_register";
-import { useRegisterStore } from "@/store/registerStore";
+
+// 5단계 진행바 라벨 (Step1과 동일 — 현재 단계만 다름)
+const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
+
+// 금액(대여료) 단위별 입력 (일/주/월)
+const PRICE_ROWS = ["만원/일", "만원/주", "만원/월"];
 
 export const RegisterStep2 = () => {
   const navigate = useNavigate();
-  const form = useRegisterStore((s) => s.form);
-  const setValues = useRegisterStore((s) => s.setValues);
-
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
+    <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
-      <h1 className="text-text-primary text-center text-2xl font-bold">
+      <h1 className="text-text-primary text-center text-[32px] font-bold">
         공간 등록
       </h1>
 
@@ -25,74 +26,51 @@ export const RegisterStep2 = () => {
 
       {/* 섹션: 거래 정보 */}
       <div className="flex flex-col gap-8">
-        <h2 className="text-text-primary border-border border-b pb-2 text-lg font-bold">
+        <h2 className="text-text-primary border-border border-b pb-2 text-[28px] font-bold">
           거래 정보
         </h2>
 
         {/* 가격 정보 (2단: 보증금 / 금액) */}
         <div className="flex flex-col gap-3">
-          <span className="text-text-primary text-sm font-bold">가격 정보</span>
+          <span className="text-text-primary text-[22px] font-bold">가격 정보</span>
 
           <div className="grid grid-cols-2 gap-6">
             {/* 보증금 */}
             <div className="flex flex-col gap-1">
-              <span className="text-text-primary text-sm font-medium">
+              <label className="text-text-tertiary text-xl font-bold">
                 보증금
-              </span>
+              </label>
               <div className="relative">
-                <Input
-                  type="number"
-                  value={form.deposit}
-                  onChange={(e) => setValues({ deposit: e.target.value })}
-                />
-                <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
+                <Input type="number" aria-label="보증금" />
+                <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
                   만원
                 </span>
               </div>
-              <span className="text-text-disabled text-xs">
+              <span className="text-text-placeholder text-base font-bold">
                 최대 100만원 설정 가능
               </span>
+
             </div>
 
             {/* 금액 (일/주/월 3줄) */}
             <div className="flex flex-col gap-1">
-              <span className="text-text-primary text-sm font-medium">
+              <label className="text-text-tertiary text-xl font-bold">
                 금액
-              </span>
+              </label>
               <div className="flex flex-col gap-2">
-                <div className="relative">
-                  <Input
-                    type="number"
-                    value={form.priceDay}
-                    onChange={(e) => setValues({ priceDay: e.target.value })}
-                  />
-                  <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
-                    만원/일
-                  </span>
-                </div>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    value={form.priceWeek}
-                    onChange={(e) => setValues({ priceWeek: e.target.value })}
-                  />
-                  <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
-                    만원/주
-                  </span>
-                </div>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    value={form.priceMonth}
-                    onChange={(e) => setValues({ priceMonth: e.target.value })}
-                  />
-                  <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm">
-                    만원/월
-                  </span>
-                </div>
+                {PRICE_ROWS.map((unit) => (
+                  <div
+                    key={unit}
+                    className="relative"
+                  >
+                    <Input type="number" />
+                    <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
+                      {unit}
+                    </span>
+                  </div>
+                ))}
               </div>
-
-              <span className="text-text-disabled text-xs">
+              <span className="text-text-placeholder text-base font-bold">
                 제출하지 않는 대여 단위는 공란으로 남겨주세요
               </span>
             </div>
@@ -101,28 +79,24 @@ export const RegisterStep2 = () => {
 
         {/* 계약 가능 기간 (시작일 / 종료일) */}
         <div className="flex flex-col gap-3">
-          <span className="text-text-primary text-sm font-bold">
+          <span className="text-text-primary text-[22px] font-bold">
             계약 가능 기간
           </span>
 
           <div className="grid grid-cols-2 gap-6">
             {/* 시작일 */}
-            <Input
-              label="시작일"
-              type="date"
-              value={form.startDate}
-              onChange={(e) => setValues({ startDate: e.target.value })}
-            />
+            <label className="flex w-full flex-col gap-1">
+              <span className="text-text-tertiary text-xl font-bold">시작일</span>
+              <Input type="date" />
+            </label>
 
             {/* 종료일 */}
             <div className="flex flex-col gap-1">
-              <Input
-                label="종료일"
-                type="date"
-                value={form.endDate}
-                onChange={(e) => setValues({ endDate: e.target.value })}
-              />
-              <span className="text-text-disabled text-xs">
+              <label className="flex w-full flex-col gap-1">
+                <span className="text-text-tertiary text-xl font-bold">종료일</span>
+                <Input type="date" />
+              </label>
+              <span className="text-text-placeholder text-base font-bold">
                 최대 3개월 신청 가능
               </span>
             </div>
@@ -136,13 +110,14 @@ export const RegisterStep2 = () => {
       <div className="flex justify-end gap-2">
         <Button
           variant="gray"
+          size="nav"
           onClick={() => navigate("/host/register")}
         >
           이전
         </Button>
         <Button
           variant="primary"
-          size="md"
+          size="nav"
           onClick={() => navigate("/host/register/step3")}
         >
           다음으로

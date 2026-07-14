@@ -1,16 +1,16 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "@/shared/components/Modal";
 import {
   mockHostSpaces,
   type MockHostSpace,
 } from "@/features/host-manage/api/mock_host_data";
+import iconPlus from "@/assets/icons/icon_plus.svg";
 
 const SPACE_STATUS_LABEL: Record<MockHostSpace["status"], string> = {
   REGISTERED: "등록 완료",
   PENDING_REVIEW: "심사중",
 };
-import iconPlus from "@/assets/icons/icon_plus.svg";
 
 const formatDate = (dateStr: string) => {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -21,7 +21,36 @@ const formatDate = (dateStr: string) => {
 
 export const MySpacePage = () => {
   const navigate = useNavigate();
+  const [spaces, setSpaces] = useState<MockHostSpace[]>(mockHostSpaces);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [editTargetId, setEditTargetId] = useState<number | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleDelete = () => {
+    if (deleteTargetId === null) return;
+    setSpaces((prev) => prev.filter((s) => s.id !== deleteTargetId));
+    setDeleteTargetId(null);
+  };
+
+  const handleEdit = () => {
+    if (editTargetId === null) return;
+    // TODO: 수정 페이지 라우트 추가 후 navigate(`/host/register/edit/${editTargetId}`)
+    navigate("/host/register");
+    setEditTargetId(null);
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -29,7 +58,7 @@ export const MySpacePage = () => {
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-text-primary text-[28px] font-bold">내 공간</h1>
-          <p className="text-lg font-medium text-[#747474]">
+          <p className="text-lg font-medium text-text-tertiary">
             내가 등록한 공간을 한곳에서 모아보세요
           </p>
         </div>
@@ -37,27 +66,56 @@ export const MySpacePage = () => {
           onClick={() => navigate("/host/register")}
           className="bg-primary-hover flex items-center gap-1 rounded-lg px-4 py-3 text-base font-medium text-white"
         >
-          <img
-            src={iconPlus}
-            alt=""
-            className="h-6 w-6"
-          />
+          <img src={iconPlus} alt="" className="h-6 w-6" />
           새 공간 등록
         </button>
       </div>
 
-      {/* 공간 목록 — 선으로만 구분, 개별 카드 없음 */}
-      {mockHostSpaces.length > 0 ? (
+      {/* 공간 목록 */}
+      {spaces.length > 0 ? (
         <div className="flex flex-col bg-white">
-          {mockHostSpaces.map((space, index) => (
+          {spaces.map((space, index) => (
             <div
               key={space.id}
-              className={`flex items-end justify-between gap-7 py-5 ${
-                index !== mockHostSpaces.length - 1
-                  ? "border-b border-[#d8d8d8]"
-                  : ""
+              className={`relative flex items-end justify-between gap-7 py-5 ${
+                index !== spaces.length - 1 ? "border-b border-divider" : ""
               }`}
             >
+              {/* ... 드롭다운 — 카드 오른쪽 상단 */}
+              <div className="absolute top-5 right-0" ref={openMenuId === space.id ? menuRef : null}>
+                <button
+                  onClick={() =>
+                    setOpenMenuId((prev) => (prev === space.id ? null : space.id))
+                  }
+                  className="text-text-secondary hover:text-text-primary flex h-10 w-10 items-center justify-center rounded-lg text-xl"
+                  aria-label="더보기"
+                >
+                  ···
+                </button>
+                {openMenuId === space.id && (
+                  <div className="absolute top-12 right-0 z-10 flex flex-col overflow-hidden rounded-lg border border-divider bg-white shadow-md">
+                    <button
+                      onClick={() => {
+                        setEditTargetId(space.id);
+                        setOpenMenuId(null);
+                      }}
+                      className="hover:bg-tag-bg text-text-primary px-6 py-3 text-base font-medium whitespace-nowrap"
+                    >
+                      공간수정
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDeleteTargetId(space.id);
+                        setOpenMenuId(null);
+                      }}
+                      className="hover:bg-tag-bg text-danger px-6 py-3 text-base font-medium whitespace-nowrap"
+                    >
+                      공간삭제
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="flex items-start gap-7">
                 {/* 공간 이미지 */}
                 <div className="bg-thumbnail-bg h-[190px] w-[190px] flex-shrink-0 overflow-hidden">
@@ -111,6 +169,26 @@ export const MySpacePage = () => {
         confirmLabel="확인"
         onConfirm={() => setShowSuccessModal(false)}
         onCancel={() => setShowSuccessModal(false)}
+      />
+
+      {/* 공간 수정 확인 모달 */}
+      <Modal
+        isOpen={editTargetId !== null}
+        title="공간을 수정하시겠습니까?"
+        confirmLabel="수정하기"
+        cancelLabel="돌아가기"
+        onConfirm={handleEdit}
+        onCancel={() => setEditTargetId(null)}
+      />
+
+      {/* 공간 삭제 확인 모달 */}
+      <Modal
+        isOpen={deleteTargetId !== null}
+        title={`공간을 삭제하면 복구할 수 없습니다\n삭제 하시겠습니까?`}
+        confirmLabel="삭제하기"
+        cancelLabel="돌아가기"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTargetId(null)}
       />
     </div>
   );

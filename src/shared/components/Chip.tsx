@@ -9,10 +9,10 @@ const Chip = ({ label, selected, onClick }: ChipProps) => (
     type="button"
     onClick={onClick}
     aria-pressed={selected}
-    className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+    className={`flex h-14 w-[184px] shrink-0 items-center justify-center rounded-lg border-[2.5px] bg-white px-5 text-lg whitespace-nowrap transition-colors ${
       selected
-        ? "bg-primary border-primary text-white"
-        : "border-border text-text-secondary bg-white hover:border-primary hover:text-primary"
+        ? "border-primary-hover text-primary-hover font-bold"
+        : "border-divider text-text-placeholder hover:border-primary-hover hover:text-primary-hover font-medium"
     }`}
   >
     {label}
