@@ -12,6 +12,7 @@ const config: Record<
   {
     showIcon: boolean;
     iconSize: number;
+    textWidth?: number;
     textHeight: number;
     direction: string;
     gap: string;
@@ -34,6 +35,7 @@ const config: Record<
   login: {
     showIcon: true,
     iconSize: 60,
+    textWidth: 270,
     textHeight: 52,
     direction: "flex-row",
     gap: "gap-[30px]",
@@ -41,7 +43,7 @@ const config: Record<
 };
 
 const Logo = ({ variant }: LogoProps) => {
-  const { showIcon, iconSize, textHeight, direction, gap } = config[variant];
+  const { showIcon, iconSize, textWidth, textHeight, direction, gap } = config[variant];
 
   return (
     <div className={`flex items-center ${direction} ${gap}`}>
@@ -56,6 +58,7 @@ const Logo = ({ variant }: LogoProps) => {
       )}
       <img
         src={logoText}
+        width={textWidth}
         height={textHeight}
         alt="POP-IT"
       />
