@@ -8,13 +8,10 @@ import Modal from "@/shared/components/Modal";
 import { STEPS, GUIDE_ITEMS } from "@/features/host-register/api/mock_register";
 import { useRegisterStore } from "@/store/registerStore";
 
-// 정적: 업로드된 사진 목업 (첫 장이 대표 사진)
-// TODO: 실제 File[] 업로드 미리보기로 교체 (파일 input state / RHF 붙일 때)
-const MOCK_PHOTOS = ["photo-1", "photo-2", "photo-3"];
-
 export const RegisterStep5 = () => {
   const navigate = useNavigate();
   const [modal, setModal] = useState<"confirm" | "success" | null>(null);
+  const [photos, setPhotos] = useState<File[]>([]);
   const form = useRegisterStore((s) => s.form);
   const reset = useRegisterStore((s) => s.reset);
   // 최종 제출 (지금은 Mock: 콘솔 출력. 실제 POST /spaces는 2차 API 때)
@@ -69,24 +66,47 @@ export const RegisterStep5 = () => {
               className="h-6 w-6"
             />
             {/* 정적: 목업 매수 표시. TODO: 업로드 매수 실시간 카운팅 */}
-            <span className="text-xs">{MOCK_PHOTOS.length}/10장</span>
+            <span className="text-xs">{photos.length}/10장</span>
             <input
               type="file"
               accept="image/*"
               multiple
+              onChange={(e) =>
+                setPhotos((prev) => [
+                  ...prev,
+                  ...Array.from(e.target.files ?? []),
+                ])
+              }
               className="hidden"
             />
           </label>
 
-          {/* 업로드된 썸네일 (정적 목업) — 첫 장에 '대표사진' 뱃지
-              TODO: MOCK_PHOTOS → 실제 업로드된 사진 미리보기(URL.createObjectURL)로 교체 */}
-          {MOCK_PHOTOS.map((photo, i) => (
+          {/* photos 실제 이미지 */}
+          {photos.map((photo, i) => (
             <div
-              key={photo}
+              key={i}
               className="bg-tag-bg relative h-24 w-24 shrink-0 overflow-hidden rounded-lg"
             >
+              <img
+                src={URL.createObjectURL(photo)}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+
+              {/* 삭제 버튼 (왼쪽 위) — 해당 사진만 배열에서 제거 */}
+              <button
+                type="button"
+                aria-label="사진 삭제"
+                onClick={() =>
+                  setPhotos((prev) => prev.filter((_, idx) => idx !== i))
+                }
+                className="absolute top-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-xs text-white"
+              >
+                ×
+              </button>
+
               {i === 0 && (
-                <span className="bg-primary absolute top-1 left-1 rounded px-1.5 py-0.5 text-[10px] font-medium text-white">
+                <span className="bg-primary-light text-primary absolute top-0 right-0 rounded-xl px-2 py-0.5 text-[13px] font-bold">
                   대표사진
                 </span>
               )}
