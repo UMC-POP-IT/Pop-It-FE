@@ -64,7 +64,7 @@ export const mockProperty: Property = {
       id: 'scene-storage',
       name: '창고',
       modelUrl: sceneStorageModelUrl,
-      thumbnail: 'https://picsum.photos/seed/prop-sinsa-001-store-thumb/400/500',
+      thumbnail: 'https://picsum.photos/seed/prop-sinsa-001-storage-thumb/400/500',
       images: [],
       camera: {
         position: [6, 6, 6],
@@ -103,12 +103,12 @@ export const mockProperty: Property = {
       id: 'scene-fitting',
       name: '피팅 룸',
       modelUrl: sceneFittingModelUrl,
-      thumbnail: 'https://picsum.photos/seed/prop-sinsa-001-store-thumb/400/500',
+      thumbnail: 'https://picsum.photos/seed/prop-sinsa-001-fitting-thumb/400/500',
       images: [
-        'https://picsum.photos/seed/prop-sinsa-001-store-1/1400/800',
-        'https://picsum.photos/seed/prop-sinsa-001-store-2/1400/800',
-        'https://picsum.photos/seed/prop-sinsa-001-store-3/1400/800',
-        'https://picsum.photos/seed/prop-sinsa-001-store-4/1400/800',
+        'https://picsum.photos/seed/prop-sinsa-001-fitting-1/1400/800',
+        'https://picsum.photos/seed/prop-sinsa-001-fitting-2/1400/800',
+        'https://picsum.photos/seed/prop-sinsa-001-fitting-3/1400/800',
+        'https://picsum.photos/seed/prop-sinsa-001-fitting-4/1400/800',
       ],
       camera: {
         position: [6, 6, 6],
