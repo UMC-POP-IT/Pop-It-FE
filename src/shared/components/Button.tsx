@@ -1,7 +1,7 @@
 import { type ButtonHTMLAttributes } from "react";
 
 type ButtonVariant =
-  "primary" | "outline" | "danger" | "kakao" | "naver" | "ghost" | "black" | "gray";
+  "primary" | "outline" | "danger" | "kakao" | "google" | "ghost" | "black" | "gray";
 type ButtonSize = "sm" | "md" | "lg" | "nav";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -14,7 +14,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   outline: "border border-primary text-primary bg-white hover:bg-primary-light",
   danger: "border border-danger text-danger bg-white hover:bg-danger-light",
   kakao: "bg-kakao text-kakao-text",
-  naver: "bg-naver text-naver-text",
+  google: "bg-google text-google-text border border-google-border",
   ghost: "bg-transparent text-text-secondary hover:bg-bg",
   black: "bg-text-primary text-white hover:bg-gray-800",
   gray: "bg-tag-bg text-text-tertiary hover:bg-gray-200",

@@ -78,6 +78,9 @@
      소셜 로그인
   ──────────────────────────────── */
   --color-kakao: #FEE500; /* 카카오 공식 컬러 | 카카오 버튼 배경 */
+  --color-google: #ffffff; /* 구글 버튼 배경 */
+  --color-google-text: #121212; /* 구글 버튼 텍스트 */
+  --color-google-border: #d8d8d8; /* 구글 버튼 테두리 */
   --color-kakao-text: #363636; /* Grey/grey-900   | 카카오 버튼 텍스트 */
   --color-naver: #00cb4b; /* 네이버 공식 컬러 | 네이버 버튼 배경 */
   --color-naver-text: #ffffff; /* Grey/white       | 네이버 버튼 텍스트 */
