@@ -152,7 +152,7 @@ export const mockProperty: Property = {
           position: [-0.5, 1.0, -1.5],
           label: '피팅룸 문',
           type: 'link',
-          description: '피팅 룸 밖으로 나가는 문',
+          description: '피팅룸 밖으로 나가는 문',
           targetSceneId: 'scene-store'
         }
         // 다른 방이 생기면 link 타입으로 연결
@@ -218,7 +218,7 @@ export const mockProperty: Property = {
         {
           id: 'door-to-fitting',
           position: [-3, 1, 1.5],
-          label: '피팅 룸 문',
+          label: '피팅룸 문',
           type: 'link',
           description: '피팅 룸으로 향하는 문',
           targetSceneId: 'scene-fitting'
