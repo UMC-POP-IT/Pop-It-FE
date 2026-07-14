@@ -1,10 +1,12 @@
+@import "https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/variable/woff2/SUIT-Variable.css";
 @import "tailwindcss";
 
 @theme {
   /* ────────────────────────────────
      폰트
+     Figma 전체 텍스트 스타일이 "SUIT Variable"을 사용함
   ──────────────────────────────── */
-  --font-sans: "Pretendard", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "SUIT Variable", ui-sans-serif, system-ui, sans-serif;
 
   /* ────────────────────────────────
      브랜드 컬러 (Blue 계열)
