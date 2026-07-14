@@ -106,19 +106,15 @@ export const RegisterStep2 = () => {
             계약 가능 기간
           </span>
 
-          {/* 달력에서 범위 선택 → 확인 누르면 store에 저장 */}
+          {/* 필드 클릭 → 달력 팝업 → 확인 시 store 저장.
+              store 값으로 초기화(뒤로 왔을 때 유지) */}
           <DateRangePicker
+            initialStart={form.startDate}
+            initialEnd={form.endDate}
             onConfirm={(start, end) =>
               setValues({ startDate: start, endDate: end })
             }
           />
-
-          {/* 선택된 기간 표시 (store 값) */}
-          {form.startDate && form.endDate && (
-            <span className="text-text-primary text-sm">
-              선택: {form.startDate} ~ {form.endDate}
-            </span>
-          )}
 
           <span className="text-text-disabled text-xs">
             최대 3개월 신청 가능

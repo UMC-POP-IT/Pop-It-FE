@@ -9,7 +9,7 @@ const isSameDay = (a: Date, b: Date) =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 
-// Date → "2026-06-21" 문자열로 (store에 저장할 형식)
+// Date → "2026-06-21" (store 저장용)
 const toYmd = (date: Date) => {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -17,11 +17,20 @@ const toYmd = (date: Date) => {
   return `${y}-${m}-${d}`;
 };
 
+// Date → "2026.06.21" (화면 표시용)
+const toDisplay = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}.${m}.${d}`;
+};
+
+// 어떤 '달(base)'의 달력 42칸(6주×7일) 날짜 배열
 const getCalendarDays = (base: Date): Date[] => {
   const year = base.getFullYear();
   const month = base.getMonth();
-  const startOffset = new Date(year, month, 1).getDay(); // 그 달 1일이 무슨 요일? (0은 일요일)
-  const gridStart = new Date(year, month, 1 - startOffset); // 1일에서 그 요일 만큼 앞으로 당김
+  const startOffset = new Date(year, month, 1).getDay(); // 그 달 1일의 요일 (0=일)
+  const gridStart = new Date(year, month, 1 - startOffset); // 1일에서 요일만큼 앞으로
   return Array.from({ length: 42 }, (_, i) => {
     const d = new Date(gridStart);
     d.setDate(gridStart.getDate() + i);
@@ -30,18 +39,28 @@ const getCalendarDays = (base: Date): Date[] => {
 };
 
 interface DateRangePickerProps {
-  onConfirm: (start: string, end: string) => void; // 확인 누르면 부모(store)에 전달
+  initialStart?: string; // store에 저장된 시작일 ("2026-06-21")
+  initialEnd?: string; // store에 저장된 종료일
+  onConfirm: (start: string, end: string) => void; // 확인 시 부모(store)에 전달
 }
 
-export const DateRangePicker = ({ onConfirm }: DateRangePickerProps) => {
-  // 지금 보는 '왼쪽 달' (2개월 중 첫 달)
-  const [viewDate, setViewDate] = useState(new Date());
-  // 선택한 범위 (아직 없으면 null)
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+export const DateRangePicker = ({
+  initialStart,
+  initialEnd,
+  onConfirm,
+}: DateRangePickerProps) => {
+  const [isOpen, setIsOpen] = useState(false); // 달력 팝업 열림/닫힘
+  const [viewDate, setViewDate] = useState(new Date()); // 왼쪽에 보이는 달
+  // 선택 범위 (store 값이 있으면 그걸로 초기화)
+  const [startDate, setStartDate] = useState<Date | null>(
+    initialStart ? new Date(initialStart) : null,
+  );
+  const [endDate, setEndDate] = useState<Date | null>(
+    initialEnd ? new Date(initialEnd) : null,
+  );
 
   const handleSelectDate = (date: Date) => {
-    // 시작이 없거나, 이미 범위를 다 골랐으면 → 새로 시작
+    // 시작이 없거나 이미 범위를 다 골랐으면 → 새로 시작
     if (!startDate || endDate) {
       setStartDate(date);
       setEndDate(null);
@@ -53,34 +72,47 @@ export const DateRangePicker = ({ onConfirm }: DateRangePickerProps) => {
       setEndDate(null);
       return;
     }
-    // 그 외 → 종료일로 확정
     setEndDate(date);
   };
 
-  //날짜 칸 하이라이트
+  // 날짜 칸 색칠
   const getDayClassName = (date: Date, base: Date) => {
     const isCurrentMonth = date.getMonth() === base.getMonth();
-
-    // 시작일 또는 종료일 → 파란 동그라미
     if (
       (startDate && isSameDay(date, startDate)) ||
       (endDate && isSameDay(date, endDate))
     ) {
-      return "bg-primary text-white rounded-md";
+      return "bg-primary rounded-full text-white";
     }
-    // 시작~종료 사이 → 연한 파랑
     if (startDate && endDate && date > startDate && date < endDate) {
       return "bg-primary-light text-text-primary";
     }
-    // 이번 달이 아니면(앞뒤 달 날짜) 흐리게
     return isCurrentMonth ? "text-text-primary" : "text-text-disabled";
   };
 
-  // 한 달치 달력 JSX를 만든다 (base = 그릴 달)
+  // 확인 → store에 저장하고 팝업 닫기
+  const handleConfirm = () => {
+    if (startDate && endDate) {
+      onConfirm(toYmd(startDate), toYmd(endDate));
+      setIsOpen(false);
+    }
+  };
+
+  const nextMonth = new Date(
+    viewDate.getFullYear(),
+    viewDate.getMonth() + 1,
+    1,
+  );
+  const goPrev = () =>
+    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
+  const goNext = () =>
+    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
+
+  // 한 달치 달력 JSX
   const renderMonth = (base: Date) => (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       {/* 월 표시 (예: 2026.06) */}
-      <div className="text-text-primary text-center text-lg font-bold">
+      <div className="text-text-primary mb-1 text-center text-base font-bold">
         {base.getFullYear()}.{String(base.getMonth() + 1).padStart(2, "0")}
       </div>
       {/* 요일 줄 */}
@@ -88,7 +120,7 @@ export const DateRangePicker = ({ onConfirm }: DateRangePickerProps) => {
         {WEEKDAYS.map((day) => (
           <span
             key={day}
-            className="text-text-secondary py-2 text-center text-sm"
+            className="text-text-secondary flex h-8 w-9 items-center justify-center text-xs"
           >
             {day}
           </span>
@@ -101,7 +133,7 @@ export const DateRangePicker = ({ onConfirm }: DateRangePickerProps) => {
             type="button"
             key={date.toISOString()}
             onClick={() => handleSelectDate(date)}
-            className={`py-2 text-sm ${getDayClassName(date, base)}`}
+            className={`flex h-9 w-9 items-center justify-center text-sm ${getDayClassName(date, base)}`}
           >
             {date.getDate()}
           </button>
@@ -110,64 +142,76 @@ export const DateRangePicker = ({ onConfirm }: DateRangePickerProps) => {
     </div>
   );
 
-  const nextMonth = new Date(
-    viewDate.getFullYear(),
-    viewDate.getMonth() + 1,
-    1,
-  );
-
-  // 월 이동
-  const goPrev = () =>
-    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
-  const goNext = () =>
-    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
+  // 필드에 보여줄 텍스트
+  const fieldText = (d: Date | null, placeholder: string) =>
+    d ? toDisplay(d) : placeholder;
 
   return (
-    <div className="border-border rounded-lg border bg-white p-4">
-      <div className="flex items-start gap-4">
-        {/* 이전 달 */}
-        <button
-          type="button"
-          onClick={goPrev}
-          aria-label="이전 달"
-          className="text-text-primary px-2 text-xl"
-        >
-          ‹
-        </button>
-
-        {/* 2개월 나란히 */}
-        {renderMonth(viewDate)}
-        {renderMonth(nextMonth)}
-
-        {/* 다음 달 */}
-        <button
-          type="button"
-          onClick={goNext}
-          aria-label="다음 달"
-          className="text-text-primary px-2 text-xl"
-        >
-          ›
-        </button>
+    <div className="relative">
+      {/* 시작일 / 종료일 필드 (클릭하면 달력 팝업 열림) */}
+      <div className="grid grid-cols-2 gap-6">
+        {[
+          { date: startDate, label: "시작일" },
+          { date: endDate, label: "종료일" },
+        ].map((field) => (
+          <button
+            key={field.label}
+            type="button"
+            onClick={() => setIsOpen((v) => !v)}
+            className="border-border flex h-12 items-center justify-between rounded-lg border bg-white px-4 text-sm"
+          >
+            <span
+              className={
+                field.date ? "text-text-primary" : "text-text-placeholder"
+              }
+            >
+              {fieldText(field.date, field.label)}
+            </span>
+            <span className="text-text-secondary text-xs">▾</span>
+          </button>
+        ))}
       </div>
 
-      {/* 선택된 범위 표시 + 확인 버튼 */}
-      <div className="mt-4 flex items-center justify-between">
-        <span className="text-text-primary text-sm">
-          {startDate ? toYmd(startDate) : "시작일"} ~{" "}
-          {endDate ? toYmd(endDate) : "종료일"}
-        </span>
-        <button
-          type="button"
-          disabled={!(startDate && endDate)}
-          onClick={() => {
-            if (startDate && endDate)
-              onConfirm(toYmd(startDate), toYmd(endDate));
-          }}
-          className="bg-primary rounded-lg px-6 py-2 text-sm font-bold text-white disabled:opacity-40"
-        >
-          확인
-        </button>
-      </div>
+      {/* 달력 팝업 (isOpen일 때만, 필드 아래에 떠 있음) */}
+      {isOpen && (
+        <div className="border-border absolute left-0 z-10 mt-2 rounded-xl border bg-white p-5 shadow-lg">
+          <div className="flex items-start gap-4">
+            <button
+              type="button"
+              onClick={goPrev}
+              aria-label="이전 달"
+              className="text-text-primary px-1 text-xl"
+            >
+              ‹
+            </button>
+            {renderMonth(viewDate)}
+            {renderMonth(nextMonth)}
+            <button
+              type="button"
+              onClick={goNext}
+              aria-label="다음 달"
+              className="text-text-primary px-1 text-xl"
+            >
+              ›
+            </button>
+          </div>
+
+          {/* 선택 범위 + 확인 */}
+          <div className="mt-4 flex items-center justify-between">
+            <span className="text-text-secondary text-sm">
+              {fieldText(startDate, "시작일")} ~ {fieldText(endDate, "종료일")}
+            </span>
+            <button
+              type="button"
+              disabled={!(startDate && endDate)}
+              onClick={handleConfirm}
+              className="bg-primary rounded-lg px-6 py-2 text-sm font-bold text-white disabled:opacity-40"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
