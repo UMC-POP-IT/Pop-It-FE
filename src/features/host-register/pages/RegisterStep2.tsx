@@ -37,11 +37,11 @@ export const RegisterStep2 = () => {
           <div className="grid grid-cols-2 gap-6">
             {/* 보증금 */}
             <div className="flex flex-col gap-1">
-              <span className="text-text-tertiary text-xl font-bold">
+              <label className="text-text-tertiary text-xl font-bold">
                 보증금
-              </span>
+              </label>
               <div className="relative">
-                <Input type="number" />
+                <Input type="number" aria-label="보증금" />
                 <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
                   만원
                 </span>
@@ -49,13 +49,14 @@ export const RegisterStep2 = () => {
               <span className="text-text-placeholder text-base font-bold">
                 최대 100만원 설정 가능
               </span>
+
             </div>
 
             {/* 금액 (일/주/월 3줄) */}
             <div className="flex flex-col gap-1">
-              <span className="text-text-tertiary text-xl font-bold">
+              <label className="text-text-tertiary text-xl font-bold">
                 금액
-              </span>
+              </label>
               <div className="flex flex-col gap-2">
                 {PRICE_ROWS.map((unit) => (
                   <div
