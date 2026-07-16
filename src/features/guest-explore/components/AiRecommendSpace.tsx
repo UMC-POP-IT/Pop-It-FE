@@ -4,6 +4,8 @@ import { recommendSpaces } from "@/features/guest-explore/api/mock_spaces";
 import type { Space } from "@/types";
 import { ScrollButton } from "./ScrollButton";
 import { useWishStore } from "@/store/wishStore";
+import { useNavigate } from "react-router-dom";
+import { useSpaceStore } from "@/store/spaceStore";
 
 const avgDayCost =
   recommendSpaces.reduce((sum, space) => sum + space.cost.day, 0) /
@@ -27,8 +29,11 @@ const AiRecommendSpace = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
-  const wishedSpaces = useWishStore((state) => state.wishedSpaces);
+  const spaces = useSpaceStore((state) => state.spaces);
+  const wishedIds = useWishStore((state) => state.wishedIds);
   const toggleWish = useWishStore((state) => state.toggleWish);
+
+  const navigate = useNavigate();
 
   // 좌/우 스크롤 버튼 활성화 여부 업데이트
   const updateScrollButtons = () => {
@@ -72,20 +77,24 @@ const AiRecommendSpace = () => {
           ref={scrollRef}
           className="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {recommendSpaces.map((space) => (
-            <div
-              key={space.id}
-              className="w-[calc(50%-0.5rem)] flex-none sm:w-[calc((100%-2*1rem)/3)] lg:w-[calc((100%-3*1rem)/4)]"
-            >
-              <SpaceCard
-                space={space}
-                categoryTag={space.keywords[0]}
-                matchReason={getMatchReason(space)}
-                isWished={wishedSpaces.some((s) => s.id === space.id)}
-                onWishToggle={() => toggleWish(space)}
-              />
-            </div>
-          ))}
+          {recommendSpaces.map((recSpace) => {
+            const space = spaces.find((s) => s.id === recSpace.id) ?? recSpace;
+            return (
+              <div
+                key={space.id}
+                className="w-[calc(50%-0.5rem)] flex-none sm:w-[calc((100%-2*1rem)/3)] lg:w-[calc((100%-3*1rem)/4)]"
+              >
+                <SpaceCard
+                  space={space}
+                  categoryTag={space.keywords[0]}
+                  matchReason={getMatchReason(space)}
+                  isWished={wishedIds.includes(space.id)}
+                  onWishToggle={() => toggleWish(space.id)}
+                  onClick={() => navigate(`/spaces/${space.id}`)}
+                />
+              </div>
+            );
+          })}
         </div>
 
         {canScrollNext && <ScrollButton direction="next" position={"1/4"} onClick={() => scrollByCard(1)} />}
