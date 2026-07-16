@@ -7,9 +7,10 @@ import tossIcon from "@/features/guest-explore/icons/Toss.png";
 
 interface AuthenticationProps {
   onVerified?: (identityVerificationId: string) => Promise<void>;
+  onIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Authentication = ({ onVerified }: AuthenticationProps) => {
+const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) => {
   const [status, setStatus] = useState<"idle" | "pending" | "done" | "error">("idle");
 
   const handleVerify = async () => {
@@ -33,6 +34,7 @@ const Authentication = ({ onVerified }: AuthenticationProps) => {
     try {
       await onVerified?.(identityVerificationId);
       setStatus("done");
+      onIsAuthenticated(true); // 인증 성공 처리
     } catch {
       setStatus("error");
     }

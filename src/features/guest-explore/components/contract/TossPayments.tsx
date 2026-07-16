@@ -46,6 +46,7 @@ interface TossPaymentsProps {
   customerEmail: string;
   customerName: string;
   customerMobilePhone: string;
+  disabled: boolean;
   onComplete: () => void;
 }
 
@@ -56,6 +57,7 @@ const TossPayments = ({
   customerEmail,
   customerName,
   customerMobilePhone,
+  disabled,
   onComplete
 }: TossPaymentsProps) => {
   const paymentRef = useRef<TossPayment | null>(null);
@@ -111,7 +113,7 @@ const TossPayments = ({
   };
 
   return (
-    <Button className="w-40" variant="primary" size="md" onClick={() => {handlePayment(); onComplete();}}>
+    <Button disabled={disabled} className="w-40" variant="primary" size="md" onClick={() => {handlePayment(); onComplete();}}>
         작성 완료
     </Button>
   );

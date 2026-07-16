@@ -1,10 +1,18 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SignatureCanvas, { type SignatureBoardHandle } from "./SignatureCanvas";
 
-const SignatureBoard = () => {
+interface SignatureBoardProps {
+  onIsSigned: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const SignatureBoard = ({onIsSigned}: SignatureBoardProps) => {
   const boardRef = useRef<SignatureBoardHandle>(null);
   const [isEmpty, setIsEmpty] = useState(true);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+
+  useEffect(() => {
+    onIsSigned(!isEmpty);
+  }, [isEmpty]);
 
   const handleClear = () => {
     boardRef.current?.clear();

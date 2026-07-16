@@ -3,6 +3,7 @@ import { formatDate, getDuration } from "@/features/guest-explore/components/Res
 import SignatureBoard from "./SignatureBoard";
 import TossPayments from "./TossPayments";
 import Authentication from "./Authentication";
+import { useState } from "react";
 
 interface ContractModalProps {
   isOpen: boolean;
@@ -13,6 +14,9 @@ interface ContractModalProps {
 
 const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractModalProps) => {
   if (!isOpen) return null;
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // 본인 인증 여부
+  const [isSigned, setIsSigned] = useState(false); // 전자 서명 여부
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -96,8 +100,8 @@ const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractMod
             </div>
           </div>
 
-          <Authentication />
-          <SignatureBoard />
+          <Authentication onIsAuthenticated={setIsAuthenticated}/>
+          <SignatureBoard onIsSigned={setIsSigned}/>
 
           <div className="flex flex-row justify-center gap-5">
             <button
@@ -113,6 +117,7 @@ const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractMod
               customerEmail="popit@gmail.com"
               customerMobilePhone="01012341234"
               customerName="popit"
+              disabled={!(isSigned && isAuthenticated)}
               onComplete={onComplete}
             />
           </div>
