@@ -28,6 +28,12 @@ export const isUsing = (start: DateInfo, end: DateInfo): boolean => {
   return today >= toDate(start) && today <= toDate(end);
 };
 
+// 시작일 ~ 종료일 기간(박/일) 계산
+export const getDuration = (start: DateInfo, end: DateInfo) => {
+  const nights = Math.round((toDate(end).getTime() - toDate(start).getTime()) / (1000 * 60 * 60 * 24));
+  return { nights, days: nights + 1 };
+};
+
 const getCardMeta = (r: Reservation): CardMeta => {
   if (r.isDone) {
     return {

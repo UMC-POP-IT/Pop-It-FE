@@ -1,5 +1,5 @@
 import type { Reservation } from "@/features/guest-explore/api/mock_spaces";
-import { formatDate } from "@/features/guest-explore/components/ReservationCard";
+import { formatDate, getDuration } from "@/features/guest-explore/components/ReservationCard";
 import SignatureBoard from "./SignatureBoard";
 import TossPayments from "./TossPayments";
 import Authentication from "./Authentication";
@@ -36,7 +36,7 @@ const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractMod
             <div className="flex justify-between">
               <span className="text-text-secondary">기간</span>
               <span className="text-text-primary font-medium">
-                {formatDate(reservation.start)} ~ {formatDate(reservation.end) + " (3일)"}
+                {formatDate(reservation.start)} ~ {formatDate(reservation.end)} ({getDuration(reservation.start, reservation.end).days}일)
               </span>
             </div>
           </div>

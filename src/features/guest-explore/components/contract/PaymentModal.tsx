@@ -2,6 +2,7 @@ import Button from "@/shared/components/Button";
 import type { Reservation } from "@/features/guest-explore/api/mock_spaces";
 import { formatDate } from "@/features/guest-explore/components/ReservationCard";
 import shieldCheckIcon from "@/features/guest-explore/icons/shield-check.svg";
+import { getDuration } from "@/features/guest-explore/components/ReservationCard";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -36,7 +37,7 @@ const PaymentModal = ({
           <div className="flex justify-between">
             <span className="text-text-secondary">기간</span>
             <span className="text-text-primary font-medium">
-              {formatDate(reservation.start)} ~ {formatDate(reservation.end)+ " (3일)"}
+              {formatDate(reservation.start)} ~ {formatDate(reservation.end)} ({getDuration(reservation.start, reservation.end).days}일)
             </span>
           </div>
         </div>
