@@ -14,10 +14,10 @@ interface ContractModalProps {
 }
 
 const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractModalProps) => {
-  if (!isOpen) return null;
-
   const [isAuthenticated, setIsAuthenticated] = useState(false); // 본인 인증 여부
   const [isSigned, setIsSigned] = useState(false); // 전자 서명 여부
+  
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
