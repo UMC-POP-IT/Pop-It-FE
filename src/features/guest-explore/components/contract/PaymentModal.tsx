@@ -92,7 +92,7 @@ const PaymentModal = ({
           <Button
             variant="outline"
             size="md"
-            className="font-normal !border-none !bg-secure-payment-bg !text-text-secondary flex-1"
+            className="flex-1 border-none! bg-secure-payment-bg! text-text-secondary! font-normal"
             onClick={onClose}
           >
             돌아가기
