@@ -14,7 +14,7 @@ const RealTimeBanner = ({
 }: RealTimeBannerProps) => (
   <div
     onClick={onClick}
-    className="border-border border-transparent cursor-pointer overflow-hidden border bg-white transition-shadow hover:shadow-md"
+    className="border-border group border-transparent cursor-pointer overflow-hidden border bg-white transition-shadow hover:shadow-md"
   >
     {/* 이미지 */}
     <div className="bg-bg relative aspect-[4/5]">
@@ -22,7 +22,7 @@ const RealTimeBanner = ({
         <img
           src={space.imageUrls[0]}
           alt={space.name}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover transition-[filter] duration-500 group-hover:brightness-75"
         />
       ) : (
         <div className="bg-bg h-full w-full" />

@@ -3,6 +3,7 @@ import RealTimeBanner from "@/features/guest-explore/components/RealTimeBanner";
 import { recommendSpaces } from "@/features/guest-explore/api/mock_spaces";
 import type { Space } from "@/types";
 import { ScrollButton } from "./ScrollButton";
+import { useNavigate } from "react-router-dom";
 
 const avgDayCost =
   recommendSpaces.reduce((sum, space) => sum + space.cost.day, 0) /
@@ -17,6 +18,8 @@ const RealTimeRecommendSpace = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const navigate = useNavigate();
 
   // 좌/우 스크롤 버튼 활성화 여부 업데이트
   const updateScrollButtons = () => {
@@ -68,6 +71,7 @@ const RealTimeRecommendSpace = () => {
               <RealTimeBanner
                 space={space}
                 matchReason={getRecommendReason(space)}
+                onClick={() => navigate(`/spaces/${space.id}`)}
               />
             </div>
           ))}
