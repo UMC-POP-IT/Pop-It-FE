@@ -123,7 +123,7 @@ export const ReservationCard = ({ reservation }: ReservationCardProps) => {
                     인증 완료
                   </Button>
                 ))}
-              <Button className="!border-none !bg-gray-200 !text-black" variant="outline" size="sm" onClick={() => navigate(`/spaces/${reservation.space.id}`)}>
+              <Button className="border-none! bg-gray-200! text-black!" variant="outline" size="sm" onClick={() => navigate(`/spaces/${reservation.space.id}`)}>
                 공간 상세
               </Button>
               {showCancel && (
