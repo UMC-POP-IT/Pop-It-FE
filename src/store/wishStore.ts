@@ -9,12 +9,12 @@ interface WishState {
 export const useWishStore = create<WishState>((set, get) => ({
   wishedIds: [],
   toggleWish: (spaceId) => {
-    const exists = get().wishedIds.includes(spaceId);
+    const isWished = get().wishedIds.includes(spaceId);
     set((state) => ({
-      wishedIds: exists
+      wishedIds: isWished
         ? state.wishedIds.filter((id) => id !== spaceId) // 이미 찜한 공간이면 제거
         : [...state.wishedIds, spaceId], // 찜하지 않은 공간이면 추가
     }));
-    useSpaceStore.getState().adjustHeartCount(spaceId, exists ? -1 : 1);
+    useSpaceStore.getState().adjustHeartCount(spaceId, isWished ? -1 : 1);
   },
 }));
