@@ -101,7 +101,7 @@ const SignatureCanvas = forwardRef<SignatureBoardHandle, SignatureCanvasProps>(
 
     // 포인터 이벤트의 화면 좌표(clientX/Y)를 캔버스 내부 좌표로 변환한다.
     const getPoint = (e: React.PointerEvent<HTMLCanvasElement>): Point => {
-      const rect = canvasRef.current!.getBoundingClientRect();
+      const rect = e.currentTarget.getBoundingClientRect();
       return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     };
 
