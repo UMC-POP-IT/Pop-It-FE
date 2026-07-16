@@ -7,7 +7,6 @@ declare module "*.css" {
 
 interface ImportMetaEnv {
   readonly VITE_TOSS_PAYMENTS_CLIENT_KEY: string;
-  readonly VITE_TOSS_PAYMENTS_SECRET_KEY: string;
   readonly VITE_PORTONE_STORE_ID: string;
   readonly VITE_PORTONE_CHANNEL_KEY: string;
 }
