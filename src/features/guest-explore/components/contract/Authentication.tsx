@@ -6,7 +6,7 @@ import passIcon from "@/features/guest-explore/icons/PASS.png";
 import tossIcon from "@/features/guest-explore/icons/Toss.png";
 
 interface AuthenticationProps {
-  onVerified?: (identityVerificationId: string) => void;
+  onVerified?: (identityVerificationId: string) => Promise<void>;
 }
 
 const Authentication = ({ onVerified }: AuthenticationProps) => {
@@ -30,8 +30,12 @@ const Authentication = ({ onVerified }: AuthenticationProps) => {
       return;
     }
 
-    setStatus("done");
-    onVerified?.(identityVerificationId);
+    try {
+      await onVerified?.(identityVerificationId);
+      setStatus("done");
+    } catch {
+      setStatus("error");
+    }
   };
 
   return (
