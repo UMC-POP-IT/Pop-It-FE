@@ -16,8 +16,8 @@ const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractMod
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative z-10 flex max-h-[85vh] w-full max-w-[590px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden={true} />
+      <div className="relative z-10 flex max-h-[85vh] w-full max-w-[590px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl" role="dialog" aria-modal="true">
         <div className="flex flex-col gap-4 overflow-y-auto p-6">
           <h3 className="text-text-primary text-xl font-bold">단기 임대차 계약서</h3>
           <span className="text-text-secondary">
