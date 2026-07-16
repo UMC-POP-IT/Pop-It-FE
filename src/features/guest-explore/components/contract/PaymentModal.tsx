@@ -1,6 +1,6 @@
 import Button from "@/shared/components/Button";
 import type { Reservation } from "@/features/guest-explore/api/mock_spaces";
-import { formatDate } from "@/features/guest-explore/components/ReservationCard";
+import { formatDate } from "@/shared/utils/date";
 import shieldCheckIcon from "@/features/guest-explore/icons/shield-check.svg";
 import { getDuration } from "@/features/guest-explore/components/ReservationCard";
 

@@ -1,5 +1,6 @@
 import type { Reservation } from "@/features/guest-explore/api/mock_spaces";
-import { formatDate, getDuration } from "@/features/guest-explore/components/ReservationCard";
+import { getDuration } from "@/features/guest-explore/components/ReservationCard";
+import { formatDate } from "@/shared/utils/date";
 import SignatureBoard from "./SignatureBoard";
 import TossPayments from "./TossPayments";
 import Authentication from "./Authentication";

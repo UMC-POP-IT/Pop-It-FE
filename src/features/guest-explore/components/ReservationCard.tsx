@@ -6,6 +6,7 @@ import Modal from "@/shared/components/Modal";
 import type { DateInfo, Reservation } from "@/features/guest-explore/api/mock_spaces";
 import PaymentModal from "@/features/guest-explore/components/contract/PaymentModal";
 import ContractModal from "@/features/guest-explore/components/contract/ContractModal";
+import { formatDate } from "@/shared/utils/date";
 
 interface ReservationCardProps {
   reservation: Reservation;
@@ -49,9 +50,6 @@ const getCardMeta = (r: Reservation): CardMeta => {
   if (r.isApproved) return { label: "승인 완료", showCancel: true, showContract: true, needsPhotoVerification: false, isPhotoRejected: false };
   return { label: "승인 대기", showCancel: true, showContract: false, needsPhotoVerification: false, isPhotoRejected: false };
 };
-
-export const formatDate = (d: DateInfo) =>
-  `${d.year}.${String(d.month).padStart(2, "0")}.${String(d.day).padStart(2, "0")} (${d.day_type})`;
 
 export const ReservationCard = ({ reservation }: ReservationCardProps) => {
   const { label, showCancel, showContract, needsPhotoVerification, isPhotoRejected } = getCardMeta(reservation);
