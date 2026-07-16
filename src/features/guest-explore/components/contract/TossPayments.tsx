@@ -8,8 +8,6 @@ interface TossPaymentRequestOptions {
   amount: { currency: "KRW"; value: number };
   orderId: string;
   orderName: string;
-  successUrl: string;
-  failUrl: string;
   customerEmail: string;
   customerName: string;
   customerMobilePhone: string;
@@ -98,8 +96,6 @@ const TossPayments = ({
       amount: { currency: "KRW", value: amount },
       orderId,
       orderName,
-      successUrl: `${window.location.origin}/success`,
-      failUrl: `${window.location.origin}/fail`,
       customerEmail,
       customerName,
       customerMobilePhone,
@@ -110,10 +106,12 @@ const TossPayments = ({
         useAppCardOnly: false,
       },
     });
+
+    onComplete(); // 결제 결과 받은 뒤에만 호출하도록
   };
 
   return (
-    <Button disabled={disabled} className="w-40" variant="primary" size="md" onClick={() => {handlePayment(); onComplete();}}>
+    <Button disabled={disabled} className="w-40" variant="primary" size="md" onClick={handlePayment}>
         작성 완료
     </Button>
   );
