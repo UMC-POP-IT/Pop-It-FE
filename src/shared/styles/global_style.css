@@ -1,10 +1,12 @@
+@import "https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/variable/woff2/SUIT-Variable.css";
 @import "tailwindcss";
 
 @theme {
   /* ────────────────────────────────
      폰트
+     Figma 전체 텍스트 스타일이 "SUIT Variable"을 사용함
   ──────────────────────────────── */
-  --font-sans: "Pretendard", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "SUIT Variable", ui-sans-serif, system-ui, sans-serif;
 
   /* ────────────────────────────────
      브랜드 컬러 (Blue 계열)
@@ -79,6 +81,9 @@
   --color-kakao-text: #363636; /* Grey/grey-900   | 카카오 버튼 텍스트 */
   --color-naver: #00cb4b; /* 네이버 공식 컬러 | 네이버 버튼 배경 */
   --color-naver-text: #ffffff; /* Grey/white       | 네이버 버튼 텍스트 */
+  --color-google: #ffffff; /* 구글 버튼 배경 */
+  --color-google-text: #5b5b5b; /* 구글 버튼 텍스트 */
+  --color-google-border: #e0e0e0; /* 구글 버튼 테두리 */
 }
 
 @layer base {

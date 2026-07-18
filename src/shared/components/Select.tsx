@@ -19,7 +19,7 @@ const Select = ({ options, value, onChange, placeholder, disabled, className = "
       value={value}
       onChange={onChange}
       disabled={disabled}
-      className={`border-divider h-14 w-full appearance-none rounded-lg border-2 bg-white px-5 text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+      className={`border-divider h-14 w-full appearance-none rounded-lg border-2 bg-white px-5 text-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
         disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer"
       } ${value ? "text-text-primary" : "text-text-placeholder"} ${className}`}
       {...props}
