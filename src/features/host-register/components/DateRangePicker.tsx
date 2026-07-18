@@ -17,6 +17,12 @@ const toYmd = (date: Date) => {
   return `${y}-${m}-${d}`;
 };
 
+// "2026-06-21" → 로컬 시간대 기준 Date (날짜만 있는 문자열의 UTC 파싱 버그 방지)
+const parseYmd = (ymd: string): Date => {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(y, m - 1, d); // 로컬 자정 (month는 0부터라 -1)
+};
+
 // Date → "2026.06.21" (화면 표시용)
 const toDisplay = (date: Date) => {
   const y = date.getFullYear();
@@ -50,13 +56,16 @@ export const DateRangePicker = ({
   onConfirm,
 }: DateRangePickerProps) => {
   const [isOpen, setIsOpen] = useState(false); // 달력 팝업 열림/닫힘
-  const [viewDate, setViewDate] = useState(new Date()); // 왼쪽에 보이는 달
-  // 선택 범위 (store 값이 있으면 그걸로 초기화)
+  // 저장된 시작일이 있으면 그 달을 먼저 보여줌 (없으면 이번 달)
+  const [viewDate, setViewDate] = useState(
+    initialStart ? parseYmd(initialStart) : new Date(),
+  );
+  // 선택 범위 (store 값이 있으면 그걸로 초기화 — 로컬 시간대로 안전 파싱)
   const [startDate, setStartDate] = useState<Date | null>(
-    initialStart ? new Date(initialStart) : null,
+    initialStart ? parseYmd(initialStart) : null,
   );
   const [endDate, setEndDate] = useState<Date | null>(
-    initialEnd ? new Date(initialEnd) : null,
+    initialEnd ? parseYmd(initialEnd) : null,
   );
   const containerRef = useRef<HTMLDivElement>(null); // 달력 전체를 가리키는 리모컨
 
