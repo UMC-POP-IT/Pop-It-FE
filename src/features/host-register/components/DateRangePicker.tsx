@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 // 요일 헤더 (일~토)
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -58,6 +58,32 @@ export const DateRangePicker = ({
   const [endDate, setEndDate] = useState<Date | null>(
     initialEnd ? new Date(initialEnd) : null,
   );
+  const containerRef = useRef<HTMLDivElement>(null); // 달력 전체를 가리키는 리모컨
+
+  // 달력이 열려있을 때만: 바깥 클릭 / Esc 키로 닫기
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    const handleClickOutside = (e: MouseEvent) => {
+      // 클릭이 달력(container) 밖이면 닫기
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    // 뒷정리: 닫히거나 언마운트될 때 감지 해제
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   // 시작일 기준 '최대 3개월'을 넘는 날짜인지 (계약 한도)
   const isOverLimit = (date: Date) =>
@@ -163,7 +189,10 @@ export const DateRangePicker = ({
     d ? toDisplay(d) : placeholder;
 
   return (
-    <div className="relative">
+    <div
+      className="relative"
+      ref={containerRef}
+    >
       {/* 시작일 / 종료일 필드 (클릭하면 달력 팝업 열림) */}
       <div className="grid grid-cols-2 gap-6">
         {[
@@ -173,6 +202,8 @@ export const DateRangePicker = ({
           <button
             key={field.label}
             type="button"
+            aria-haspopup="dialog"
+            aria-expanded={isOpen}
             onClick={() => setIsOpen((v) => !v)}
             className="border-border flex h-12 items-center justify-between rounded-lg border bg-white px-4 text-sm"
           >
