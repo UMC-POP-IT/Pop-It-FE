@@ -41,7 +41,7 @@ const ExploreDetailInfo = ({
 
           <div className="flex shrink-0 items-center">
             {/* 찜하기: 게스트 전용 기능 */}
-            {!isHost && (
+            {!isHost && onWishToggle && (
               <button
                 type="button"
                 aria-label={isWished ? "찜 해제하기" : "찜하기"}
