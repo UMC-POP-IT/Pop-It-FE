@@ -105,12 +105,28 @@ export const HostSpaceDetailPage = () => {
         </p>
         <button
           type="button"
-          onClick={() => setStatus("loading")}
+          onClick={() => {
+            setStatus("loading");
+            setSpace(null);
+            if (!Number.isFinite(id)) {
+              setStatus("notfound");
+              return;
+            }
+            fetchHostSpaceById(id)
+              .then((result) => {
+                if (result) {
+                  setSpace(result);
+                  setStatus("success");
+                } else {
+                  setStatus("notfound");
+                }
+              })
+              .catch(() => setStatus("error"));
+          }}
           className="text-primary text-sm font-medium"
         >
           다시 시도
         </button>
-      </div>
     );
   }
 
