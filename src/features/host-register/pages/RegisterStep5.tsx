@@ -3,7 +3,7 @@ import Button from "@/shared/components/Button";
 import iconCamera from "@/assets/icons/icon_camera.svg";
 import iconInfo from "@/assets/icons/icon_info.svg";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "@/shared/components/Modal";
 import { useRegisterStore } from "@/store/registerStore";
 import { STEPS } from "@/features/host-register/api/mock_register";
@@ -85,40 +85,20 @@ export const RegisterStep5 = () => {
                   ...Array.from(e.target.files ?? []),
                 ])
               }
-              className="hidden"
+              className="sr-only"
             />
           </label>
 
-          {/* photos 실제 이미지 */}
+          {/* 업로드된 사진 썸네일 (미리보기 URL 관리는 PhotoThumbnail 내부에서) */}
           {photos.map((photo, i) => (
-            <div
+            <PhotoThumbnail
               key={i}
-              className="bg-tag-bg border-divider relative size-[144px] shrink-0 overflow-hidden rounded-lg border-2"
-            >
-              <img
-                src={URL.createObjectURL(photo)}
-                alt=""
-                className="h-full w-full object-cover"
-              />
-
-              {/* 삭제 버튼 (왼쪽 위) — 해당 사진만 배열에서 제거 */}
-              <button
-                type="button"
-                aria-label="사진 삭제"
-                onClick={() =>
-                  setPhotos((prev) => prev.filter((_, idx) => idx !== i))
-                }
-                className="absolute top-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-xs text-white"
-              >
-                ×
-              </button>
-
-              {i === 0 && (
-                <span className="bg-primary-light text-primary absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1.5 text-xl font-medium whitespace-nowrap">
-                  대표사진
-                </span>
-              )}
-            </div>
+              photo={photo}
+              isFirst={i === 0}
+              onRemove={() =>
+                setPhotos((prev) => prev.filter((_, idx) => idx !== i))
+              }
+            />
           ))}
         </div>
 
@@ -177,6 +157,52 @@ export const RegisterStep5 = () => {
           완료
         </Button>
       </div>
+    </div>
+  );
+};
+
+// 사진 썸네일 — 미리보기 URL을 한 번만 만들고 정리(revoke)까지 관리 (메모리 누수 방지)
+const PhotoThumbnail = ({
+  photo,
+  isFirst,
+  onRemove,
+}: {
+  photo: File;
+  isFirst: boolean;
+  onRemove: () => void;
+}) => {
+  const [url, setUrl] = useState("");
+
+  useEffect(() => {
+    const objectUrl = URL.createObjectURL(photo);
+    setUrl(objectUrl);
+    // 뒷정리: 언마운트 / photo 변경 시 URL 해제 (메모리 누수 방지)
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [photo]);
+
+  return (
+    <div className="bg-tag-bg border-divider relative size-[144px] shrink-0 overflow-hidden rounded-lg border-2">
+      <img
+        src={url}
+        alt=""
+        className="h-full w-full object-cover"
+      />
+
+      {/* 삭제 버튼 (왼쪽 위) */}
+      <button
+        type="button"
+        aria-label="사진 삭제"
+        onClick={onRemove}
+        className="absolute top-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-xs text-white"
+      >
+        ×
+      </button>
+
+      {isFirst && (
+        <span className="bg-primary-light text-primary absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1.5 text-xl font-medium whitespace-nowrap">
+          대표사진
+        </span>
+      )}
     </div>
   );
 };
