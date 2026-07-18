@@ -2,9 +2,8 @@ import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import { useNavigate } from "react-router-dom";
-
-// 5단계 진행바 라벨 (Step1과 동일 — 현재 단계만 다름)
-const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
+import { useRegisterStore } from "@/store/registerStore";
+import { STEPS } from "@/features/host-register/api/mock_register";
 
 //Tip 박스 안내 문구
 const TIP_ITEMS = [
@@ -16,6 +15,8 @@ const TIP_ITEMS = [
 
 export const RegisterStep4 = () => {
   const navigate = useNavigate();
+  const form = useRegisterStore((s) => s.form);
+  const setValues = useRegisterStore((s) => s.setValues);
   return (
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -42,25 +43,35 @@ export const RegisterStep4 = () => {
 
         {/* 공간명 */}
         <div className="flex flex-col gap-2">
-          <span className="text-text-primary text-[22px] font-bold">공간명</span>
-          <Input placeholder="예: 성수 000 건물" />
+          <span className="text-text-primary text-[22px] font-bold">
+            공간명
+          </span>
+          <Input
+            placeholder="예: 성수 000 건물"
+            value={form.buildingName}
+            onChange={(e) => setValues({ buildingName: e.target.value })}
+          />
         </div>
         {/* 공간 설명
             ⚠️ 공통 Textarea 없어 임시 구현 → 챈(4번)과 협의 예정 */}
         <div className="flex flex-col gap-2">
-          <span className="text-text-primary text-[22px] font-bold">공간 설명</span>
+          <span className="text-text-primary text-[22px] font-bold">
+            공간 설명
+          </span>
           <div className="relative">
             <textarea
               rows={8}
               maxLength={1000}
+              value={form.description}
+              onChange={(e) => setValues({ description: e.target.value })}
               placeholder={
                 "예: 성수역 도보 3분 거리입니다. 인테리어가 깔끔하여 전시회에 적합합니다.\n주변 상권이 좋아 유동인구가 많습니다"
               }
               className="text-text-primary border-border focus:border-primary w-full resize-none rounded-lg border bg-white px-4 py-3 text-lg font-medium transition-colors focus:outline-none"
             />
-            {/* 정적: 글자수 0 고정. TODO: RHF 붙일 때 실제 카운팅 */}
+            {/* 글자수 카운트 (실제 반영) */}
             <span className="text-text-disabled pointer-events-none absolute right-4 bottom-3 text-lg font-medium">
-              0/1000
+              {form.description.length}/1000
             </span>
           </div>
         </div>
