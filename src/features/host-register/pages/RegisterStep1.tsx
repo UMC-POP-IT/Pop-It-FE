@@ -6,9 +6,7 @@ import Chip from "@/shared/components/Chip";
 import Select from "@/shared/components/Select";
 import { useNavigate } from "react-router-dom";
 import { useRegisterStore } from "@/store/registerStore";
-
-// 5단계 진행바 라벨 (피그마 기준)
-const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
+import { STEPS } from "@/features/host-register/api/mock_register";
 
 // 건물 유형 칩 선택지 (피그마 기준)
 const BUILDING_TYPES = [

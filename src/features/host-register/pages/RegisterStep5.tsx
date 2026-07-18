@@ -6,9 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Modal from "@/shared/components/Modal";
 import { useRegisterStore } from "@/store/registerStore";
-
-// 5단계 진행바 라벨 (Step1~4와 동일 — 현재 단계만 다름)
-const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
+import { STEPS } from "@/features/host-register/api/mock_register";
 
 // 사진 촬영 가이드 안내 문구
 const GUIDE_ITEMS = [

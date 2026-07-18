@@ -3,9 +3,7 @@ import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import { useNavigate } from "react-router-dom";
 import { useRegisterStore } from "@/store/registerStore";
-
-// 5단계 진행바 라벨 (Step1과 동일 — 현재 단계만 다름)
-const STEPS = ["위치/구조", "거래 정보", "공간 정보", "상세 정보", "사진 등록"];
+import { STEPS } from "@/features/host-register/api/mock_register";
 
 export const RegisterStep2 = () => {
   const navigate = useNavigate();
