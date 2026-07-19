@@ -6,9 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { HOST_STEPS } from "@/features/host-register/api/mock_register";
 
 // 호스트 등록 시작 모달 (인트로)
-// 정적: 항상 열린 상태로 표시. TODO: 열림/닫힘 상태 + 액션 연결
 //  - [등록 시작하기] → step1(사업자 정보) 화면으로 이동
-//  - [X] → 모달 닫고 이전 화면(게스트홈)으로 복귀
+//  - [X] → 게스트홈(/)으로 복귀
+// TODO(2차): 모달 열림/닫힘 상태 관리
 export const HostRegisterStart = () => {
   const navigate = useNavigate();
   return (
@@ -18,8 +18,7 @@ export const HostRegisterStart = () => {
 
       {/* 모달 카드 */}
       <div className="relative z-10 flex w-[720px] gap-8 rounded-2xl bg-white p-8 shadow-xl">
-        {/* X 닫기 (공통 X 컴포넌트 없어 LoginModal과 동일하게 raw button 사용)
-            TODO: onClick → 게스트홈(/)으로 복귀 */}
+        {/* X 닫기 (공통 X 컴포넌트 없어 LoginModal과 동일하게 raw button 사용) */}
         <button
           type="button"
           aria-label="닫기"
@@ -56,7 +55,7 @@ export const HostRegisterStart = () => {
             currentStep={-1}
           />
 
-          {/* 등록 시작하기 → step1(사업자 정보)로 이동 (TODO) */}
+          {/* 등록 시작하기 → step1(사업자 정보)로 이동 */}
           <Button
             variant="primary"
             size="md"

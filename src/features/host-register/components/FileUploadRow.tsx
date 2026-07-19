@@ -7,7 +7,7 @@ interface FileUploadRowProps {
 }
 
 // 파일 첨부 행 (사업자등록증 사본 / 통장 사본 공용)
-// 정적: 파일명 표시 영역은 placeholder만 노출. TODO: 실제 선택 파일명 표시 + 업로드 처리
+// 파일 선택 시 파일명 표시. (실제 서버 업로드는 2차 API 때)
 const FileUploadRow = ({ label, placeholder, hint }: FileUploadRowProps) => {
   const [file, setFile] = useState<File | null>(null);
   return (

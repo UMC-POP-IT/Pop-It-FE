@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useHostRegisterStore } from "@/store/registerStore";
 
 // 호스트 등록 완료 화면
-// TODO: [호스트 홈으로] 클릭 시 호스트 홈으로 이동
 export const HostRegisterComplete = () => {
   const navigate = useNavigate();
   const reset = useHostRegisterStore((s) => s.reset);

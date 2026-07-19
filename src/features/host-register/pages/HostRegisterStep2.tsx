@@ -107,7 +107,7 @@ export const HostRegisterStep2 = () => {
       </div>
 
       {/* 이전 / 다음으로 버튼 (우측 정렬)
-          정적: '다음으로' 활성 상태로 표시. TODO: 유효성 검사 통과 시 활성화 + 완료 화면 이동 */}
+          TODO(2차): 유효성 검사 통과 시 활성화 */}
       <div className="flex justify-end gap-2">
         <Button
           variant="gray"

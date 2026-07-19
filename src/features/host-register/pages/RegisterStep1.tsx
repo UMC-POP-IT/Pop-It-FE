@@ -143,8 +143,7 @@ export const RegisterStep1 = () => {
       </div>
 
       {/* 다음으로 버튼 (우측 정렬)
-          정적: 초기 비활성(회색) 상태로 표시.
-          TODO: 필수항목 유효성 검사 통과 시 활성화 + Step2 라우팅 (RHF 붙일 때) */}
+          TODO(2차): 필수항목 유효성 검사 통과 시 활성화 */}
       <div className="flex justify-end">
         <Button
           variant="primary"
