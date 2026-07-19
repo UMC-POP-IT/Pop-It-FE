@@ -11,6 +11,7 @@ export interface Reservation {
   end: DateInfo; // 마감 날짜
   isDone: boolean; // 마감 여부
   isPhotoVerified?: boolean; // 퇴실 사진 인증 완료 여부 (isDone === true 인 경우에만 의미 있음)
+  isPhotoRejected?: boolean; // 퇴실 사진 인증 거절 여부 (isDone === true && isPhotoVerified === false 인 경우에만 의미 있음)
 }
 
 /** 날짜 */
@@ -405,6 +406,31 @@ export const reservations: Reservation[] = [
     end: { year: 2026, month: 5, day: 25, day_type: '일' },
     isDone: true,
     isPhotoVerified: true,
+  },
+  {
+    isApproved: true,
+    isContracted: true,
+    space: {
+      id: 1001,
+      hostId: 2001,
+      imageUrls: [
+        'https://picsum.photos/seed/space1001/400/300',
+        'https://picsum.photos/seed/space1001b/400/300',
+      ],
+      heartCount: 128,
+      name: '신사 아뜰리에',
+      address: '서울 강남구 압구정로 42길 15',
+      cost: { day: 80000, month: 1800000, year: 19800000 },
+      keywords: ['자연광', '통유리', '화보촬영', '단독공간'],
+      description: '통유리로 자연광이 가득 들어오는 신사동 단독 화보촬영 스튜디오입니다.',
+      createdAt: '2026-01-12T09:00:00.000Z',
+    },
+    total_cost: 160000,
+    start: { year: 2026, month: 5, day: 24, day_type: '토' },
+    end: { year: 2026, month: 5, day: 25, day_type: '일' },
+    isDone: true,
+    isPhotoVerified: false,
+    isPhotoRejected: true,
   },
 ];
 
