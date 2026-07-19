@@ -12,24 +12,25 @@ const RealTimeBanner = ({
   onClick,
   matchReason,
 }: RealTimeBannerProps) => (
-  <div
-    onClick={onClick}
-    className="border-border group border-transparent cursor-pointer overflow-hidden border bg-white transition-shadow hover:shadow-md"
-  >
+  <div className="border-border group border-transparent cursor-pointer overflow-hidden border bg-white transition-shadow hover:shadow-md">
     {/* 이미지 */}
-    <button type="button" className="bg-bg relative aspect-[4/5] group-hover:cursor-pointer">
+    <button
+      type="button"
+      onClick={onClick}
+      className="bg-bg relative aspect-[4/5] group-hover:cursor-pointer"
+    >
       {space.imageUrls[0] ? (
         <img
           src={space.imageUrls[0]}
           alt={space.name}
-          className="h-full w-full group object-cover transition-[filter] duration-500 group-hover:brightness-75"
+          className="h-full w-full object-cover transition-[filter] duration-500 group-hover:brightness-75"
         />
       ) : (
         <div className="bg-bg h-full w-full" />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
       <div className="absolute bottom-0 left-0 flex flex-col gap-1 p-4 mb-4 text-left">
-        <span className="text-2xl leading-snug font-bold text-white text whitespace-pre-wrap">
+        <span className="text-2xl leading-snug font-bold text-white whitespace-pre-wrap">
           {"이번 주, 놓치면 아쉬운\n강남 팝업 특가"}
         </span>
         <span className="text-sm text-white/80">{matchReason}</span>
