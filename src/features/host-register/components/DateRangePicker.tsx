@@ -1,0 +1,275 @@
+import { useState, useRef, useEffect } from "react";
+
+// 요일 헤더 (일~토)
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+// 두 날짜가 '같은 날'인지 확인 (년·월·일 비교)
+const isSameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
+
+// Date → "2026-06-21" (store 저장용)
+const toYmd = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+// "2026-06-21" → 로컬 시간대 기준 Date (날짜만 있는 문자열의 UTC 파싱 버그 방지)
+const parseYmd = (ymd: string): Date => {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(y, m - 1, d); // 로컬 자정 (month는 0부터라 -1)
+};
+
+// Date → "2026.06.21" (화면 표시용)
+const toDisplay = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}.${m}.${d}`;
+};
+
+// 어떤 '달(base)'의 달력 42칸(6주×7일) 날짜 배열
+const getCalendarDays = (base: Date): Date[] => {
+  const year = base.getFullYear();
+  const month = base.getMonth();
+  const startOffset = new Date(year, month, 1).getDay(); // 그 달 1일의 요일 (0=일)
+  const gridStart = new Date(year, month, 1 - startOffset); // 1일에서 요일만큼 앞으로
+  return Array.from({ length: 42 }, (_, i) => {
+    const d = new Date(gridStart);
+    d.setDate(gridStart.getDate() + i);
+    return d;
+  });
+};
+
+interface DateRangePickerProps {
+  initialStart?: string; // store에 저장된 시작일 ("2026-06-21")
+  initialEnd?: string; // store에 저장된 종료일
+  onConfirm: (start: string, end: string) => void; // 확인 시 부모(store)에 전달
+}
+
+export const DateRangePicker = ({
+  initialStart,
+  initialEnd,
+  onConfirm,
+}: DateRangePickerProps) => {
+  const [isOpen, setIsOpen] = useState(false); // 달력 팝업 열림/닫힘
+  // 저장된 시작일이 있으면 그 달을 먼저 보여줌 (없으면 이번 달)
+  const [viewDate, setViewDate] = useState(
+    initialStart ? parseYmd(initialStart) : new Date(),
+  );
+  // 선택 범위 (store 값이 있으면 그걸로 초기화 — 로컬 시간대로 안전 파싱)
+  const [startDate, setStartDate] = useState<Date | null>(
+    initialStart ? parseYmd(initialStart) : null,
+  );
+  const [endDate, setEndDate] = useState<Date | null>(
+    initialEnd ? parseYmd(initialEnd) : null,
+  );
+  const containerRef = useRef<HTMLDivElement>(null); // 달력 전체를 가리키는 리모컨
+
+  // 달력이 열려있을 때만: 바깥 클릭 / Esc 키로 닫기
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    const handleClickOutside = (e: MouseEvent) => {
+      // 클릭이 달력(container) 밖이면 닫기
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    // 뒷정리: 닫히거나 언마운트될 때 감지 해제
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  // 시작일 기준 '최대 3개월'을 넘는 날짜인지 (계약 한도)
+  const isOverLimit = (date: Date) =>
+    !!startDate &&
+    date >
+      new Date(
+        startDate.getFullYear(),
+        startDate.getMonth() + 3,
+        startDate.getDate(),
+      );
+
+  const handleSelectDate = (date: Date) => {
+    // 시작이 없거나 이미 범위를 다 골랐으면 → 새로 시작
+    if (!startDate || endDate) {
+      setStartDate(date);
+      setEndDate(null);
+      return;
+    }
+    // 시작일보다 앞을 누르면 → 그걸 새 시작으로
+    if (date < startDate) {
+      setStartDate(date);
+      setEndDate(null);
+      return;
+    }
+    if (isOverLimit(date)) return; // 3개월 초과면 종료일로 못 고름
+    setEndDate(date);
+  };
+
+  // 날짜 칸 색칠
+  const getDayClassName = (date: Date, base: Date) => {
+    const isCurrentMonth = date.getMonth() === base.getMonth();
+    if (
+      (startDate && isSameDay(date, startDate)) ||
+      (endDate && isSameDay(date, endDate))
+    ) {
+      return "bg-primary rounded-full text-white";
+    }
+    if (startDate && endDate && date > startDate && date < endDate) {
+      return "bg-primary-light text-text-primary";
+    }
+    return isCurrentMonth ? "text-text-primary" : "text-text-disabled";
+  };
+
+  // 확인 → store에 저장하고 팝업 닫기
+  const handleConfirm = () => {
+    if (startDate && endDate) {
+      onConfirm(toYmd(startDate), toYmd(endDate));
+      setIsOpen(false);
+    }
+  };
+
+  const nextMonth = new Date(
+    viewDate.getFullYear(),
+    viewDate.getMonth() + 1,
+    1,
+  );
+  const goPrev = () =>
+    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
+  const goNext = () =>
+    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
+
+  // 한 달치 달력 JSX
+  const renderMonth = (base: Date) => (
+    <div className="flex flex-col gap-2">
+      {/* 월 표시 (예: 2026.06) */}
+      <div className="text-text-primary mb-1 text-center text-base font-bold">
+        {base.getFullYear()}.{String(base.getMonth() + 1).padStart(2, "0")}
+      </div>
+      {/* 요일 줄 */}
+      <div className="grid grid-cols-7">
+        {WEEKDAYS.map((day) => (
+          <span
+            key={day}
+            className="text-text-secondary flex h-8 w-9 items-center justify-center text-xs"
+          >
+            {day}
+          </span>
+        ))}
+      </div>
+      {/* 날짜 42칸 */}
+      <div className="grid grid-cols-7">
+        {getCalendarDays(base).map((date) => {
+          // 종료일 고르는 중 + 3개월 초과 → 비활성
+          const disabled = !!startDate && !endDate && isOverLimit(date);
+          return (
+            <button
+              type="button"
+              key={date.toISOString()}
+              disabled={disabled}
+              onClick={() => handleSelectDate(date)}
+              className={`flex h-9 w-9 items-center justify-center text-sm ${getDayClassName(date, base)} ${disabled ? "cursor-not-allowed opacity-30" : ""}`}
+            >
+              {date.getDate()}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  // 필드에 보여줄 텍스트
+  const fieldText = (d: Date | null, placeholder: string) =>
+    d ? toDisplay(d) : placeholder;
+
+  return (
+    <div
+      className="relative"
+      ref={containerRef}
+    >
+      {/* 시작일 / 종료일 필드 (클릭하면 달력 팝업 열림) */}
+      <div className="grid grid-cols-2 gap-6">
+        {[
+          { date: startDate, label: "시작일" },
+          { date: endDate, label: "종료일" },
+        ].map((field) => (
+          <button
+            key={field.label}
+            type="button"
+            aria-haspopup="dialog"
+            aria-expanded={isOpen}
+            onClick={() => setIsOpen((v) => !v)}
+            className="border-border flex h-12 items-center justify-between rounded-lg border bg-white px-4 text-sm"
+          >
+            <span
+              className={
+                field.date ? "text-text-primary" : "text-text-placeholder"
+              }
+            >
+              {fieldText(field.date, field.label)}
+            </span>
+            <span className="text-text-secondary text-xs">▾</span>
+          </button>
+        ))}
+      </div>
+
+      {/* 달력 팝업 (isOpen일 때만, 필드 아래에 떠 있음) */}
+      {isOpen && (
+        <div className="border-border absolute left-0 z-10 mt-2 rounded-xl border bg-white p-5 shadow-lg">
+          <div className="flex items-start gap-4">
+            <button
+              type="button"
+              onClick={goPrev}
+              aria-label="이전 달"
+              className="text-text-primary px-1 text-xl"
+            >
+              ‹
+            </button>
+            {renderMonth(viewDate)}
+            {renderMonth(nextMonth)}
+            <button
+              type="button"
+              onClick={goNext}
+              aria-label="다음 달"
+              className="text-text-primary px-1 text-xl"
+            >
+              ›
+            </button>
+          </div>
+
+          {/* 선택 범위 + 확인 */}
+          <div className="mt-4 flex items-center justify-between">
+            <span className="text-text-secondary text-sm">
+              {fieldText(startDate, "시작일")} ~ {fieldText(endDate, "종료일")}
+            </span>
+            <button
+              type="button"
+              disabled={!(startDate && endDate)}
+              onClick={handleConfirm}
+              className="bg-primary rounded-lg px-6 py-2 text-sm font-bold text-white disabled:opacity-40"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DateRangePicker;
