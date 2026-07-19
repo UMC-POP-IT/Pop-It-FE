@@ -7,6 +7,10 @@ import Select from "@/shared/components/Select";
 import { useNavigate } from "react-router-dom";
 import { useRegisterStore } from "@/store/registerStore";
 import { STEPS } from "@/features/host-register/api/mock_register";
+import { useState } from "react";
+import AddressSearchModal from "@/features/host-register/components/AddressSearchModal";
+
+
 
 // 건물 유형 칩 선택지 (피그마 기준)
 const BUILDING_TYPES = [
@@ -35,6 +39,7 @@ export const RegisterStep1 = () => {
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
   const navigate = useNavigate();
+  const [isAddrOpen, setIsAddrOpen]= useState(false);
   return (
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -120,7 +125,7 @@ export const RegisterStep1 = () => {
               <Input
                 placeholder="주소"
                 value={form.address}
-                onChange={(e) => setValues({ address: e.target.value })}
+                readOnly
               />
             </div>
             {/* TODO: 주소 검색 API 연동 */}
@@ -128,6 +133,7 @@ export const RegisterStep1 = () => {
               variant="black"
               size="nav"
               className="text-xl! font-bold!"
+              onClick={()=> setIsAddrOpen(true)}
             >
               주소 찾기
             </Button>
@@ -153,6 +159,14 @@ export const RegisterStep1 = () => {
           다음으로
         </Button>
       </div>
+
+      <AddressSearchModal
+        isOpen = {isAddrOpen}
+        onClose={()=> setIsAddrOpen(false)}
+        onComplete={(address)=> setValues({address})}/>
+
+
+
     </div>
   );
 };
