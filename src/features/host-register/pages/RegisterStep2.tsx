@@ -3,6 +3,7 @@ import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import { useNavigate } from "react-router-dom";
 import { useRegisterStore } from "@/store/registerStore";
+import DateRangePicker from "@/features/host-register/components/DateRangePicker";
 import { STEPS } from "@/features/host-register/api/mock_register";
 
 export const RegisterStep2 = () => {
@@ -100,42 +101,25 @@ export const RegisterStep2 = () => {
           </div>
         </div>
 
-        {/* 계약 가능 기간 (시작일 / 종료일) */}
+        {/* 계약 가능 기간 */}
         <div className="flex flex-col gap-3">
           <span className="text-text-primary text-[22px] font-bold">
             계약 가능 기간
           </span>
 
-          <div className="grid grid-cols-2 gap-6">
-            {/* 시작일 */}
-            <label className="flex w-full flex-col gap-1">
-              <span className="text-text-tertiary text-xl font-bold">
-                시작일
-              </span>
-              <Input
-                type="date"
-                value={form.startDate}
-                onChange={(e) => setValues({ startDate: e.target.value })}
-              />
-            </label>
+          {/* 필드 클릭 → 달력 팝업 → 확인 시 store 저장.
+              store 값으로 초기화(뒤로 왔을 때 유지) */}
+          <DateRangePicker
+            initialStart={form.startDate}
+            initialEnd={form.endDate}
+            onConfirm={(start, end) =>
+              setValues({ startDate: start, endDate: end })
+            }
+          />
 
-            {/* 종료일 */}
-            <div className="flex flex-col gap-1">
-              <label className="flex w-full flex-col gap-1">
-                <span className="text-text-tertiary text-xl font-bold">
-                  종료일
-                </span>
-                <Input
-                  type="date"
-                  value={form.endDate}
-                  onChange={(e) => setValues({ endDate: e.target.value })}
-                />
-              </label>
-              <span className="text-text-placeholder text-base font-bold">
-                최대 3개월 신청 가능
-              </span>
-            </div>
-          </div>
+          <span className="text-text-placeholder text-base font-bold">
+            최대 3개월 신청 가능
+          </span>
         </div>
       </div>
 

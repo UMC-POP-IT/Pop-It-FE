@@ -1,36 +1,69 @@
+import { useState } from "react";
+import * as PortOne from "@portone/browser-sdk/v2";
+import kakaoIcon from "@/features/guest-explore/icons/Kakao.png";
+import naverIcon from "@/features/guest-explore/icons/Naver.png";
+import passIcon from "@/features/guest-explore/icons/PASS.png";
+import tossIcon from "@/features/guest-explore/icons/Toss.png";
+
 interface AuthenticationProps {
-  onIsAuthenticated: (v: boolean) => void;
+  onVerified?: (identityVerificationId: string) => Promise<void>;
+  onIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Authentication = ({ onIsAuthenticated }: AuthenticationProps) => {
+const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) => {
+  const [status, setStatus] = useState<"idle" | "pending" | "done" | "error">("idle");
+
+  const handleVerify = async () => {
+    if (status === "pending" || status === "done") return;
+    setStatus("pending");
+
+    const identityVerificationId = `identity-verification-${crypto.randomUUID()}`;
+
+    const response = await PortOne.requestIdentityVerification({
+      storeId: import.meta.env.VITE_PORTONE_STORE_ID,
+      channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
+      identityVerificationId,
+      redirectUrl: window.location.href,
+    });
+
+    if (response?.code !== undefined) {
+      setStatus("error");
+      return;
+    }
+
+    try {
+      await onVerified?.(identityVerificationId);
+      setStatus("done");
+      onIsAuthenticated(true); // 인증 성공 처리
+    } catch {
+      setStatus("error");
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-3">
-      <span className="text-text-primary text-xl font-bold">통합 본인 인증</span>
-      <div className="border-border flex items-center justify-between rounded-md border px-4 py-4">
-        <div className="flex gap-3">
-          {/* 네이버 */}
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#03C75A]">
-            <span className="text-base font-bold text-white">N</span>
-          </div>
-          {/* 카카오 */}
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FEE500]">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#363636" aria-hidden="true">
-              <path d="M12 3C6.48 3 2 6.58 2 11c0 2.79 1.84 5.25 4.6 6.68-.2.75-.73 2.7-.83 3.12-.13.52.19.51.4.37.17-.11 2.66-1.8 3.74-2.53.68.1 1.38.15 2.09.15 5.52 0 10-3.58 10-8s-4.48-8-10-8z" />
-            </svg>
-          </div>
-          {/* PASS */}
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#004EA2]">
-            <span className="text-[10px] font-bold text-white">PASS</span>
-          </div>
+    <div className="flex flex-col gap-2">
+      <h4 className="text-text-primary text-xl font-bold rounded-sm">통합 본인 인증</h4>
+
+      <button
+        type="button"
+        onClick={handleVerify}
+        disabled={status === "pending" || status === "done"}
+        className="border-border flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 disabled:cursor-not-allowed hover:bg-bg"
+      >
+        <div className="flex items-center gap-1">
+          <img src={naverIcon} alt="네이버" className="h-10 w-10 rounded-md"/>
+          <img src={kakaoIcon} alt="카카오" className="h-10 w-10 rounded-md"/>
+          <img src={passIcon} alt="PASS" className="h-10 w-10 rounded-md"/>
+          <img src={tossIcon} alt="토스" className="h-10 w-10 rounded-md border border-border"/>
         </div>
-        <button
-          type="button"
-          className="text-text-primary text-sm font-medium underline underline-offset-2"
-          onClick={() => onIsAuthenticated(true)}
-        >
-          간편인증 하기
-        </button>
-      </div>
+
+        <span className="text-text-primary shrink-0 text-sm font-medium">
+          {status === "pending" && "인증 중..."}
+          {status === "done" && "인증 완료"}
+          {status === "error" && "다시 시도"}
+          {status === "idle" && "간편인증 하기"}
+        </span>
+      </button>
     </div>
   );
 };

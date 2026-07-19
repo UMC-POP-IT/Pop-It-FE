@@ -1,114 +1,109 @@
-import { useRef, useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import SignatureCanvas, { type SignatureBoardHandle } from "./SignatureCanvas";
 
 interface SignatureBoardProps {
-  onIsSigned: (v: boolean) => void;
+  onIsSigned: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const SignatureBoard = ({ onIsSigned }: SignatureBoardProps) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [hasSignature, setHasSignature] = useState(false);
+const SignatureBoard = ({onIsSigned}: SignatureBoardProps) => {
+  const boardRef = useRef<SignatureBoardHandle>(null);
+  const [isEmpty, setIsEmpty] = useState(true);
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.strokeStyle = "#121212";
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-  }, []);
-
-  const getPos = (e: React.MouseEvent | React.TouchEvent) => {
-    const canvas = canvasRef.current!;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    if ("touches" in e) {
-      return {
-        x: (e.touches[0].clientX - rect.left) * scaleX,
-        y: (e.touches[0].clientY - rect.top) * scaleY,
-      };
-    }
-    return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY,
-    };
-  };
-
-  const startDraw = (e: React.MouseEvent | React.TouchEvent) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!ctx) return;
-    const { x, y } = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    setIsDrawing(true);
-  };
-
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!ctx) return;
-    const { x, y } = getPos(e);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    if (!hasSignature) {
-      setHasSignature(true);
-      onIsSigned(true);
-    }
-  };
-
-  const endDraw = () => setIsDrawing(false);
+    onIsSigned(!isEmpty);
+  }, [isEmpty]);
 
   const handleClear = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!ctx || !canvas) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    setHasSignature(false);
-    onIsSigned(false);
+    boardRef.current?.clear();
+    setStatus("idle");
   };
+
+  const handleUndo = () => {
+    boardRef.current?.undo();
+    setStatus("idle");
+  };
+
+  // const handleSubmit = async () => {
+  //   if (boardRef.current?.isEmpty()) return;
+
+  //   setStatus("submitting");
+  //   try {
+  //     const blob = await boardRef.current?.toBlob("#ffffff");
+  //     if (!blob) throw new Error("서명 이미지를 생성하지 못했습니다.");
+
+  //     const form = new FormData();
+  //     form.append("signature", blob, "signature.png");
+
+  //     const response = await fetch(SIGNATURE_UPLOAD_URL, {
+  //       method: "POST",
+  //       body: form,
+  //     });
+  //     if (!response.ok) throw new Error("서명 저장에 실패했습니다.");
+
+  //     setStatus("success");
+  //   } catch (error) {
+  //     console.error(error);
+  //     setStatus("error");
+  //   }
+  // };
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div>
-          <span className="text-text-primary text-xl font-bold">계약 전자 서명</span>
-          <p className="text-text-secondary text-sm">서명란 (아래에 서명해주세요)</p>
-        </div>
-        {hasSignature && (
-          <button
-            type="button"
-            className="text-text-secondary text-xs underline underline-offset-2"
-            onClick={handleClear}
-          >
-            다시 서명
-          </button>
-        )}
-      </div>
-      <div className="bg-contract-guide-bg border-border relative h-40 w-full overflow-hidden rounded-md border">
-        {!hasSignature && (
-          <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-[#c4c4c4]">
+      <div className="text-text-primary text-xl font-bold">계약 전자 서명</div>
+      <div className="text-text-secondary">서명란 (아래에 서명해주세요)</div>
+
+      <div className="border-border bg-contract-guide-bg relative h-80 rounded-lg border">
+        {isEmpty && (
+          <span className="text-border pointer-events-none absolute inset-0 flex items-center justify-center text-2xl">
             전자 서명
           </span>
         )}
-        <canvas
-          ref={canvasRef}
-          width={540}
-          height={160}
+        <SignatureCanvas
+          ref={boardRef}
           className="h-full w-full touch-none"
-          onMouseDown={startDraw}
-          onMouseMove={draw}
-          onMouseUp={endDraw}
-          onMouseLeave={endDraw}
-          onTouchStart={startDraw}
-          onTouchMove={draw}
-          onTouchEnd={endDraw}
+          onChange={(empty) => {
+            setIsEmpty(empty);
+            setStatus("idle");
+          }}
         />
       </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={handleUndo}
+            disabled={isEmpty}
+            className="text-text-secondary text-sm underline disabled:opacity-40"
+          >
+            실행 취소
+          </button>
+          <button
+            type="button"
+            onClick={handleClear}
+            disabled={isEmpty}
+            className="text-text-secondary text-sm underline disabled:opacity-40"
+          >
+            지우기
+          </button>
+        </div>
+
+        {/* <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          onClick={handleSubmit}
+          disabled={isEmpty || status === "submitting"}
+        >
+          {status === "submitting" ? "저장 중..." : "서명 저장"}
+        </Button> */}
+      </div>
+
+      {status === "success" && <span className="text-primary text-sm">서명이 저장되었습니다.</span>}
+      {status === "error" && (
+        <span className="text-danger text-sm">서명 저장에 실패했습니다. 다시 시도해주세요.</span>
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Button from "@/shared/components/Button";
 import type {
   HostReservation,
   MockHostSpace,
@@ -122,19 +123,15 @@ const HostContractModal = ({
             >
               취소
             </button>
-            <button
+            <Button
+              variant="primary"
+              size="md"
+              className="w-40"
               disabled={!(isAuthenticated && isSigned)}
               onClick={onComplete}
-              className="bg-primary-hover flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
-                  fill="currentColor"
-                />
-              </svg>
-              전자 계약서 서명하기
-            </button>
+              작성 완료
+            </Button>
           </div>
         </div>
       </div>
