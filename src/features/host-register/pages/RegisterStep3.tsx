@@ -71,7 +71,7 @@ export const RegisterStep3 = () => {
           onChange={(next) => setValues({ spaceStructure: next[0] ?? "" })}
         />
 
-        {/* 면적 — ㎡ = 평 (자동 환산은 이후 로직) */}
+        {/* 면적 — ㎡ 입력 시 평 자동 환산 (평은 읽기 전용·파생값이라 store 저장 X) */}
         <div className="flex flex-col gap-2">
           <span className="text-text-primary text-[22px] font-bold">면적</span>
           <span className="text-text-tertiary text-xl font-bold">
@@ -91,8 +91,11 @@ export const RegisterStep3 = () => {
             </div>
             <span className="text-text-secondary text-2xl">=</span>
             <div className="relative flex-1">
+              {/* 평 = ㎡ × 0.3025 (자동 계산, 읽기 전용) */}
               <input
                 type="number"
+                readOnly
+                value={form.area ? (Number(form.area) * 0.3025).toFixed(1) : ""}
                 className="text-text-primary placeholder:text-text-secondary h-14 w-full rounded-lg bg-[#F2F2F2] px-5 text-right text-lg font-medium transition-colors focus:outline-none"
               />
               <span className="text-text-secondary pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 text-lg font-medium">
