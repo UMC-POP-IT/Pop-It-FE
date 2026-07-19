@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import type {
   HostReservation,
   MockHostSpace,
 } from "@/features/host-manage/api/mock_host_data";
 import Authentication from "@/features/guest-explore/components/contract/Authentication";
 import SignatureBoard from "@/features/guest-explore/components/contract/SignatureBoard";
+import { formatHostDate, getDurationDays } from "@/features/host-manage/utils/dateUtils";
 
 interface HostContractModalProps {
   isOpen: boolean;
@@ -15,19 +15,6 @@ interface HostContractModalProps {
   onComplete: () => void;
 }
 
-const formatHostDate = (dateStr: string) => {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const d = new Date(year, month - 1, day);
-  const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")} (${dayNames[d.getDay()]})`;
-};
-
-const getDurationDays = (start: string, end: string) => {
-  const s = new Date(start);
-  const e = new Date(end);
-  return Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-};
-
 const HostContractModal = ({
   isOpen,
   reservation,
@@ -35,7 +22,6 @@ const HostContractModal = ({
   onClose,
   onComplete,
 }: HostContractModalProps) => {
-  const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSigned, setIsSigned] = useState(false);
 
@@ -57,7 +43,7 @@ const HostContractModal = ({
         <div className="flex flex-col gap-4 overflow-y-auto p-6">
           <h3 className="text-text-primary text-xl font-bold">단기 임대차 계약서</h3>
           <span className="text-text-secondary text-sm">
-            {`임대인(이하 "호스트")가 임차인(이하 "게스트")은 다음과 같이 단기 공간 임대차 계약을 체결합니다.`}
+            {`임대인(이하 "호스트")과 임차인(이하 "게스트")은 다음과 같이 단기 공간 임대차 계약을 체결합니다.`}
           </span>
 
           <div className="flex flex-col gap-2 text-sm">
@@ -132,7 +118,7 @@ const HostContractModal = ({
           <div className="flex flex-row justify-center gap-5">
             <button
               className="bg-contract-guide-bg w-40 rounded-lg py-3 text-text-secondary"
-              onClick={() => navigate("/host/reservations")}
+              onClick={onClose}
             >
               취소
             </button>

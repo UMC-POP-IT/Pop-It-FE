@@ -3,6 +3,7 @@ import type {
   HostReservation,
   MockHostSpace,
 } from "@/features/host-manage/api/mock_host_data";
+import { formatHostDate, getDurationDays } from "@/features/host-manage/utils/dateUtils";
 
 interface HostPaymentModalProps {
   isOpen: boolean;
@@ -13,19 +14,6 @@ interface HostPaymentModalProps {
   onClose: () => void;
   onSignContract: () => void;
 }
-
-const formatHostDate = (dateStr: string) => {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const d = new Date(year, month - 1, day);
-  const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")} (${dayNames[d.getDay()]})`;
-};
-
-const getDurationDays = (start: string, end: string) => {
-  const s = new Date(start);
-  const e = new Date(end);
-  return Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-};
 
 const HostPaymentModal = ({
   isOpen,
