@@ -15,6 +15,8 @@ interface HostReservationCardProps {
   onApprove?: () => void;
   onReject?: () => void;
   onPhotoView?: () => void;
+  onCheckoutApprove?: () => void;
+  onCheckoutReject?: () => void;
 }
 
 const STATUS_LABEL: Record<HostReservation["status"], string> = {
@@ -42,6 +44,8 @@ export const HostReservationCard = ({
   onApprove,
   onReject,
   onPhotoView,
+  onCheckoutApprove,
+  onCheckoutReject,
 }: HostReservationCardProps) => {
   const { status, startDate, endDate, totalPrice } = reservation;
   const hasCheckoutPhoto = (reservation.checkoutPhotoUrls?.length ?? 0) > 0;
@@ -178,6 +182,22 @@ export const HostReservationCard = ({
                 >
                   퇴실 사진 보기
                 </button>
+                {hasCheckoutPhoto && (
+                  <>
+                    <button
+                      onClick={onCheckoutReject}
+                      className="text-danger h-10 px-4 text-base font-bold"
+                    >
+                      퇴실 거부
+                    </button>
+                    <button
+                      onClick={onCheckoutApprove}
+                      className="bg-primary-hover h-10 rounded-lg px-6 py-1.5 text-base font-bold text-white"
+                    >
+                      퇴실 승인
+                    </button>
+                  </>
+                )}
               </>
             )}
           </div>
