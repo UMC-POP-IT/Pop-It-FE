@@ -23,6 +23,9 @@ const SpaceCard = ({
   <div
     onClick={onClick}
     className="border-border cursor-pointer overflow-hidden border border-transparent bg-white transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl"
+    role="button"
+    tabIndex={0}
+    onKeyDown={(event) => {if (event.key === "Enter") onClick?.()}}
   >
     {/* 이미지 */}
     <div className="bg-bg relative aspect-[4/3]">
