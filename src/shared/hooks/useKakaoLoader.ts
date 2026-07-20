@@ -38,9 +38,10 @@ const loadKakaoSdk = () => {
       script.async = true;
       script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&libraries=services&autoload=false`;
       script.addEventListener("load", handleLoad);
-      script.addEventListener("error", () =>
-        reject(new Error("카카오 지도 SDK 로드에 실패했습니다.")),
-      );
+      script.addEventListener("error", () => {
+        kakaoLoaderPromise = null;
+        reject(new Error("카카오 지도 SDK 로드에 실패했습니다."));
+      });
       document.head.appendChild(script);
     });
   }
