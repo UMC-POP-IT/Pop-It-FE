@@ -81,7 +81,7 @@ export const RegisterStep5 = () => {
               onChange={(e) =>
                 setPhotos((prev) => [
                   ...prev,
-                  ...Array.from(e.target.files ?? []),
+                  ...Array.from(e.target.files ?? []).slice(0, 10),
                 ])
               }
               className="sr-only"
@@ -150,6 +150,7 @@ export const RegisterStep5 = () => {
         <Button
           variant="primary"
           size="nav"
+          disabled={photos.length < 3}
           onClick={() => setModal("confirm")}
         >
           완료
