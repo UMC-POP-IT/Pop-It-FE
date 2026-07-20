@@ -3,6 +3,9 @@ import SpaceCard from "@/shared/components/SpaceCard";
 import { ScrollButton } from "@/features/guest-explore/components/ScrollButton";
 import WishedSpaceEmptyState from "@/features/guest-explore/components/WishedSpaceEmptyState";
 import { useWishStore } from "@/store/wishStore";
+import { useSpaceStore } from "@/store/spaceStore";
+import type { Space } from "@/types";
+import { useNavigate } from "react-router-dom";
 
 const HeartIcon = () => {
   return (
@@ -16,8 +19,16 @@ export const WishedSpace = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
-  const wishedSpaces = useWishStore((state) => state.wishedSpaces);
+  const spaces = useSpaceStore((state) => state.spaces);
+  const wishedIds = useWishStore((state) => state.wishedIds);
   const toggleWish = useWishStore((state) => state.toggleWish);
+
+  // wishedIds에 해당하는 최신 Space 데이터를 spaceStore에서 조회
+  const wishedSpaces = wishedIds
+    .map((id) => spaces.find((space) => space.id === id))
+    .filter((space): space is Space => space !== undefined);
+
+  const navigate = useNavigate();
 
   // 좌/우 스크롤 버튼 활성화 여부 업데이트
   const updateScrollButtons = () => {
@@ -70,7 +81,8 @@ export const WishedSpace = () => {
                     space={space}
                     categoryTag={space.keywords[0]}
                     isWished={true}
-                    onWishToggle={() => toggleWish(space)}
+                    onWishToggle={() => toggleWish(space.id)}
+                    onClick={() => navigate(`/spaces/${space.id}`)}
                 />
                 </div>
             )) : <WishedSpaceEmptyState />}
