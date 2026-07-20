@@ -5,6 +5,10 @@ import Chip from "@/shared/components/Chip";
 import { useNavigate } from "react-router-dom";
 import { useRegisterStore } from "@/store/registerStore";
 import { STEPS } from "@/features/host-register/api/mock_register";
+import { type KeyboardEvent } from "react";
+
+const NO_SPINNER =
+  "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
 // 칩 그룹 선택지
 const USAGE_OPTIONS = [
@@ -38,6 +42,18 @@ export const RegisterStep3 = () => {
   const navigate = useNavigate();
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
+  const blockNonNumeric = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+  };
+
+  const isValid =
+    form.usage !== "" &&
+    form.spaceStructure !== "" &&
+    form.area !== "" &&
+    form.floorType !== "" &&
+    form.floor !== "" &&
+    form.hasParking !== null;
+
   return (
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -124,7 +140,11 @@ export const RegisterStep3 = () => {
             type="number"
             placeholder="층수 입력"
             value={form.floor}
-            onChange={(e) => setValues({ floor: e.target.value })}
+            onChange={(e) =>
+              setValues({ floor: e.target.value.replace(/[^0-9]/g, "") })
+            }
+            onKeyDown={blockNonNumeric}
+            className={NO_SPINNER}
           />
           <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
             층
@@ -189,6 +209,7 @@ export const RegisterStep3 = () => {
         <Button
           variant="primary"
           size="nav"
+          disabled={!isValid}
           onClick={() => navigate("/host/register/step4")}
         >
           다음으로
