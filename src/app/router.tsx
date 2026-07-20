@@ -30,6 +30,7 @@ import { HostRegisterComplete } from "@/features/host-register/pages/HostRegiste
 
 // 4번 팀원 (챈 - 내공간관리/예약관리/로그인)
 import { MySpacePage } from "@/features/host-manage/pages/MySpacePage";
+import { HostSpaceDetailPage } from "@/features/host-manage/pages/HostSpaceDetailPage";
 import { HostReservationPage } from "@/features/host-manage/pages/HostReservationPage";
 
 export const router = createBrowserRouter([
@@ -85,6 +86,7 @@ export const router = createBrowserRouter([
 
       // 4번 팀원 - 내공간관리/예약관리
       { path: "/host/spaces", element: <MySpacePage /> },
+      { path: "/host/spaces/:spaceId", element: <HostSpaceDetailPage /> },
       { path: "/host/reservations", element: <HostReservationPage /> },
     ],
   },
