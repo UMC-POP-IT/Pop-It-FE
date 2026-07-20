@@ -28,15 +28,44 @@ const SpaceLocationMapModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
         className="absolute inset-0 bg-black/40"
+import { useEffect } from "react";
+
+const SpaceLocationMapModal = ({
+  space,
+  isOpen,
+  onClose,
+}: SpaceLocationMapModalProps) => {
+  const { isLoaded, error } = useKakaoLoader();
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const center = { lat: space.latitude, lng: space.longitude };
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${space.name} 위치 확인`}
+      className="fixed inset-0 z-50 flex items-center justify-center"
+    >
+      <div
+        className="absolute inset-0 bg-black/40"
         onClick={onClose}
-        aria-hidden={true}
       />
 
-      <div
-        className="relative z-10 h-[560px] w-[1012px] overflow-hidden rounded-xl bg-white"
-        role="dialog"
-        aria-modal="true"
-      >
+      <div className="relative z-10 h-[560px] w-[1012px] overflow-hidden rounded-xl bg-white">
+        <div className="absolute inset-0">
           {isLoaded ? (
             <KakaoMap
               center={center}
@@ -59,7 +88,7 @@ const SpaceLocationMapModal = ({
                   >
                     <path
                       d="M16 0C7.163 0 0 7.163 0 16C0 27 16 40 16 40C16 40 32 27 32 16C32 7.163 24.837 0 16 0Z"
-                      fill="#e6483a"
+                      fill="`#e6483a`"
                     />
                     <circle
                       cx="16"
@@ -101,6 +130,7 @@ const SpaceLocationMapModal = ({
         </button>
       </div>
     </div>
+  );
   );
 };
 
