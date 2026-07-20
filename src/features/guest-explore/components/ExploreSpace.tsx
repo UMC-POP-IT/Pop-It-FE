@@ -36,7 +36,7 @@ const ExploreSpace = () => {
 
       {isMapView ? (
         <ExploreSpaceMap
-          spaces={pagedSpaces}
+          spaces={exploreSpaces}
           onSelectSpace={(spaceId) => navigate(`/spaces/${spaceId}`)}
           onClose={() => setIsMapView(false)}
         />
