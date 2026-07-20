@@ -29,7 +29,12 @@ const loadKakaoSdk = () => {
       ) as HTMLScriptElement | null;
 
       if (existingScript) {
-        existingScript.addEventListener("load", handleLoad);
+        // load 이벤트가 이미 지난 경우를 대비해 즉시 초기화 경로를 제공
+        if (window.kakao?.maps) {
+          handleLoad();
+        } else {
+          existingScript.addEventListener("load", handleLoad, { once: true });
+        }
         return;
       }
 
