@@ -17,6 +17,9 @@ export const RegisterStep4 = () => {
   const navigate = useNavigate();
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
+  const isValid =
+    form.buildingName.length >= 4 && form.description.length >= 10;
+
   return (
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -50,6 +53,7 @@ export const RegisterStep4 = () => {
             placeholder="예: 성수 000 건물"
             value={form.buildingName}
             onChange={(e) => setValues({ buildingName: e.target.value })}
+            maxLength={30}
           />
         </div>
         {/* 공간 설명
@@ -101,6 +105,7 @@ export const RegisterStep4 = () => {
         <Button
           variant="primary"
           size="nav"
+          disabled={!isValid}
           onClick={() => navigate("/host/register/step5")}
         >
           다음으로
