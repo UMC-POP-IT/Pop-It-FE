@@ -19,8 +19,19 @@ export const RegisterStep2 = () => {
   const blockNonNumeric = (e: KeyboardEvent<HTMLInputElement>) => {
     if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
   };
+
   const depositError =
     Number(form.deposit) > 100 ? "보증금은 100만원 이하 입력해 주세요" : "";
+
+  //금액: 일/주/월 하나라도 입력 되었는지
+  const hasPrice =
+    form.priceDay !== "" || form.priceWeek !== "" || form.priceMonth !== "";
+
+  //기간: 시작일 + 종료일 둘 다 입력됐나
+  const hasPeriod = form.startDate !== "" && form.endDate !== "";
+
+  //전부 통과 + 보증금 에러 없음 -> 유효
+  const isValid = hasPrice && hasPeriod && !depositError;
 
   return (
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
@@ -175,6 +186,7 @@ export const RegisterStep2 = () => {
         <Button
           variant="primary"
           size="nav"
+          disabled={!isValid}
           onClick={() => navigate("/host/register/step3")}
         >
           다음으로
