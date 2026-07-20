@@ -150,6 +150,20 @@ npm run dev
 npm run build
 ```
 
+### 환경변수
+
+공간 탐색/상세 페이지의 지도는 카카오 지도 JavaScript SDK를 사용합니다. `.env.example`을 복사해 `.env`로 저장한 뒤, 발급받은 키를 채워주세요.
+
+```bash
+cp .env.example .env
+```
+
+| 변수 | 설명 |
+| --- | --- |
+| `VITE_KAKAO_JS_KEY` | 카카오 디벨로퍼스에서 발급받은 JavaScript 키 (https://developers.kakao.com) |
+
+키가 없으면 지도 영역에 안내 문구와 함께 임시 배경이 표시됩니다.
+
 ---
 
 ## 🗺️ 화면 목록 및 플로우
