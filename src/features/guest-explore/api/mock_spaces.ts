@@ -146,7 +146,7 @@ export interface ExploreSpaceDetail extends Space {
  */
 const GANGNAM_STATION = { lat: 37.4979, lng: 127.0276 };
 
-const scatterCoordinate = (index: number) => ({
+export const scatterCoordinate = (index: number) => ({
   latitude: GANGNAM_STATION.lat + (((index * 37) % 21) - 10) * 0.0012,
   longitude: GANGNAM_STATION.lng + (((index * 53) % 21) - 10) * 0.0012,
 });
