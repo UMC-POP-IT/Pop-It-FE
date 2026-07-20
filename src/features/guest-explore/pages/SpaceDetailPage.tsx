@@ -8,11 +8,11 @@ import { useWishStore } from "@/store/wishStore";
 export const SpaceDetailPage = () => {
   const { spaceId } = useParams<{ spaceId: string }>();
   const navigate = useNavigate();
-  const wishedIds = useWishStore((state) => state.wishedIds);
+  const wishedSpaces = useWishStore((state) => state.wishedSpaces);
   const toggleWish = useWishStore((state) => state.toggleWish);
 
   const space = exploreSpaces.find((item) => item.id === Number(spaceId));
-  const isWished = !!space && wishedIds.includes(space.id);
+  const isWished = !!space && wishedSpaces.some((s) => s.id === space.id);
 
   if (!space) {
     return (
@@ -39,7 +39,7 @@ export const SpaceDetailPage = () => {
         <ExploreDetailInfo
           space={space}
           isWished={isWished}
-          onWishToggle={() => toggleWish(space.id)}
+          onWishToggle={() => toggleWish(space)}
         />
         <ExploreReservationCard dayCost={space.cost.day} />
       </div>
