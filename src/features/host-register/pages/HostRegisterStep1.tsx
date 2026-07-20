@@ -36,8 +36,7 @@ export const HostRegisterStep1 = () => {
           </p>
         </div>
 
-        {/* 과세자 등록 (택1)
-            정적: 첫 번째 카드 선택 상태로 표시. TODO: 실제 선택 로직 (RHF) */}
+        {/* 과세자 등록 (택1) — store 연결됨 */}
         <div className="flex flex-col gap-2">
           <span className="text-text-primary text-sm font-bold">
             과세자 등록
@@ -150,7 +149,7 @@ export const HostRegisterStep1 = () => {
       </div>
 
       {/* 다음으로 버튼 (우측 정렬)
-          정적: 활성 상태로 표시. TODO: 유효성 검사 통과 시 활성화 + step2 이동 */}
+          TODO(2차): 유효성 검사 통과 시 활성화 */}
       <div className="flex justify-end">
         <Button
           variant="primary"

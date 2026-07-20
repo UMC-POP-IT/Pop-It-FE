@@ -62,8 +62,7 @@ export const RegisterStep5 = () => {
 
         {/* 사진 업로더: 카메라 타일 + 업로드된 썸네일들 */}
         <div className="flex flex-wrap gap-[18.5px]">
-          {/* 업로드 버튼 타일 (카메라 아이콘 + 매수 카운트)
-              정적: 파일 input은 숨김 처리만. TODO: onChange로 실제 업로드/미리보기 처리 */}
+          {/* 업로드 버튼 타일 (카메라 아이콘 + 매수 카운트) */}
           <label
             aria-label="사진 추가"
             className="border-divider text-text-tertiary flex size-[144px] shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2"
@@ -121,8 +120,7 @@ export const RegisterStep5 = () => {
       </div>
 
       {/* 이전 / 완료 버튼 (우측 정렬)
-          정적: 목업 사진 3장 기준이라 '완료' 활성 상태로 표시.
-          TODO: 실제 업로드 3장 이상일 때만 활성화 + 최종 제출(POST /spaces) 연결 */}
+          TODO(2차): 사진 3장 이상일 때만 활성화(유효성) + 최종 제출(POST /spaces) */}
       <div className="flex justify-end gap-2">
         <Modal
           isOpen={modal === "confirm"}

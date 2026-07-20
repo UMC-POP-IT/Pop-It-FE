@@ -89,8 +89,7 @@ export const RegisterStep4 = () => {
       </div>
 
       {/* 이전 / 다음으로 버튼 (우측 정렬)
-          정적: 다음으로는 초기 비활성(회색) 상태.
-          TODO: 유효성 검사 통과 시 활성화 + 단계 이동 (RHF 붙일 때) */}
+          TODO(2차): 유효성 검사 통과 시 활성화 */}
       <div className="flex justify-end gap-2">
         <Button
           variant="gray"
