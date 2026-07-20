@@ -13,6 +13,12 @@ export const HostRegisterStep1 = () => {
   const navigate = useNavigate();
   const form = useHostRegisterStore((s) => s.form);
   const setValues = useHostRegisterStore((s) => s.setValues);
+  const isValid =
+  form.taxpayerType !== "" &&
+  form.businessNumber !== "" &&
+  form.storeName !== "" &&
+  form.businessAddress !== "";
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -85,7 +91,7 @@ export const HostRegisterStep1 = () => {
             id="business-number"
             placeholder="000-00-00000"
             value={form.businessNumber}
-            onChange={(e) => setValues({ businessNumber: e.target.value })}
+            onChange={(e) => setValues({ businessNumber: e.target.value.replace(/[^0-9]/g,"") })}
           />
         </div>
 
@@ -124,7 +130,6 @@ export const HostRegisterStep1 = () => {
             <div className="flex-1">
               <Input
                 id="business-address"
-                placeholder="주소를 검색해주세요"
                 value={form.businessAddress}
                 onChange={(e) => setValues({ businessAddress: e.target.value })}
               />
@@ -148,12 +153,12 @@ export const HostRegisterStep1 = () => {
         </div>
       </div>
 
-      {/* 다음으로 버튼 (우측 정렬)
-          TODO(2차): 유효성 검사 통과 시 활성화 */}
+      {/* 다음으로 버튼 (우측 정렬) */}
       <div className="flex justify-end">
         <Button
           variant="primary"
           size="md"
+          disabled={!isValid}
           onClick={() => navigate("/host/host-register/step2")}
         >
           다음으로

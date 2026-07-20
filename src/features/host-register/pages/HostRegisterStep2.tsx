@@ -19,6 +19,10 @@ export const HostRegisterStep2 = () => {
     if (import.meta.env.DEV) console.log("호스트 등록 제출 데이터", form);
     navigate("/host/host-register/complete");
   };
+  const isValid =
+  form.bankName !== "" &&
+  form.accountNumber !== "" &&
+  form.accountHolder !== "";
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
@@ -82,7 +86,7 @@ export const HostRegisterStep2 = () => {
             id="account-number"
             placeholder="- 없이 숫자만 입력"
             value={form.accountNumber}
-            onChange={(e) => setValues({ accountNumber: e.target.value })}
+            onChange={(e) => setValues({ accountNumber: e.target.value.replace(/[^0-9]/g, "") })}
           />
         </div>
 
@@ -118,6 +122,7 @@ export const HostRegisterStep2 = () => {
         <Button
           variant="primary"
           size="md"
+          disabled={!isValid}
           onClick={handleSubmit}
         >
           다음으로
