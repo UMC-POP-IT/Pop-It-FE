@@ -85,7 +85,6 @@ export const router = createBrowserRouter([
 
       // 4번 팀원 - 내공간관리/예약관리
       { path: "/host/spaces", element: <MySpacePage /> },
-      { path: "/host/spaces/:spaceId", element: <SpaceDetailPage /> },
       { path: "/host/reservations", element: <HostReservationPage /> },
     ],
   },
