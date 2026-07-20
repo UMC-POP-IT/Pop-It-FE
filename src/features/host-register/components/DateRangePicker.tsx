@@ -80,6 +80,9 @@ export const DateRangePicker = ({
         containerRef.current &&
         !containerRef.current.contains(e.target as Node)
       ) {
+        if (startDate && endDate) {
+          onConfirm(toYmd(startDate), toYmd(endDate));
+        }
         setIsOpen(false);
       }
     };
@@ -92,7 +95,7 @@ export const DateRangePicker = ({
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, startDate, endDate, onConfirm]);
 
   // 시작일 기준 '최대 3개월'을 넘는 날짜인지 (계약 한도)
   const isOverLimit = (date: Date) =>
@@ -166,7 +169,7 @@ export const DateRangePicker = ({
         {WEEKDAYS.map((day) => (
           <span
             key={day}
-            className="text-text-secondary flex h-8 w-9 items-center justify-center text-xs"
+            className="text-text-secondary flex h-8 w-12 items-center justify-center text-xs"
           >
             {day}
           </span>
@@ -183,7 +186,7 @@ export const DateRangePicker = ({
               key={date.toISOString()}
               disabled={disabled}
               onClick={() => handleSelectDate(date)}
-              className={`flex h-9 w-9 items-center justify-center text-sm ${getDayClassName(date, base)} ${disabled ? "cursor-not-allowed opacity-30" : ""}`}
+              className={`flex h-9 w-12 items-center justify-center text-sm ${getDayClassName(date, base)} ${disabled ? "cursor-not-allowed opacity-30" : ""}`}
             >
               {date.getDate()}
             </button>
