@@ -142,7 +142,6 @@ export const HostReservationPage = () => {
                   reservation={reservation}
                   guest={guest}
                   space={space}
-                  onGuestDetail={() => {}}
                   onDetail={() => navigate(`/host/spaces/${space.id}`)}
                   onApprove={() => handleApproveClick(reservation.id)}
                   onReject={() => setRejectTargetId(reservation.id)}

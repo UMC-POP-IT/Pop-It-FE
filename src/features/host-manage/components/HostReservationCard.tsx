@@ -4,13 +4,10 @@ import type {
   MockHostSpace,
 } from "@/features/host-manage/api/mock_host_data";
 import iconPerson from "@/assets/icons/icon_person.svg";
-import iconChevronRight from "@/assets/icons/icon_chevron_right.svg";
-
 interface HostReservationCardProps {
   reservation: HostReservation;
   guest: MockGuestInfo;
   space: MockHostSpace;
-  onGuestDetail?: () => void;
   onDetail?: () => void;
   onApprove?: () => void;
   onReject?: () => void;
@@ -39,7 +36,6 @@ export const HostReservationCard = ({
   reservation,
   guest,
   space,
-  onGuestDetail,
   onDetail,
   onApprove,
   onReject,
@@ -71,17 +67,6 @@ export const HostReservationCard = ({
             {guest.businessDescription}
           </p>
         </div>
-        <button
-          onClick={onGuestDetail}
-          className="text-text-primary flex flex-shrink-0 items-center text-base font-medium whitespace-nowrap"
-        >
-          예약자 상세
-          <img
-            src={iconChevronRight}
-            alt=""
-            className="h-6 w-6"
-          />
-        </button>
       </div>
 
       {/* 공간 정보 */}
