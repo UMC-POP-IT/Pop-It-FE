@@ -5,11 +5,23 @@ import { useNavigate } from "react-router-dom";
 import { useRegisterStore } from "@/store/registerStore";
 import DateRangePicker from "@/features/host-register/components/DateRangePicker";
 import { STEPS } from "@/features/host-register/api/mock_register";
+import { type KeyboardEvent } from "react";
+
+// number input 화살표(스피너) 숨김 클래스
+const NO_SPINNER =
+  "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
 export const RegisterStep2 = () => {
   const navigate = useNavigate();
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
+  // number 입력에서 e, +, -, . 못 치게 막기
+  const blockNonNumeric = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+  };
+  const depositError =
+    Number(form.deposit) > 100 ? "보증금은 100만원 이하 입력해 주세요" : "";
+
   return (
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -46,15 +58,24 @@ export const RegisterStep2 = () => {
                   type="number"
                   aria-label="보증금"
                   value={form.deposit}
-                  onChange={(e) => setValues({ deposit: e.target.value })}
+                  onChange={(e) =>
+                    setValues({
+                      deposit: e.target.value.replace(/[^0-9]/g, ""),
+                    })
+                  }
+                  onKeyDown={blockNonNumeric}
+                  className={NO_SPINNER}
+                  error={depositError}
                 />
-                <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
+                <span className="text-text-secondary pointer-events-none absolute top-7 right-4 -translate-y-1/2 text-lg font-medium">
                   만원
                 </span>
               </div>
-              <span className="text-text-placeholder text-base font-bold">
-                최대 100만원 설정 가능
-              </span>
+              {!depositError && (
+                <span className="text-text-placeholder text-base font-bold">
+                  최대 100만원 설정 가능
+                </span>
+              )}
             </div>
 
             {/* 금액 (일/주/월 3줄) */}
@@ -67,7 +88,13 @@ export const RegisterStep2 = () => {
                   <Input
                     type="number"
                     value={form.priceDay}
-                    onChange={(e) => setValues({ priceDay: e.target.value })}
+                    onChange={(e) =>
+                      setValues({
+                        priceDay: e.target.value.replace(/[^0-9]/g, ""),
+                      })
+                    }
+                    onKeyDown={blockNonNumeric}
+                    className={NO_SPINNER}
                   />
                   <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
                     만원/일
@@ -77,7 +104,13 @@ export const RegisterStep2 = () => {
                   <Input
                     type="number"
                     value={form.priceWeek}
-                    onChange={(e) => setValues({ priceWeek: e.target.value })}
+                    onChange={(e) =>
+                      setValues({
+                        priceWeek: e.target.value.replace(/[^0-9]/g, ""),
+                      })
+                    }
+                    onKeyDown={blockNonNumeric}
+                    className={NO_SPINNER}
                   />
                   <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
                     만원/주
@@ -87,7 +120,13 @@ export const RegisterStep2 = () => {
                   <Input
                     type="number"
                     value={form.priceMonth}
-                    onChange={(e) => setValues({ priceMonth: e.target.value })}
+                    onChange={(e) =>
+                      setValues({
+                        priceMonth: e.target.value.replace(/[^0-9]/g, ""),
+                      })
+                    }
+                    onKeyDown={blockNonNumeric}
+                    className={NO_SPINNER}
                   />
                   <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
                     만원/월
