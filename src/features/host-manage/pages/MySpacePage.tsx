@@ -99,7 +99,7 @@ export const MySpacePage = () => {
                         setEditTargetId(space.id);
                         setOpenMenuId(null);
                       }}
-                      className="rounded-[4px] bg-[#f2f2f2] px-7 py-2 text-center text-base font-bold text-[#808080] whitespace-nowrap"
+                      className="rounded-[4px] px-7 py-2 text-center text-base font-bold text-[#808080] whitespace-nowrap hover:bg-[#f2f2f2]"
                     >
                       공간수정
                     </button>
@@ -108,7 +108,7 @@ export const MySpacePage = () => {
                         setDeleteTargetId(space.id);
                         setOpenMenuId(null);
                       }}
-                      className="px-6 py-2 text-center text-base font-bold text-[#808080] whitespace-nowrap"
+                      className="rounded-[4px] px-6 py-2 text-center text-base font-bold text-danger whitespace-nowrap hover:bg-[#f2f2f2]"
                     >
                       공간삭제
                     </button>

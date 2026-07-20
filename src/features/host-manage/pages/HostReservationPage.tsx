@@ -170,7 +170,7 @@ export const HostReservationPage = () => {
         isOpen={rejectTargetId !== null}
         title={`${rejectGuest?.nickname ?? ""}님을\n예약 거절하시겠습니까?`}
         description="예약을 거절하면 승인대기 목록에서 삭제됩니다"
-        confirmLabel="승인 취소"
+        confirmLabel="예약 거절"
         cancelLabel="돌아가기"
         onConfirm={handleReject}
         onCancel={() => setRejectTargetId(null)}
