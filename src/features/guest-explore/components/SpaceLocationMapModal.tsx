@@ -29,10 +29,14 @@ const SpaceLocationMapModal = ({
       <div
         className="absolute inset-0 bg-black/40"
         onClick={onClose}
+        aria-hidden={true}
       />
 
-      <div className="relative z-10 h-[560px] w-[1012px] overflow-hidden rounded-xl bg-white">
-        <div className="absolute inset-0">
+      <div
+        className="relative z-10 h-[560px] w-[1012px] overflow-hidden rounded-xl bg-white"
+        role="dialog"
+        aria-modal="true"
+      >
           {isLoaded ? (
             <KakaoMap
               center={center}
