@@ -23,9 +23,8 @@ export const RegisterStep2 = () => {
   const depositError =
     Number(form.deposit) > 100 ? "보증금은 100만원 이하 입력해 주세요" : "";
 
-  //금액: 일/주/월 하나라도 입력 되었는지
-  const hasPrice =
-    form.priceDay !== "" || form.priceWeek !== "" || form.priceMonth !== "";
+  //금액: 일 단가 입력됐는지 (주/월 가격은 상세 페이지에서 일 단가로 계산)
+  const hasPrice = form.priceDay !== "";
 
   //기간: 시작일 + 종료일 둘 다 입력됐나
   const hasPeriod = form.startDate !== "" && form.endDate !== "";
@@ -89,64 +88,27 @@ export const RegisterStep2 = () => {
               )}
             </div>
 
-            {/* 금액 (일/주/월 3줄) */}
+            {/* 금액 (일 단가만 입력 — 주/월 가격은 상세 페이지에서 계산) */}
             <div className="flex flex-col gap-1">
               <label className="text-text-tertiary text-xl font-bold">
                 금액
               </label>
-              <div className="flex flex-col gap-2">
-                <div className="relative">
-                  <Input
-                    type="number"
-                    value={form.priceDay}
-                    onChange={(e) =>
-                      setValues({
-                        priceDay: e.target.value.replace(/[^0-9]/g, ""),
-                      })
-                    }
-                    onKeyDown={blockNonNumeric}
-                    className={NO_SPINNER}
-                  />
-                  <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
-                    만원/일
-                  </span>
-                </div>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    value={form.priceWeek}
-                    onChange={(e) =>
-                      setValues({
-                        priceWeek: e.target.value.replace(/[^0-9]/g, ""),
-                      })
-                    }
-                    onKeyDown={blockNonNumeric}
-                    className={NO_SPINNER}
-                  />
-                  <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
-                    만원/주
-                  </span>
-                </div>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    value={form.priceMonth}
-                    onChange={(e) =>
-                      setValues({
-                        priceMonth: e.target.value.replace(/[^0-9]/g, ""),
-                      })
-                    }
-                    onKeyDown={blockNonNumeric}
-                    className={NO_SPINNER}
-                  />
-                  <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
-                    만원/월
-                  </span>
-                </div>
+              <div className="relative">
+                <Input
+                  type="number"
+                  value={form.priceDay}
+                  onChange={(e) =>
+                    setValues({
+                      priceDay: e.target.value.replace(/[^0-9]/g, ""),
+                    })
+                  }
+                  onKeyDown={blockNonNumeric}
+                  className={NO_SPINNER}
+                />
+                <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
+                  만원/일
+                </span>
               </div>
-              <span className="text-text-placeholder text-base font-bold">
-                제출하지 않는 대여 단위는 공란으로 남겨주세요
-              </span>
             </div>
           </div>
         </div>
