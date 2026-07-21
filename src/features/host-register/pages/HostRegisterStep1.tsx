@@ -112,7 +112,7 @@ export const HostRegisterStep1 = () => {
           </label>
           <Input
             id="business-name"
-            placeholder="예: OO 갤러리, 카페 등"
+            placeholder="예: (주) 홍따오기 컴퍼니"
             value={form.storeName}
             onChange={(e) => setValues({ storeName: e.target.value })}
           />
