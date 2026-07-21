@@ -127,14 +127,21 @@ export const DateRangePicker = ({
   // 날짜 칸 색칠
   const getDayClassName = (date: Date, base: Date) => {
     const isCurrentMonth = date.getMonth() === base.getMonth();
-    if (
-      (startDate && isSameDay(date, startDate)) ||
-      (endDate && isSameDay(date, endDate))
-    ) {
-      return "bg-primary rounded-full text-white";
+    // 시작일만 선택 (종료일 아직) → 연파랑 완전 원
+    if (startDate && !endDate && isSameDay(date, startDate)) {
+      return "bg-primary-100 rounded-full text-text-primary";
     }
-    if (startDate && endDate && date > startDate && date < endDate) {
-      return "bg-primary-light text-text-primary";
+    // 범위 완성 → 시작=왼쪽반원, 종료=오른쪽반원, 중간=채움 (예약 달력 스타일 통일)
+    if (startDate && endDate) {
+      if (isSameDay(date, startDate)) {
+        return "bg-primary-100 rounded-l-full text-text-primary";
+      }
+      if (isSameDay(date, endDate)) {
+        return "bg-primary-100 rounded-r-full text-text-primary";
+      }
+      if (date > startDate && date < endDate) {
+        return "bg-primary-light text-text-primary";
+      }
     }
     return isCurrentMonth ? "text-text-primary" : "text-text-disabled";
   };
@@ -178,8 +185,10 @@ export const DateRangePicker = ({
       {/* 날짜 42칸 */}
       <div className="grid grid-cols-7">
         {getCalendarDays(base).map((date) => {
-          // 종료일 고르는 중 + 3개월 초과 → 비활성
-          const disabled = !!startDate && !endDate && isOverLimit(date);
+          // 다른 달 날짜(회색) 또는 종료일 고르는 중 3개월 초과 → 비활성(클릭 X)
+          const isOtherMonth = date.getMonth() !== base.getMonth();
+          const disabled =
+            isOtherMonth || (!!startDate && !endDate && isOverLimit(date));
           return (
             <button
               type="button"
