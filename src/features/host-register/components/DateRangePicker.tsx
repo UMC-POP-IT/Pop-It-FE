@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import calendarIcon from "@/assets/icons/icon_calendar.svg";
 
 // 요일 헤더 (일~토)
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -226,8 +227,14 @@ export const DateRangePicker = ({
             aria-haspopup="dialog"
             aria-expanded={isOpen}
             onClick={() => setIsOpen((v) => !v)}
-            className="border-border flex h-12 items-center justify-between rounded-lg border bg-white px-4 text-sm"
+            className="border-border flex h-12 items-center gap-2 rounded-lg border bg-white px-4 text-sm"
           >
+            <img
+              src={calendarIcon}
+              alt=""
+              className="h-5 w-5"
+            />
+
             <span
               className={
                 field.date ? "text-text-primary" : "text-text-placeholder"
@@ -235,7 +242,6 @@ export const DateRangePicker = ({
             >
               {fieldText(field.date, field.label)}
             </span>
-            <span className="text-text-secondary text-xs">▾</span>
           </button>
         ))}
       </div>
