@@ -115,15 +115,20 @@ const ExploreDetailInfo = ({
               <span className="text-text-primary font-normal">주 단가</span>
               <span className="text-right">
                 <span className="text-primary">
-                  {space.weekCost.toLocaleString()}
+                  {(space.cost.day * 7).toLocaleString()}
                 </span>
                 <span className="text-text-primary">원</span>
               </span>
             </div>
             <div className="flex w-full items-center justify-between">
-              <span className="text-text-primary font-normal">월 단가</span>
-              <span className="text-text-primary text-right">
-                {space.monthCostText}
+              <span className="text-text-primary font-normal">
+                월 단가 (30일 기준)
+              </span>
+              <span className="text-right">
+                <span className="text-primary">
+                  {(space.cost.day * 30).toLocaleString()}
+                </span>
+                <span className="text-text-primary">원</span>
               </span>
             </div>
           </div>

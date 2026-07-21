@@ -131,8 +131,8 @@ export const recommendSpaces: Space[] = [
 export interface ExploreSpaceDetail extends Space {
   category: string; // 카테고리 태그 (ex. 팝업스토어)
   area: number; // 전용면적 (m²)
-  weekCost: number; // 주 단가
-  monthCostText: string; // 월 단가 (금액이 아닌 "협의 후 결정" 등 텍스트로 노출되는 케이스가 있어 별도 필드로 분리)
+  // 공간 등록 시 일 단가만 입력받으므로 주/월 단가는 cost.day 기준으로 계산해서 노출
+  // (주 단가 = cost.day * 7, 월 단가 = cost.day * 30, 표시부는 ExploreDetailInfo 참고)
   facilities: string[]; // 시설정보
   spaceInfo: string[]; // 공간정보
 }
@@ -157,8 +157,8 @@ export const exploreSpaces: ExploreSpaceDetail[] = Array.from(
     ],
     heartCount: 20,
     keywords: ["키워드", "키워드"],
-    // month/year는 화면에 노출되지 않는 값(실제 노출은 monthCostText)이라
-    // weekCost를 재사용하지 않고 일 단가 기준 추정치로 채워둠
+    // 등록 시 일 단가만 입력받으므로 month/year는 일 단가 기준 추정치로 채워둠
+    // (실제 노출되는 주/월 단가는 ExploreDetailInfo에서 cost.day 기준으로 계산)
     cost: {
       day: 700000,
       month: 700000 * 30,
@@ -166,8 +166,6 @@ export const exploreSpaces: ExploreSpaceDetail[] = Array.from(
     },
     category: "팝업스토어",
     area: 66,
-    weekCost: 4900000,
-    monthCostText: "협의 후 결정",
     description:
       "강남역 도보 3분 거리의 1층 코너 매장입니다.\n유동인구가 매우 많으며, 대형 쇼윈도우가 있어 팝업 스토어에 최적화되어 있습니다.",
     facilities: ["에어컨", "에어컨", "에어컨"], // TODO: 실제 시설 데이터 연동 전까지 Figma 목업 값 그대로 사용

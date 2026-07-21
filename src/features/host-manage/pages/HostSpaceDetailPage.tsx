@@ -34,9 +34,6 @@ const toExploreSpaceDetail = (space: MockHostSpace): ExploreSpaceDetail => {
     createdAt: space.registeredAt,
     category: space.category,
     area: areaNumber,
-    // TODO: 주 단가 필드가 별도로 없어 일 단가 기준 추정치 사용 (백엔드 연동 시 교체)
-    weekCost: space.cost.day * 7,
-    monthCostText: `${space.cost.month.toLocaleString()}원`,
     facilities: space.facilities,
     spaceInfo: space.spaceInfo,
   };
@@ -127,6 +124,7 @@ export const HostSpaceDetailPage = () => {
         >
           다시 시도
         </button>
+      </div>
     );
   }
 
