@@ -5,20 +5,12 @@ import { useNavigate } from "react-router-dom";
 import { useRegisterStore } from "@/store/registerStore";
 import DateRangePicker from "@/features/host-register/components/DateRangePicker";
 import { STEPS } from "@/features/host-register/api/mock_register";
-import { type KeyboardEvent } from "react";
-
-// number input 화살표(스피너) 숨김 클래스
-const NO_SPINNER =
-  "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+import { NO_SPINNER, blockNonNumeric } from "@/shared/utils/numberInput";
 
 export const RegisterStep2 = () => {
   const navigate = useNavigate();
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
-  // number 입력에서 e, +, -, . 못 치게 막기
-  const blockNonNumeric = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
-  };
 
   const depositError =
     Number(form.deposit) > 100 ? "보증금은 100만원 이하 입력해 주세요" : "";
@@ -96,6 +88,7 @@ export const RegisterStep2 = () => {
               <div className="relative">
                 <Input
                   type="number"
+                  aria-label="금액"
                   value={form.priceDay}
                   onChange={(e) =>
                     setValues({

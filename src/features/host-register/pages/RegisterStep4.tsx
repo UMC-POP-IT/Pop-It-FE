@@ -18,7 +18,8 @@ export const RegisterStep4 = () => {
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
   const isValid =
-    form.buildingName.length >= 4 && form.description.length >= 10;
+    form.buildingName.trim().length >= 4 &&
+    form.description.trim().length >= 10;
 
   return (
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">

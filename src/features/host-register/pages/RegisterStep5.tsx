@@ -81,7 +81,10 @@ export const RegisterStep5 = () => {
               onChange={(e) =>
                 setPhotos((prev) => [
                   ...prev,
-                  ...Array.from(e.target.files ?? []).slice(0, 10),
+                  ...Array.from(e.target.files ?? []).slice(
+                    0,
+                    Math.max(0, 10 - prev.length),
+                  ),
                 ])
               }
               className="sr-only"

@@ -79,7 +79,8 @@ export const DateRangePicker = ({
       // 클릭이 달력(container) 밖이면 닫기
       if (
         containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
+        e.target instanceof Node &&
+        !containerRef.current.contains(e.target)
       ) {
         if (startDate && endDate) {
           onConfirm(toYmd(startDate), toYmd(endDate));
@@ -134,6 +135,10 @@ export const DateRangePicker = ({
     }
     // 범위 완성 → 시작=왼쪽반원, 종료=오른쪽반원, 중간=채움 (예약 달력 스타일 통일)
     if (startDate && endDate) {
+      // 시작일 = 종료일 (하루만 선택) → 완전한 원 (반원 안 잘리게)
+      if (isSameDay(startDate, endDate) && isSameDay(date, startDate)) {
+        return "bg-primary-100 rounded-full text-text-primary";
+      }
       if (isSameDay(date, startDate)) {
         return "bg-primary-100 rounded-l-full text-text-primary";
       }
@@ -190,11 +195,18 @@ export const DateRangePicker = ({
           const isOtherMonth = date.getMonth() !== base.getMonth();
           const disabled =
             isOtherMonth || (!!startDate && !endDate && isOverLimit(date));
+          // 선택된 날(시작·종료·범위 안)인지 → 스크린리더용 aria-pressed
+          const isSelected =
+            (!!startDate && isSameDay(date, startDate)) ||
+            (!!endDate && isSameDay(date, endDate)) ||
+            (!!startDate && !!endDate && date > startDate && date < endDate);
           return (
             <button
               type="button"
               key={date.toISOString()}
               disabled={disabled}
+              aria-label={`${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`}
+              aria-pressed={isSelected}
               onClick={() => handleSelectDate(date)}
               className={`flex h-9 w-12 items-center justify-center text-sm ${getDayClassName(date, base)} ${disabled ? "cursor-not-allowed opacity-30" : ""}`}
             >
