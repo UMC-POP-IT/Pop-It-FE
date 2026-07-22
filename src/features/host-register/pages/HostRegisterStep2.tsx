@@ -87,7 +87,9 @@ export const HostRegisterStep2 = () => {
             id="account-number"
             placeholder="- 없이 숫자만 입력"
             value={form.accountNumber}
-            onChange={(e) => sanitizeNumber(e.target.value)}
+            onChange={(e) =>
+              setValues({ accountNumber: sanitizeNumber(e.target.value) })
+            }
           />
         </div>
 
