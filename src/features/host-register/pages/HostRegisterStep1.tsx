@@ -14,10 +14,10 @@ export const HostRegisterStep1 = () => {
   const form = useHostRegisterStore((s) => s.form);
   const setValues = useHostRegisterStore((s) => s.setValues);
   const isValid =
-  form.taxpayerType !== "" &&
-  form.businessNumber !== "" &&
-  form.storeName !== "" &&
-  form.businessAddress !== "";
+    form.taxpayerType !== "" &&
+    form.businessNumber !== "" &&
+    form.storeName.trim() !== "" &&
+    form.businessAddress.trim() !== "";
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
@@ -91,7 +91,11 @@ export const HostRegisterStep1 = () => {
             id="business-number"
             placeholder="000-00-00000"
             value={form.businessNumber}
-            onChange={(e) => setValues({ businessNumber: e.target.value.replace(/[^0-9]/g,"") })}
+            onChange={(e) =>
+              setValues({
+                businessNumber: e.target.value.replace(/[^0-9]/g, ""),
+              })
+            }
           />
         </div>
 

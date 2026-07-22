@@ -9,6 +9,7 @@ import {
   BANK_OPTIONS,
 } from "@/features/host-register/api/mock_register";
 import { useHostRegisterStore } from "@/store/registerStore";
+import { sanitizeNumber } from "@/shared/utils/sanitizeNumber";
 
 export const HostRegisterStep2 = () => {
   const navigate = useNavigate();
@@ -20,9 +21,9 @@ export const HostRegisterStep2 = () => {
     navigate("/host/host-register/complete");
   };
   const isValid =
-  form.bankName !== "" &&
-  form.accountNumber !== "" &&
-  form.accountHolder !== "";
+    form.bankName !== "" &&
+    form.accountNumber !== "" &&
+    form.accountHolder.trim() !== "";
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
@@ -86,7 +87,7 @@ export const HostRegisterStep2 = () => {
             id="account-number"
             placeholder="- 없이 숫자만 입력"
             value={form.accountNumber}
-            onChange={(e) => setValues({ accountNumber: e.target.value.replace(/[^0-9]/g, "") })}
+            onChange={(e) => sanitizeNumber(e.target.value)}
           />
         </div>
 
