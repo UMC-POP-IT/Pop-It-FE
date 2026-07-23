@@ -15,6 +15,10 @@ export interface Space {
   keywords: string[]; // 키워드들
   description: string; // 공간 설명
   createdAt: string;
+  // 카카오맵 표시용 좌표. 공간 탐색/상세 API 응답에는 항상 포함되지만,
+  // 지도를 쓰지 않는 기존 목업(찜한 공간, 예약 내역 등)과의 호환을 위해 optional로 둠.
+  latitude?: number; // 위도
+  longitude?: number; // 경도
 }
 
 export interface User {

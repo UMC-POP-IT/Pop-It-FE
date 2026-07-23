@@ -1,6 +1,14 @@
 const FILTER_LABELS = ["전체", "지역", "일 단위"];
 
-const ExploreSearchFilterBar = () => {
+interface ExploreSearchFilterBarProps {
+  isMapView: boolean;
+  onToggleMapView: () => void;
+}
+
+const ExploreSearchFilterBar = ({
+  isMapView,
+  onToggleMapView,
+}: ExploreSearchFilterBarProps) => {
   return (
     <div className="flex w-full items-center justify-between gap-6">
       <div className="relative w-[589px] shrink-0">
@@ -64,7 +72,13 @@ const ExploreSearchFilterBar = () => {
 
         <button
           type="button"
-          className="flex items-center justify-center gap-[6px] rounded-full bg-primary-light px-4 py-[10px] text-lg text-text-primary hover:bg-primary-light/80"
+          aria-pressed={isMapView}
+          onClick={onToggleMapView}
+          className={`flex items-center justify-center gap-[6px] rounded-full px-4 py-[10px] text-lg transition-colors ${
+            isMapView
+              ? "bg-primary text-white"
+              : "bg-primary-light text-text-primary hover:bg-primary-light/80"
+          }`}
         >
           <span>🗺</span>
           <span>지도</span>

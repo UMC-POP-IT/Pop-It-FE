@@ -4,7 +4,10 @@ import {
   mockHostSpaces,
   type MockHostSpace,
 } from "@/features/host-manage/api/mock_host_data";
-import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
+import {
+  scatterCoordinate,
+  type ExploreSpaceDetail,
+} from "@/features/guest-explore/api/mock_spaces";
 import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDetailGallery";
 import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetailInfo";
 
@@ -39,6 +42,8 @@ const toExploreSpaceDetail = (space: MockHostSpace): ExploreSpaceDetail => {
     monthCostText: `${space.cost.month.toLocaleString()}원`,
     facilities: space.facilities,
     spaceInfo: space.spaceInfo,
+    // 지도 표시용 좌표 (백엔드 연동 전까지 목업 스캐터 처리)
+    ...scatterCoordinate(space.id),
   };
 };
 
@@ -127,6 +132,7 @@ export const HostSpaceDetailPage = () => {
         >
           다시 시도
         </button>
+      </div>
     );
   }
 
@@ -154,7 +160,10 @@ export const HostSpaceDetailPage = () => {
       <ExploreDetailGallery space={detail} />
 
       <div className="flex w-full items-start gap-[23px]">
-        <ExploreDetailInfo space={detail} variant="host" />
+        <ExploreDetailInfo
+          space={detail}
+          variant="host"
+        />
       </div>
     </div>
   );
