@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Button from "@/shared/components/Button";
 
-const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
-
 interface TossPaymentRequestOptions {
   method: "CARD";
   amount: { currency: "KRW"; value: number };
@@ -111,7 +109,7 @@ const TossPayments = ({
   };
 
   return (
-    <Button disabled={disabled} className="w-40" variant="primary" size="md" onClick={handlePayment}>
+    <Button disabled={disabled || !isSdkReady} className="w-40" variant="primary" size="md" onClick={handlePayment}>
         작성 완료
     </Button>
   );
