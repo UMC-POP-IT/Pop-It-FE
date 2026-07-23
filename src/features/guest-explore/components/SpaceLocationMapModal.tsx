@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import KakaoMap from "./KakaoMap";
 import KakaoMapOverlay from "./KakaoMapOverlay";
 import MapBackground from "./MapBackground";
@@ -13,23 +14,6 @@ interface SpaceLocationMapModalProps {
 const DETAIL_MAP_LEVEL = 3;
 
 /** 공간 상세 페이지 - 지도 아이콘 클릭 시 노출되는 위치 확인 모달 */
-const SpaceLocationMapModal = ({
-  space,
-  isOpen,
-  onClose,
-}: SpaceLocationMapModalProps) => {
-  const { isLoaded, error } = useKakaoLoader();
-
-  if (!isOpen) return null;
-
-  const center = { lat: space.latitude, lng: space.longitude };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/40"
-import { useEffect } from "react";
-
 const SpaceLocationMapModal = ({
   space,
   isOpen,
@@ -88,7 +72,7 @@ const SpaceLocationMapModal = ({
                   >
                     <path
                       d="M16 0C7.163 0 0 7.163 0 16C0 27 16 40 16 40C16 40 32 27 32 16C32 7.163 24.837 0 16 0Z"
-                      fill="`#e6483a`"
+                      fill="#e6483a"
                     />
                     <circle
                       cx="16"
@@ -130,7 +114,6 @@ const SpaceLocationMapModal = ({
         </button>
       </div>
     </div>
-  );
   );
 };
 
