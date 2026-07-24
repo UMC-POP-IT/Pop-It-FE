@@ -11,8 +11,10 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@portone/browser-sdk": "^0.1.9",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
+    "@toss/tds-mobile": "^2.5.0",
     "react": "^19.1.0",
     "react-daum-postcode": "^4.0.0",
     "react-dom": "^19.1.0",

@@ -94,8 +94,12 @@ export const RegisterStep3 = () => {
               {/* 평 = ㎡ × 0.3025 (자동 계산, 읽기 전용) */}
               <input
                 type="number"
+                value={
+                  form.area !== ""
+                    ? (Number(form.area) * 0.3025).toFixed(1)
+                    : ""
+                }
                 readOnly
-                value={form.area ? (Number(form.area) * 0.3025).toFixed(1) : ""}
                 className="text-text-primary placeholder:text-text-secondary h-14 w-full [appearance:textfield] rounded-lg bg-[#F2F2F2] pr-12 pl-5 text-right text-lg font-medium transition-colors focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
               <span className="text-text-secondary pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 text-lg font-medium">
