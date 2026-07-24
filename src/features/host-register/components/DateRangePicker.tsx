@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import calendarIcon from "@/assets/icons/icon_calendar.svg";
 
 // 요일 헤더 (일~토)
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -78,8 +79,12 @@ export const DateRangePicker = ({
       // 클릭이 달력(container) 밖이면 닫기
       if (
         containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
+        e.target instanceof Node &&
+        !containerRef.current.contains(e.target)
       ) {
+        if (startDate && endDate) {
+          onConfirm(toYmd(startDate), toYmd(endDate));
+        }
         setIsOpen(false);
       }
     };
@@ -92,7 +97,7 @@ export const DateRangePicker = ({
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, startDate, endDate, onConfirm]);
 
   // 시작일 기준 '최대 3개월'을 넘는 날짜인지 (계약 한도)
   const isOverLimit = (date: Date) =>
@@ -124,14 +129,25 @@ export const DateRangePicker = ({
   // 날짜 칸 색칠
   const getDayClassName = (date: Date, base: Date) => {
     const isCurrentMonth = date.getMonth() === base.getMonth();
-    if (
-      (startDate && isSameDay(date, startDate)) ||
-      (endDate && isSameDay(date, endDate))
-    ) {
-      return "bg-primary rounded-full text-white";
+    // 시작일만 선택 (종료일 아직) → 연파랑 완전 원
+    if (startDate && !endDate && isSameDay(date, startDate)) {
+      return "bg-primary-100 rounded-full text-text-primary";
     }
-    if (startDate && endDate && date > startDate && date < endDate) {
-      return "bg-primary-light text-text-primary";
+    // 범위 완성 → 시작=왼쪽반원, 종료=오른쪽반원, 중간=채움 (예약 달력 스타일 통일)
+    if (startDate && endDate) {
+      // 시작일 = 종료일 (하루만 선택) → 완전한 원 (반원 안 잘리게)
+      if (isSameDay(startDate, endDate) && isSameDay(date, startDate)) {
+        return "bg-primary-100 rounded-full text-text-primary";
+      }
+      if (isSameDay(date, startDate)) {
+        return "bg-primary-100 rounded-l-full text-text-primary";
+      }
+      if (isSameDay(date, endDate)) {
+        return "bg-primary-100 rounded-r-full text-text-primary";
+      }
+      if (date > startDate && date < endDate) {
+        return "bg-primary-light text-text-primary";
+      }
     }
     return isCurrentMonth ? "text-text-primary" : "text-text-disabled";
   };
@@ -166,7 +182,7 @@ export const DateRangePicker = ({
         {WEEKDAYS.map((day) => (
           <span
             key={day}
-            className="text-text-secondary flex h-8 w-9 items-center justify-center text-xs"
+            className="text-text-secondary flex h-8 w-12 items-center justify-center text-xs"
           >
             {day}
           </span>
@@ -175,15 +191,24 @@ export const DateRangePicker = ({
       {/* 날짜 42칸 */}
       <div className="grid grid-cols-7">
         {getCalendarDays(base).map((date) => {
-          // 종료일 고르는 중 + 3개월 초과 → 비활성
-          const disabled = !!startDate && !endDate && isOverLimit(date);
+          // 다른 달 날짜(회색) 또는 종료일 고르는 중 3개월 초과 → 비활성(클릭 X)
+          const isOtherMonth = date.getMonth() !== base.getMonth();
+          const disabled =
+            isOtherMonth || (!!startDate && !endDate && isOverLimit(date));
+          // 선택된 날(시작·종료·범위 안)인지 → 스크린리더용 aria-pressed
+          const isSelected =
+            (!!startDate && isSameDay(date, startDate)) ||
+            (!!endDate && isSameDay(date, endDate)) ||
+            (!!startDate && !!endDate && date > startDate && date < endDate);
           return (
             <button
               type="button"
               key={date.toISOString()}
               disabled={disabled}
+              aria-label={`${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`}
+              aria-pressed={isSelected}
               onClick={() => handleSelectDate(date)}
-              className={`flex h-9 w-9 items-center justify-center text-sm ${getDayClassName(date, base)} ${disabled ? "cursor-not-allowed opacity-30" : ""}`}
+              className={`flex h-9 w-12 items-center justify-center text-sm ${getDayClassName(date, base)} ${disabled ? "cursor-not-allowed opacity-30" : ""}`}
             >
               {date.getDate()}
             </button>
@@ -214,8 +239,14 @@ export const DateRangePicker = ({
             aria-haspopup="dialog"
             aria-expanded={isOpen}
             onClick={() => setIsOpen((v) => !v)}
-            className="border-border flex h-12 items-center justify-between rounded-lg border bg-white px-4 text-sm"
+            className="border-border flex h-12 items-center gap-2 rounded-lg border bg-white px-4 text-sm"
           >
+            <img
+              src={calendarIcon}
+              alt=""
+              className="h-5 w-5"
+            />
+
             <span
               className={
                 field.date ? "text-text-primary" : "text-text-placeholder"
@@ -223,7 +254,6 @@ export const DateRangePicker = ({
             >
               {fieldText(field.date, field.label)}
             </span>
-            <span className="text-text-secondary text-xs">▾</span>
           </button>
         ))}
       </div>
