@@ -8,11 +8,15 @@ import {
   TAXPAYER_OPTIONS,
 } from "@/features/host-register/api/mock_register";
 import { useHostRegisterStore } from "@/store/registerStore";
+import { useState } from "react";
+import AddressSearchModal from "@/features/host-register/components/AddressSearchModal";
 
 export const HostRegisterStep1 = () => {
   const navigate = useNavigate();
   const form = useHostRegisterStore((s) => s.form);
   const setValues = useHostRegisterStore((s) => s.setValues);
+  const [isAddrOpen, setIsAddrOpen] = useState(false);
+  const [addrError, setAddrError] = useState(""); // 서울 외 지역 선택 시 에러
   const isValid =
     form.taxpayerType !== "" &&
     form.businessNumber !== "" &&
@@ -134,18 +138,26 @@ export const HostRegisterStep1 = () => {
             <div className="flex-1">
               <Input
                 id="business-address"
+                placeholder="주소 찾기로 주소를 입력해주세요"
                 value={form.businessAddress}
-                onChange={(e) => setValues({ businessAddress: e.target.value })}
+                readOnly
+                error={addrError}
               />
             </div>
-            {/*TODO: 주소 검색 API(다음 우편번호 등) 연결 */}
             <Button
               variant="black"
               size="md"
+              onClick={() => setIsAddrOpen(true)}
             >
               주소 찾기
             </Button>
           </div>
+          {/* 안내문 (에러 없을 때만) */}
+          {!addrError && (
+            <span className="text-text-disabled text-xs">
+              현재 서울 지역만 등록 가능합니다
+            </span>
+          )}
           <Input
             placeholder="상세 주소를 입력해주세요"
             aria-label="상세 주소"
@@ -168,6 +180,20 @@ export const HostRegisterStep1 = () => {
           다음으로
         </Button>
       </div>
+
+      <AddressSearchModal
+        isOpen={isAddrOpen}
+        onClose={() => setIsAddrOpen(false)}
+        onComplete={({ address, sido }) => {
+          // 서울 외 지역 → 빨간 에러, 저장 안 함
+          if (sido !== "서울") {
+            setAddrError("서울 외 지역은 선택하실 수 없습니다");
+            return;
+          }
+          setAddrError("");
+          setValues({ businessAddress: address });
+        }}
+      />
     </div>
   );
 };
