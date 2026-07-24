@@ -26,6 +26,11 @@ export const RegisterStep1 = () => {
   const navigate = useNavigate();
   const [isAddrOpen, setIsAddrOpen] = useState(false);
   const [addrError, setAddrError] = useState(""); // 서울 외 지역 선택 시 에러
+  const isValid =
+    form.buildingType !== "" &&
+    form.address !== "" &&
+    form.detailAddress.trim() !== "";
+
   return (
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -114,12 +119,12 @@ export const RegisterStep1 = () => {
         </div>
       </div>
 
-      {/* 다음으로 버튼 (우측 정렬)
-          TODO(2차): 필수항목 유효성 검사 통과 시 활성화 */}
+      {/* 다음으로 버튼 (우측 정렬)*/}
       <div className="flex justify-end">
         <Button
           variant="primary"
           size="nav"
+          disabled={!isValid}
           onClick={() => navigate("/host/register/step2")}
         >
           다음으로
