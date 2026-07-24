@@ -13,8 +13,6 @@ export interface SpaceRegisterForm {
   // Step2 거래정보
   deposit: string;
   priceDay: string;
-  priceWeek: string;
-  priceMonth: string;
   startDate: string;
   endDate: string;
   // Step3 공간정보
@@ -50,8 +48,6 @@ const initialForm: SpaceRegisterForm = {
   detailAddress: "",
   deposit: "",
   priceDay: "",
-  priceWeek: "",
-  priceMonth: "",
   startDate: "",
   endDate: "",
   usage: "",

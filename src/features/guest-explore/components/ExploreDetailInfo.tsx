@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
+import SpaceLocationMapModal from "@/features/guest-explore/components/SpaceLocationMapModal";
 
 interface ExploreDetailInfoProps {
   space: ExploreSpaceDetail;
@@ -22,6 +23,7 @@ const ExploreDetailInfo = ({
 }: ExploreDetailInfoProps) => {
   const navigate = useNavigate();
   const isHost = variant === "host";
+  const [isMapOpen, setIsMapOpen] = useState(false);
 
   return (
     <div
@@ -59,6 +61,7 @@ const ExploreDetailInfo = ({
             <button
               type="button"
               aria-label="지도로 보기"
+              onClick={() => setIsMapOpen(true)}
               className="flex items-center justify-center p-3 text-2xl leading-none"
             >
               🗺
@@ -191,6 +194,12 @@ const ExploreDetailInfo = ({
           </p>
         </div>
       </div>
+
+      <SpaceLocationMapModal
+        space={space}
+        isOpen={isMapOpen}
+        onClose={() => setIsMapOpen(false)}
+      />
     </div>
   );
 };

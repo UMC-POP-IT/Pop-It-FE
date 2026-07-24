@@ -5,6 +5,7 @@ import Chip from "@/shared/components/Chip";
 import { useNavigate } from "react-router-dom";
 import { useRegisterStore } from "@/store/registerStore";
 import { STEPS } from "@/features/host-register/api/mock_register";
+import { NO_SPINNER, blockNonNumeric } from "@/shared/utils/numberInput";
 
 // 칩 그룹 선택지
 const USAGE_OPTIONS = [
@@ -38,6 +39,15 @@ export const RegisterStep3 = () => {
   const navigate = useNavigate();
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
+
+  const isValid =
+    form.usage !== "" &&
+    form.spaceStructure !== "" &&
+    form.area !== "" &&
+    form.floorType !== "" &&
+    form.floor !== "" &&
+    form.hasParking !== null;
+
   return (
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -81,6 +91,7 @@ export const RegisterStep3 = () => {
             <div className="relative flex-1">
               <input
                 type="number"
+                aria-label="전용 면적 (제곱미터)"
                 value={form.area}
                 onChange={(e) => setValues({ area: e.target.value })}
                 className="text-text-primary placeholder:text-text-secondary h-14 w-full [appearance:textfield] rounded-lg bg-[#F2F2F2] pr-12 pl-5 text-right text-lg font-medium transition-colors focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
@@ -94,6 +105,7 @@ export const RegisterStep3 = () => {
               {/* 평 = ㎡ × 0.3025 (자동 계산, 읽기 전용) */}
               <input
                 type="number"
+                aria-label="평 환산 (자동 계산)"
                 value={
                   form.area !== ""
                     ? (Number(form.area) * 0.3025).toFixed(1)
@@ -122,9 +134,14 @@ export const RegisterStep3 = () => {
         <div className="relative">
           <Input
             type="number"
+            aria-label="층수"
             placeholder="층수 입력"
             value={form.floor}
-            onChange={(e) => setValues({ floor: e.target.value })}
+            onChange={(e) =>
+              setValues({ floor: e.target.value.replace(/[^0-9]/g, "") })
+            }
+            onKeyDown={blockNonNumeric}
+            className={NO_SPINNER}
           />
           <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
             층
@@ -189,6 +206,7 @@ export const RegisterStep3 = () => {
         <Button
           variant="primary"
           size="nav"
+          disabled={!isValid}
           onClick={() => navigate("/host/register/step4")}
         >
           다음으로

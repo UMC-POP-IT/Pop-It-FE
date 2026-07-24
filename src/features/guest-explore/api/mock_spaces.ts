@@ -135,7 +135,21 @@ export interface ExploreSpaceDetail extends Space {
   // (주 단가 = cost.day * 7, 월 단가 = cost.day * 30, 표시부는 ExploreDetailInfo 참고)
   facilities: string[]; // 시설정보
   spaceInfo: string[]; // 공간정보
+  // 공간 탐색/상세 응답에는 항상 포함되는 값이라 여기서는 필수로 좁혀서 사용
+  latitude: number;
+  longitude: number;
 }
+
+/**
+ * 지도 목업용 좌표 스캐터 헬퍼
+ * TODO: 백엔드 연동 후 API 응답의 latitude/longitude 값으로 교체
+ */
+const GANGNAM_STATION = { lat: 37.4979, lng: 127.0276 };
+
+export const scatterCoordinate = (index: number) => ({
+  latitude: GANGNAM_STATION.lat + (((index * 37) % 21) - 10) * 0.0012,
+  longitude: GANGNAM_STATION.lng + (((index * 53) % 21) - 10) * 0.0012,
+});
 
 /**
  * 공간 탐색(목록) + 공간 상세 - ExploreSpace.tsx / SpaceDetailPage.tsx
@@ -171,6 +185,7 @@ export const exploreSpaces: ExploreSpaceDetail[] = Array.from(
     facilities: ["에어컨", "에어컨", "에어컨"], // TODO: 실제 시설 데이터 연동 전까지 Figma 목업 값 그대로 사용
     spaceInfo: ["에어컨", "에어컨", "에어컨"],
     createdAt: "2026-07-01T00:00:00.000Z",
+    ...scatterCoordinate(index),
   }),
 );
 
