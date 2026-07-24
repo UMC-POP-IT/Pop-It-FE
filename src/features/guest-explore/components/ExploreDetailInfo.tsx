@@ -120,9 +120,12 @@ const ExploreDetailInfo = ({
                 <span className="text-text-primary">원</span>
               </span>
             </div>
-            <div className="flex w-full items-center justify-between">
-              <span className="text-text-primary font-normal">
-                월 단가 (30일 기준)
+            <div className="flex w-full items-start justify-between">
+              <span className="text-text-primary flex flex-col font-normal">
+                월 단가
+                <span className="text-text-tag text-xs font-normal">
+                  (30일 기준)
+                </span>
               </span>
               <span className="text-right">
                 <span className="text-primary">
