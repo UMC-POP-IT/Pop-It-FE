@@ -88,6 +88,7 @@ export const RegisterStep1 = () => {
           <div className="flex items-start gap-2">
             <div className="flex-1">
               <Input
+                aria-label="주소"
                 placeholder="주소 찾기로 주소를 입력해주세요"
                 value={form.address}
                 readOnly
@@ -135,9 +136,10 @@ export const RegisterStep1 = () => {
         isOpen={isAddrOpen}
         onClose={() => setIsAddrOpen(false)}
         onComplete={({ address, sido, sigungu }) => {
-          // 서울 외 지역 → 빨간 에러, 저장 안 함
+          // 서울 외 지역 → 빨간 에러 + 기존 주소값 비우기 (유효성 우회 방지)
           if (sido !== "서울") {
             setAddrError("서울 외 지역은 선택하실 수 없습니다");
+            setValues({ address: "", city: "", district: "" });
             return;
           }
           setAddrError("");

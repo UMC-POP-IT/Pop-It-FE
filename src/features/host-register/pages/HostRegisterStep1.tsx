@@ -185,9 +185,10 @@ export const HostRegisterStep1 = () => {
         isOpen={isAddrOpen}
         onClose={() => setIsAddrOpen(false)}
         onComplete={({ address, sido }) => {
-          // 서울 외 지역 → 빨간 에러, 저장 안 함
+          // 서울 외 지역 → 빨간 에러 + 기존 주소값 비우기 (유효성 우회 방지)
           if (sido !== "서울") {
             setAddrError("서울 외 지역은 선택하실 수 없습니다");
+            setValues({ businessAddress: "" });
             return;
           }
           setAddrError("");
