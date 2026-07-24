@@ -13,6 +13,12 @@ export const HostRegisterStep1 = () => {
   const navigate = useNavigate();
   const form = useHostRegisterStore((s) => s.form);
   const setValues = useHostRegisterStore((s) => s.setValues);
+  const isValid =
+    form.taxpayerType !== "" &&
+    form.businessNumber !== "" &&
+    form.storeName.trim() !== "" &&
+    form.businessAddress.trim() !== "";
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -36,8 +42,7 @@ export const HostRegisterStep1 = () => {
           </p>
         </div>
 
-        {/* 과세자 등록 (택1)
-            정적: 첫 번째 카드 선택 상태로 표시. TODO: 실제 선택 로직 (RHF) */}
+        {/* 과세자 등록 (택1) — store 연결됨 */}
         <div className="flex flex-col gap-2">
           <span className="text-text-primary text-sm font-bold">
             과세자 등록
@@ -86,7 +91,11 @@ export const HostRegisterStep1 = () => {
             id="business-number"
             placeholder="000-00-00000"
             value={form.businessNumber}
-            onChange={(e) => setValues({ businessNumber: e.target.value })}
+            onChange={(e) =>
+              setValues({
+                businessNumber: e.target.value.replace(/[^0-9]/g, ""),
+              })
+            }
           />
         </div>
 
@@ -107,7 +116,7 @@ export const HostRegisterStep1 = () => {
           </label>
           <Input
             id="business-name"
-            placeholder="예: OO 갤러리, 카페 등"
+            placeholder="예: (주) 홍따오기 컴퍼니"
             value={form.storeName}
             onChange={(e) => setValues({ storeName: e.target.value })}
           />
@@ -125,7 +134,6 @@ export const HostRegisterStep1 = () => {
             <div className="flex-1">
               <Input
                 id="business-address"
-                placeholder="주소를 검색해주세요"
                 value={form.businessAddress}
                 onChange={(e) => setValues({ businessAddress: e.target.value })}
               />
@@ -149,12 +157,12 @@ export const HostRegisterStep1 = () => {
         </div>
       </div>
 
-      {/* 다음으로 버튼 (우측 정렬)
-          정적: 활성 상태로 표시. TODO: 유효성 검사 통과 시 활성화 + step2 이동 */}
+      {/* 다음으로 버튼 (우측 정렬) */}
       <div className="flex justify-end">
         <Button
           variant="primary"
           size="md"
+          disabled={!isValid}
           onClick={() => navigate("/host/host-register/step2")}
         >
           다음으로

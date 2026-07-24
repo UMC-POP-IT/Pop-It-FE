@@ -1,11 +1,14 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
+import SpaceLocationMapModal from "@/features/guest-explore/components/SpaceLocationMapModal";
 
 interface ExploreDetailInfoProps {
   space: ExploreSpaceDetail;
-  isWished: boolean;
-  onWishToggle: () => void;
+  /** 게스트/호스트 역할에 따른 조건부 렌더링 (기본값: 게스트) */
+  variant?: "guest" | "host";
+  isWished?: boolean;
+  onWishToggle?: () => void;
 }
 
 interface SectionTitleProps {
@@ -14,13 +17,18 @@ interface SectionTitleProps {
 
 const ExploreDetailInfo = ({
   space,
-  isWished,
+  variant = "guest",
+  isWished = false,
   onWishToggle,
 }: ExploreDetailInfoProps) => {
   const navigate = useNavigate();
+  const isHost = variant === "host";
+  const [isMapOpen, setIsMapOpen] = useState(false);
 
   return (
-    <div className="flex w-[689px] shrink-0 flex-col gap-10">
+    <div
+      className={`flex shrink-0 flex-col gap-10 ${isHost ? "w-full" : "w-[689px]"}`}
+    >
       {/* 제목 + 액션 */}
       <div className="flex flex-col items-start gap-4">
         <div className="flex w-full items-start justify-between">
@@ -34,34 +42,41 @@ const ExploreDetailInfo = ({
           </div>
 
           <div className="flex shrink-0 items-center">
-            <button
-              type="button"
-              aria-label={isWished ? "찜 해제하기" : "찜하기"}
-              aria-pressed={isWished}
-              onClick={onWishToggle}
-              className="flex items-center justify-center p-3"
-            >
-              <span
-                className={`text-2xl leading-none ${isWished ? "text-red-500" : "text-text-secondary"}`}
+            {/* 찜하기: 게스트 전용 기능 */}
+            {!isHost && onWishToggle && (
+              <button
+                type="button"
+                aria-label={isWished ? "찜 해제하기" : "찜하기"}
+                aria-pressed={isWished}
+                onClick={onWishToggle}
+                className="flex items-center justify-center p-3"
               >
-                {isWished ? "♥" : "♡"}
-              </span>
-            </button>
+                <span
+                  className={`text-2xl leading-none ${isWished ? "text-red-500" : "text-text-secondary"}`}
+                >
+                  {isWished ? "♥" : "♡"}
+                </span>
+              </button>
+            )}
             <button
               type="button"
               aria-label="지도로 보기"
+              onClick={() => setIsMapOpen(true)}
               className="flex items-center justify-center p-3 text-2xl leading-none"
             >
               🗺
             </button>
-            <button
-              type="button"
-              aria-label="3D로 둘러보기"
-              onClick={() => navigate(`/spaces/${space.id}/view`)}
-              className="text-text-primary flex items-center justify-center p-3 text-sm font-bold"
-            >
-              3D
-            </button>
+            {/* 3D 큐레이션: 게스트 탐색 목업 데이터에 연결되어 있어 호스트 화면에서는 비노출 */}
+            {!isHost && (
+              <button
+                type="button"
+                aria-label="3D로 둘러보기"
+                onClick={() => navigate(`/spaces/${space.id}/view`)}
+                className="text-text-primary flex items-center justify-center p-3 text-sm font-bold"
+              >
+                3D
+              </button>
+            )}
           </div>
         </div>
 
@@ -171,6 +186,12 @@ const ExploreDetailInfo = ({
           </p>
         </div>
       </div>
+
+      <SpaceLocationMapModal
+        space={space}
+        isOpen={isMapOpen}
+        onClose={() => setIsMapOpen(false)}
+      />
     </div>
   );
 };

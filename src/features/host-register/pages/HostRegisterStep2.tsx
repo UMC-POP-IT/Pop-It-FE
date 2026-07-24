@@ -9,6 +9,7 @@ import {
   BANK_OPTIONS,
 } from "@/features/host-register/api/mock_register";
 import { useHostRegisterStore } from "@/store/registerStore";
+import { sanitizeNumber } from "@/shared/utils/sanitizeNumber";
 
 export const HostRegisterStep2 = () => {
   const navigate = useNavigate();
@@ -19,6 +20,10 @@ export const HostRegisterStep2 = () => {
     if (import.meta.env.DEV) console.log("호스트 등록 제출 데이터", form);
     navigate("/host/host-register/complete");
   };
+  const isValid =
+    form.bankName !== "" &&
+    form.accountNumber !== "" &&
+    form.accountHolder.trim() !== "";
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
@@ -82,7 +87,9 @@ export const HostRegisterStep2 = () => {
             id="account-number"
             placeholder="- 없이 숫자만 입력"
             value={form.accountNumber}
-            onChange={(e) => setValues({ accountNumber: e.target.value })}
+            onChange={(e) =>
+              setValues({ accountNumber: sanitizeNumber(e.target.value) })
+            }
           />
         </div>
 
@@ -107,7 +114,7 @@ export const HostRegisterStep2 = () => {
       </div>
 
       {/* 이전 / 다음으로 버튼 (우측 정렬)
-          정적: '다음으로' 활성 상태로 표시. TODO: 유효성 검사 통과 시 활성화 + 완료 화면 이동 */}
+          TODO(2차): 유효성 검사 통과 시 활성화 */}
       <div className="flex justify-end gap-2">
         <Button
           variant="gray"
@@ -118,6 +125,7 @@ export const HostRegisterStep2 = () => {
         <Button
           variant="primary"
           size="md"
+          disabled={!isValid}
           onClick={handleSubmit}
         >
           다음으로

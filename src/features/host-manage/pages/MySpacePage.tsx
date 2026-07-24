@@ -93,13 +93,13 @@ export const MySpacePage = () => {
                   ···
                 </button>
                 {openMenuId === space.id && (
-                  <div className="absolute top-12 right-0 z-10 flex flex-col overflow-hidden rounded-lg border border-divider bg-white shadow-md">
+                  <div className="absolute top-12 right-0 z-10 flex flex-col overflow-hidden rounded-[8px] border-2 border-[#d8d8d8] bg-white p-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]">
                     <button
                       onClick={() => {
                         setEditTargetId(space.id);
                         setOpenMenuId(null);
                       }}
-                      className="hover:bg-tag-bg text-text-primary px-6 py-3 text-base font-medium whitespace-nowrap"
+                      className="rounded-[4px] px-7 py-2 text-center text-base font-bold text-[#808080] whitespace-nowrap hover:bg-[#f2f2f2]"
                     >
                       공간수정
                     </button>
@@ -108,7 +108,7 @@ export const MySpacePage = () => {
                         setDeleteTargetId(space.id);
                         setOpenMenuId(null);
                       }}
-                      className="hover:bg-tag-bg text-danger px-6 py-3 text-base font-medium whitespace-nowrap"
+                      className="rounded-[4px] px-6 py-2 text-center text-base font-bold text-danger whitespace-nowrap hover:bg-[#f2f2f2]"
                     >
                       공간삭제
                     </button>

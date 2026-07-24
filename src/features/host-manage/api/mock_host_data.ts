@@ -208,7 +208,11 @@ export const mockHostReservations: HostReservation[] = [
     endDate: "2026-06-05",
     status: "COMPLETED", // 사용 완료 (퇴실 사진 등록됨)
     totalPrice: 2500000,
-    checkoutPhotoUrls: ["/mock/checkout-1.jpg"],
+    checkoutPhotoUrls: [
+      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800",
+      "https://images.unsplash.com/photo-1497366754035-f200581393ab?w=800",
+      "https://images.unsplash.com/photo-1564069114553-7215e1ff1890?w=800",
+    ],
   },
   {
     id: 109,

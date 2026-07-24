@@ -7,7 +7,7 @@ interface FileUploadRowProps {
 }
 
 // 파일 첨부 행 (사업자등록증 사본 / 통장 사본 공용)
-// 정적: 파일명 표시 영역은 placeholder만 노출. TODO: 실제 선택 파일명 표시 + 업로드 처리
+// 파일 선택 시 파일명 표시. (실제 서버 업로드는 2차 API 때)
 const FileUploadRow = ({ label, placeholder, hint }: FileUploadRowProps) => {
   const [file, setFile] = useState<File | null>(null);
   return (
@@ -16,7 +16,7 @@ const FileUploadRow = ({ label, placeholder, hint }: FileUploadRowProps) => {
       <div className="flex gap-2">
         {/* 선택된 파일명 표시 영역*/}
         <div
-          className={`border-border flex flex-1 items-center rounded-lg border bg-white px-4 py-2.5 text-sm ${file ? "text-text-primary" : "text-text-disabled"}`}
+          className={`border-border flex flex-1 items-center rounded-lg border bg-tag-bg px-4 py-2.5 text-sm ${file ? "text-text-primary" : "text-text-disabled"}`}
         >
           {file ? file.name : placeholder}
         </div>
