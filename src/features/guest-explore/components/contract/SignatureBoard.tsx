@@ -73,14 +73,6 @@ const SignatureBoard = ({onIsSigned}: SignatureBoardProps) => {
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={handleUndo}
-            disabled={isEmpty}
-            className="text-text-secondary text-sm underline disabled:opacity-40"
-          >
-            실행 취소
-          </button>
-          <button
-            type="button"
             onClick={handleClear}
             disabled={isEmpty}
             className="text-text-secondary text-sm underline disabled:opacity-40"
