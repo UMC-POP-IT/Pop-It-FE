@@ -84,6 +84,7 @@ const Header = () => {
                   }
                   navigate("/reservations");
                 }}
+                aria-current={pathname === "/reservations" ? "page" : undefined}
                 className={`pb-0.5 text-base font-bold transition-colors ${
                   pathname === "/reservations"
                     ? "text-primary border-primary border-b-2"

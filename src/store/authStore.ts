@@ -34,7 +34,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   setMode: (mode) => set({ mode }),
   openLoginModal: (pendingAction) =>
     set({ isLoginModalOpen: true, pendingAction: pendingAction ?? null }),
-  closeLoginModal: () => set({ isLoginModalOpen: false }),
+  closeLoginModal: () => set({ isLoginModalOpen: false, pendingAction: null }),
   clearPendingAction: () => set({ pendingAction: null }),
   logout: () => set({ user: null, mode: "GUEST", pendingAction: null }),
 }));

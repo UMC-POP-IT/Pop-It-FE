@@ -24,10 +24,8 @@ const getEffectiveStatus = (r: HostReservation): HostReservation["status"] => {
   if (r.status === "CONTRACTED") {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const start = new Date(r.startDate);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(r.endDate);
-    end.setHours(0, 0, 0, 0);
+    const start = new Date(r.startDate + "T00:00:00");
+    const end = new Date(r.endDate + "T00:00:00");
     if (start <= today && today <= end) return "IN_USE";
   }
   return r.status;
