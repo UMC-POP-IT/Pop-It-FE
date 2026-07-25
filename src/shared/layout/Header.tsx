@@ -152,7 +152,7 @@ const Header = () => {
             </button>
           ) : (
             <button
-              onClick={openLoginModal}
+              onClick={() => openLoginModal()}
               className="text-primary text-sm font-medium"
             >
               로그인
