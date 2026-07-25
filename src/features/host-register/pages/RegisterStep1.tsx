@@ -99,7 +99,9 @@ export const RegisterStep1 = () => {
               variant="black"
               size="nav"
               className="text-xl! font-bold!"
-              onClick={() => setIsAddrOpen(true)}
+              onClick={() => {
+                setAddrError("");
+                setIsAddrOpen(true)}}
             >
               주소 찾기
             </Button>

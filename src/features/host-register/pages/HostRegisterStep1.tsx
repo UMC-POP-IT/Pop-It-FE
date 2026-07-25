@@ -147,7 +147,9 @@ export const HostRegisterStep1 = () => {
             <Button
               variant="black"
               size="md"
-              onClick={() => setIsAddrOpen(true)}
+              onClick={() => {
+                setAddrError("");
+                setIsAddrOpen(true)}}
             >
               주소 찾기
             </Button>
