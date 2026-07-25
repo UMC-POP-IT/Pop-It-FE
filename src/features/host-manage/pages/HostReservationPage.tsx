@@ -26,7 +26,9 @@ const getEffectiveStatus = (r: HostReservation): HostReservation["status"] => {
     today.setHours(0, 0, 0, 0);
     const start = new Date(r.startDate);
     start.setHours(0, 0, 0, 0);
-    if (start <= today) return "IN_USE";
+    const end = new Date(r.endDate);
+    end.setHours(0, 0, 0, 0);
+    if (start <= today && today <= end) return "IN_USE";
   }
   return r.status;
 };
@@ -91,7 +93,7 @@ export const HostReservationPage = () => {
   const handleContractComplete = () => {
     if (approveTargetId === null) return;
     setReservations((prev) =>
-      prev.map((r) => (r.id === approveTargetId ? { ...r, status: "APPROVED" } : r)),
+      prev.map((r) => (r.id === approveTargetId ? { ...r, status: "CONTRACTED" } : r)),
     );
     setIsContractModalOpen(false);
     setApproveTargetId(null);

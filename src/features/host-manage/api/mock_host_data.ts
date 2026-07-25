@@ -135,7 +135,7 @@ export const mockGuests: Record<number, MockGuestInfo> = {
   },
 };
 
-// 호스트 관점 예약 목록 (기준일: 2026-07-26)
+// 호스트 관점 예약 목록 (탭별 상태 기준 작성)
 export const mockHostReservations: HostReservation[] = [
   // 승인 대기 (PENDING) — 미래 계약 3건
   {
