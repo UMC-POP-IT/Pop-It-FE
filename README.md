@@ -54,7 +54,7 @@
 
 ## 📁 폴더 구조
 
-```
+``` text
 src/
 ├── app/                       # 앱 진입점, 라우터
 │   ├── App.tsx
@@ -76,7 +76,7 @@ src/
 │   │   │   ├── contract/           # 본인인증, 전자계약 서명, 결제(Toss/PortOne) 모달
 │   │   │   └── curation/           # 3D 큐레이션 (룸 뷰어) (Three.js Scene, Hotspot 등)
 │   │   ├── hooks/ icons/ pages/
-│   ├── guest-recommend/       # (예약된 폴더, 현재 구현은 guest-explore 내부에 통합) -> 이건 경우에 따라 나중에 없앨수도
+│   ├── guest-recommend/       # 현재는 guest-explore에 통합되어 있으며, 별도 폴더는 추후 정리 예정
 │   ├── host-register/         # 공간 등록 5단계 / 호스트 전환 등록 2단계
 │   │   ├── api/ components/ hooks/ pages/ steps/
 │   └── host-manage/           # 내 공간 관리 · 예약 관리(호스트) · 게스트 계약/결제
@@ -211,8 +211,8 @@ pnpm format
 | 3D 큐레이션 | SpaceViewPage (CurationViewer) | `/spaces/:spaceId/view` | 고태현 |
 | 전자계약/결제 | ContractModal, Authentication, SignatureBoard, PaymentModal, TossPayments | 공간 상세 내 모달 | 강민경 |
 | 나의 예약 | MyReservationPage | `/reservations` | 고태현 |
-| 공간 등록 (1~5단계) | RegisterStep1~5 | `/host/register`, `/host/register/step2~5` | 이수빈 |
-| 호스트 등록 (1~2단계) | HostRegisterStart, HostRegisterStep1~2, HostRegisterComplete | `/host/host-register`, `/step1`, `/step2`, `/complete` | 이수빈 |
+| 공간 등록 (1~5단계) | RegisterStep1~5 | `/host/register/step2 ~ /host/register/step5` | 이수빈 |
+| 호스트 등록 (1~2단계) | HostRegisterStart, HostRegisterStep1~2, HostRegisterComplete | `/host/host-register/step1`, `/host/host-register/step2`, `/host/host-register/complete` | 이수빈 |
 | 내 공간 관리 | MySpacePage, HostSpaceDetailPage | `/host/spaces`, `/host/spaces/:spaceId` | 임채은 |
 | 예약 관리(호스트) | HostReservationPage | `/host/reservations` | 임채은 |
 
