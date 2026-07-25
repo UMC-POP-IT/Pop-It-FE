@@ -26,7 +26,7 @@
 | 1번 | 강민경 | 공간탐색, 공간 상세(호스트, 게스트 모두), 프론트엔드 배포|
 | 2번 | 고태현 | 공간 탐색 - AI 맞춤형 공간 / 실시간 추천 공간, 3D 큐레이션, 나의 예약, 찜하기 |
 | 3번 | 이수빈 | 공간 등록 (5단계 플로우), 호스트 등록 (2단계 플로우) |
-| 4번 | 임채은 | 로그인, 내 공간 관리, 공통 컴포넌트/디자인시스템, 호스트 예약하기 |
+| 4번 | 임채은 | 로그인, 내 공간 관리, 공통 컴포넌트/디자인시스템, 호스트 예약관리 |
 
 > 4명 모두 디자인 확정 → 화면설계서 기반 병렬 개발을 진행하며, 디자인/백엔드 개발과 함께 진행됩니다.
 > 
@@ -211,8 +211,8 @@ pnpm format
 | 3D 큐레이션 | SpaceViewPage (CurationViewer) | `/spaces/:spaceId/view` | 고태현 |
 | 전자계약/결제 | ContractModal, Authentication, SignatureBoard, PaymentModal, TossPayments | 공간 상세 내 모달 | 강민경 |
 | 나의 예약 | MyReservationPage | `/reservations` | 고태현 |
-| 공간 등록 (1~5단계) | RegisterStep1~5 | `/host/register/step2 ~ /host/register/step5` | 이수빈 |
-| 호스트 등록 (1~2단계) | HostRegisterStart, HostRegisterStep1~2, HostRegisterComplete | `/host/host-register/step1`, `/host/host-register/step2`, `/host/host-register/complete` | 이수빈 |
+| 공간 등록 (1~5단계) | RegisterStep1~5 | `/host/register`, `/host/register/step2 ~ /host/register/step5` | 이수빈 |
+| 호스트 등록 (1~2단계) | HostRegisterStart, HostRegisterStep1~2, HostRegisterComplete | `/host/host-register`, `/host/host-register/step1`, `/host/host-register/step2`, `/host/host-register/complete` | 이수빈 |
 | 내 공간 관리 | MySpacePage, HostSpaceDetailPage | `/host/spaces`, `/host/spaces/:spaceId` | 임채은 |
 | 예약 관리(호스트) | HostReservationPage | `/host/reservations` | 임채은 |
 
