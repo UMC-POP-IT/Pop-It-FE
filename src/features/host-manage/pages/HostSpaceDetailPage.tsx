@@ -29,8 +29,6 @@ const toExploreSpaceDetail = (space: MockHostSpace): ExploreSpaceDetail => {
     address: space.address,
     cost: {
       day: space.cost.day,
-      month: space.cost.month,
-      year: space.cost.month * 12,
     },
     keywords: space.facilities,
     description: space.description,
