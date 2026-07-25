@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Badge from "@/shared/components/Badge";
 import Button from "@/shared/components/Button";
@@ -58,12 +58,20 @@ export const ReservationCard = ({ reservation }: ReservationCardProps) => {
   const [isContractModalOpen, setIsContractModalOpen] = useState(false); // 계약서 확인 & 통합 본인 인증 & 전자서명 창 open 여부
   const [isContractDone, setIsContractDone] = useState(false); // 계약 마무리 여부
   const [agreedToGuide, setAgreedToGuide] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
 
   const handleCancelReservation = () => {
     // TODO: 예약 취소 창 close
     setIsCancelModalOpen(false);
+  };
+
+  const handlePhotoSelected = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // TODO: 선택한 사진 서버 업로드
+    e.target.value = "";
   };
 
   const handleSignContract = () => {
@@ -107,7 +115,14 @@ export const ReservationCard = ({ reservation }: ReservationCardProps) => {
               {reservation.isDone &&
                 (needsPhotoVerification ? (
                   <>
-                    <Button variant="primary" size="sm">
+                    <input
+                      ref={photoInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoSelected}
+                      className="sr-only"
+                    />
+                    <Button variant="primary" size="sm" onClick={() => photoInputRef.current?.click()}>
                       사진 인증
                     </Button>
                     {isPhotoRejected && (
