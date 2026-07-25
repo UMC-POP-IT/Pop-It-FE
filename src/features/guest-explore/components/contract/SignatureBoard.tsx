@@ -19,11 +19,6 @@ const SignatureBoard = ({onIsSigned}: SignatureBoardProps) => {
     setStatus("idle");
   };
 
-  const handleUndo = () => {
-    boardRef.current?.undo();
-    setStatus("idle");
-  };
-
   // const handleSubmit = async () => {
   //   if (boardRef.current?.isEmpty()) return;
 
