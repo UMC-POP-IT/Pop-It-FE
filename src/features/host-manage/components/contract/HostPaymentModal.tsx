@@ -27,6 +27,8 @@ const HostPaymentModal = ({
   if (!isOpen) return null;
 
   const { startDate, endDate, totalPrice } = reservation;
+  const deposit = Math.round(totalPrice * 0.2);
+  const insurance = Math.round(totalPrice * 0.05);
   const platformFee = Math.round(totalPrice * 0.1);
   const netAmount = totalPrice - platformFee;
   const days = getDurationDays(startDate, endDate);
@@ -54,6 +56,14 @@ const HostPaymentModal = ({
           <div className="flex justify-between">
             <span className="text-text-secondary">임대료</span>
             <span className="text-text-primary font-medium">{totalPrice.toLocaleString()}원</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-text-secondary">보증금 (에스크로)</span>
+            <span className="text-text-primary font-medium">{deposit.toLocaleString()}원</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-text-secondary">보험료</span>
+            <span className="text-text-primary font-medium">{insurance.toLocaleString()}원</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">플랫폼 수수료 10%</span>
@@ -84,8 +94,8 @@ const HostPaymentModal = ({
             checked={agreedToGuide}
             onChange={(e) => onAgreedToGuideChange(e.target.checked)}
           />
-          이웃 화합가이드에 동의합니다. (소음 관리, 대기열 관리, 쓰레기 처리 등 이웃과의 조화로운 공존을 위한
-          가이드라인을 준수합니다.)
+          결제 및 정산 조건에 동의합니다. (플랫폼 수수료 10% 공제 및 영업일 기준 3~7일 후 입금되는 정산
+          정책을 확인했습니다.)
         </label>
 
         <div className="flex gap-2">

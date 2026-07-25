@@ -4,6 +4,7 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 interface ExploreReservationCardProps {
   dayCost: number;
+  onLoginRequired?: () => void;
 }
 
 const formatDate = (date: Date) => {
@@ -22,7 +23,7 @@ const isSameDay = (a: Date, b: Date) =>
 const diffDays = (a: Date, b: Date) =>
   Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-const ExploreReservationCard = ({ dayCost }: ExploreReservationCardProps) => {
+const ExploreReservationCard = ({ dayCost, onLoginRequired }: ExploreReservationCardProps) => {
   const today = useMemo(() => new Date(), []);
   const [viewDate, setViewDate] = useState(
     new Date(today.getFullYear(), today.getMonth(), 1),
@@ -44,6 +45,10 @@ const ExploreReservationCard = ({ dayCost }: ExploreReservationCardProps) => {
   }, [viewDate]);
 
   const handleSelectDate = (date: Date) => {
+    if (onLoginRequired) {
+      onLoginRequired();
+      return;
+    }
     if (!startDate || endDate) {
       setStartDate(date);
       setEndDate(null);

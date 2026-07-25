@@ -4,6 +4,7 @@ import KakaoMapOverlay from "./KakaoMapOverlay";
 import MapBackground from "./MapBackground";
 import { useKakaoLoader } from "@/shared/hooks/useKakaoLoader";
 import { useWishStore } from "@/store/wishStore";
+import { useAuthStore } from "@/store/authStore";
 import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
 
 interface ExploreSpaceMapProps {
@@ -26,6 +27,16 @@ const ExploreSpaceMap = ({
   const [selectedSpaceId, setSelectedSpaceId] = useState<number | null>(null);
   const wishedIds = useWishStore((state) => state.wishedIds);
   const toggleWish = useWishStore((state) => state.toggleWish);
+  const user = useAuthStore((s) => s.user);
+  const openLoginModal = useAuthStore((s) => s.openLoginModal);
+
+  const handleWishToggle = (spaceId: number) => {
+    if (!user) {
+      openLoginModal({ type: "wish", spaceId });
+      return;
+    }
+    toggleWish(spaceId);
+  };
 
   const center = spaces[0]
     ? { lat: spaces[0].latitude, lng: spaces[0].longitude }
@@ -109,7 +120,7 @@ const ExploreSpaceMap = ({
                           ? "찜 해제하기"
                           : "찜하기"
                       }
-                      onClick={() => toggleWish(selectedSpace.id)}
+                      onClick={() => handleWishToggle(selectedSpace.id)}
                       className={`text-lg leading-none ${
                         wishedIds.includes(selectedSpace.id)
                           ? "text-red-500"

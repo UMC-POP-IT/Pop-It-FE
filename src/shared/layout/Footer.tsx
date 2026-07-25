@@ -1,13 +1,12 @@
 import { Fragment } from "react";
-import { Link } from "react-router-dom";
 import Logo from "@/shared/components/Logo";
 
 const FOOTER_LINKS = [
-  "이용약관",
-  "개인정보처리방침",
-  "운영정책",
-  "호스트 이용약관",
-  "취소 및 환불 정책",
+  { label: "이용약관", href: "https://app.notion.com/p/3a47ff832aa380298623fb2bc0bd0e27" },
+  { label: "개인정보처리방침", href: "https://app.notion.com/p/3a47ff832aa3803c9439c22026742566" },
+  { label: "운영정책", href: "https://app.notion.com/p/3a47ff832aa380f99950de6e2b2c8606" },
+  { label: "호스트 이용약관", href: "https://app.notion.com/p/3a47ff832aa3801b9210cca3e675ae33" },
+  { label: "취소 및 환불 정책", href: "https://app.notion.com/p/3a47ff832aa380fa8f77ddffee35c6ae" },
 ];
 
 const Footer = () => (
@@ -23,15 +22,17 @@ const Footer = () => (
         </div>
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
-            {FOOTER_LINKS.map((item, i) => (
-              <Fragment key={item}>
+            {FOOTER_LINKS.map(({ label, href }, i) => (
+              <Fragment key={label}>
                 {i > 0 && <span className="bg-divider h-2.5 w-px" />}
-                <Link
-                  to="#"
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-text-tag hover:text-primary text-[10px] font-bold tracking-[-0.1px] transition-colors"
                 >
-                  {item}
-                </Link>
+                  {label}
+                </a>
               </Fragment>
             ))}
           </div>

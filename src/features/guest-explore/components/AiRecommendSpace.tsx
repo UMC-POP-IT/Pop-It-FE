@@ -6,6 +6,7 @@ import { ScrollButton } from "./ScrollButton";
 import { useWishStore } from "@/store/wishStore";
 import { useNavigate } from "react-router-dom";
 import { useSpaceStore } from "@/store/spaceStore";
+import { useAuthStore } from "@/store/authStore";
 
 const avgDayCost =
   recommendSpaces.reduce((sum, space) => sum + space.cost.day, 0) /
@@ -32,8 +33,18 @@ const AiRecommendSpace = () => {
   const spaces = useSpaceStore((state) => state.spaces);
   const wishedIds = useWishStore((state) => state.wishedIds);
   const toggleWish = useWishStore((state) => state.toggleWish);
+  const user = useAuthStore((s) => s.user);
+  const openLoginModal = useAuthStore((s) => s.openLoginModal);
 
   const navigate = useNavigate();
+
+  const handleWishToggle = (spaceId: number) => {
+    if (!user) {
+      openLoginModal({ type: "wish", spaceId });
+      return;
+    }
+    toggleWish(spaceId);
+  };
 
   // 좌/우 스크롤 버튼 활성화 여부 업데이트
   const updateScrollButtons = () => {
@@ -89,7 +100,7 @@ const AiRecommendSpace = () => {
                   categoryTag={space.keywords[0]}
                   matchReason={getMatchReason(space)}
                   isWished={wishedIds.includes(space.id)}
-                  onWishToggle={() => toggleWish(space.id)}
+                  onWishToggle={() => handleWishToggle(space.id)}
                   onClick={() => navigate(`/spaces/${space.id}`)}
                 />
               </div>
