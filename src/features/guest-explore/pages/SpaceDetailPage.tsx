@@ -4,12 +4,16 @@ import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDet
 import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetailInfo";
 import ExploreReservationCard from "@/features/guest-explore/components/ExploreReservationCard";
 import { useWishStore } from "@/store/wishStore";
+import { useAuthStore } from "@/store/authStore";
+import { useWishGuard } from "@/shared/hooks/useWishGuard";
 
 export const SpaceDetailPage = () => {
   const { spaceId } = useParams<{ spaceId: string }>();
   const navigate = useNavigate();
   const wishedIds = useWishStore((state) => state.wishedIds);
-  const toggleWish = useWishStore((state) => state.toggleWish);
+  const user = useAuthStore((s) => s.user);
+  const openLoginModal = useAuthStore((s) => s.openLoginModal);
+  const { handleWishToggle } = useWishGuard();
 
   const space = exploreSpaces.find((item) => item.id === Number(spaceId));
   const isWished = !!space && wishedIds.includes(space.id);
@@ -39,9 +43,12 @@ export const SpaceDetailPage = () => {
         <ExploreDetailInfo
           space={space}
           isWished={isWished}
-          onWishToggle={() => toggleWish(space.id)}
+          onWishToggle={() => handleWishToggle(space.id)}
         />
-        <ExploreReservationCard dayCost={space.cost.day} />
+        <ExploreReservationCard
+          dayCost={space.cost.day}
+          onLoginRequired={!user ? () => openLoginModal() : undefined}
+        />
       </div>
     </div>
   );

@@ -20,8 +20,19 @@ const TAB_STATUS: HostReservation["status"][] = [
   "COMPLETED",
 ];
 
+const getEffectiveStatus = (r: HostReservation): HostReservation["status"] => {
+  if (r.status === "CONTRACTED") {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(r.startDate + "T00:00:00");
+    const end = new Date(r.endDate + "T00:00:00");
+    if (start <= today && today <= end) return "IN_USE";
+  }
+  return r.status;
+};
+
 const filterByTab = (list: HostReservation[], tab: number): HostReservation[] =>
-  list.filter((r) => r.status === TAB_STATUS[tab]);
+  list.filter((r) => getEffectiveStatus(r) === TAB_STATUS[tab]);
 
 export const HostReservationPage = () => {
   const navigate = useNavigate();
@@ -46,7 +57,7 @@ export const HostReservationPage = () => {
   const [checkoutRejectTargetId, setCheckoutRejectTargetId] = useState<number | null>(null);
 
   const countByStatus = (status: HostReservation["status"]) =>
-    reservations.filter((r) => r.status === status).length;
+    reservations.filter((r) => getEffectiveStatus(r) === status).length;
 
   const tabs = [
     { label: "승인 대기", count: countByStatus("PENDING") },
@@ -80,7 +91,7 @@ export const HostReservationPage = () => {
   const handleContractComplete = () => {
     if (approveTargetId === null) return;
     setReservations((prev) =>
-      prev.map((r) => (r.id === approveTargetId ? { ...r, status: "APPROVED" } : r)),
+      prev.map((r) => (r.id === approveTargetId ? { ...r, status: "CONTRACTED" } : r)),
     );
     setIsContractModalOpen(false);
     setApproveTargetId(null);

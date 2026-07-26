@@ -94,9 +94,9 @@ const SpaceCard = ({
       </span>
       {space.keywords.length > 0 && (
         <div className="flex gap-1 pt-0.5">
-          {space.keywords.slice(0, 2).map((keyword) => (
+          {space.keywords.slice(0, 2).map((keyword, i) => (
             <span
-              key={keyword}
+              key={`${keyword}-${i}`}
               className="bg-tag-bg text-text-tag rounded-full px-2 py-0.5 text-xs"
             >
               #{keyword}

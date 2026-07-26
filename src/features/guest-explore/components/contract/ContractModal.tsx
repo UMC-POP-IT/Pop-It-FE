@@ -14,8 +14,8 @@ interface ContractModalProps {
 }
 
 const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractModalProps) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // 본인 인증 여부
-  const [isSigned, setIsSigned] = useState(false); // 전자 서명 여부
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isSigned, setIsSigned] = useState(false);
   
   if (!isOpen) return null;
 
@@ -53,23 +53,16 @@ const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractMod
             </div>
             <div className="flex justify-between">
               <span className="text-text-secondary">보증금(에스크로)</span>
-              {/* TODO: 보증금 계산 로직 확정 후 반영 */}
-              <span className="text-text-primary font-medium">-</span>
+              <span className="text-text-primary font-medium">{Math.round(reservation.total_cost * 0.2).toLocaleString()}원</span>
             </div>
             <div className="flex justify-between">
               <span className="text-text-secondary">단기 공간 보험료 5% 적용</span>
-              {/* TODO: 보험료 계산 로직 확정 후 반영 */}
-              <span className="text-text-primary font-medium">-</span>
+              <span className="text-text-primary font-medium">{Math.round(reservation.total_cost * 0.05).toLocaleString()}원</span>
             </div>
           </div>
 
-          <div className="border-border flex items-center justify-between border-t pt-4 font-bold">
-            <span className="text-text-primary text-xl">총 결제 금액</span>
-            <span className="text-xl">{reservation.total_cost.toLocaleString()}원</span>
-          </div>
-
           <div className="bg-contract-guide-bg flex flex-col gap-2 rounded-lg p-3">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 font-medium">
               <span className="text-primary text-sm font-medium">제 1조(목적)</span>
               <span className="text-text-secondary text-sm">
                 호스트는 상기 공간을 게스트에게 단기 임대하며, 게스트는 약정된 용도로만 사용합니다.
@@ -113,7 +106,7 @@ const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractMod
           <div className="flex flex-row justify-center gap-5">
             <button
               className="bg-contract-guide-bg w-40 rounded-lg text-text-secondary"
-              onClick={() => (window.location.href = "/reservations")}
+              onClick={onClose}
             >
               취소
             </button>
