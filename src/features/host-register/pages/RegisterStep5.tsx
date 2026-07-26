@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import Modal from "@/shared/components/Modal";
 import { useRegisterStore } from "@/store/registerStore";
 import { STEPS, GUIDE_ITEMS } from "@/features/host-register/api/mock_register";
+import iconTrash from "@/assets/icons/icon_trash.svg";
 
 export const RegisterStep5 = () => {
   const navigate = useNavigate();
@@ -176,21 +177,25 @@ const PhotoThumbnail = ({
   }, [photo]);
 
   return (
-    <div className="bg-tag-bg border-divider relative size-[144px] shrink-0 overflow-hidden rounded-lg border-2">
+    <div className="group bg-tag-bg border-divider relative size-[144px] shrink-0 overflow-hidden rounded-lg border-2">
       <img
         src={url}
         alt=""
         className="h-full w-full object-cover"
       />
 
-      {/* 삭제 버튼 (왼쪽 위) */}
+      {/* 삭제 오버레이 (hover 시) */}
       <button
         type="button"
         aria-label="사진 삭제"
         onClick={onRemove}
-        className="absolute top-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-xs text-white"
+        className="absolute inset-0 flex items-center justify-center bg-black/70 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
       >
-        ×
+        <img
+          src={iconTrash}
+          alt=""
+          className="h-8 w-8"
+        />
       </button>
 
       {isFirst && (
