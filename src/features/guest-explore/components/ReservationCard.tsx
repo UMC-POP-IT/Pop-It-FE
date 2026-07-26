@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Badge from "@/shared/components/Badge";
 import Button from "@/shared/components/Button";
@@ -6,6 +6,7 @@ import Modal from "@/shared/components/Modal";
 import type { DateInfo, Reservation } from "@/features/guest-explore/api/mock_spaces";
 import PaymentModal from "@/features/guest-explore/components/contract/PaymentModal";
 import ContractModal from "@/features/guest-explore/components/contract/ContractModal";
+import PhotoVerificationModal from "@/features/guest-explore/components/PhotoVerificationModal";
 import { formatDate } from "@/shared/utils/date";
 
 interface ReservationCardProps {
@@ -52,13 +53,19 @@ const getCardMeta = (r: Reservation): CardMeta => {
 };
 
 export const ReservationCard = ({ reservation }: ReservationCardProps) => {
-  const { label, showCancel, showContract, needsPhotoVerification, isPhotoRejected } = getCardMeta(reservation);
+  const cardMeta = getCardMeta(reservation);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false); // 예약 취소 창 open 여부
   const [isPaymentModalOpen, setisPaymentModalOpen] = useState(false); // 계약 전 결제 예정 / 총 결제 금액 창 open 여부
   const [isContractModalOpen, setIsContractModalOpen] = useState(false); // 계약서 확인 & 통합 본인 인증 & 전자서명 창 open 여부
   const [isContractDone, setIsContractDone] = useState(false); // 계약 마무리 여부
   const [agreedToGuide, setAgreedToGuide] = useState(false);
-  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false); // 퇴실 사진 인증 창 open 여부
+  const [isPhotoVerifiedDone, setIsPhotoVerifiedDone] = useState(false); // 사진 인증 완료 여부 (목업: 실제 업로드 API 연동 전까지 로컬로만 반영)
+
+  const label = isPhotoVerifiedDone ? "퇴실 완료" : cardMeta.label;
+  const needsPhotoVerification = cardMeta.needsPhotoVerification && !isPhotoVerifiedDone;
+  const isPhotoRejected = cardMeta.isPhotoRejected && !isPhotoVerifiedDone;
+  const { showCancel, showContract } = cardMeta;
 
   const navigate = useNavigate();
 
@@ -67,11 +74,11 @@ export const ReservationCard = ({ reservation }: ReservationCardProps) => {
     setIsCancelModalOpen(false);
   };
 
-  const handlePhotoSelected = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handlePhotoVerificationComplete = (files: File[]) => {
     // TODO: 선택한 사진 서버 업로드
-    e.target.value = "";
+    void files;
+    setIsPhotoModalOpen(false);
+    setIsPhotoVerifiedDone(true);
   };
 
   const handleSignContract = () => {
@@ -115,14 +122,7 @@ export const ReservationCard = ({ reservation }: ReservationCardProps) => {
               {reservation.isDone &&
                 (needsPhotoVerification ? (
                   <>
-                    <input
-                      ref={photoInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoSelected}
-                      className="sr-only"
-                    />
-                    <Button variant="primary" size="sm" onClick={() => photoInputRef.current?.click()}>
+                    <Button variant="primary" size="sm" onClick={() => setIsPhotoModalOpen(true)}>
                       사진 인증
                     </Button>
                     {isPhotoRejected && (
@@ -184,6 +184,13 @@ export const ReservationCard = ({ reservation }: ReservationCardProps) => {
           setIsContractDone(true);
           setIsContractModalOpen(false);
         }}
+      />
+
+      {/* Photo Verification Modal */}
+      <PhotoVerificationModal
+        isOpen={isPhotoModalOpen}
+        onClose={() => setIsPhotoModalOpen(false)}
+        onComplete={handlePhotoVerificationComplete}
       />
 
       {/* Complete Contract & Payment Modal */}
