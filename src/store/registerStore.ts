@@ -34,7 +34,9 @@ export interface SpaceRegisterForm {
 
 interface RegisterState {
   form: SpaceRegisterForm;
+  isEdit: boolean;
   setValues: (values: Partial<SpaceRegisterForm>) => void;
+  setEdit: (isEdit: boolean) => void;
   reset: () => void;
 }
 
@@ -66,11 +68,13 @@ const initialForm: SpaceRegisterForm = {
 
 export const useRegisterStore = create<RegisterState>((set) => ({
   form: initialForm,
+  isEdit: false,
   // 넘어온 값만 기존 form에 덮어씀 (나머지는 그대로)
   setValues: (values) =>
     set((state) => ({ form: { ...state.form, ...values } })),
+  setEdit: (isEdit) => set({ isEdit }),
   // 전부 초기화 (등록 완료 후)
-  reset: () => set({ form: initialForm }),
+  reset: () => set({ form: initialForm, isEdit: false }),
 }));
 
 // ─────────────────────────────────────────────
