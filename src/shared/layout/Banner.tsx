@@ -103,7 +103,7 @@ const Banner = () => {
           </button>
         )}
 
-        <div aria-live="polite" aria-atomic="true" className="absolute right-10 bottom-6 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white md:right-16 aria-live">
+        <div aria-atomic="true" className="absolute right-10 bottom-6 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white md:right-16 aria-live">
           {current + 1} / {total}
         </div>
       </div>
