@@ -34,7 +34,9 @@ const PhotoVerificationModal = ({ isOpen, onClose, onComplete }: PhotoVerificati
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    addFiles(Array.from(e.dataTransfer.files));
+    // 이미질 파일만 가능하게끔 필터링
+    const imageFiles = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+    addFiles(imageFiles);
   };
 
   const handleRemoveFile = (index: number) => {
