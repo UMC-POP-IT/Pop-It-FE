@@ -17,15 +17,23 @@ const GUIDE_ITEMS = [
 
 export const RegisterStep5 = () => {
   const isEdit = useRegisterStore((s) => s.isEdit);
+  const editSpaceId = useRegisterStore((s) => s.editSpaceId);
   const navigate = useNavigate();
   const [modal, setModal] = useState<"confirm" | "success" | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const form = useRegisterStore((s) => s.form);
   const reset = useRegisterStore((s) => s.reset);
 
-  // 최종 제출 (지금은 Mock: 콘솔 출력. 실제 POST /spaces는 2차 API 때)
+  // 최종 제출 (지금은 Mock: 콘솔 출력. 실제 POST/PATCH /spaces는 2차 API 때)
   const handleSubmit = () => {
-    if (import.meta.env.DEV) console.log("공간 등록 제출 데이터:", form);
+    if (import.meta.env.DEV) {
+      console.log(
+        isEdit
+          ? `공간 수정 제출 데이터 (id=${editSpaceId}):`
+          : "공간 등록 제출 데이터:",
+        form,
+      );
+    }
     setModal("success");
   };
   // 성공 확인 → 보관함 비우고 '내 공간'으로 이동
