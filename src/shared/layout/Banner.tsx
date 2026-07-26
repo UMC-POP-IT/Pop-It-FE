@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import iconChevronRight from "@/assets/icons/icon_chevron_right.svg";
-import background1 from "@/assets/banner/background_1.png";
-import background2 from "@/assets/banner/background_2.png";
-import background3 from "@/assets/banner/background_3.png";
+import background1 from "@/assets/banner/background_1.jpg";
+import background2 from "@/assets/banner/background_2.jpg";
+import background3 from "@/assets/banner/background_3.jpg";
 import { useAuthStore } from "@/store/authStore";
 
 // TODO: 실제 노션 소개 페이지 URL로 교체
@@ -87,7 +87,7 @@ const Banner = () => {
         <p className="text-sm opacity-80 md:text-base">{slide.subtitle}</p>
         {slide.cta?.type === "external" && (
           <a
-            href={slide.cta.href}
+            href={slide.cta.href || undefined}
             target="_blank"
             rel="noopener noreferrer"
             className={ctaClassName}
