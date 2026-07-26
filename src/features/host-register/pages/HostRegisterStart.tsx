@@ -1,9 +1,11 @@
+import { useEffect } from "react";
 import StepIndicator from "@/shared/components/StepIndicator";
 import Button from "@/shared/components/Button";
 import Logo from "@/shared/components/Logo";
 import iconClose from "@/assets/icons/icon_close.svg";
 import { useNavigate } from "react-router-dom";
 import { HOST_STEPS } from "@/features/host-register/api/mock_register";
+import { useAuthStore } from "@/store/authStore";
 
 // 호스트 등록 시작 모달 (인트로)
 //  - [등록 시작하기] → step1(사업자 정보) 화면으로 이동
@@ -11,6 +13,13 @@ import { HOST_STEPS } from "@/features/host-register/api/mock_register";
 // TODO(2차): 모달 열림/닫힘 상태 관리
 export const HostRegisterStart = () => {
   const navigate = useNavigate();
+  const setHostIntroSeen = useAuthStore((s) => s.setHostIntroSeen);
+
+  // 이 안내 모달이 한 번 뜨면 '봤음'으로 표시 → 이후 호스트 전환 시 재노출 안 함
+  useEffect(() => {
+    setHostIntroSeen();
+  }, [setHostIntroSeen]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* 딤 배경 */}

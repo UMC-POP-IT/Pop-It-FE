@@ -1,4 +1,5 @@
 // src/app/router.tsx
+import { SpaceEditEntry } from "@/features/host-register/pages/SpaceEditEntry";
 import { createBrowserRouter } from "react-router-dom";
 import { MainLayout } from "@/shared/layout/MainLayout";
 import { AuthLayout } from "@/shared/layout/AuthLayout";
@@ -74,6 +75,9 @@ export const router = createBrowserRouter([
       { path: "/host/register/step3", element: <RegisterStep3 /> },
       { path: "/host/register/step4", element: <RegisterStep4 /> },
       { path: "/host/register/step5", element: <RegisterStep5 /> },
+
+      //공간수정
+      { path: "/host/register/edit/:spaceId", element: <SpaceEditEntry /> },
 
       // 3번 팀원 - 호스트 등록 (게스트 → 호스트 전환)
       { path: "/host/host-register", element: <HostRegisterStart /> },
