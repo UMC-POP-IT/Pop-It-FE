@@ -106,7 +106,7 @@ const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractMod
           <div className="flex flex-row justify-center gap-5">
             <button
               className="bg-contract-guide-bg w-40 rounded-lg text-text-secondary"
-              onClick={() => (window.location.href = "/reservations")}
+              onClick={onClose}
             >
               취소
             </button>

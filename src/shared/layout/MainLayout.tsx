@@ -29,6 +29,7 @@ const PendingActionExecutor = () => {
         break;
     }
     clearPendingAction();
+    // navigate·toggleWish·setMode·clearPendingAction은 안정적 참조(stable ref)라 deps 제외
   }, [user, pendingAction]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
@@ -39,8 +40,9 @@ const RouteModeSync = () => {
   const setMode = useAuthStore((s) => s.setMode);
 
   useEffect(() => {
+    // /host/* 직접 접근 시 헤더 모드를 URL에 맞게 동기화
     setMode(pathname.startsWith("/host") ? "HOST" : "GUEST");
-  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps (setMode는 stable ref)
 
   return null;
 };

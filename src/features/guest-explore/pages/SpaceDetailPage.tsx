@@ -43,7 +43,7 @@ export const SpaceDetailPage = () => {
         <ExploreDetailInfo
           space={space}
           isWished={isWished}
-          onWishToggle={handleWishToggle}
+          onWishToggle={() => handleWishToggle(space.id)}
         />
         <ExploreReservationCard
           dayCost={space.cost.day}
