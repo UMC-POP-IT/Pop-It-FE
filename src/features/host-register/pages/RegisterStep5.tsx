@@ -6,14 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Modal from "@/shared/components/Modal";
 import { useRegisterStore } from "@/store/registerStore";
-import { STEPS } from "@/features/host-register/api/mock_register";
-
-// 사진 촬영 가이드 안내 문구
-const GUIDE_ITEMS = [
-  "밝고 선명한 공간 사진을 권장합니다.",
-  "공간의 전체적인 모습과 세부 시설이 잘 보이게 찍어주세요",
-  "수평이 잘 맞은 사진이 게스트의 신뢰도를 높입니다.",
-];
+import { STEPS, GUIDE_ITEMS } from "@/features/host-register/api/mock_register";
+import iconTrash from "@/assets/icons/icon_trash.svg";
 
 export const RegisterStep5 = () => {
   const navigate = useNavigate();
@@ -183,21 +177,25 @@ const PhotoThumbnail = ({
   }, [photo]);
 
   return (
-    <div className="bg-tag-bg border-divider relative size-[144px] shrink-0 overflow-hidden rounded-lg border-2">
+    <div className="group bg-tag-bg border-divider relative size-[144px] shrink-0 overflow-hidden rounded-lg border-2">
       <img
         src={url}
         alt=""
         className="h-full w-full object-cover"
       />
 
-      {/* 삭제 버튼 (왼쪽 위) */}
+      {/* 삭제 오버레이 — hover 기기는 hover 시, 터치 기기는 항상 노출(투명 클릭 함정 방지) */}
       <button
         type="button"
         aria-label="사진 삭제"
         onClick={onRemove}
-        className="absolute top-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-xs text-white"
+        className="absolute inset-0 flex items-center justify-center bg-black/70 transition-opacity focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
       >
-        ×
+        <img
+          src={iconTrash}
+          alt=""
+          className="h-8 w-8"
+        />
       </button>
 
       {isFirst && (

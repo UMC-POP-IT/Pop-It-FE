@@ -178,9 +178,9 @@ const ExploreReservationCard = ({ dayCost, onLoginRequired }: ExploreReservation
                 {totalDays > 0 ? `${totalDays}일` : "-"}
               </span>
             </div>
-            <div className="flex w-[165px] items-center justify-between">
-              <span className="text-base">예상 가격:</span>
-              <span className="text-xl font-bold">
+            <div className="flex w-full items-center justify-between gap-2">
+              <span className="text-base whitespace-nowrap">예상 가격:</span>
+              <span className="text-xl font-bold whitespace-nowrap">
                 {totalPrice.toLocaleString()}원
               </span>
             </div>

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { exploreSpaces, recommendSpaces } from "@/features/guest-explore/api/mock_spaces";
 import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDetailGallery";

@@ -4,48 +4,33 @@ import Button from "@/shared/components/Button";
 import Chip from "@/shared/components/Chip";
 import { useNavigate } from "react-router-dom";
 import { useRegisterStore } from "@/store/registerStore";
-import { STEPS } from "@/features/host-register/api/mock_register";
+import {
+  STEPS,
+  USAGE_OPTIONS,
+  STRUCTURE_OPTIONS,
+  FLOOR_TYPE_OPTIONS,
+  HEATING_OPTIONS,
+  SECURITY_OPTIONS,
+  ETC_OPTIONS,
+} from "@/features/host-register/api/mock_register";
 import { NO_SPINNER, blockNonNumeric } from "@/shared/utils/numberInput";
-
-// 칩 그룹 선택지
-const USAGE_OPTIONS = [
-  "팝업스토어",
-  "전시/갤러리",
-  "복합공간",
-  "쇼룸",
-  "카페/F&B",
-]; // 기본 정보(택1)
-const STRUCTURE_OPTIONS = ["오픈형 홀", "가벽 분리형", "룸 분리형"]; // 공간 구조(택1)
-const FLOOR_TYPE_OPTIONS = ["일반 층", "반지층", "지하", "옥탑"]; // 층수 유형(택1)
-const HEATING_OPTIONS = [
-  "개별 난방",
-  "중앙 난방",
-  "지역 난방",
-  "벽걸이 에어컨",
-  "스탠드 에어컨",
-  "천장 에어컨",
-]; // 냉난방(다중)
-const SECURITY_OPTIONS = [
-  "현관 보안",
-  "CCTV",
-  "방범창",
-  "카드키",
-  "자체 경비원",
-  "사설 경비",
-]; // 보안(다중)
-const ETC_OPTIONS = ["화재 경보기", "소화기", "WIFI", "화장실"]; // 기타(다중)
 
 export const RegisterStep3 = () => {
   const navigate = useNavigate();
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
 
+  //반지층, 옥탑은 '몇 층' 숫자가 없어 층수 입력칸을 숨긴다
+  const needsFloorNumber=
+    form.floorType !== "반지층" && form.floorType !=="옥탑";
+
+
   const isValid =
     form.usage !== "" &&
     form.spaceStructure !== "" &&
     form.area !== "" &&
     form.floorType !== "" &&
-    form.floor !== "" &&
+    (!needsFloorNumber || form.floor !== "") &&
     form.hasParking !== null;
 
   return (
@@ -129,9 +114,18 @@ export const RegisterStep3 = () => {
           label="층수"
           options={FLOOR_TYPE_OPTIONS}
           selected={form.floorType ? [form.floorType] : []}
-          onChange={(next) => setValues({ floorType: next[0] ?? "" })}
+          onChange={(next) => {
+            const floorType = next[0] ?? "";
+            const hidesFloor = floorType === "반지층" || floorType === "옥탑";
+            setValues({
+              floorType,
+              floor: hidesFloor ? "": form.floor,
+            })
+          }}
         />
-        <div className="relative">
+
+        {needsFloorNumber && (
+          <div className="relative">
           <Input
             type="number"
             aria-label="층수"
@@ -147,6 +141,8 @@ export const RegisterStep3 = () => {
             층
           </span>
         </div>
+        )}
+        
 
         {/* 주차 — 주차 가능 / 주차 불가능 (택1)*/}
         <ChipGroup

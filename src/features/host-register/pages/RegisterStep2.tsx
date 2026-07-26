@@ -83,12 +83,12 @@ export const RegisterStep2 = () => {
             {/* 금액 (일 단가만 입력 — 주/월 가격은 상세 페이지에서 계산) */}
             <div className="flex flex-col gap-1">
               <label className="text-text-tertiary text-xl font-bold">
-                금액
+                1일 대여료
               </label>
               <div className="relative">
                 <Input
                   type="number"
-                  aria-label="금액"
+                  aria-label="1일 대여료"
                   value={form.priceDay}
                   onChange={(e) =>
                     setValues({
