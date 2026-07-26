@@ -484,9 +484,13 @@ export function getReservationStatus(r: Reservation): ReservationStatus {
  * TODO: 실제 백엔드 연동 시 아래 mock 구현을 fetch/axios 기반 API 호출로 교체
  * (예: DELETE /reservations/{id}). 호출부(컴포넌트)는 이 함수의 시그니처만
  * 신뢰하므로 내부 구현을 바꿔도 호출부 수정은 필요 없다.
+ *
+ * exported `reservations` 배열은 여러 컴포넌트/테스트가 공유하는 참조이므로
+ * 여기서 직접 splice하지 않는다. 취소 성공 여부만 반환(실패 시 throw)하고,
+ * 실제 목록 갱신은 호출부(MyReservationList)의 로컬 state에서 처리한다.
  */
 export async function cancelReservation(id: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 300));
-  const index = reservations.findIndex((r) => r.id === id);
-  if (index !== -1) reservations.splice(index, 1);
+  const exists = reservations.some((r) => r.id === id);
+  if (!exists) throw new Error("Reservation not found");
 }

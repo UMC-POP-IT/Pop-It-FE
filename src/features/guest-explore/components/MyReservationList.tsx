@@ -13,7 +13,7 @@ const TAB_STATUSES: ReservationStatus[] = ["예약 예정", "승인 완료", "�
 
 export const MyReservationList = () => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [reservationList, setReservationList] = useState(reservations);
+  const [reservationList, setReservationList] = useState(() => [...reservations]);
 
   const handleCancelReservation = async (id: number) => {
     await cancelReservation(id);

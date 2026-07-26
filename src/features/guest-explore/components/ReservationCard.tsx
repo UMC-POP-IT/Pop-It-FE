@@ -155,8 +155,9 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
         isOpen={isCancelModalOpen}
         title={`${reservation.space.name}\n예약을 취소하시겠습니까?`}
         description={'현재 승인 대기 상태로, 취소 시\n별도의 수수료가 발생하지 않습니다'}
-        confirmLabel="예약 취소"
+        confirmLabel={isCancelling ? "취소 중..." : "예약 취소"}
         cancelLabel="돌아가기"
+        confirmDisabled={isCancelling}
         onConfirm={handleCancelReservation}
         onCancel={() => setIsCancelModalOpen(false)}
       />
