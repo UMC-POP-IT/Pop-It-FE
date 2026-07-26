@@ -4,7 +4,7 @@ import KakaoMapOverlay from "./KakaoMapOverlay";
 import MapBackground from "./MapBackground";
 import { useKakaoLoader } from "@/shared/hooks/useKakaoLoader";
 import { useWishStore } from "@/store/wishStore";
-import { useAuthStore } from "@/store/authStore";
+import { useWishGuard } from "@/shared/hooks/useWishGuard";
 import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
 
 interface ExploreSpaceMapProps {
@@ -26,17 +26,7 @@ const ExploreSpaceMap = ({
   const { isLoaded, error } = useKakaoLoader();
   const [selectedSpaceId, setSelectedSpaceId] = useState<number | null>(null);
   const wishedIds = useWishStore((state) => state.wishedIds);
-  const toggleWish = useWishStore((state) => state.toggleWish);
-  const user = useAuthStore((s) => s.user);
-  const openLoginModal = useAuthStore((s) => s.openLoginModal);
-
-  const handleWishToggle = (spaceId: number) => {
-    if (!user) {
-      openLoginModal({ type: "wish", spaceId });
-      return;
-    }
-    toggleWish(spaceId);
-  };
+  const { handleWishToggle } = useWishGuard();
 
   const center = spaces[0]
     ? { lat: spaces[0].latitude, lng: spaces[0].longitude }
