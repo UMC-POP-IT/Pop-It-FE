@@ -5,19 +5,12 @@ import iconOwner from "@/assets/icons/icon_owner.svg";
 import Chip from "@/shared/components/Chip";
 import { useNavigate } from "react-router-dom";
 import { useRegisterStore } from "@/store/registerStore";
-import { STEPS } from "@/features/host-register/api/mock_register";
+import {
+  STEPS,
+  BUILDING_TYPES,
+} from "@/features/host-register/api/mock_register";
 import { useState } from "react";
 import AddressSearchModal from "@/features/host-register/components/AddressSearchModal";
-
-// 건물 유형 칩 선택지 (피그마 기준)
-const BUILDING_TYPES = [
-  "대형 사무실",
-  "중소형 사무실",
-  "오피스텔 형",
-  "단지내 상가",
-  "일반 상가",
-  "복합 상가",
-];
 
 export const RegisterStep1 = () => {
   // 단계 간 값 유지용 store (뒤로 와도 선택/입력 유지)
@@ -101,7 +94,8 @@ export const RegisterStep1 = () => {
               className="text-xl! font-bold!"
               onClick={() => {
                 setAddrError("");
-                setIsAddrOpen(true)}}
+                setIsAddrOpen(true);
+              }}
             >
               주소 찾기
             </Button>

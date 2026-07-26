@@ -6,14 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Modal from "@/shared/components/Modal";
 import { useRegisterStore } from "@/store/registerStore";
-import { STEPS } from "@/features/host-register/api/mock_register";
-
-// 사진 촬영 가이드 안내 문구
-const GUIDE_ITEMS = [
-  "밝고 선명한 공간 사진을 권장합니다.",
-  "공간의 전체적인 모습과 세부 시설이 잘 보이게 찍어주세요",
-  "수평이 잘 맞은 사진이 게스트의 신뢰도를 높입니다.",
-];
+import { STEPS, GUIDE_ITEMS } from "@/features/host-register/api/mock_register";
 
 export const RegisterStep5 = () => {
   const navigate = useNavigate();
