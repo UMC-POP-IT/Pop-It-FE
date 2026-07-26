@@ -29,17 +29,12 @@ const toExploreSpaceDetail = (space: MockHostSpace): ExploreSpaceDetail => {
     address: space.address,
     cost: {
       day: space.cost.day,
-      month: space.cost.month,
-      year: space.cost.month * 12,
     },
     keywords: space.facilities,
     description: space.description,
     createdAt: space.registeredAt,
     category: space.category,
     area: areaNumber,
-    // TODO: 주 단가 필드가 별도로 없어 일 단가 기준 추정치 사용 (백엔드 연동 시 교체)
-    weekCost: space.cost.day * 7,
-    monthCostText: `${space.cost.month.toLocaleString()}원`,
     facilities: space.facilities,
     spaceInfo: space.spaceInfo,
     // 지도 표시용 좌표 (백엔드 연동 전까지 목업 스캐터 처리)

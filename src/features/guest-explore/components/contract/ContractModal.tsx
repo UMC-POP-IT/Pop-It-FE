@@ -93,7 +93,7 @@ const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractMod
               </span>
             </div>
             <div className="flex flex-col gap-1 font-medium">
-              <span className="text-primary text-sm font-medium">제 6조(결제 및 정산)</span>
+              <span className="text-primary text-sm">제 6조(결제 및 정산)</span>
               <span className="text-text-secondary text-sm">
                 본 계약에 따른 대금 결제, 에스크로 보관 및 호스트에 대한 최종 정산은 '팝잇'의 플랫폼 이용 약관 및 정책에 따릅니다.
               </span>

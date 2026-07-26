@@ -3,6 +3,7 @@ import { isUsing } from "../components/ReservationCard";
 
 /** 예약 내역 */
 export interface Reservation {
+  id: number; // 예약 고유 ID (백엔드 예약 취소/조회 등 API 호출 시 식별자로 사용)
   isApproved: boolean; // 승인 여부 (완료: true, 대기: false)
   isContracted: boolean; // 계약 완료 여부 (승인 후 계약까지 마쳐야 "사용 중"으로 전환)
   space: Space; // 예약한 공간 정보
@@ -38,7 +39,7 @@ export const recommendSpaces: Space[] = [
     heartCount: 128,
     name: '신사 아뜰리에',
     address: '서울 강남구 압구정로 42길 15',
-    cost: { day: 80000, month: 1800000, year: 19800000 },
+    cost: { day: 80000 },
     keywords: ['자연광', '통유리', '화보촬영', '단독공간'],
     description: '통유리로 자연광이 가득 들어오는 신사동 단독 화보촬영 스튜디오입니다.',
     createdAt: '2026-01-12T09:00:00.000Z',
@@ -53,7 +54,7 @@ export const recommendSpaces: Space[] = [
     heartCount: 342,
     name: '신사 라운지홀',
     address: '서울 강남구 도산대로 108',
-    cost: { day: 80000, month: 2000000, year: 21600000 },
+    cost: { day: 80000 },
     keywords: ['모임', '파티룸', '빔프로젝터', '주차가능'],
     description: '빔프로젝터와 넓은 주차 공간을 갖춘 모임 및 파티에 최적화된 라운지홀입니다.',
     createdAt: '2026-02-03T09:00:00.000Z',
@@ -68,7 +69,7 @@ export const recommendSpaces: Space[] = [
     heartCount: 87,
     name: '신사 하우스',
     address: '서울 강남구 논현로 175길 32',
-    cost: { day: 90000, month: 2200000, year: 24000000 },
+    cost: { day: 90000 },
     keywords: ['루프탑', '야외', '바베큐', '뷰맛집'],
     description: '루프탑에서 바베큐를 즐기며 도심 야경을 감상할 수 있는 하우스입니다.',
     createdAt: '2026-02-20T09:00:00.000Z',
@@ -83,7 +84,7 @@ export const recommendSpaces: Space[] = [
     heartCount: 215,
     name: '신사 미팅랩',
     address: '서울 강남구 강남대로 152길 8',
-    cost: { day: 60000, month: 1500000, year: 16800000 },
+    cost: { day: 60000 },
     keywords: ['회의실', '화이트보드', '조용한', '역세권'],
     description: '역세권에 위치한 조용하고 아늑한 소규모 회의 및 스터디 공간입니다.',
     createdAt: '2026-03-05T09:00:00.000Z',
@@ -98,7 +99,7 @@ export const recommendSpaces: Space[] = [
     heartCount: 64,
     name: '성수 브릭스튜디오',
     address: '서울 성동구 연무장길 45',
-    cost: { day: 100000, month: 2400000, year: 26400000 },
+    cost: { day: 100000 },
     keywords: ['노출콘크리트', '넓은공간', '전시', '팝업스토어'],
     description: '노출콘크리트 인테리어가 매력적인 성수동 전시 및 팝업스토어 전용 공간입니다.',
     createdAt: '2026-03-18T09:00:00.000Z',
@@ -113,7 +114,7 @@ export const recommendSpaces: Space[] = [
     heartCount: 176,
     name: '한남 갤러리룸',
     address: '서울 용산구 이태원로 55길 21',
-    cost: { day: 120000, month: 2800000, year: 30000000 },
+    cost: { day: 120000 },
     keywords: ['모던', '고급', '갤러리', '프라이빗'],
     description: '모던하고 고급스러운 분위기의 한남동 프라이빗 갤러리룸입니다.',
     createdAt: '2026-04-01T09:00:00.000Z',
@@ -131,8 +132,8 @@ export const recommendSpaces: Space[] = [
 export interface ExploreSpaceDetail extends Space {
   category: string; // 카테고리 태그 (ex. 팝업스토어)
   area: number; // 전용면적 (m²)
-  weekCost: number; // 주 단가
-  monthCostText: string; // 월 단가 (금액이 아닌 "협의 후 결정" 등 텍스트로 노출되는 케이스가 있어 별도 필드로 분리)
+  // 공간 등록 시 일 단가만 입력받으므로 주/월 단가는 cost.day 기준으로 계산해서 노출
+  // (주 단가 = cost.day * 7, 월 단가 = cost.day * 30, 표시부는 ExploreDetailInfo 참고)
   facilities: string[]; // 시설정보
   spaceInfo: string[]; // 공간정보
   // 공간 탐색/상세 응답에는 항상 포함되는 값이라 여기서는 필수로 좁혀서 사용
@@ -171,17 +172,12 @@ export const exploreSpaces: ExploreSpaceDetail[] = Array.from(
     ],
     heartCount: 20,
     keywords: ["키워드", "키워드"],
-    // month/year는 화면에 노출되지 않는 값(실제 노출은 monthCostText)이라
-    // weekCost를 재사용하지 않고 일 단가 기준 추정치로 채워둠
+    // 등록 시 일 단가만 입력받음 - 주/월 단가는 ExploreDetailInfo에서 cost.day 기준으로 계산
     cost: {
       day: 700000,
-      month: 700000 * 30,
-      year: 700000 * 365,
     },
     category: "팝업스토어",
     area: 66,
-    weekCost: 4900000,
-    monthCostText: "협의 후 결정",
     description:
       "강남역 도보 3분 거리의 1층 코너 매장입니다.\n유동인구가 매우 많으며, 대형 쇼윈도우가 있어 팝업 스토어에 최적화되어 있습니다.",
     facilities: ["에어컨", "에어컨", "에어컨"], // TODO: 실제 시설 데이터 연동 전까지 Figma 목업 값 그대로 사용
@@ -207,7 +203,7 @@ export const likedSpaces: Space[] = [
     heartCount: 342,
     name: '신사 라운지홀',
     address: '서울 강남구 도산대로 108',
-    cost: { day: 80000, month: 2000000, year: 21600000 },
+    cost: { day: 80000 },
     keywords: ['모임', '파티룸', '빔프로젝터', '주차가능'],
     description: '빔프로젝터와 넓은 주차 공간을 갖춘 모임 및 파티에 최적화된 라운지홀입니다.',
     createdAt: '2026-02-03T09:00:00.000Z',
@@ -222,7 +218,7 @@ export const likedSpaces: Space[] = [
     heartCount: 64,
     name: '성수 브릭스튜디오',
     address: '서울 성동구 연무장길 45',
-    cost: { day: 100000, month: 2400000, year: 26400000 },
+    cost: { day: 100000 },
     keywords: ['노출콘크리트', '넓은공간', '전시', '팝업스토어'],
     description: '노출콘크리트 인테리어가 매력적인 성수동 전시 및 팝업스토어 전용 공간입니다.',
     createdAt: '2026-03-18T09:00:00.000Z',
@@ -237,7 +233,7 @@ export const likedSpaces: Space[] = [
     heartCount: 176,
     name: '한남 갤러리룸',
     address: '서울 용산구 이태원로 55길 21',
-    cost: { day: 120000, month: 2800000, year: 30000000 },
+    cost: { day: 120000 },
     keywords: ['모던', '고급', '갤러리', '프라이빗'],
     description: '모던하고 고급스러운 분위기의 한남동 프라이빗 갤러리룸입니다.',
     createdAt: '2026-04-01T09:00:00.000Z',
@@ -256,6 +252,7 @@ export const likedSpaces: Space[] = [
 export const reservations: Reservation[] = [
   // 예약 예정 (승인 완료 · 계약 대기 → 계약 하기 버튼 노출)
   {
+    id: 1,
     isApproved: true,
     isContracted: false,
     space: {
@@ -268,7 +265,7 @@ export const reservations: Reservation[] = [
       heartCount: 176,
       name: '한남 갤러리룸',
       address: '서울 용산구 이태원로 55길 21',
-      cost: { day: 120000, month: 2800000, year: 30000000 },
+      cost: { day: 120000 },
       keywords: ['모던', '고급', '갤러리', '프라이빗'],
       description: '모던하고 고급스러운 분위기의 한남동 프라이빗 갤러리룸입니다.',
       createdAt: '2026-04-01T09:00:00.000Z',
@@ -280,6 +277,7 @@ export const reservations: Reservation[] = [
   },
   // 예약 예정 (승인 대기)
   {
+    id: 2,
     isApproved: false,
     isContracted: false,
     space: {
@@ -292,7 +290,7 @@ export const reservations: Reservation[] = [
       heartCount: 342,
       name: '신사 라운지홀',
       address: '서울 강남구 도산대로 108',
-      cost: { day: 80000, month: 2000000, year: 21600000 },
+      cost: { day: 80000 },
       keywords: ['모임', '파티룸', '빔프로젝터', '주차가능'],
       description: '빔프로젝터와 넓은 주차 공간을 갖춘 모임 및 파티에 최적화된 라운지홀입니다.',
       createdAt: '2026-02-03T09:00:00.000Z',
@@ -303,6 +301,7 @@ export const reservations: Reservation[] = [
     isDone: false,
   },
   {
+    id: 3,
     isApproved: false,
     isContracted: false,
     space: {
@@ -315,7 +314,7 @@ export const reservations: Reservation[] = [
       heartCount: 176,
       name: '한남 갤러리룸',
       address: '서울 용산구 이태원로 55길 21',
-      cost: { day: 120000, month: 2800000, year: 30000000 },
+      cost: { day: 120000 },
       keywords: ['모던', '고급', '갤러리', '프라이빗'],
       description: '모던하고 고급스러운 분위기의 한남동 프라이빗 갤러리룸입니다.',
       createdAt: '2026-04-01T09:00:00.000Z',
@@ -327,6 +326,7 @@ export const reservations: Reservation[] = [
   },
   // 계약 완료 (승인 완료 + 계약 완료, 계약 기간 전)
   {
+    id: 4,
     isApproved: true,
     isContracted: true,
     space: {
@@ -339,7 +339,7 @@ export const reservations: Reservation[] = [
       heartCount: 64,
       name: '임시 장소',
       address: '서울 성동구 연무장길 45',
-      cost: { day: 100000, month: 2400000, year: 26400000 },
+      cost: { day: 100000 },
       keywords: ['노출콘크리트', '넓은공간', '전시', '팝업스토어'],
       description: '노출콘크리트 인테리어가 매력적인 성수동 전시 및 팝업스토어 전용 공간입니다.',
       createdAt: '2026-03-18T09:00:00.000Z',
@@ -351,6 +351,7 @@ export const reservations: Reservation[] = [
   },
   // 사용 중 (승인 완료 + 계약 완료, 계약 기간 내)
   {
+    id: 5,
     isApproved: true,
     isContracted: true,
     space: {
@@ -363,7 +364,7 @@ export const reservations: Reservation[] = [
       heartCount: 64,
       name: '성수 브릭스튜디오',
       address: '서울 성동구 연무장길 45',
-      cost: { day: 100000, month: 2400000, year: 26400000 },
+      cost: { day: 100000 },
       keywords: ['노출콘크리트', '넓은공간', '전시', '팝업스토어'],
       description: '노출콘크리트 인테리어가 매력적인 성수동 전시 및 팝업스토어 전용 공간입니다.',
       createdAt: '2026-03-18T09:00:00.000Z',
@@ -375,6 +376,7 @@ export const reservations: Reservation[] = [
   },
   // 지난 예약 (마감 완료)
   {
+    id: 6,
     isApproved: true,
     isContracted: true,
     space: {
@@ -387,7 +389,7 @@ export const reservations: Reservation[] = [
       heartCount: 215,
       name: '신사 미팅랩',
       address: '서울 강남구 강남대로 152길 8',
-      cost: { day: 60000, month: 1500000, year: 16800000 },
+      cost: { day: 60000 },
       keywords: ['회의실', '화이트보드', '조용한', '역세권'],
       description: '역세권에 위치한 조용하고 아늑한 소규모 회의 및 스터디 공간입니다.',
       createdAt: '2026-03-05T09:00:00.000Z',
@@ -399,6 +401,7 @@ export const reservations: Reservation[] = [
     isPhotoVerified: false,
   },
   {
+    id: 7,
     isApproved: true,
     isContracted: true,
     space: {
@@ -411,7 +414,7 @@ export const reservations: Reservation[] = [
       heartCount: 128,
       name: '신사 아뜰리에',
       address: '서울 강남구 압구정로 42길 15',
-      cost: { day: 80000, month: 1800000, year: 19800000 },
+      cost: { day: 80000 },
       keywords: ['자연광', '통유리', '화보촬영', '단독공간'],
       description: '통유리로 자연광이 가득 들어오는 신사동 단독 화보촬영 스튜디오입니다.',
       createdAt: '2026-01-12T09:00:00.000Z',
@@ -423,6 +426,7 @@ export const reservations: Reservation[] = [
     isPhotoVerified: true,
   },
   {
+    id: 8,
     isApproved: true,
     isContracted: true,
     space: {
@@ -435,7 +439,7 @@ export const reservations: Reservation[] = [
       heartCount: 128,
       name: '신사 아뜰리에',
       address: '서울 강남구 압구정로 42길 15',
-      cost: { day: 80000, month: 1800000, year: 19800000 },
+      cost: { day: 80000 },
       keywords: ['자연광', '통유리', '화보촬영', '단독공간'],
       description: '통유리로 자연광이 가득 들어오는 신사동 단독 화보촬영 스튜디오입니다.',
       createdAt: '2026-01-12T09:00:00.000Z',
@@ -464,4 +468,24 @@ export function getReservationStatus(r: Reservation): ReservationStatus {
   }
   if (r.isApproved) return '승인 완료';
   return '예약 예정';
+}
+
+// ------------------------------------------------------------
+// (참고) 예약 취소 API
+// ------------------------------------------------------------
+
+/**
+ * 예약을 취소한다.
+ * TODO: 실제 백엔드 연동 시 아래 mock 구현을 fetch/axios 기반 API 호출로 교체
+ * (예: DELETE /reservations/{id}). 호출부(컴포넌트)는 이 함수의 시그니처만
+ * 신뢰하므로 내부 구현을 바꿔도 호출부 수정은 필요 없다.
+ *
+ * exported `reservations` 배열은 여러 컴포넌트/테스트가 공유하는 참조이므로
+ * 여기서 직접 splice하지 않는다. 취소 성공 여부만 반환(실패 시 throw)하고,
+ * 실제 목록 갱신은 호출부(MyReservationList)의 로컬 state에서 처리한다.
+ */
+export async function cancelReservation(id: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const exists = reservations.some((r) => r.id === id);
+  if (!exists) throw new Error("Reservation not found");
 }

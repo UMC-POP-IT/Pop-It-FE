@@ -23,6 +23,9 @@ importers:
       react:
         specifier: ^19.1.0
         version: 19.2.7
+      react-daum-postcode:
+        specifier: ^4.0.0
+        version: 4.0.0(react@19.2.7)
       react-dom:
         specifier: ^19.1.0
         version: 19.2.7(react@19.2.7)
@@ -1512,6 +1515,11 @@ packages:
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
+
+  react-daum-postcode@4.0.0:
+    resolution: {integrity: sha512-2CGR8Aa/5637IKaplJXv5m9S/qQWWYBr30FhQ9mK9nXiisVbTvrpU9D4U1mgr8YYCKw2RgcK8daN+F+PJhW+ig==}
+    peerDependencies:
+      react: '>=16.8.0'
 
   react-dom@19.2.7:
     resolution: {integrity: sha512-t0BRVXvbiE/o20Hfw669rLbMCDWtYZLvmJigy2f0MxsXF+71pxhR3xOkspmsO8h3ZlNzyibAmtCa3l4lYKk6gQ==}
@@ -3073,6 +3081,10 @@ snapshots:
       lie: 3.3.0
 
   punycode@2.3.1: {}
+
+  react-daum-postcode@4.0.0(react@19.2.7):
+    dependencies:
+      react: 19.2.7
 
   react-dom@19.2.7(react@19.2.7):
     dependencies:

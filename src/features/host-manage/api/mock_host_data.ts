@@ -13,7 +13,7 @@ export interface MockHostSpace {
   address: string;
   area: string; // 면적
   category: string;
-  cost: { hour: number; day: number; month: number };
+  cost: { hour: number; day: number };
   imageUrls: string[];
   description: string;
   facilities: string[];
@@ -47,7 +47,7 @@ export const mockHostSpaces: MockHostSpace[] = [
     address: "서울 강남구 역삼동 130-3",
     area: "66m²",
     category: "팝업스토어",
-    cost: { hour: 80000, day: 700000, month: 4900000 },
+    cost: { hour: 80000, day: 700000 },
     imageUrls: [],
     description:
       "강남역 도보 3분 거리의 1층 코너 매장입니다.\n유동인구가 매우 많으며, 대형 쇼윈도우가 있어 팝업 스토어에 최적화되어 있습니다.",
@@ -62,7 +62,7 @@ export const mockHostSpaces: MockHostSpace[] = [
     address: "서울 마포구 와우산로 44",
     area: "82m²",
     category: "팝업스토어",
-    cost: { hour: 60000, day: 500000, month: 3800000 },
+    cost: { hour: 60000, day: 500000 },
     imageUrls: [],
     description:
       "홍대입구역 도보 5분 루프탑 공간입니다. 자연채광이 풍부하고 개방감이 넘칩니다.",
@@ -77,7 +77,7 @@ export const mockHostSpaces: MockHostSpace[] = [
     address: "서울 중구 을지로 56",
     area: "120m²",
     category: "갤러리",
-    cost: { hour: 100000, day: 900000, month: 6500000 },
+    cost: { hour: 100000, day: 900000 },
     imageUrls: [],
     description:
       "을지로 감성 갤러리 공간입니다. 화이트톤 인테리어로 전시·팝업에 최적화되어 있습니다.",
@@ -92,7 +92,7 @@ export const mockHostSpaces: MockHostSpace[] = [
     address: "서울 성동구 성수이로 45",
     area: "200m²",
     category: "복합문화",
-    cost: { hour: 150000, day: 1200000, month: 9000000 },
+    cost: { hour: 150000, day: 1200000 },
     imageUrls: [],
     description:
       "성수동 대형 복합문화공간입니다. 1·2층 전체 운영 가능하며 식음료 판매 허가 완료 공간입니다.",
