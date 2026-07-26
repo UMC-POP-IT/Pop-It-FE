@@ -184,12 +184,12 @@ const PhotoThumbnail = ({
         className="h-full w-full object-cover"
       />
 
-      {/* 삭제 오버레이 (hover 시) */}
+      {/* 삭제 오버레이 — hover 기기는 hover 시, 터치 기기는 항상 노출(투명 클릭 함정 방지) */}
       <button
         type="button"
         aria-label="사진 삭제"
         onClick={onRemove}
-        className="absolute inset-0 flex items-center justify-center bg-black/70 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+        className="absolute inset-0 flex items-center justify-center bg-black/70 transition-opacity focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
       >
         <img
           src={iconTrash}
