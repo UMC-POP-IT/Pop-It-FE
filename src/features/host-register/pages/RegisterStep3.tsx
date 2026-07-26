@@ -16,6 +16,7 @@ import {
 import { NO_SPINNER, blockNonNumeric } from "@/shared/utils/numberInput";
 
 export const RegisterStep3 = () => {
+  const isEdit = useRegisterStore((s) => s.isEdit);
   const navigate = useNavigate();
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
@@ -37,7 +38,7 @@ export const RegisterStep3 = () => {
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
       <h1 className="text-text-primary text-center text-[32px] font-bold">
-        공간 등록
+        {isEdit ? "공간 수정" : "공간 등록"}
       </h1>
 
       {/* 상단 진행바 — 2 = 세 번째 단계(공간 정보) */}

@@ -10,15 +10,24 @@ import { STEPS, GUIDE_ITEMS } from "@/features/host-register/api/mock_register";
 import iconTrash from "@/assets/icons/icon_trash.svg";
 
 export const RegisterStep5 = () => {
+  const isEdit = useRegisterStore((s) => s.isEdit);
+  const editSpaceId = useRegisterStore((s) => s.editSpaceId);
   const navigate = useNavigate();
   const [modal, setModal] = useState<"confirm" | "success" | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const form = useRegisterStore((s) => s.form);
   const reset = useRegisterStore((s) => s.reset);
 
-  // 최종 제출 (지금은 Mock: 콘솔 출력. 실제 POST /spaces는 2차 API 때)
+  // 최종 제출 (지금은 Mock: 콘솔 출력. 실제 POST/PATCH /spaces는 2차 API 때)
   const handleSubmit = () => {
-    if (import.meta.env.DEV) console.log("공간 등록 제출 데이터:", form);
+    if (import.meta.env.DEV) {
+      console.log(
+        isEdit
+          ? `공간 수정 제출 데이터 (id=${editSpaceId}):`
+          : "공간 등록 제출 데이터:",
+        form,
+      );
+    }
     setModal("success");
   };
   // 성공 확인 → 보관함 비우고 '내 공간'으로 이동
@@ -31,7 +40,7 @@ export const RegisterStep5 = () => {
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
       <h1 className="text-text-primary text-center text-[32px] font-bold">
-        공간 등록
+        {isEdit ? "공간 수정" : "공간 등록"}
       </h1>
 
       {/* 상단 진행바 — 4 = 다섯 번째 단계(사진 등록, 마지막) */}
@@ -121,15 +130,21 @@ export const RegisterStep5 = () => {
       <div className="flex justify-end gap-2">
         <Modal
           isOpen={modal === "confirm"}
-          title="공간을 등록 하시겠습니까?"
+          title={
+            isEdit ? "공간을 수정하시겠습니까?" : "공간을 등록하시겠습니까?"
+          }
           cancelLabel="돌아가기"
-          confirmLabel="공간 등록하기"
+          confirmLabel={isEdit ? "공간 수정하기" : "공간 등록하기"}
           onCancel={() => setModal(null)}
           onConfirm={handleSubmit}
         />
         <Modal
           isOpen={modal === "success"}
-          title="공간이 성공적으로 등록되었습니다!"
+          title={
+            isEdit
+              ? "공간이 성공적으로 수정되었습니다!"
+              : "공간이 성공적으로 등록되었습니다!"
+          }
           confirmLabel="확인"
           singleButton
           showCheckIcon

@@ -8,6 +8,7 @@ import { STEPS } from "@/features/host-register/api/mock_register";
 import { NO_SPINNER, blockNonNumeric } from "@/shared/utils/numberInput";
 
 export const RegisterStep2 = () => {
+  const isEdit = useRegisterStore((s) => s.isEdit);
   const navigate = useNavigate();
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
@@ -28,7 +29,7 @@ export const RegisterStep2 = () => {
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
       <h1 className="text-text-primary text-center text-[32px] font-bold">
-        공간 등록
+        {isEdit ? "공간 수정" : "공간 등록"}
       </h1>
 
       {/* 상단 진행바 (공통 컴포넌트) — 1 = 두 번째 단계(거래 정보) */}

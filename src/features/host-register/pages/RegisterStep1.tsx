@@ -13,6 +13,7 @@ import { useState } from "react";
 import AddressSearchModal from "@/features/host-register/components/AddressSearchModal";
 
 export const RegisterStep1 = () => {
+  const isEdit = useRegisterStore((s) => s.isEdit);
   // 단계 간 값 유지용 store (뒤로 와도 선택/입력 유지)
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
@@ -28,7 +29,7 @@ export const RegisterStep1 = () => {
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
       <h1 className="text-text-primary text-center text-[32px] font-bold">
-        공간 등록
+        {isEdit ? "공간 수정" : "공간 등록"}
       </h1>
 
       {/* 상단 진행바 (공통 컴포넌트) — 0 = 첫 단계 */}
