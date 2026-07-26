@@ -27,8 +27,14 @@ export interface DateInfo {
 // a. ExplorePage
 // ============================================================
 
-/** AI 맞춤형 공간 (캐러셀) - AiRecommendSpace.tsx */
-export const recommendSpaces: Space[] = [
+/**
+ * AI 맞춤형 공간 (캐러셀) - AiRecommendSpace.tsx / RealTimeRecommendSpace.tsx
+ *
+ * 공간 상세페이지(SpaceDetailPage)로 이동했을 때도 정상 렌더링되도록
+ * ExploreSpaceDetail과 동일한 형태(카테고리/면적/시설정보/좌표 포함)로 정의한다.
+ * (#126: 카드 클릭 시 "공간 정보를 찾을 수 없어요" 노출되던 버그 수정)
+ */
+export const recommendSpaces: ExploreSpaceDetail[] = [
   {
     id: 1001,
     hostId: 2001,
@@ -43,6 +49,12 @@ export const recommendSpaces: Space[] = [
     keywords: ['자연광', '통유리', '화보촬영', '단독공간'],
     description: '통유리로 자연광이 가득 들어오는 신사동 단독 화보촬영 스튜디오입니다.',
     createdAt: '2026-01-12T09:00:00.000Z',
+    category: '화보촬영',
+    area: 33,
+    facilities: ['통유리', '자연광 조명', '탈의실'],
+    spaceInfo: ['단독공간', '주차 가능'],
+    latitude: 37.5227,
+    longitude: 127.0286,
   },
   {
     id: 1002,
@@ -58,6 +70,12 @@ export const recommendSpaces: Space[] = [
     keywords: ['모임', '파티룸', '빔프로젝터', '주차가능'],
     description: '빔프로젝터와 넓은 주차 공간을 갖춘 모임 및 파티에 최적화된 라운지홀입니다.',
     createdAt: '2026-02-03T09:00:00.000Z',
+    category: '파티룸',
+    area: 50,
+    facilities: ['빔프로젝터', '음향시설', '주방'],
+    spaceInfo: ['주차 가능', '최대 30인'],
+    latitude: 37.5219,
+    longitude: 127.0233,
   },
   {
     id: 1003,
@@ -73,6 +91,12 @@ export const recommendSpaces: Space[] = [
     keywords: ['루프탑', '야외', '바베큐', '뷰맛집'],
     description: '루프탑에서 바베큐를 즐기며 도심 야경을 감상할 수 있는 하우스입니다.',
     createdAt: '2026-02-20T09:00:00.000Z',
+    category: '루프탑',
+    area: 80,
+    facilities: ['바베큐 그릴', '야외 테이블', '조명'],
+    spaceInfo: ['야외 공간', '주차 가능'],
+    latitude: 37.5175,
+    longitude: 127.0246,
   },
   {
     id: 1004,
@@ -88,6 +112,12 @@ export const recommendSpaces: Space[] = [
     keywords: ['회의실', '화이트보드', '조용한', '역세권'],
     description: '역세권에 위치한 조용하고 아늑한 소규모 회의 및 스터디 공간입니다.',
     createdAt: '2026-03-05T09:00:00.000Z',
+    category: '회의실',
+    area: 20,
+    facilities: ['화이트보드', '와이파이', '모니터'],
+    spaceInfo: ['역세권', '최대 8인'],
+    latitude: 37.5165,
+    longitude: 127.0224,
   },
   {
     id: 1005,
@@ -103,6 +133,12 @@ export const recommendSpaces: Space[] = [
     keywords: ['노출콘크리트', '넓은공간', '전시', '팝업스토어'],
     description: '노출콘크리트 인테리어가 매력적인 성수동 전시 및 팝업스토어 전용 공간입니다.',
     createdAt: '2026-03-18T09:00:00.000Z',
+    category: '팝업스토어',
+    area: 66,
+    facilities: ['노출콘크리트 인테리어', '대형 쇼윈도우', '조명'],
+    spaceInfo: ['전시 특화', '넓은 공간'],
+    latitude: 37.5446,
+    longitude: 127.0559,
   },
   {
     id: 1006,
@@ -118,6 +154,12 @@ export const recommendSpaces: Space[] = [
     keywords: ['모던', '고급', '갤러리', '프라이빗'],
     description: '모던하고 고급스러운 분위기의 한남동 프라이빗 갤러리룸입니다.',
     createdAt: '2026-04-01T09:00:00.000Z',
+    category: '갤러리',
+    area: 40,
+    facilities: ['조명 시스템', '전시 벽면', '음향시설'],
+    spaceInfo: ['프라이빗', '최대 20인'],
+    latitude: 37.5347,
+    longitude: 127.0011,
   },
 ];
 

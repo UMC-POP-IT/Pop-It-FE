@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { exploreSpaces } from "@/features/guest-explore/api/mock_spaces";
+import { exploreSpaces, recommendSpaces } from "@/features/guest-explore/api/mock_spaces";
 import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDetailGallery";
 import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetailInfo";
 import ExploreReservationCard from "@/features/guest-explore/components/ExploreReservationCard";
@@ -16,12 +16,11 @@ export const SpaceDetailPage = () => {
   const openLoginModal = useAuthStore((s) => s.openLoginModal);
   const { handleWishToggle } = useWishGuard();
 
-  // 공간 상세 진입/전환 시 항상 페이지 최상단에서 시작하도록 스크롤 위치 초기화
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [spaceId]);
-
-  const space = exploreSpaces.find((item) => item.id === Number(spaceId));
+  // "AI 맞춤형 공간" / "실시간 추천 공간" 카드는 exploreSpaces가 아닌 recommendSpaces에서 오므로
+  // 두 목록을 함께 조회해야 상세페이지 진입이 가능하다. (#126)
+  const space = [...recommendSpaces, ...exploreSpaces].find(
+    (item) => item.id === Number(spaceId),
+  );
   const isWished = !!space && wishedIds.includes(space.id);
 
   if (!space) {
