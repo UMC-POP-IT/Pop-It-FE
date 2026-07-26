@@ -16,6 +16,10 @@ export const SpaceDetailPage = () => {
   const openLoginModal = useAuthStore((s) => s.openLoginModal);
   const { handleWishToggle } = useWishGuard();
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [spaceId]);
+
   // "AI 맞춤형 공간" / "실시간 추천 공간" 카드는 exploreSpaces가 아닌 recommendSpaces에서 오므로
   // 두 목록을 함께 조회해야 상세페이지 진입이 가능하다. (#126)
   const space = [...recommendSpaces, ...exploreSpaces].find(
