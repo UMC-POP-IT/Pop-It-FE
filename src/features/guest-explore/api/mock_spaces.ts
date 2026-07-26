@@ -3,6 +3,7 @@ import { isUsing } from "../components/ReservationCard";
 
 /** 예약 내역 */
 export interface Reservation {
+  id: number; // 예약 고유 ID (백엔드 예약 취소/조회 등 API 호출 시 식별자로 사용)
   isApproved: boolean; // 승인 여부 (완료: true, 대기: false)
   isContracted: boolean; // 계약 완료 여부 (승인 후 계약까지 마쳐야 "사용 중"으로 전환)
   space: Space; // 예약한 공간 정보
@@ -251,6 +252,7 @@ export const likedSpaces: Space[] = [
 export const reservations: Reservation[] = [
   // 예약 예정 (승인 완료 · 계약 대기 → 계약 하기 버튼 노출)
   {
+    id: 1,
     isApproved: true,
     isContracted: false,
     space: {
@@ -275,6 +277,7 @@ export const reservations: Reservation[] = [
   },
   // 예약 예정 (승인 대기)
   {
+    id: 2,
     isApproved: false,
     isContracted: false,
     space: {
@@ -298,6 +301,7 @@ export const reservations: Reservation[] = [
     isDone: false,
   },
   {
+    id: 3,
     isApproved: false,
     isContracted: false,
     space: {
@@ -322,6 +326,7 @@ export const reservations: Reservation[] = [
   },
   // 계약 완료 (승인 완료 + 계약 완료, 계약 기간 전)
   {
+    id: 4,
     isApproved: true,
     isContracted: true,
     space: {
@@ -346,6 +351,7 @@ export const reservations: Reservation[] = [
   },
   // 사용 중 (승인 완료 + 계약 완료, 계약 기간 내)
   {
+    id: 5,
     isApproved: true,
     isContracted: true,
     space: {
@@ -370,6 +376,7 @@ export const reservations: Reservation[] = [
   },
   // 지난 예약 (마감 완료)
   {
+    id: 6,
     isApproved: true,
     isContracted: true,
     space: {
@@ -394,6 +401,7 @@ export const reservations: Reservation[] = [
     isPhotoVerified: false,
   },
   {
+    id: 7,
     isApproved: true,
     isContracted: true,
     space: {
@@ -418,6 +426,7 @@ export const reservations: Reservation[] = [
     isPhotoVerified: true,
   },
   {
+    id: 8,
     isApproved: true,
     isContracted: true,
     space: {
@@ -459,4 +468,24 @@ export function getReservationStatus(r: Reservation): ReservationStatus {
   }
   if (r.isApproved) return '승인 완료';
   return '예약 예정';
+}
+
+// ------------------------------------------------------------
+// (참고) 예약 취소 API
+// ------------------------------------------------------------
+
+/**
+ * 예약을 취소한다.
+ * TODO: 실제 백엔드 연동 시 아래 mock 구현을 fetch/axios 기반 API 호출로 교체
+ * (예: DELETE /reservations/{id}). 호출부(컴포넌트)는 이 함수의 시그니처만
+ * 신뢰하므로 내부 구현을 바꿔도 호출부 수정은 필요 없다.
+ *
+ * exported `reservations` 배열은 여러 컴포넌트/테스트가 공유하는 참조이므로
+ * 여기서 직접 splice하지 않는다. 취소 성공 여부만 반환(실패 시 throw)하고,
+ * 실제 목록 갱신은 호출부(MyReservationList)의 로컬 state에서 처리한다.
+ */
+export async function cancelReservation(id: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const exists = reservations.some((r) => r.id === id);
+  if (!exists) throw new Error("Reservation not found");
 }
