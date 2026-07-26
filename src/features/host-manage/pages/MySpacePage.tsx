@@ -21,7 +21,7 @@ const formatDate = (dateStr: string) => {
 };
 
 export const MySpacePage = () => {
-  const setEdit = useRegisterStore((s) => s.setEdit);
+  const reset = useRegisterStore((s) => s.reset);
   const navigate = useNavigate();
   const [spaces, setSpaces] = useState<MockHostSpace[]>(mockHostSpaces);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -72,7 +72,7 @@ export const MySpacePage = () => {
         </div>
         <button
           onClick={() => {
-            setEdit(false);
+            reset(); // 수정 모드 해제 + 이전 폼 잔여값까지 초기화
             navigate("/host/register");
           }}
           className="bg-primary-hover flex items-center gap-1 rounded-lg px-4 py-3 text-base font-medium text-white"
