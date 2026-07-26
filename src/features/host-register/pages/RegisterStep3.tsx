@@ -20,12 +20,17 @@ export const RegisterStep3 = () => {
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
 
+  //반지층, 옥탑은 '몇 층' 숫자가 없어 층수 입력칸을 숨긴다
+  const needsFloorNumber=
+    form.floorType !== "반지층" && form.floorType !=="옥탑";
+
+
   const isValid =
     form.usage !== "" &&
     form.spaceStructure !== "" &&
     form.area !== "" &&
     form.floorType !== "" &&
-    form.floor !== "" &&
+    (!needsFloorNumber || form.floor !== "") &&
     form.hasParking !== null;
 
   return (
@@ -109,9 +114,18 @@ export const RegisterStep3 = () => {
           label="층수"
           options={FLOOR_TYPE_OPTIONS}
           selected={form.floorType ? [form.floorType] : []}
-          onChange={(next) => setValues({ floorType: next[0] ?? "" })}
+          onChange={(next) => {
+            const floorType = next[0] ?? "";
+            const hidesFloor = floorType === "반지층" || floorType === "옥탑";
+            setValues({
+              floorType,
+              floor: hidesFloor ? "": form.floor,
+            })
+          }}
         />
-        <div className="relative">
+
+        {needsFloorNumber && (
+          <div className="relative">
           <Input
             type="number"
             aria-label="층수"
@@ -127,6 +141,8 @@ export const RegisterStep3 = () => {
             층
           </span>
         </div>
+        )}
+        
 
         {/* 주차 — 주차 가능 / 주차 불가능 (택1)*/}
         <ChipGroup
