@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { exploreSpaces } from "@/features/guest-explore/api/mock_spaces";
 import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDetailGallery";
@@ -14,6 +15,11 @@ export const SpaceDetailPage = () => {
   const user = useAuthStore((s) => s.user);
   const openLoginModal = useAuthStore((s) => s.openLoginModal);
   const { handleWishToggle } = useWishGuard();
+
+  // 공간 상세 진입/전환 시 항상 페이지 최상단에서 시작하도록 스크롤 위치 초기화
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [spaceId]);
 
   const space = exploreSpaces.find((item) => item.id === Number(spaceId));
   const isWished = !!space && wishedIds.includes(space.id);
