@@ -19,11 +19,6 @@ const SignatureBoard = ({onIsSigned}: SignatureBoardProps) => {
     setStatus("idle");
   };
 
-  const handleUndo = () => {
-    boardRef.current?.undo();
-    setStatus("idle");
-  };
-
   // const handleSubmit = async () => {
   //   if (boardRef.current?.isEmpty()) return;
 
@@ -71,14 +66,6 @@ const SignatureBoard = ({onIsSigned}: SignatureBoardProps) => {
 
       <div className="flex items-center justify-between">
         <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={handleUndo}
-            disabled={isEmpty}
-            className="text-text-secondary text-sm underline disabled:opacity-40"
-          >
-            실행 취소
-          </button>
           <button
             type="button"
             onClick={handleClear}

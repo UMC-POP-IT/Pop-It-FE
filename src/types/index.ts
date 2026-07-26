@@ -1,8 +1,6 @@
-/* 일/월/년 단위 가격 */
+/* 일 단위 가격. 주/월 단가는 화면에서 day 기준으로 계산해서 노출한다. */
 export interface Cost {
   day: number;
-  month: number;
-  year: number;
 }
 export interface Space {
   id: number;

@@ -11,6 +11,7 @@ import { formatDate } from "@/shared/utils/date";
 
 interface ReservationCardProps {
   reservation: Reservation;
+  onCancel?: () => Promise<void> | void;
 }
 
 interface CardMeta {
@@ -52,8 +53,8 @@ const getCardMeta = (r: Reservation): CardMeta => {
   return { label: "승인 대기", showCancel: true, showContract: false, needsPhotoVerification: false, isPhotoRejected: false };
 };
 
-export const ReservationCard = ({ reservation }: ReservationCardProps) => {
-  const cardMeta = getCardMeta(reservation);
+export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps) => {
+  const { label, showCancel, showContract, needsPhotoVerification, isPhotoRejected } = getCardMeta(reservation);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false); // 예약 취소 창 open 여부
   const [isPaymentModalOpen, setisPaymentModalOpen] = useState(false); // 계약 전 결제 예정 / 총 결제 금액 창 open 여부
   const [isContractModalOpen, setIsContractModalOpen] = useState(false); // 계약서 확인 & 통합 본인 인증 & 전자서명 창 open 여부
@@ -69,9 +70,18 @@ export const ReservationCard = ({ reservation }: ReservationCardProps) => {
 
   const navigate = useNavigate();
 
-  const handleCancelReservation = () => {
-    // TODO: 예약 취소 창 close
-    setIsCancelModalOpen(false);
+  const handleCancelReservation = async () => {
+    if (isCancelling) return;
+    try {
+      setIsCancelling(true);
+      await onCancel?.();
+      setIsCancelModalOpen(false);
+    } catch (error) {
+      console.error(error);
+      alert("예약 취소에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setIsCancelling(false);
+    }
   };
 
   const handlePhotoVerificationComplete = (files: File[]) => {
@@ -159,10 +169,11 @@ export const ReservationCard = ({ reservation }: ReservationCardProps) => {
         isOpen={isCancelModalOpen}
         title={`${reservation.space.name}\n예약을 취소하시겠습니까?`}
         description={'현재 승인 대기 상태로, 취소 시\n별도의 수수료가 발생하지 않습니다'}
-        confirmLabel="예약 취소"
+        confirmLabel={isCancelling ? "취소 중..." : "예약 취소"}
         cancelLabel="돌아가기"
-        onConfirm={() => setIsCancelModalOpen(false)}
-        onCancel={handleCancelReservation}
+        confirmDisabled={isCancelling}
+        onConfirm={handleCancelReservation}
+        onCancel={() => setIsCancelModalOpen(false)}
       />
 
       {/* Payment Modal */}
