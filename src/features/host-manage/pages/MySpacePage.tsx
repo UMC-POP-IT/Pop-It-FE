@@ -6,6 +6,7 @@ import {
   type MockHostSpace,
 } from "@/features/host-manage/api/mock_host_data";
 import iconPlus from "@/assets/icons/icon_plus.svg";
+import { useRegisterStore } from "@/store/registerStore";
 
 const SPACE_STATUS_LABEL: Record<MockHostSpace["status"], string> = {
   REGISTERED: "등록 완료",
@@ -20,6 +21,7 @@ const formatDate = (dateStr: string) => {
 };
 
 export const MySpacePage = () => {
+  const setEdit = useRegisterStore((s) => s.setEdit);
   const navigate = useNavigate();
   const [spaces, setSpaces] = useState<MockHostSpace[]>(mockHostSpaces);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -54,8 +56,7 @@ export const MySpacePage = () => {
 
   const handleEdit = () => {
     if (editTargetId === null) return;
-    // TODO: 수정 페이지 라우트 추가 후 navigate(`/host/register/edit/${editTargetId}`)
-    navigate("/host/register");
+    navigate(`/host/register/edit/${editTargetId}`);
     setEditTargetId(null);
   };
 
@@ -65,15 +66,22 @@ export const MySpacePage = () => {
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-text-primary text-[28px] font-bold">내 공간</h1>
-          <p className="text-lg font-medium text-text-tertiary">
+          <p className="text-text-tertiary text-lg font-medium">
             내가 등록한 공간을 한곳에서 모아보세요
           </p>
         </div>
         <button
-          onClick={() => navigate("/host/register")}
+          onClick={() => {
+            setEdit(false);
+            navigate("/host/register");
+          }}
           className="bg-primary-hover flex items-center gap-1 rounded-lg px-4 py-3 text-base font-medium text-white"
         >
-          <img src={iconPlus} alt="" className="h-6 w-6" />
+          <img
+            src={iconPlus}
+            alt=""
+            className="h-6 w-6"
+          />
           새 공간 등록
         </button>
       </div>
@@ -85,14 +93,19 @@ export const MySpacePage = () => {
             <div
               key={space.id}
               className={`relative flex items-end justify-between gap-7 py-5 ${
-                index !== spaces.length - 1 ? "border-b border-divider" : ""
+                index !== spaces.length - 1 ? "border-divider border-b" : ""
               }`}
             >
               {/* ... 드롭다운 — 카드 오른쪽 상단 */}
-              <div className="absolute top-5 right-0" ref={openMenuId === space.id ? menuRef : null}>
+              <div
+                className="absolute top-5 right-0"
+                ref={openMenuId === space.id ? menuRef : null}
+              >
                 <button
                   onClick={() =>
-                    setOpenMenuId((prev) => (prev === space.id ? null : space.id))
+                    setOpenMenuId((prev) =>
+                      prev === space.id ? null : space.id,
+                    )
                   }
                   className="text-text-secondary hover:text-text-primary flex h-10 w-10 items-center justify-center rounded-lg text-xl"
                   aria-label="더보기"
@@ -106,7 +119,7 @@ export const MySpacePage = () => {
                         setEditTargetId(space.id);
                         setOpenMenuId(null);
                       }}
-                      className="rounded-[4px] px-7 py-2 text-center text-base font-bold text-[#808080] whitespace-nowrap hover:bg-[#f2f2f2]"
+                      className="rounded-[4px] px-7 py-2 text-center text-base font-bold whitespace-nowrap text-[#808080] hover:bg-[#f2f2f2]"
                     >
                       공간수정
                     </button>
@@ -115,7 +128,7 @@ export const MySpacePage = () => {
                         setDeleteTargetId(space.id);
                         setOpenMenuId(null);
                       }}
-                      className="rounded-[4px] px-6 py-2 text-center text-base font-bold text-danger whitespace-nowrap hover:bg-[#f2f2f2]"
+                      className="text-danger rounded-[4px] px-6 py-2 text-center text-base font-bold whitespace-nowrap hover:bg-[#f2f2f2]"
                     >
                       공간삭제
                     </button>

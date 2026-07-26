@@ -128,15 +128,21 @@ export const RegisterStep5 = () => {
       <div className="flex justify-end gap-2">
         <Modal
           isOpen={modal === "confirm"}
-          title="공간을 등록 하시겠습니까?"
+          title={
+            isEdit ? "공간을 수정하시겠습니까?" : "공간을 등록하시겠습니까?"
+          }
           cancelLabel="돌아가기"
-          confirmLabel="공간 등록하기"
+          confirmLabel={isEdit ? "공간 수정하기" : "공간 등록하기"}
           onCancel={() => setModal(null)}
           onConfirm={handleSubmit}
         />
         <Modal
           isOpen={modal === "success"}
-          title="공간이 성공적으로 등록되었습니다!"
+          title={
+            isEdit
+              ? "공간이 성공적으로 수정되었습니다!"
+              : "공간이 성공적으로 등록되었습니다!"
+          }
           confirmLabel="확인"
           singleButton
           showCheckIcon
