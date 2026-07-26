@@ -22,6 +22,13 @@ const formatDate = (dateStr: string) => {
 export const MySpacePage = () => {
   const navigate = useNavigate();
   const [spaces, setSpaces] = useState<MockHostSpace[]>(mockHostSpaces);
+
+  // 등록된 공간이 없으면 호스트 등록 온보딩부터 시작
+  useEffect(() => {
+    if (spaces.length === 0) {
+      navigate("/host/host-register", { replace: true });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [editTargetId, setEditTargetId] = useState<number | null>(null);
