@@ -54,8 +54,9 @@ const getCardMeta = (r: Reservation): CardMeta => {
 };
 
 export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps) => {
-  const { label, showCancel, showContract, needsPhotoVerification, isPhotoRejected } = getCardMeta(reservation);
+  const cardMeta = getCardMeta(reservation);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false); // 예약 취소 창 open 여부
+  const [isCancelling, setIsCancelling] = useState(false); // 예약 취소 진행 중 여부
   const [isPaymentModalOpen, setisPaymentModalOpen] = useState(false); // 계약 전 결제 예정 / 총 결제 금액 창 open 여부
   const [isContractModalOpen, setIsContractModalOpen] = useState(false); // 계약서 확인 & 통합 본인 인증 & 전자서명 창 open 여부
   const [isContractDone, setIsContractDone] = useState(false); // 계약 마무리 여부
