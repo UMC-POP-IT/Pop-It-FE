@@ -28,6 +28,13 @@ export const MySpacePage = () => {
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // 등록된 공간이 없으면 호스트 등록 온보딩부터 시작
+  useEffect(() => {
+    if (spaces.length === 0) {
+      navigate("/host/host-register", { replace: true });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 메뉴 외부 클릭 시 닫기
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

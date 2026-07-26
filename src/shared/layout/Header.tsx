@@ -9,6 +9,12 @@ const Header = () => {
   const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
 
   const handleModeToggle = () => {
+    if (!user) {
+      const targetMode = mode === "GUEST" ? "HOST" : "GUEST";
+      const navigateTo = mode === "GUEST" ? "/host/spaces" : "/";
+      openLoginModal({ type: "modeToggle", targetMode, navigateTo });
+      return;
+    }
     if (mode === "GUEST") {
       setMode("HOST");
       navigate("/host/spaces");
@@ -70,18 +76,23 @@ const Header = () => {
               >
                 공간탐색
               </NavLink>
-              <NavLink
-                to="/reservations"
-                className={({ isActive }) =>
-                  `pb-0.5 text-base font-bold transition-colors ${
-                    isActive
-                      ? "text-primary border-primary border-b-2"
-                      : "text-text-primary"
-                  }`
-                }
+              <button
+                onClick={() => {
+                  if (!user) {
+                    openLoginModal({ type: "navigate", path: "/reservations" });
+                    return;
+                  }
+                  navigate("/reservations");
+                }}
+                aria-current={pathname === "/reservations" ? "page" : undefined}
+                className={`pb-0.5 text-base font-bold transition-colors ${
+                  pathname === "/reservations"
+                    ? "text-primary border-primary border-b-2"
+                    : "text-text-primary"
+                }`}
               >
                 나의 예약
-              </NavLink>
+              </button>
             </>
           )}
         </nav>
@@ -142,7 +153,7 @@ const Header = () => {
             </button>
           ) : (
             <button
-              onClick={openLoginModal}
+              onClick={() => openLoginModal()}
               className="text-primary text-sm font-medium"
             >
               로그인

@@ -6,6 +6,7 @@ import { useWishStore } from "@/store/wishStore";
 import { useSpaceStore } from "@/store/spaceStore";
 import type { Space } from "@/types";
 import { useNavigate } from "react-router-dom";
+import { useWishGuard } from "@/shared/hooks/useWishGuard";
 
 const HeartIcon = () => {
   return (
@@ -21,7 +22,7 @@ export const WishedSpace = () => {
   const [canScrollNext, setCanScrollNext] = useState(false);
   const spaces = useSpaceStore((state) => state.spaces);
   const wishedIds = useWishStore((state) => state.wishedIds);
-  const toggleWish = useWishStore((state) => state.toggleWish);
+  const { handleWishToggle } = useWishGuard();
 
   // wishedIds에 해당하는 최신 Space 데이터를 spaceStore에서 조회
   const wishedSpaces = wishedIds
@@ -81,7 +82,7 @@ export const WishedSpace = () => {
                     space={space}
                     categoryTag={space.keywords[0]}
                     isWished={true}
-                    onWishToggle={() => toggleWish(space.id)}
+                    onWishToggle={() => handleWishToggle(space.id)}
                     onClick={() => navigate(`/spaces/${space.id}`)}
                 />
                 </div>

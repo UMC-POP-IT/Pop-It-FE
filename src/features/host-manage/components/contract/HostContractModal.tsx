@@ -29,8 +29,6 @@ const HostContractModal = ({
   if (!isOpen) return null;
 
   const { startDate, endDate, totalPrice } = reservation;
-  const platformFee = Math.round(totalPrice * 0.1);
-  const netAmount = totalPrice - platformFee;
   const days = getDurationDays(startDate, endDate);
 
   return (
@@ -44,7 +42,7 @@ const HostContractModal = ({
         <div className="flex flex-col gap-4 overflow-y-auto p-6">
           <h3 className="text-text-primary text-xl font-bold">단기 임대차 계약서</h3>
           <span className="text-text-secondary text-sm">
-            {`임대인(이하 "호스트")과 임차인(이하 "게스트")은 다음과 같이 단기 공간 임대차 계약을 체결합니다.`}
+            {`임대인(이하 "호스트")과 임차인(이하 "게스트")은 공간 중개 플랫폼 '팝잇'을 통하여 다음과 같이 단기 공간 임대차 계약을 체결하며, 본 계약서에 기재된 임대 조건에 상호 합의합니다.`}
           </span>
 
           <div className="flex flex-col gap-2 text-sm">
@@ -70,14 +68,13 @@ const HostContractModal = ({
               <span className="text-text-primary font-medium">{totalPrice.toLocaleString()}원</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-text-secondary">플랫폼 수수료 10%</span>
-              <span className="text-text-primary font-medium">-{platformFee.toLocaleString()}원</span>
+              <span className="text-text-secondary">보증금(에스크로)</span>
+              <span className="text-text-primary font-medium">{Math.round(totalPrice * 0.2).toLocaleString()}원</span>
             </div>
-          </div>
-
-          <div className="border-border flex items-center justify-between border-t pt-4 font-bold">
-            <span className="text-text-primary text-xl">총 수령 금액</span>
-            <span className="text-xl">{netAmount.toLocaleString()}원</span>
+            <div className="flex justify-between">
+              <span className="text-text-secondary">단기 공간 보험료 5% 적용</span>
+              <span className="text-text-primary font-medium">{Math.round(totalPrice * 0.05).toLocaleString()}원</span>
+            </div>
           </div>
 
           <div className="bg-contract-guide-bg flex flex-col gap-2 rounded-lg p-3">
@@ -90,7 +87,7 @@ const HostContractModal = ({
             <div className="flex flex-col gap-1">
               <span className="text-primary text-sm font-medium">제 2조(보증금)</span>
               <span className="text-text-secondary text-sm">
-                보증금은 에스크로 계좌에 보관되며, 퇴실 시 공간 상태 점검 후 이상이 없을 경우 전액 환불됩니다.
+                보증금은 에스크로 계좌에 안전하게 보관되며, 퇴실 시 공간 상태 점검 후 이상이 없을 경우 전액 환불됩니다.
               </span>
             </div>
             <div className="flex flex-col gap-1">
@@ -109,6 +106,12 @@ const HostContractModal = ({
               <span className="text-primary text-sm font-medium">제 5조(이웃 화합)</span>
               <span className="text-text-secondary text-sm">
                 게스트는 소음, 대기열, 쓰레기 관리 등 이웃 화합 가이드를 준수해야 합니다.
+              </span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-primary text-sm font-medium">제 6조(결제 및 정산)</span>
+              <span className="text-text-secondary text-sm">
+                본 계약에 따른 대금 결제, 에스크로 보관 및 호스트에 대한 최종 정산은 '팝잇'의 플랫폼 이용 약관 및 정책에 따릅니다.
               </span>
             </div>
           </div>
