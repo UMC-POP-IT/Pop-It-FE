@@ -10,7 +10,7 @@ export const HostRegisterComplete = () => {
 
   const handleDone = () => {
     reset();
-    navigate("/host/register");
+    navigate("/host/spaces");
   };
   return (
     <div className="mx-auto flex min-h-[60vh] w-full max-w-2xl flex-col items-center justify-center gap-4 px-4 py-6 text-center">
@@ -34,7 +34,7 @@ export const HostRegisterComplete = () => {
         size="md"
         onClick={handleDone}
       >
-        공간 등록하러 가기
+        호스트 홈으로
       </Button>
     </div>
   );
