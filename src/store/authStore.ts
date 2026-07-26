@@ -13,6 +13,7 @@ interface AuthState {
   mode: Mode;
   isLoginModalOpen: boolean;
   pendingAction: PendingAction | null;
+  hasSeenHostIntro: boolean; // 호스트 등록 안내 모달을 이미 봤는지 (한 번만 노출)
 
   setUser: (user: User | null) => void;
   login: (user: User) => void;
@@ -20,6 +21,7 @@ interface AuthState {
   openLoginModal: (pendingAction?: PendingAction) => void;
   closeLoginModal: () => void;
   clearPendingAction: () => void;
+  setHostIntroSeen: () => void;
   logout: () => void;
 }
 
@@ -28,6 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   mode: "GUEST",
   isLoginModalOpen: false,
   pendingAction: null,
+  hasSeenHostIntro: false,
 
   setUser: (user) => set({ user }),
   login: (user) => set({ user, isLoginModalOpen: false }),
@@ -36,5 +39,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoginModalOpen: true, pendingAction: pendingAction ?? null }),
   closeLoginModal: () => set({ isLoginModalOpen: false, pendingAction: null }),
   clearPendingAction: () => set({ pendingAction: null }),
-  logout: () => set({ user: null, mode: "GUEST", pendingAction: null }),
+  setHostIntroSeen: () => set({ hasSeenHostIntro: true }),
+  logout: () =>
+    set({
+      user: null,
+      mode: "GUEST",
+      pendingAction: null,
+      hasSeenHostIntro: false, // 로그아웃 시 초기화 → 다음 사용자에게 다시 안내
+    }),
 }));
