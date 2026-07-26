@@ -3,21 +3,24 @@ import Logo from "@/shared/components/Logo";
 import { useAuthStore } from "@/store/authStore";
 
 const Header = () => {
-  const { user, mode, setMode, openLoginModal } = useAuthStore();
+  const { user, mode, setMode, openLoginModal, hasSeenHostIntro } =
+    useAuthStore();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
 
   const handleModeToggle = () => {
+    // 게스트→호스트 '첫' 전환이면 호스트 등록 안내 모달로, 이후엔 내 공간으로
+    const hostDest = hasSeenHostIntro ? "/host/spaces" : "/host/host-register";
     if (!user) {
       const targetMode = mode === "GUEST" ? "HOST" : "GUEST";
-      const navigateTo = mode === "GUEST" ? "/host/spaces" : "/";
+      const navigateTo = mode === "GUEST" ? hostDest : "/";
       openLoginModal({ type: "modeToggle", targetMode, navigateTo });
       return;
     }
     if (mode === "GUEST") {
       setMode("HOST");
-      navigate("/host/spaces");
+      navigate(hostDest);
     } else {
       setMode("GUEST");
       navigate("/");
@@ -99,29 +102,31 @@ const Header = () => {
 
         <div className="ml-auto flex items-center gap-5">
           {/* 모드 전환 버튼 — 게스트 모드 나의 예약 탭에서는 숨김 */}
-          {!hideModeToggle && <button
-            onClick={handleModeToggle}
-            className="bg-primary-light text-text-primary flex items-center gap-1 rounded p-1 pl-1 text-base transition-colors"
-          >
-            <span className="px-1">
-              {mode === "GUEST" ? "호스트 전환" : "게스트 전환"}
-            </span>
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
+          {!hideModeToggle && (
+            <button
+              onClick={handleModeToggle}
+              className="bg-primary-light text-text-primary flex items-center gap-1 rounded p-1 pl-1 text-base transition-colors"
             >
-              <path
-                d="M9 6L15 12L9 18"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>}
+              <span className="px-1">
+                {mode === "GUEST" ? "호스트 전환" : "게스트 전환"}
+              </span>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M9 6L15 12L9 18"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          )}
 
           {/* 로그인 상태에 따라 분기 */}
           {user ? (

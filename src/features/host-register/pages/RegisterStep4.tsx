@@ -3,17 +3,10 @@ import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
 import { useNavigate } from "react-router-dom";
 import { useRegisterStore } from "@/store/registerStore";
-import { STEPS } from "@/features/host-register/api/mock_register";
-
-//Tip 박스 안내 문구
-const TIP_ITEMS = [
-  "주변 교통 및 유동인구 특징",
-  "추천하는 팝업/전시 업종",
-  "공간 내 이용 가능한 가구 및 비품 정보",
-  "입출입 절차 및 주의사항",
-];
+import { STEPS, TIP_ITEMS } from "@/features/host-register/api/mock_register";
 
 export const RegisterStep4 = () => {
+  const isEdit = useRegisterStore((s) => s.isEdit);
   const navigate = useNavigate();
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
@@ -25,7 +18,7 @@ export const RegisterStep4 = () => {
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
       <h1 className="text-text-primary text-center text-[32px] font-bold">
-        공간 등록
+        {isEdit ? "공간 수정" : "공간 등록"}
       </h1>
 
       {/* 상단 진행바 (공통 컴포넌트) — 1 = 네 번째 단계*/}

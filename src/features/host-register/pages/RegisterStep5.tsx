@@ -6,25 +6,28 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Modal from "@/shared/components/Modal";
 import { useRegisterStore } from "@/store/registerStore";
-import { STEPS } from "@/features/host-register/api/mock_register";
-
-// 사진 촬영 가이드 안내 문구
-const GUIDE_ITEMS = [
-  "밝고 선명한 공간 사진을 권장합니다.",
-  "공간의 전체적인 모습과 세부 시설이 잘 보이게 찍어주세요",
-  "수평이 잘 맞은 사진이 게스트의 신뢰도를 높입니다.",
-];
+import { STEPS, GUIDE_ITEMS } from "@/features/host-register/api/mock_register";
+import iconTrash from "@/assets/icons/icon_trash.svg";
 
 export const RegisterStep5 = () => {
+  const isEdit = useRegisterStore((s) => s.isEdit);
+  const editSpaceId = useRegisterStore((s) => s.editSpaceId);
   const navigate = useNavigate();
   const [modal, setModal] = useState<"confirm" | "success" | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const form = useRegisterStore((s) => s.form);
   const reset = useRegisterStore((s) => s.reset);
 
-  // 최종 제출 (지금은 Mock: 콘솔 출력. 실제 POST /spaces는 2차 API 때)
+  // 최종 제출 (지금은 Mock: 콘솔 출력. 실제 POST/PATCH /spaces는 2차 API 때)
   const handleSubmit = () => {
-    if (import.meta.env.DEV) console.log("공간 등록 제출 데이터:", form);
+    if (import.meta.env.DEV) {
+      console.log(
+        isEdit
+          ? `공간 수정 제출 데이터 (id=${editSpaceId}):`
+          : "공간 등록 제출 데이터:",
+        form,
+      );
+    }
     setModal("success");
   };
   // 성공 확인 → 보관함 비우고 '내 공간'으로 이동
@@ -37,7 +40,7 @@ export const RegisterStep5 = () => {
     <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
       <h1 className="text-text-primary text-center text-[32px] font-bold">
-        공간 등록
+        {isEdit ? "공간 수정" : "공간 등록"}
       </h1>
 
       {/* 상단 진행바 — 4 = 다섯 번째 단계(사진 등록, 마지막) */}
@@ -127,15 +130,21 @@ export const RegisterStep5 = () => {
       <div className="flex justify-end gap-2">
         <Modal
           isOpen={modal === "confirm"}
-          title="공간을 등록 하시겠습니까?"
+          title={
+            isEdit ? "공간을 수정하시겠습니까?" : "공간을 등록하시겠습니까?"
+          }
           cancelLabel="돌아가기"
-          confirmLabel="공간 등록하기"
+          confirmLabel={isEdit ? "공간 수정하기" : "공간 등록하기"}
           onCancel={() => setModal(null)}
           onConfirm={handleSubmit}
         />
         <Modal
           isOpen={modal === "success"}
-          title="공간이 성공적으로 등록되었습니다!"
+          title={
+            isEdit
+              ? "공간이 성공적으로 수정되었습니다!"
+              : "공간이 성공적으로 등록되었습니다!"
+          }
           confirmLabel="확인"
           singleButton
           showCheckIcon
@@ -183,21 +192,25 @@ const PhotoThumbnail = ({
   }, [photo]);
 
   return (
-    <div className="bg-tag-bg border-divider relative size-[144px] shrink-0 overflow-hidden rounded-lg border-2">
+    <div className="group bg-tag-bg border-divider relative size-[144px] shrink-0 overflow-hidden rounded-lg border-2">
       <img
         src={url}
         alt=""
         className="h-full w-full object-cover"
       />
 
-      {/* 삭제 버튼 (왼쪽 위) */}
+      {/* 삭제 오버레이 — hover 기기는 hover 시, 터치 기기는 항상 노출(투명 클릭 함정 방지) */}
       <button
         type="button"
         aria-label="사진 삭제"
         onClick={onRemove}
-        className="absolute top-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-xs text-white"
+        className="absolute inset-0 flex items-center justify-center bg-black/70 transition-opacity focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
       >
-        ×
+        <img
+          src={iconTrash}
+          alt=""
+          className="h-8 w-8"
+        />
       </button>
 
       {isFirst && (
