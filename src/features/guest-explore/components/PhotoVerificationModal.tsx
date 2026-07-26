@@ -10,6 +10,7 @@ interface PhotoVerificationModalProps {
 
 const MAX_PHOTOS = 10;
 const MIN_PHOTOS = 3;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 const formatFileSize = (bytes: number) => `${Math.round(bytes / (1024 * 1024))}MB`;
 
@@ -21,7 +22,9 @@ const PhotoVerificationModal = ({ isOpen, onClose, onComplete }: PhotoVerificati
 
   const addFiles = (newFiles: File[]) => {
     if (newFiles.length === 0) return;
-    setFiles((prev) => [...prev, ...newFiles].slice(0, MAX_PHOTOS));
+    const validFiles = newFiles.filter((f) => f.size <= MAX_FILE_SIZE);
+    if (validFiles.length === 0) return;
+    setFiles((prev) => [...prev, ...validFiles].slice(0, MAX_PHOTOS));
   };
 
   const handleFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
