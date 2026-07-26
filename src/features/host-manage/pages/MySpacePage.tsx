@@ -22,6 +22,11 @@ const formatDate = (dateStr: string) => {
 export const MySpacePage = () => {
   const navigate = useNavigate();
   const [spaces, setSpaces] = useState<MockHostSpace[]>(mockHostSpaces);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [editTargetId, setEditTargetId] = useState<number | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // 등록된 공간이 없으면 호스트 등록 온보딩부터 시작
   useEffect(() => {
@@ -29,11 +34,6 @@ export const MySpacePage = () => {
       navigate("/host/host-register", { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-  const [editTargetId, setEditTargetId] = useState<number | null>(null);
-  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   // 메뉴 외부 클릭 시 닫기
   useEffect(() => {
