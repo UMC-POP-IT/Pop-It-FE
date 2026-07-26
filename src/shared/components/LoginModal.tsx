@@ -2,8 +2,15 @@ import { useAuthStore } from "@/store/authStore";
 import Logo from "@/shared/components/Logo";
 import Button from "@/shared/components/Button";
 
+const DEV_USER = {
+  id: 1,
+  email: "dev@pop-it.kr",
+  nickname: "개발자",
+  role: "GUEST" as const,
+};
+
 export const LoginModal = () => {
-  const { isLoginModalOpen, closeLoginModal } = useAuthStore();
+  const { isLoginModalOpen, closeLoginModal, login } = useAuthStore();
 
   if (!isLoginModalOpen) return null;
 
@@ -34,6 +41,16 @@ export const LoginModal = () => {
             </div>
 
             <div className="flex w-full flex-col gap-3">
+              {import.meta.env.DEV && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="h-auto! border-dashed! px-[40px]! py-[16px]! text-xl! font-bold!"
+                  onClick={() => login(DEV_USER)}
+                >
+                  🛠️ 임시 로그인 (개발용)
+                </Button>
+              )}
               <Button variant="kakao" size="lg" className="h-auto! gap-3 px-[40px]! py-[16px]! text-xl! font-bold!">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M12 3C6.48 3 2 6.58 2 11c0 2.79 1.84 5.25 4.6 6.68-.2.75-.73 2.7-.83 3.12-.13.52.19.51.4.37.17-.11 2.66-1.8 3.74-2.53.68.1 1.38.15 2.09.15 5.52 0 10-3.58 10-8s-4.48-8-10-8z" />
