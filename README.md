@@ -4,7 +4,7 @@
 **단기 임대 전용 플랫폼 — POP UP 잇다**
 > 
 
-방치된 유휴 공간(상가, 스튜디오, 사무실 등)을 단기로 필요한 사람과 연결해주는 매칭 플랫폼입니다. AI 맞춤 추천, 3D/360 공간 큐레이션, 에스크로 기반 안전 거래 시스템을 통해 임대인과 임차인 모두에게 안전하고 편리한 단기 공간 매칭 경험을 제공합니다.
+방치된 유휴 공간(상가, 스튜디오, 사무실 등)을 단기로 필요한 사람과 연결해주는 매칭 플랫폼입니다. AI 맞춤 추천, 3D 큐레이션, 에스크로 기반 안전 거래 시스템을 통해 임대인과 임차인 모두에게 안전하고 편리한 단기 공간 매칭 경험을 제공합니다.
 
 ---
 
@@ -23,10 +23,10 @@
 
 | 역할 | 담당자 | 담당 기능 |
 | --- | --- | --- |
-| 1번 | 강민경 | 공간탐색, 공간 상세(호스트, 게스트 모두), 찜하기 |
-| 2번 | 고태현 | AI 맞춤추천(추천 공간), 3D/360 공간 큐레이션, 나의 예약 |
+| 1번 | 강민경 | 공간탐색, 공간 상세(호스트, 게스트 모두), 프론트엔드 배포|
+| 2번 | 고태현 | 공간 탐색 - AI 맞춤형 공간 / 실시간 추천 공간, 3D 큐레이션, 나의 예약, 찜하기 |
 | 3번 | 이수빈 | 공간 등록 (5단계 플로우), 호스트 등록 (2단계 플로우) |
-| 4번 | 임채은 | 내 공간 관리, 게스트 소통, 공통 레이아웃/디자인시스템 |
+| 4번 | 임채은 | 로그인, 내 공간 관리, 공통 컴포넌트/디자인시스템, 호스트 예약관리 |
 
 > 4명 모두 디자인 확정 → 화면설계서 기반 병렬 개발을 진행하며, 디자인/백엔드 개발과 함께 진행됩니다.
 > 
@@ -38,44 +38,57 @@
 | 분류 | 스택 |
 | --- | --- |
 | Language | TypeScript |
-| Library/Framework | React, Vite |
-| Styling | (예: Tailwind CSS / styled-components) |
-| State Management | (예: React Query, Zustand) |
-| Form | (예: react-hook-form) |
-| 3D/360 | Three.js, @react-three/fiber, @react-three/drei |
+| Library/Framework | React 19, React Router 7, Vite 6 |
+| Styling | Tailwind CSS 4, @toss/tds-mobile |
+| State Management | Zustand 5 |
+| 지도 | Kakao Maps JavaScript SDK |
+| 3D 큐레이션 | Three.js, @react-three/fiber, @react-three/drei |
+| 결제/본인인증 | PortOne(@portone/browser-sdk), TossPayments |
+| 패키지 매니저 | pnpm, npm |
+| Lint/Format | ESLint, Prettier (+ prettier-plugin-tailwindcss) |
 | 협업 도구 | GitHub, Notion, Figma |
-| 배포 | (예: Vercel) |
+| 리뷰 봇 | coderabbitai, copilot |
+| 배포 | Vercel |
 
 ---
 
 ## 📁 폴더 구조
 
-```
+``` text
 src/
-├── app/                      # 앱 진입점, 라우터, 전역 Provider
+├── app/                       # 앱 진입점, 라우터
 │   ├── App.tsx
-│   ├── router.tsx
-│   └── providers/
+│   └── router.tsx
 │
-├── shared/                   # 공통 디자인 시스템 & 레이아웃
-│   ├── components/           # Button, Card, Badge, Input, Modal 등
-│   ├── layout/               # Header, Footer, ModeToggle, PageWrapper
-│   ├── styles/               # 색상/폰트/spacing 토큰
-│   ├── hooks/                # 공통 hooks
-│   └── utils/                # 공통 함수
+├── shared/                    # 공통 디자인 시스템 & 컴포넌트
+│   ├── components/            # 공통 컴포넌트 (Button, Badge, Chip, Input, Select, Modal, SpaceCard 등)
+│   ├── layout/                # Header, Footer, Banner, MainLayout, AuthLayout
+│   ├── styles/                # 색상/폰트/spacing 토큰
+│   ├── hooks/                 # 공통 hooks (ex. useKakaoLoader)
+│   └── utils/                 # 공통 함수
 │
-├── features/                 # 기능(도메인) 단위 폴더
-│   ├── guest-explore/        # 공간탐색 / 상세 / 찜
-│   ├── guest-recommend/      # AI추천 / 3D 큐레이션 / 예약
-│   ├── host-register/        # 공간 등록 5단계
-│   └── host-manage/          # 내공간관리 / 게스트소통
+├── features/                  # 기능(도메인) 단위 폴더
+│   ├── auth/                  # 로그인
+│   │   ├── api/ hooks/ pages/
+│   ├── guest-explore/         # 공간탐색 · AI/실시간 추천 · 상세 · 찜 · 예약 · 계약/결제 · 3D 큐레이션
+│   │   ├── api/                    # mock 데이터, curation_model
+│   │   ├── components/             # 탐색·상세·찜·예약 리스트/카드/지도 등
+│   │   │   ├── contract/           # 본인인증, 전자계약 서명, 결제(Toss/PortOne) 모달
+│   │   │   └── curation/           # 3D 큐레이션 (룸 뷰어) (Three.js Scene, Hotspot 등)
+│   │   ├── hooks/ icons/ pages/
+│   ├── guest-recommend/       # 현재는 guest-explore에 통합되어 있으며, 별도 폴더는 추후 정리 예정
+│   ├── host-register/         # 공간 등록 5단계 / 호스트 전환 등록 2단계
+│   │   ├── api/ components/ hooks/ pages/ steps/
+│   └── host-manage/           # 내 공간 관리 · 예약 관리(호스트) · 게스트 계약/결제
+│       ├── api/ components/(contract/) hooks/ pages/ utils/
 │
-├── types/                    # 전역 타입 정의
-├── assets/                   # 이미지, 아이콘
+├── store/                     # 전역 상태 (Zustand): auth, register, space, wish
+├── types/                     # 전역 타입 정의 (kakao-maps 등)
+├── assets/                    # 이미지, 아이콘
 └── main.tsx
 ```
 
-각 `features/*` 폴더는 `components/`, `pages/`, `hooks/`, `api/` 하위 구조를 동일하게 가지며, 담당자별로 폴더가 분리되어 있어 작업 충돌을 최소화합니다.
+각 `features/*` 폴더는 담당자별로 분리되어 있으며 `components/`, `pages/`, `hooks/`, `api/` 하위 구조를 기본으로 갖되, 기능 성격에 따라 `steps/`, `utils/`, `contract/`, `curation/` 같은 하위 폴더를 추가로 둡니다. `guest-recommend`는 초기 설계 시 분리했던 폴더지만, 실제 개발은 `guest-explore` 안(AiRecommendSpace, RealTimeRecommendSpace, curation/)에서 함께 진행되고 있습니다.
 
 ---
 
@@ -138,16 +151,30 @@ chore: 패키지 설치 및 설정
 ```bash
 # 저장소 클론
 git clone https://github.com/UMC-POP-IT/Pop-It-FE.git
-cd pop-it-frontend
+cd Pop-It-FE
 
-# 패키지 설치
-npm install
+# 패키지 설치 (pnpm 사용)
+pnpm install
+
+# 환경변수 설정 (.env)
+# 아래 값을 채운 .env 파일을 프로젝트 루트에 생성합니다.
+VITE_TOSS_PAYMENTS_CLIENT_KEY=   # TossPayments 결제 클라이언트 키
+VITE_PORTONE_STORE_ID=           # PortOne 본인인증/결제 스토어 ID
+VITE_PORTONE_CHANNEL_KEY=        # PortOne 채널 키
+VITE_KAKAO_JS_KEY=               # Kakao Maps JavaScript SDK 앱 키
 
 # 개발 서버 실행
-npm run dev
+pnpm dev
 
 # 빌드
-npm run build
+pnpm build
+
+# 프리뷰 (빌드 결과 로컬 확인)
+pnpm preview
+
+# 린트 / 포맷
+pnpm lint
+pnpm format
 ```
 
 ---
@@ -157,34 +184,37 @@ npm run build
 ### 게스트 모드
 
 ```
-로그인 → AI 맞춤추천 / 공간탐색
-   → 공간 상세 (3D 큐레이션 포함)
-   → 찜하기 / 예약 요청
-   → 본인인증 → 전자계약 → 에스크로 결제
-   → 나의 예약 (사용예정 / 사용중 / 지난예약)
+로그인 (/login)
+   → 홈 (/, AI 맞춤추천 + 실시간 추천 + 공간탐색 리스트)
+   → 공간 상세 (/spaces/:spaceId)
+        → 3D 큐레이션 (/spaces/:spaceId/view)
+        → 찜하기
+        → 예약 요청 → 본인인증 → 전자계약(서명) → 결제(TossPayments/PortOne)
+   → 나의 예약 (/reservations, 사용예정 / 사용중 / 지난예약)
 ```
 
 ### 호스트 모드
 
 ```
-모드전환(게스트 ↔ 호스트)
-   → 공간 등록 (위치/구조 → 거래정보 → 공간정보 → 상세정보 → 사진등록)
-   → 내 공간 관리 (등록된 공간 / 예약관리: 승인대기·이용중·이용완료)
-   → 게스트 소통
+호스트 등록 (/host/host-register → step1 → step2 → complete, 게스트 → 호스트 전환)
+   → 공간 등록 (/host/register → step2 → step3 → step4 → step5)
+   → 내 공간 관리 (/host/spaces → /host/spaces/:spaceId)
+   → 예약 관리 (/host/reservations, 승인대기 · 이용중 · 이용완료)
 ```
 
-| 화면 이름 | 페이지 ID | 진입 경로 | 담당자 |
+| 화면 이름 | 컴포넌트/페이지 | 라우트 | 담당자 |
 | --- | --- | --- | --- |
-| 로그인/회원가입 | LoginPage | 최초 진입 | 임채은 |
-| 추천 공간 | ExplorePage - AiRecommendSpace, RealTimeRecommendSpace | 로그인 후 메인 | 고태현 |
-| 공간 탐색 | ExplorePage | 메인 탭 | 강민경 |
-| 공간 상세 | DetailPage | 리스트 클릭 | 강민경 |
-| 3D 큐레이션 | SpaceViewPage | 상세 내 진입 | 고태현 |
-| 나의 예약 | MyReservationPage | 메인 탭 | 고태현 |
-| 공간 등록 (1~5단계) | SpaceRegisterStep1~5 | 호스트 모드 진입 | 이수빈 |
-| 호스트 등록 (1~2단계) | HostRegisterStep1~2 | 호스트 모드 진입 | 이수빈 |
-| 내 공간 관리 | MySpacePage | 호스트 모드 | 임채은 |
-| 게스트 소통 | ChatPage | 내공간관리 내 | 임채은 |
+| 로그인 | LoginPage | `/login` | 임채은 |
+| 홈 (추천+탐색) | HomePage → AiRecommendSpace, RealTimeRecommendSpace, ExploreSpace | `/` | 고태현 / 강민경 |
+| 공간 탐색 | ExplorePage | `/explore` | 강민경 |
+| 공간 상세 | SpaceDetailPage | `/spaces/:spaceId` | 강민경 |
+| 3D 큐레이션 | SpaceViewPage (CurationViewer) | `/spaces/:spaceId/view` | 고태현 |
+| 전자계약/결제 | ContractModal, Authentication, SignatureBoard, PaymentModal, TossPayments | 공간 상세 내 모달 | 강민경 |
+| 나의 예약 | MyReservationPage | `/reservations` | 고태현 |
+| 공간 등록 (1~5단계) | RegisterStep1~5 | `/host/register`, `/host/register/step2 ~ /host/register/step5` | 이수빈 |
+| 호스트 등록 (1~2단계) | HostRegisterStart, HostRegisterStep1~2, HostRegisterComplete | `/host/host-register`, `/host/host-register/step1`, `/host/host-register/step2`, `/host/host-register/complete` | 이수빈 |
+| 내 공간 관리 | MySpacePage, HostSpaceDetailPage | `/host/spaces`, `/host/spaces/:spaceId` | 임채은 |
+| 예약 관리(호스트) | HostReservationPage | `/host/reservations` | 임채은 |
 
 ---
 

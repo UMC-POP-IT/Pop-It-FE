@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
 import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
+import { getPropertyBySpaceId } from "@/features/guest-explore/api/mock_3dcuration";
 import SpaceLocationMapModal from "@/features/guest-explore/components/SpaceLocationMapModal";
+import CurationModal from "@/features/guest-explore/components/curation/CurationModal";
 
 interface ExploreDetailInfoProps {
   space: ExploreSpaceDetail;
@@ -21,9 +22,10 @@ const ExploreDetailInfo = ({
   isWished = false,
   onWishToggle,
 }: ExploreDetailInfoProps) => {
-  const navigate = useNavigate();
   const isHost = variant === "host";
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [isCurationOpen, setIsCurationOpen] = useState(false);
+  const property = getPropertyBySpaceId(space.id);
 
   return (
     <div
@@ -71,7 +73,7 @@ const ExploreDetailInfo = ({
               <button
                 type="button"
                 aria-label="3D로 둘러보기"
-                onClick={() => navigate(`/spaces/${space.id}/view`)}
+                onClick={() => setIsCurationOpen(true)}
                 className="text-text-primary flex items-center justify-center p-3 text-sm font-bold"
               >
                 3D
@@ -118,15 +120,23 @@ const ExploreDetailInfo = ({
               <span className="text-text-primary font-normal">주 단가</span>
               <span className="text-right">
                 <span className="text-primary">
-                  {space.weekCost.toLocaleString()}
+                  {(space.cost.day * 7).toLocaleString()}
                 </span>
                 <span className="text-text-primary">원</span>
               </span>
             </div>
-            <div className="flex w-full items-center justify-between">
-              <span className="text-text-primary font-normal">월 단가</span>
-              <span className="text-text-primary text-right">
-                {space.monthCostText}
+            <div className="flex w-full items-start justify-between">
+              <span className="text-text-primary flex flex-col font-normal">
+                월 단가
+                <span className="text-text-tag text-xs font-normal">
+                  (30일 기준)
+                </span>
+              </span>
+              <span className="text-right">
+                <span className="text-primary">
+                  {(space.cost.day * 30).toLocaleString()}
+                </span>
+                <span className="text-text-primary">원</span>
               </span>
             </div>
           </div>
@@ -192,6 +202,14 @@ const ExploreDetailInfo = ({
         isOpen={isMapOpen}
         onClose={() => setIsMapOpen(false)}
       />
+
+      {property && (
+        <CurationModal
+          property={property}
+          isOpen={isCurationOpen}
+          onClose={() => setIsCurationOpen(false)}
+        />
+      )}
     </div>
   );
 };

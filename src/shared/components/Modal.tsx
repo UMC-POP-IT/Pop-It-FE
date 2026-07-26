@@ -8,6 +8,8 @@ interface ModalProps {
   singleButton?: boolean;
   /** true면 상단에 파란 체크 아이콘 표시 */
   showCheckIcon?: boolean;
+  /** true면 확인 버튼을 비활성화 (예: 비동기 처리 중 중복 클릭 방지) */
+  confirmDisabled?: boolean;
   onConfirm?: () => void;
   onCancel?: () => void;
 }
@@ -20,6 +22,7 @@ const Modal = ({
   cancelLabel = "취소",
   singleButton = false,
   showCheckIcon = false,
+  confirmDisabled = false,
   onConfirm,
   onCancel,
 }: ModalProps) => {
@@ -71,7 +74,8 @@ const Modal = ({
           onConfirm && (
             <button
               onClick={onConfirm}
-              className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white"
+              disabled={confirmDisabled}
+              className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {confirmLabel}
             </button>
@@ -89,7 +93,8 @@ const Modal = ({
             {onConfirm && (
               <button
                 onClick={onConfirm}
-                className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white"
+                disabled={confirmDisabled}
+                className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {confirmLabel}
               </button>

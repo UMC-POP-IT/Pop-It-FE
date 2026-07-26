@@ -241,9 +241,16 @@ export const mockProperty: Property = {
 
 export const mockProperties: Property[] = [mockProperty];
 
-/** Space.id(spaceId) 로 해당 공간의 3D 큐레이션 Property를 찾는다. */
+/**
+ * Space.id(spaceId) 로 해당 공간의 3D 큐레이션 Property를 찾는다.
+ * 현재는 등록된 3D 모델이 mockProperty 하나뿐이므로, 매칭되는 매물이 없으면
+ * 해당 모델로 통일해서 보여준다.
+ */
 export function getPropertyBySpaceId(spaceId: number): Property | undefined {
-  return mockProperties.find((property) => property.spaceId === spaceId);
+  return (
+    mockProperties.find((property) => property.spaceId === spaceId) ??
+    mockProperty
+  );
 }
 
 /** Property 안에서 특정 Scene을 찾는다. 없으면 defaultScene, 그마저 없으면 첫 Scene을 반환. */

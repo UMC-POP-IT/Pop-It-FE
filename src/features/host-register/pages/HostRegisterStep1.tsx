@@ -8,11 +8,21 @@ import {
   TAXPAYER_OPTIONS,
 } from "@/features/host-register/api/mock_register";
 import { useHostRegisterStore } from "@/store/registerStore";
+import { useState } from "react";
+import AddressSearchModal from "@/features/host-register/components/AddressSearchModal";
 
 export const HostRegisterStep1 = () => {
   const navigate = useNavigate();
   const form = useHostRegisterStore((s) => s.form);
   const setValues = useHostRegisterStore((s) => s.setValues);
+  const [isAddrOpen, setIsAddrOpen] = useState(false);
+  const [addrError, setAddrError] = useState(""); // 서울 외 지역 선택 시 에러
+  const isValid =
+    form.taxpayerType !== "" &&
+    form.businessNumber !== "" &&
+    form.storeName.trim() !== "" &&
+    form.businessAddress.trim() !== "";
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
@@ -85,7 +95,11 @@ export const HostRegisterStep1 = () => {
             id="business-number"
             placeholder="000-00-00000"
             value={form.businessNumber}
-            onChange={(e) => setValues({ businessNumber: e.target.value })}
+            onChange={(e) =>
+              setValues({
+                businessNumber: e.target.value.replace(/[^0-9]/g, ""),
+              })
+            }
           />
         </div>
 
@@ -106,7 +120,7 @@ export const HostRegisterStep1 = () => {
           </label>
           <Input
             id="business-name"
-            placeholder="예: OO 갤러리, 카페 등"
+            placeholder="예: (주) 홍따오기 컴퍼니"
             value={form.storeName}
             onChange={(e) => setValues({ storeName: e.target.value })}
           />
@@ -124,19 +138,28 @@ export const HostRegisterStep1 = () => {
             <div className="flex-1">
               <Input
                 id="business-address"
-                placeholder="주소를 검색해주세요"
+                placeholder="주소 찾기로 주소를 입력해주세요"
                 value={form.businessAddress}
-                onChange={(e) => setValues({ businessAddress: e.target.value })}
+                readOnly
+                error={addrError}
               />
             </div>
-            {/*TODO: 주소 검색 API(다음 우편번호 등) 연결 */}
             <Button
               variant="black"
               size="md"
+              onClick={() => {
+                setAddrError("");
+                setIsAddrOpen(true)}}
             >
               주소 찾기
             </Button>
           </div>
+          {/* 안내문 (에러 없을 때만) */}
+          {!addrError && (
+            <span className="text-text-disabled text-xs">
+              현재 서울 지역만 등록 가능합니다
+            </span>
+          )}
           <Input
             placeholder="상세 주소를 입력해주세요"
             aria-label="상세 주소"
@@ -148,17 +171,32 @@ export const HostRegisterStep1 = () => {
         </div>
       </div>
 
-      {/* 다음으로 버튼 (우측 정렬)
-          TODO(2차): 유효성 검사 통과 시 활성화 */}
+      {/* 다음으로 버튼 (우측 정렬) */}
       <div className="flex justify-end">
         <Button
           variant="primary"
           size="md"
+          disabled={!isValid}
           onClick={() => navigate("/host/host-register/step2")}
         >
           다음으로
         </Button>
       </div>
+
+      <AddressSearchModal
+        isOpen={isAddrOpen}
+        onClose={() => setIsAddrOpen(false)}
+        onComplete={({ address, sido }) => {
+          // 서울 외 지역 → 빨간 에러 + 기존 주소값 비우기 (유효성 우회 방지)
+          if (!sido.startsWith("서울")) {
+            setAddrError("서울 외 지역은 선택하실 수 없습니다");
+            setValues({ businessAddress: "" });
+            return;
+          }
+          setAddrError("");
+          setValues({ businessAddress: address });
+        }}
+      />
     </div>
   );
 };

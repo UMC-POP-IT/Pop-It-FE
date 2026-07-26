@@ -7,6 +7,7 @@ import ExploreSpaceMap from "./ExploreSpaceMap";
 import { exploreSpaces } from "@/features/guest-explore/api/mock_spaces";
 import { useWishStore } from "@/store/wishStore";
 import { useSpaceStore } from "@/store/spaceStore";
+import { useWishGuard } from "@/shared/hooks/useWishGuard";
 
 const PAGE_SIZE = 8;
 
@@ -16,8 +17,8 @@ const ExploreSpace = () => {
   const [isMapView, setIsMapView] = useState(false);
 
   const wishedIds = useWishStore((state) => state.wishedIds);
-  const toggleWish = useWishStore((state) => state.toggleWish);
   const spaces = useSpaceStore((state) => state.spaces);
+  const { handleWishToggle } = useWishGuard();
 
   const totalPages = Math.ceil(exploreSpaces.length / PAGE_SIZE);
   const pagedSpaces = exploreSpaces.slice(
@@ -36,7 +37,7 @@ const ExploreSpace = () => {
 
       {isMapView ? (
         <ExploreSpaceMap
-          spaces={pagedSpaces}
+          spaces={exploreSpaces}
           onSelectSpace={(spaceId) => navigate(`/spaces/${spaceId}`)}
           onClose={() => setIsMapView(false)}
         />
@@ -55,7 +56,7 @@ const ExploreSpace = () => {
                   categoryTag={space.category}
                   onClick={() => navigate(`/spaces/${space.id}`)}
                   isWished={wishedIds.includes(space.id)}
-                  onWishToggle={() => toggleWish(space.id)}
+                  onWishToggle={() => handleWishToggle(space.id)}
                 />
               );
             })}

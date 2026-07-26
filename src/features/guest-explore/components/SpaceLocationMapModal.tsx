@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import KakaoMap from "./KakaoMap";
 import KakaoMapOverlay from "./KakaoMapOverlay";
 import MapBackground from "./MapBackground";
@@ -20,12 +21,28 @@ const SpaceLocationMapModal = ({
 }: SpaceLocationMapModalProps) => {
   const { isLoaded, error } = useKakaoLoader();
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const center = { lat: space.latitude, lng: space.longitude };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${space.name} 위치 확인`}
+      className="fixed inset-0 z-50 flex items-center justify-center"
+    >
       <div
         className="absolute inset-0 bg-black/40"
         onClick={onClose}

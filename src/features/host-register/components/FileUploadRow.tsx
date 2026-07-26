@@ -16,7 +16,7 @@ const FileUploadRow = ({ label, placeholder, hint }: FileUploadRowProps) => {
       <div className="flex gap-2">
         {/* 선택된 파일명 표시 영역*/}
         <div
-          className={`border-border flex flex-1 items-center rounded-lg border bg-white px-4 py-2.5 text-sm ${file ? "text-text-primary" : "text-text-disabled"}`}
+          className={`border-border flex flex-1 items-center rounded-lg border bg-tag-bg px-4 py-2.5 text-sm ${file ? "text-text-primary" : "text-text-disabled"}`}
         >
           {file ? file.name : placeholder}
         </div>

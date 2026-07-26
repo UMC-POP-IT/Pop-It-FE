@@ -3,6 +3,7 @@ import Tab from "@/shared/components/Tab";
 import {
   reservations,
   getReservationStatus,
+  cancelReservation,
   type ReservationStatus,
 } from "@/features/guest-explore/api/mock_spaces";
 import { ReservationCard } from "@/features/guest-explore/components/ReservationCard";
@@ -12,9 +13,15 @@ const TAB_STATUSES: ReservationStatus[] = ["예약 예정", "승인 완료", "�
 
 export const MyReservationList = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [reservationList, setReservationList] = useState(() => [...reservations]);
+
+  const handleCancelReservation = async (id: number) => {
+    await cancelReservation(id);
+    setReservationList((prev) => prev.filter((r) => r.id !== id));
+  };
 
   const grouped = TAB_STATUSES.map((status) =>
-    reservations.filter((r) => getReservationStatus(r) === status),
+    reservationList.filter((r) => getReservationStatus(r) === status),
   );
   const activeReservations = grouped[activeIndex];
 
@@ -33,10 +40,11 @@ export const MyReservationList = () => {
         {activeReservations.length === 0 ? (
           <MyReservationListEmptyState />
         ) : (
-          activeReservations.map((reservation, i) => (
+          activeReservations.map((reservation) => (
             <ReservationCard
-              key={`${reservation.space.name}-${reservation.start.year}-${reservation.start.month}-${reservation.start.day}-${i}`}
+              key={reservation.id}
               reservation={reservation}
+              onCancel={() => handleCancelReservation(reservation.id)}
             />
           ))
         )}
