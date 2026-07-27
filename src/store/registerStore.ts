@@ -10,6 +10,8 @@ export interface SpaceRegisterForm {
   district: string;
   address: string;
   detailAddress: string;
+  latitude: number | null; // 위도(카카오 Geocoder 변환값)
+  longitude: number | null; //경도
   // Step2 거래정보
   deposit: string;
   priceDay: string;
@@ -49,6 +51,8 @@ const initialForm: SpaceRegisterForm = {
   district: "",
   address: "",
   detailAddress: "",
+  latitude: null,
+  longitude: null,
   deposit: "",
   priceDay: "",
   startDate: "",
