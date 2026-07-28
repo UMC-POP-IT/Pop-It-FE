@@ -10,14 +10,17 @@ import {
 } from "@/features/host-register/api/mock_register";
 import { useHostRegisterStore } from "@/store/registerStore";
 import { sanitizeNumber } from "@/shared/utils/sanitizeNumber";
+import { useAuthStore } from "@/store/authStore";
 
 export const HostRegisterStep2 = () => {
   const navigate = useNavigate();
   const form = useHostRegisterStore((s) => s.form);
   const setValues = useHostRegisterStore((s) => s.setValues);
+  const setHostRegistered = useAuthStore((s) => s.setHostRegistered);
   //최종 제출 (Mock: 콘솔 출력, 실제 POST /hosts는 2차)
   const handleSubmit = () => {
     if (import.meta.env.DEV) console.log("호스트 등록 제출 데이터", form);
+    setHostRegistered(true); //등록완료-> 이후 호스트 모드 진입 허용
     navigate("/host/host-register/complete");
   };
   const isValid =

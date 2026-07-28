@@ -13,7 +13,7 @@ interface AuthState {
   mode: Mode;
   isLoginModalOpen: boolean;
   pendingAction: PendingAction | null;
-  hasSeenHostIntro: boolean; // 호스트 등록 안내 모달을 이미 봤는지 (한 번만 노출)
+  isHostRegistered: boolean; // 호스트 등록 완료 여부 (추후 GET/api/v1/hosts/me 로 채움)
 
   setUser: (user: User | null) => void;
   login: (user: User) => void;
@@ -21,7 +21,7 @@ interface AuthState {
   openLoginModal: (pendingAction?: PendingAction) => void;
   closeLoginModal: () => void;
   clearPendingAction: () => void;
-  setHostIntroSeen: () => void;
+  setHostRegistered: (isHostRegistered: boolean) => void;
   logout: () => void;
 }
 
@@ -30,7 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   mode: "GUEST",
   isLoginModalOpen: false,
   pendingAction: null,
-  hasSeenHostIntro: false,
+  isHostRegistered: false,
 
   setUser: (user) => set({ user }),
   login: (user) => set({ user, isLoginModalOpen: false }),
@@ -39,12 +39,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoginModalOpen: true, pendingAction: pendingAction ?? null }),
   closeLoginModal: () => set({ isLoginModalOpen: false, pendingAction: null }),
   clearPendingAction: () => set({ pendingAction: null }),
-  setHostIntroSeen: () => set({ hasSeenHostIntro: true }),
+  setHostRegistered: (isHostRegistered) => set({ isHostRegistered }),
   logout: () =>
     set({
       user: null,
       mode: "GUEST",
       pendingAction: null,
-      hasSeenHostIntro: false, // 로그아웃 시 초기화 → 다음 사용자에게 다시 안내
+      isHostRegistered: false, // 로그아웃 시 초기화 → 다음 사용자에게 다시 안내
     }),
 }));
