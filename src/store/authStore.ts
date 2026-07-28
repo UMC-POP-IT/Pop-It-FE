@@ -13,7 +13,7 @@ interface AuthState {
   mode: Mode;
   isLoginModalOpen: boolean;
   pendingAction: PendingAction | null;
-  isHostRegistered: boolean; // 호스트 등록 완료 여부 (추후 GET/api/v1/hosts/me 로 채움)
+  isHostRegistered: boolean; // 호스트 등록 완료 여부 (추후 GET /api/v1/hosts/me 로 채움)
 
   setUser: (user: User | null) => void;
   login: (user: User) => void;
