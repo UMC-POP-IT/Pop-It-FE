@@ -53,6 +53,7 @@ export async function handleOAuthCallback(code: string): Promise<User> {
 
   const { accessToken, refreshToken } = await exchangeTokens(code, verifier);
 
+  // TODO: XSS 보안 강화를 위해 백엔드와 협의 후 HttpOnly 쿠키 방식으로 전환 필요
   localStorage.setItem("access_token", accessToken);
   localStorage.setItem("refresh_token", refreshToken);
   sessionStorage.removeItem("oauth_verifier");
