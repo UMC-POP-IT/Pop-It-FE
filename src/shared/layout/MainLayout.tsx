@@ -48,6 +48,8 @@ const OAuthCallbackHandler = () => {
     const error = params.get("error");
     if (error) {
       console.error("OAuth error:", error, params.get("error_description"));
+      sessionStorage.removeItem("oauth_pending_action");
+      sessionStorage.removeItem("oauth_verifier");
       window.history.replaceState(null, "", window.location.pathname);
       navigate("/", { replace: true });
       return;
@@ -76,6 +78,8 @@ const OAuthCallbackHandler = () => {
       })
       .catch((err) => {
         console.error("OAuth token exchange failed:", err);
+        sessionStorage.removeItem("oauth_pending_action");
+        sessionStorage.removeItem("oauth_verifier");
         navigate("/", { replace: true });
       });
   }, [login]); // eslint-disable-line react-hooks/exhaustive-deps

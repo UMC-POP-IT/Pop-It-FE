@@ -6,6 +6,8 @@ import { startLogin } from "@/shared/utils/oauth";
 const savePendingAndLogin = (provider: "kakao" | "google", pendingAction: unknown) => {
   if (pendingAction) {
     sessionStorage.setItem("oauth_pending_action", JSON.stringify(pendingAction));
+  } else {
+    sessionStorage.removeItem("oauth_pending_action");
   }
   startLogin(provider);
 };
