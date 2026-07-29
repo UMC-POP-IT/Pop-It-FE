@@ -1,4 +1,4 @@
-import type { Space } from "@/types";
+import type { Space } from "@/features/guest-explore/api/spaces_api";
 import Badge from "@/shared/components/Badge";
 
 interface SpaceCardProps {
@@ -11,6 +11,9 @@ interface SpaceCardProps {
   /** AI 추천 이유 뱃지 (ex. 최근 본 공간보다 15% 저렴해요) */
   matchReason?: string;
 }
+
+const WISHCOUNT = 50;
+const KEYWORDS = ["키워드", "키워드"]
 
 const SpaceCard = ({
   space,
@@ -29,10 +32,10 @@ const SpaceCard = ({
   >
     {/* 이미지 */}
     <div className="bg-bg relative aspect-[4/3]">
-      {space.imageUrls[0] ? (
+      {space.thumbnailUrl ? (
         <img
-          src={space.imageUrls[0]}
-          alt={space.name}
+          src={space.thumbnailUrl}
+          alt={space.buildingName}
           className="h-full w-full object-cover"
         />
       ) : (
@@ -68,33 +71,33 @@ const SpaceCard = ({
               label={matchReason}
             />
             <span className="text-text-secondary flex shrink-0 items-center gap-0.5 text-xs">
-              ♡ {space.heartCount}
+              ♡ {WISHCOUNT}
             </span>
           </div>
           <span className="text-text-primary truncate text-sm font-semibold">
-            {space.name}
+            {space.buildingName}
           </span>
         </>
       ) : (
         <div className="flex items-center justify-between gap-2">
           <span className="text-text-primary truncate text-sm font-semibold">
-            {space.name}
+            {space.buildingName}
           </span>
           <span className="text-text-secondary flex shrink-0 items-center gap-0.5 text-xs">
-            ♡ {space.heartCount}
+            ♡ {WISHCOUNT}
           </span>
         </div>
       )}
       <span className="text-text-secondary truncate text-xs">
-        {space.address}
+        {space.roadAddress}
       </span>
       <span className="text-text-primary text-sm font-bold">
-        {space.cost.day.toLocaleString()}원{" "}
+        {Number(space.pricePerDay).toLocaleString()}원{" "}
         <span className="text-text-secondary text-xs font-normal">/일</span>
       </span>
-      {space.keywords.length > 0 && (
+      {KEYWORDS.length > 0 && (
         <div className="flex gap-1 pt-0.5">
-          {space.keywords.slice(0, 2).map((keyword, i) => (
+          {KEYWORDS.slice(0, 2).map((keyword, i) => (
             <span
               key={`${keyword}-${i}`}
               className="bg-tag-bg text-text-tag rounded-full px-2 py-0.5 text-xs"
