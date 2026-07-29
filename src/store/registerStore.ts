@@ -22,9 +22,7 @@ export interface SpaceRegisterForm {
   floorType: string;
   floor: string;
   hasParking: boolean | null;
-  heatingList: string[];
-  securityList: string[];
-  etcList: string[];
+  facilityIds: number[];
   // Step4 상세정보
   buildingName: string; // 공간명
   description: string;
@@ -59,9 +57,7 @@ const initialForm: SpaceRegisterForm = {
   floorType: "",
   floor: "",
   hasParking: null,
-  heatingList: [],
-  securityList: [],
-  etcList: [],
+  facilityIds: [],
   buildingName: "",
   description: "",
   photoList: [],

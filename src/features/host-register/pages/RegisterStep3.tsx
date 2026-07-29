@@ -9,22 +9,50 @@ import {
   USAGE_OPTIONS,
   STRUCTURE_OPTIONS,
   FLOOR_TYPE_OPTIONS,
-  HEATING_OPTIONS,
-  SECURITY_OPTIONS,
-  ETC_OPTIONS,
 } from "@/features/host-register/api/mock_register";
 import { NO_SPINNER, blockNonNumeric } from "@/shared/utils/numberInput";
+import { useEffect, useState } from "react";
+import { getFacilities } from "@/features/host-register/api/facility_api";
+import type {
+  FacilityCategory,
+  FacilityCategoryGroup,
+  FacilityItem,
+} from "@/features/host-register/api/facility_api";
+
+// 서버 카테고리 → 화면 라벨 (서버는 영어 enum, 화면은 한글)
+const FACILITY_CATEGORY_LABEL: Record<FacilityCategory, string> = {
+  HEATING_COOLING: "냉난방",
+  SECURITY: "보안",
+  ETC: "기타",
+};
 
 export const RegisterStep3 = () => {
   const isEdit = useRegisterStore((s) => s.isEdit);
   const navigate = useNavigate();
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
+  // 시설 목록 (서버에서 받아옴)
+  const [facilityGroups, setFacilityGroups] = useState<FacilityCategoryGroup[]>(
+    [],
+  );
+
+  useEffect(() => {
+    getFacilities()
+      .then((data) => setFacilityGroups(data.facilities))
+      .catch((err) => console.error("시설 목록 조회 실패", err));
+  }, []);
+
+  // 시설 선택 토글 — 이미 있으면 빼고, 없으면 넣는다
+  const toggleFacility = (facilityId: number) =>
+    setValues({
+      facilityIds: form.facilityIds.includes(facilityId)
+        ? form.facilityIds.filter((id) => id !== facilityId)
+        : [...form.facilityIds, facilityId],
+    });
 
   //반지층, 옥탑은 '몇 층' 숫자가 없어 층수 입력칸을 숨긴다
-  const needsFloorNumber=
-    form.floorType !== "반지층" && form.floorType !=="옥탑";
-
+  const needsFloorNumber =
+    form.floorType !== "반지층" && form.floorType !== "옥탑";
 
   const isValid =
     form.usage !== "" &&
@@ -120,30 +148,29 @@ export const RegisterStep3 = () => {
             const hidesFloor = floorType === "반지층" || floorType === "옥탑";
             setValues({
               floorType,
-              floor: hidesFloor ? "": form.floor,
-            })
+              floor: hidesFloor ? "" : form.floor,
+            });
           }}
         />
 
         {needsFloorNumber && (
           <div className="relative">
-          <Input
-            type="number"
-            aria-label="층수"
-            placeholder="층수 입력"
-            value={form.floor}
-            onChange={(e) =>
-              setValues({ floor: e.target.value.replace(/[^0-9]/g, "") })
-            }
-            onKeyDown={blockNonNumeric}
-            className={NO_SPINNER}
-          />
-          <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
-            층
-          </span>
-        </div>
+            <Input
+              type="number"
+              aria-label="층수"
+              placeholder="층수 입력"
+              value={form.floor}
+              onChange={(e) =>
+                setValues({ floor: e.target.value.replace(/[^0-9]/g, "") })
+              }
+              onKeyDown={blockNonNumeric}
+              className={NO_SPINNER}
+            />
+            <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
+              층
+            </span>
+          </div>
         )}
-        
 
         {/* 주차 — 주차 가능 / 주차 불가능 (택1)*/}
         <ChipGroup
@@ -165,30 +192,15 @@ export const RegisterStep3 = () => {
         <span className="text-text-primary text-[22px] font-bold">
           시설 정보
         </span>
-        <ChipGroup
-          label="냉난방"
-          options={HEATING_OPTIONS}
-          selected={form.heatingList}
-          onChange={(next) => setValues({ heatingList: next })}
-          multiple
-          labelVariant="secondary"
-        />
-        <ChipGroup
-          label="보안"
-          options={SECURITY_OPTIONS}
-          selected={form.securityList}
-          onChange={(next) => setValues({ securityList: next })}
-          multiple
-          labelVariant="secondary"
-        />
-        <ChipGroup
-          label="기타"
-          options={ETC_OPTIONS}
-          selected={form.etcList}
-          onChange={(next) => setValues({ etcList: next })}
-          multiple
-          labelVariant="secondary"
-        />
+        {facilityGroups.map((group) => (
+          <FacilityChipGroup
+            key={group.category}
+            label={FACILITY_CATEGORY_LABEL[group.category]}
+            items={group.items}
+            selectedIds={form.facilityIds}
+            onToggle={toggleFacility}
+          />
+        ))}
       </div>
 
       {/* 이전 / 다음으로 (다음으로는 초기 비활성) */}
@@ -263,3 +275,30 @@ const ChipGroup = ({
     </div>
   );
 };
+
+// 시설 칩 그룹 — 화면엔 이름을, 값으론 facilityId를 다룬다
+const FacilityChipGroup = ({
+  label,
+  items,
+  selectedIds,
+  onToggle,
+}: {
+  label: string;
+  items: FacilityItem[];
+  selectedIds: number[];
+  onToggle: (facilityId: number) => void;
+}) => (
+  <div className="flex flex-col gap-2">
+    <span className="text-text-tertiary text-xl font-bold">{label}</span>
+    <div className="flex flex-wrap gap-2">
+      {items.map((item) => (
+        <Chip
+          key={item.facilityId}
+          label={item.name}
+          selected={selectedIds.includes(item.facilityId)}
+          onClick={() => onToggle(item.facilityId)}
+        />
+      ))}
+    </div>
+  </div>
+);
