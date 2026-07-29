@@ -1,6 +1,7 @@
 import { useAuthStore } from "@/store/authStore";
 import Logo from "@/shared/components/Logo";
 import Button from "@/shared/components/Button";
+import { startLogin } from "@/shared/utils/oauth";
 
 const DEV_USER = {
   id: 1,
@@ -41,14 +42,14 @@ export const LoginModal = () => {
             </div>
 
             <div className="flex w-full flex-col gap-3">
-              <Button variant="kakao" size="lg" className="h-auto! gap-3 px-[40px]! py-[16px]! text-xl! font-bold!">
+              <Button variant="kakao" size="lg" className="h-auto! gap-3 px-[40px]! py-[16px]! text-xl! font-bold!" onClick={() => startLogin("kakao")}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M12 3C6.48 3 2 6.58 2 11c0 2.79 1.84 5.25 4.6 6.68-.2.75-.73 2.7-.83 3.12-.13.52.19.51.4.37.17-.11 2.66-1.8 3.74-2.53.68.1 1.38.15 2.09.15 5.52 0 10-3.58 10-8s-4.48-8-10-8z" />
                 </svg>
                 카카오 로그인/회원가입
               </Button>
               <div className="flex items-center gap-3">
-                <Button variant="google" size="lg" className="h-auto! flex-1 gap-3 px-[40px]! py-[16px]! text-xl! font-bold! text-google-text!">
+                <Button variant="google" size="lg" className="h-auto! flex-1 gap-3 px-[40px]! py-[16px]! text-xl! font-bold! text-google-text!" onClick={() => startLogin("google")}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />

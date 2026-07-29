@@ -5,6 +5,7 @@ import Footer from "./Footer";
 import { LoginModal } from "@/shared/components/LoginModal";
 import { useAuthStore } from "@/store/authStore";
 import { useWishStore } from "@/store/wishStore";
+import { handleOAuthCallback } from "@/shared/utils/oauth";
 
 const PendingActionExecutor = () => {
   const user = useAuthStore((s) => s.user);
@@ -35,6 +36,32 @@ const PendingActionExecutor = () => {
   return null;
 };
 
+const OAuthCallbackHandler = () => {
+  const login = useAuthStore((s) => s.login);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (!code) return;
+
+    // URL에서 code 제거 (히스토리 오염 방지)
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState(null, "", cleanUrl);
+
+    handleOAuthCallback(code)
+      .then((user) => {
+        login(user);
+        navigate("/", { replace: true });
+      })
+      .catch((err) => {
+        console.error("OAuth token exchange failed:", err);
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return null;
+};
+
 const RouteModeSync = () => {
   const { pathname } = useLocation();
   const setMode = useAuthStore((s) => s.setMode);
@@ -57,5 +84,6 @@ export const MainLayout = () => (
     <LoginModal />
     <PendingActionExecutor />
     <RouteModeSync />
+    <OAuthCallbackHandler />
   </div>
 );
