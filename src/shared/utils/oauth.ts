@@ -27,15 +27,34 @@ export async function startLogin(provider: "kakao" | "google"): Promise<void> {
   window.location.href = `${BASE_URL}/api/v1/auth/oauth/${provider}?challenge=${challenge}`;
 }
 
+/*
+ * POST /api/v1/auth/exchange
+ * Request:  { code: string, verifier: string }
+ * Response: { isSuccess: boolean, code: string, message: string,
+ *             result: { accessToken: string, refreshToken: string } }
+ *
+ * 토큰 저장 전략:
+ *   - accessToken / refreshToken → 현재 localStorage 임시 저장
+ *   - TODO: XSS 보안 강화를 위해 백엔드와 협의 후 HttpOnly 쿠키 방식으로 전환 필요
+ *   - refreshToken 갱신: 추후 401 응답 인터셉터에서 POST /api/v1/auth/reissue 호출 예정
+ */
 async function exchangeTokens(code: string, verifier: string): Promise<{ accessToken: string; refreshToken: string }> {
-  const res = await fetch(`${BASE_URL}/api/v1/auth/exchange`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code, verifier }),
-  });
-  if (!res.ok) throw new Error(`Token exchange failed: ${res.status}`);
-  const json = await res.json();
-  return json.result ?? json;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/auth/exchange`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, verifier }),
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`Token exchange failed: ${res.status}`);
+    const json = await res.json();
+    return json.result ?? json;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function fetchMe(accessToken: string): Promise<User> {
