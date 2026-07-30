@@ -27,8 +27,6 @@ const HostPaymentModal = ({
   if (!isOpen) return null;
 
   const { startDate, endDate, totalPrice } = reservation;
-  const deposit = Math.round(totalPrice * 0.2);
-  const insurance = Math.round(totalPrice * 0.05);
   const platformFee = Math.round(totalPrice * 0.1);
   const netAmount = totalPrice - platformFee;
   const days = getDurationDays(startDate, endDate);
@@ -56,14 +54,6 @@ const HostPaymentModal = ({
           <div className="flex justify-between">
             <span className="text-text-secondary">임대료</span>
             <span className="text-text-primary font-medium">{totalPrice.toLocaleString()}원</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-text-secondary">보증금 (에스크로)</span>
-            <span className="text-text-primary font-medium">{deposit.toLocaleString()}원</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-text-secondary">보험료</span>
-            <span className="text-text-primary font-medium">{insurance.toLocaleString()}원</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">플랫폼 수수료 10%</span>

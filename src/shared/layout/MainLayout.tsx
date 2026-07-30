@@ -5,6 +5,7 @@ import Footer from "./Footer";
 import { LoginModal } from "@/shared/components/LoginModal";
 import { useAuthStore } from "@/store/authStore";
 import { useWishStore } from "@/store/wishStore";
+import { handleOAuthCallback } from "@/shared/utils/oauth";
 
 const PendingActionExecutor = () => {
   const user = useAuthStore((s) => s.user);
@@ -35,6 +36,57 @@ const PendingActionExecutor = () => {
   return null;
 };
 
+const OAuthCallbackHandler = () => {
+  const login = useAuthStore((s) => s.login);
+  const setPendingAction = useAuthStore((s) => s.setPendingAction);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    // 카카오/구글에서 에러 파라미터로 돌아온 경우
+    const error = params.get("error");
+    if (error) {
+      console.error("OAuth error:", error, params.get("error_description"));
+      sessionStorage.removeItem("oauth_pending_action");
+      sessionStorage.removeItem("oauth_verifier");
+      window.history.replaceState(null, "", window.location.pathname);
+      navigate("/", { replace: true });
+      return;
+    }
+
+    const code = params.get("code");
+    if (!code) return;
+
+    // URL에서 code 제거 (히스토리 오염 방지 및 새로고침 중복 실행 방지)
+    window.history.replaceState(null, "", window.location.pathname);
+
+    handleOAuthCallback(code)
+      .then(({ user, accessToken, refreshToken }) => {
+        // 리다이렉트 전에 저장했던 pendingAction 복원
+        const saved = sessionStorage.getItem("oauth_pending_action");
+        if (saved) {
+          try {
+            setPendingAction(JSON.parse(saved));
+          } catch {
+            // 파싱 실패 시 무시
+          }
+          sessionStorage.removeItem("oauth_pending_action");
+        }
+        login(user, accessToken, refreshToken);
+        navigate("/", { replace: true });
+      })
+      .catch((err) => {
+        console.error("OAuth token exchange failed:", err);
+        sessionStorage.removeItem("oauth_pending_action");
+        sessionStorage.removeItem("oauth_verifier");
+        navigate("/", { replace: true });
+      });
+  }, [login]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return null;
+};
+
 const RouteModeSync = () => {
   const { pathname } = useLocation();
   const setMode = useAuthStore((s) => s.setMode);
@@ -57,5 +109,6 @@ export const MainLayout = () => (
     <LoginModal />
     <PendingActionExecutor />
     <RouteModeSync />
+    <OAuthCallbackHandler />
   </div>
 );

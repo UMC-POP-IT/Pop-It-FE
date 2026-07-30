@@ -24,6 +24,7 @@ interface AuthState {
   openLoginModal: (pendingAction?: PendingAction) => void;
   closeLoginModal: () => void;
   clearPendingAction: () => void;
+  setPendingAction: (action: PendingAction) => void;
   setHostIntroSeen: () => void;
   logout: () => void;
 }
@@ -46,6 +47,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoginModalOpen: true, pendingAction: pendingAction ?? null }),
   closeLoginModal: () => set({ isLoginModalOpen: false, pendingAction: null }),
   clearPendingAction: () => set({ pendingAction: null }),
+  setPendingAction: (action) => set({ pendingAction: action }),
   setHostIntroSeen: () => set({ hasSeenHostIntro: true }),
   logout: () =>
     set({
