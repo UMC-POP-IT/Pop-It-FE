@@ -1,5 +1,5 @@
 import Button from "@/shared/components/Button";
-import type { Reservation } from "@/features/guest-explore/api/mock_spaces";
+import type { Reservation } from "@/features/guest-explore/api/my_reservation_api";
 import { formatDate } from "@/shared/utils/date";
 import shieldCheckIcon from "@/features/guest-explore/icons/shield-check.svg";
 import { getDuration } from "@/features/guest-explore/components/ReservationCard";
@@ -32,12 +32,12 @@ const PaymentModal = ({
         <div className="flex flex-col gap-2 text-sm">
           <div className="flex justify-between">
             <span className="text-text-secondary">공간</span>
-            <span className="text-text-primary font-medium">{reservation.space.name}</span>
+            <span className="text-text-primary font-medium">{reservation.space.buildingName}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">기간</span>
             <span className="text-text-primary font-medium">
-              {formatDate(reservation.start)} ~ {formatDate(reservation.end)} ({getDuration(reservation.start, reservation.end).days}일)
+              {formatDate(reservation.startDate)} ~ {formatDate(reservation.endDate)} ({getDuration(reservation.startDate, reservation.endDate).days}일)
             </span>
           </div>
         </div>
@@ -45,7 +45,7 @@ const PaymentModal = ({
         <div className="border-border flex flex-col gap-2 border-t pt-4 text-sm">
           <div className="flex justify-between">
             <span className="text-text-secondary">임대료</span>
-            <span className="text-text-primary font-medium">{reservation.total_cost.toLocaleString()}원</span>
+            <span className="text-text-primary font-medium">{reservation.totalPrice.toLocaleString()}원</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">보증금(에스크로)</span>
@@ -61,7 +61,7 @@ const PaymentModal = ({
 
         <div className="border-border flex items-center justify-between border-t pt-4 font-bold">
           <span className="text-text-primary text-base">총 결제 금액</span>
-          <span className="text-lg">{reservation.total_cost.toLocaleString()}원</span>
+          <span className="text-lg">{reservation.totalPrice.toLocaleString()}원</span>
         </div>
 
         <div className="bg-secure-payment-bg flex gap-2 rounded-lg p-3">

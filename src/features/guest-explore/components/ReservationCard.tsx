@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Badge from "@/shared/components/Badge";
 import Button from "@/shared/components/Button";
 import Modal from "@/shared/components/Modal";
-import type { DateInfo, Reservation } from "@/features/guest-explore/api/mock_spaces";
+import { GetCheckOutApproval, Reservation } from "../api/my_reservation_api";
 import PaymentModal from "@/features/guest-explore/components/contract/PaymentModal";
 import ContractModal from "@/features/guest-explore/components/contract/ContractModal";
 import PhotoVerificationModal from "@/features/guest-explore/components/PhotoVerificationModal";
@@ -20,37 +20,69 @@ interface CardMeta {
   showContract: boolean;
   needsPhotoVerification: boolean;
   isPhotoRejected: boolean;
+  isDone: boolean;
 }
 
 // 현재 사용 중인지 체크
-const toDate = (d: DateInfo) => new Date(d.year, d.month - 1, d.day);
+// dateStr: "YYYY-MM-DD"
+const toDate = (dateStr: string) => {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
 
-export const isUsing = (start: DateInfo, end: DateInfo): boolean => {
+export const isUsing = (start: string, end: string): boolean => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return today >= toDate(start) && today <= toDate(end);
 };
 
 // 시작일 ~ 종료일 기간(박/일) 계산
-export const getDuration = (start: DateInfo, end: DateInfo) => {
+export const getDuration = (start: string, end: string) => {
   const nights = Math.round((toDate(end).getTime() - toDate(start).getTime()) / (1000 * 60 * 60 * 24));
   return { nights, days: nights + 1 };
 };
 
 const getCardMeta = (r: Reservation): CardMeta => {
-  if (r.isDone) {
+
+  if (r.status === "USAGE_COMPLETED" || r.status === "CHECKOUT_COMPLETED") {
+      return {
+        label: r.isPhotoVerified ? "퇴실 완료" : "이용 완료",
+        showCancel: false,
+        showContract: false,
+        needsPhotoVerification: !r.isPhotoVerified,
+        isPhotoRejected: r.status === "USAGE_COMPLETED",
+        isDone: true
+      };
+  }
+
+  if (r.status === "CONTRACT_COMPLETED" || r.status === "IN_USE")
     return {
-      label: r.isPhotoVerified ? "퇴실 완료" : "이용 완료",
+      label: isUsing(r.startDate, r.endDate) ? "사용 중" : "계약 완료",
       showCancel: false,
       showContract: false,
-      needsPhotoVerification: !r.isPhotoVerified,
-      isPhotoRejected: !r.isPhotoVerified && !!r.isPhotoRejected,
+      needsPhotoVerification: false,
+      isPhotoRejected: false,
+      isDone: false
     };
-  }
-  if (r.isApproved && r.isContracted)
-    return { label: isUsing(r.start, r.end) ? "사용 중" : "계약 완료", showCancel: false, showContract: false, needsPhotoVerification: false, isPhotoRejected: false };
-  if (r.isApproved) return { label: "승인 완료", showCancel: true, showContract: true, needsPhotoVerification: false, isPhotoRejected: false };
-  return { label: "승인 대기", showCancel: true, showContract: false, needsPhotoVerification: false, isPhotoRejected: false };
+
+  if (r.status === "APPROVED")
+    return {
+      label: "승인 완료",
+      showCancel: true,
+      showContract: true,
+      needsPhotoVerification: false,
+      isPhotoRejected: false,
+      isDone: false
+    };
+
+  return {
+    label: "승인 대기",
+    showCancel: true,
+    showContract: false,
+    needsPhotoVerification: false,
+    isPhotoRejected: false,
+    isDone: false
+  };
 };
 
 export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps) => {
@@ -67,9 +99,14 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   const label = isPhotoVerifiedDone ? "퇴실 완료" : cardMeta.label;
   const needsPhotoVerification = cardMeta.needsPhotoVerification && !isPhotoVerifiedDone;
   const isPhotoRejected = cardMeta.isPhotoRejected && !isPhotoVerifiedDone;
-  const { showCancel, showContract } = cardMeta;
+  const { showCancel, showContract, isDone } = cardMeta;
 
   const navigate = useNavigate();
+
+  // useEffect(() => {
+  //   GetCheckOutApproval(reservation.reservationId)
+  //     .then((data) => {})
+  // }, [])
 
   const handleCancelReservation = async () => {
     if (isCancelling) return;
@@ -102,22 +139,22 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   return (
     <div className="border-border flex flex-col gap-4 border-b py-4 last:border-none sm:flex-row">
       <img
-        src={reservation.space.imageUrls[0]}
-        alt={reservation.space.name}
+        src={reservation.space.thumbnailUrl}
+        alt={reservation.space.buildingName}
         className="flex items-center justify-center bg-tag-bg h-40 w-full flex-none sm:h-45 sm:w-45"
       />
 
       {/* Button */}
       <div className="flex flex-1 flex-col gap-1.5">
         <Badge variant="pending" label={label} />
-        <span className="ml-2 text-text-primary text-base font-bold">{reservation.space.name}</span>
+        <span className="ml-2 text-text-primary text-base font-bold">{reservation.space.buildingName}</span>
         <span className="ml-2 text-text-secondary text-sm">
-          {formatDate(reservation.start)} ~ {formatDate(reservation.end)}
+          {formatDate(reservation.startDate)} ~ {formatDate(reservation.endDate)}
         </span>
 
         <div className="ml-2 mt-auto flex flex-col gap-1 pt-2">
           {needsPhotoVerification && (
-            (reservation.isPhotoRejected ? 
+            (isPhotoRejected ?
               <span className="self-end text-red-400 text-sm mr-44 whitespace-pre-wrap">{"호스트가 퇴실 승인을\n거절했습니다 다시 인증해주세요"}</span> :
               <span className="self-end text-primary text-sm mr-14">사진 인증이 필요합니다 (필수)</span>
             )
@@ -126,11 +163,11 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
             <span className="text-text-secondary text-sm">
               총 금액:{" "}
               <span className="text-text-primary text-base font-bold">
-                {reservation.total_cost.toLocaleString()}원
+                {reservation.totalPrice.toLocaleString()}원
               </span>
             </span>
             <div className="flex gap-2">
-              {reservation.isDone &&
+              {isDone &&
                 (needsPhotoVerification ? (
                   <>
                     <Button variant="primary" size="sm" onClick={() => setIsPhotoModalOpen(true)}>
@@ -147,7 +184,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
                     인증 완료
                   </Button>
                 ))}
-              <Button className="border-none! bg-gray-200! text-black!" variant="outline" size="sm" onClick={() => navigate(`/spaces/${reservation.space.id}`)}>
+              <Button className="border-none! bg-gray-200! text-black!" variant="outline" size="sm" onClick={() => navigate(`/spaces/${reservation.space.spaceId}`)}>
                 공간 상세
               </Button>
               {showCancel && (
@@ -168,7 +205,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
       {/* Reservation Cancel Modal */}
       <Modal
         isOpen={isCancelModalOpen}
-        title={`${reservation.space.name}\n예약을 취소하시겠습니까?`}
+        title={`${reservation.space.buildingName}\n예약을 취소하시겠습니까?`}
         description={'현재 승인 대기 상태로, 취소 시\n별도의 수수료가 발생하지 않습니다'}
         confirmLabel={isCancelling ? "취소 중..." : "예약 취소"}
         cancelLabel="돌아가기"

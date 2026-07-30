@@ -1,4 +1,4 @@
-import type { Reservation } from "@/features/guest-explore/api/mock_spaces";
+import type { Reservation } from "@/features/guest-explore/api/my_reservation_api";
 import { getDuration } from "@/features/guest-explore/components/ReservationCard";
 import { formatDate } from "@/shared/utils/date";
 import SignatureBoard from "./SignatureBoard";
@@ -32,7 +32,7 @@ const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractMod
           <div className="flex flex-col gap-2 text-sm">
             <div className="flex justify-between">
               <span className="text-text-secondary">공간</span>
-              <span className="text-text-primary font-medium">{reservation.space.name}</span>
+              <span className="text-text-primary font-medium">{reservation.space.buildingName}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-text-secondary">주소</span>
@@ -41,7 +41,7 @@ const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractMod
             <div className="flex justify-between">
               <span className="text-text-secondary">기간</span>
               <span className="text-text-primary font-medium">
-                {formatDate(reservation.start)} ~ {formatDate(reservation.end)} ({getDuration(reservation.start, reservation.end).days}일)
+                {formatDate(reservation.startDate)} ~ {formatDate(reservation.endDate)} ({getDuration(reservation.startDate, reservation.endDate).days}일)
               </span>
             </div>
           </div>
@@ -49,15 +49,15 @@ const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractMod
           <div className="border-border flex flex-col gap-2 border-t pt-4 text-sm">
             <div className="flex justify-between">
               <span className="text-text-secondary">임대료</span>
-              <span className="text-text-primary font-medium">{reservation.total_cost.toLocaleString()}원</span>
+              <span className="text-text-primary font-medium">{reservation.totalPrice.toLocaleString()}원</span>
             </div>
             <div className="flex justify-between">
               <span className="text-text-secondary">보증금(에스크로)</span>
-              <span className="text-text-primary font-medium">{Math.round(reservation.total_cost * 0.2).toLocaleString()}원</span>
+              <span className="text-text-primary font-medium">{Math.round(reservation.totalPrice * 0.2).toLocaleString()}원</span>
             </div>
             <div className="flex justify-between">
               <span className="text-text-secondary">단기 공간 보험료 5% 적용</span>
-              <span className="text-text-primary font-medium">{Math.round(reservation.total_cost * 0.05).toLocaleString()}원</span>
+              <span className="text-text-primary font-medium">{Math.round(reservation.totalPrice * 0.05).toLocaleString()}원</span>
             </div>
           </div>
 
@@ -111,9 +111,9 @@ const ContractModal = ({ isOpen, reservation, onClose, onComplete }: ContractMod
               취소
             </button>
             <TossPayments
-              amount={reservation.total_cost}
+              amount={reservation.totalPrice}
               orderId={"pop_it_1"}
-              orderName={reservation.space.name}
+              orderName={reservation.space.buildingName}
               customerEmail="popit@gmail.com"
               customerMobilePhone="01012341234"
               customerName="popit"

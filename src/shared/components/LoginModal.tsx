@@ -61,7 +61,9 @@ export const LoginModal = () => {
                   /* Vercel에서는 npm run build를 실행하기 때문에, 즉 DEV 모드가 아닌 상황이므로 임시로그인이 사라지게 됨. 
                      현재 상황은 개발/배포 둘 다 확인이 가능해야하는 상황이므로 임시로 주석처리 함. 로그인 기능이 구현 완료되면 반드시 수정할 것!*/} 
                   <button
-                    onClick={() => login(DEV_USER)}
+                    onClick={() =>
+                      login(DEV_USER, import.meta.env.VITE_DEV_ACCESS_TOKEN, import.meta.env.VITE_DEV_REFRESH_TOKEN)
+                    }
                     className="shrink-0 text-xs text-[#b0b0b0] underline underline-offset-2 hover:text-[#888]"
                   >
                     임시로그인
