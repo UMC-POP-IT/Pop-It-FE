@@ -18,6 +18,7 @@ export const MySpacePage = () => {
   const navigate = useNavigate();
   const [spaces, setSpaces] = useState<ApiMySpace[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [editTargetId, setEditTargetId] = useState<number | null>(null);
@@ -27,10 +28,11 @@ export const MySpacePage = () => {
   const loadSpaces = useCallback(async () => {
     try {
       setIsLoading(true);
+      setIsError(false);
       const result = await fetchMySpaces({ size: 50 });
       setSpaces(result.spaces ?? []);
     } catch {
-      setSpaces([]);
+      setIsError(true);
     } finally {
       setIsLoading(false);
     }
@@ -42,10 +44,10 @@ export const MySpacePage = () => {
 
   // 등록된 공간이 없으면 호스트 등록 온보딩부터 시작
   useEffect(() => {
-    if (!isLoading && spaces.length === 0) {
+    if (!isLoading && !isError && spaces.length === 0) {
       navigate("/host/host-register", { replace: true });
     }
-  }, [isLoading, spaces.length, navigate]);
+  }, [isLoading, isError, spaces.length, navigate]);
 
   // 메뉴 외부 클릭 시 닫기
   useEffect(() => {

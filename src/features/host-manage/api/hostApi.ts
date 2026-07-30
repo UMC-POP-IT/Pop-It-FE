@@ -1,5 +1,5 @@
 import { apiFetch } from "@/shared/utils/apiClient";
-import type { ApiHostReservation, ApiMySpace } from "@/types";
+import type { ApiHostReservation, ApiMySpace, ReservationStatus } from "@/types";
 
 interface HostReservationsResult {
   reservations: ApiHostReservation[];
@@ -16,7 +16,7 @@ interface MySpacesResult {
 
 interface ReservationActionResult {
   reservationId: number;
-  status: string;
+  status: ReservationStatus;
 }
 
 interface CheckoutPhotosResult {

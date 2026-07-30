@@ -95,14 +95,13 @@ export const HostReservationPage = () => {
   const handleContractComplete = async () => {
     if (approveTargetId === null) return;
     try {
-      await approveReservation(approveTargetId);
+      const result = await approveReservation(approveTargetId);
       setReservations((prev) =>
         prev.map((r) =>
-          r.reservationId === approveTargetId ? { ...r, status: "APPROVED" as ReservationStatus } : r,
+          r.reservationId === approveTargetId ? { ...r, status: result.status } : r,
         ),
       );
     } catch {
-      // 실패 시 서버 상태 다시 로드
       await loadReservations();
     }
     setIsContractModalOpen(false);

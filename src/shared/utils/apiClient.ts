@@ -18,9 +18,9 @@ function buildHeaders(options: RequestInit): HeadersInit {
 
 async function parseResponse<T>(res: Response): Promise<T> {
   if (res.status === 204) return undefined as T;
-  const contentLength = res.headers.get("content-length");
-  if (contentLength === "0") return undefined as T;
-  const json = await res.json();
+  const text = await res.text();
+  if (!text) return undefined as T;
+  const json = JSON.parse(text);
   return json.result ?? json;
 }
 
