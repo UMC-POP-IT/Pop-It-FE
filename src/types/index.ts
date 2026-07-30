@@ -38,3 +38,62 @@ export interface Reservation {
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "IN_USE" | "COMPLETED";
   totalPrice: number;
 }
+
+// ─── Host API types ───────────────────────────────────────────────
+
+export type ReservationStatus =
+  | "PENDING_APPROVAL"
+  | "APPROVED"
+  | "CONTRACTED"
+  | "IN_USE"
+  | "COMPLETED"
+  | "CANCELLED";
+
+export interface HostReservationSpace {
+  spaceId: number;
+  buildingName: string;
+  address: string;
+  thumbnailUrl: string;
+}
+
+export interface HostReservationGuest {
+  userId: number;
+  nickname: string;
+}
+
+export interface ApiHostReservation {
+  reservationId: number;
+  status: ReservationStatus;
+  startDate: string;
+  endDate: string;
+  usagePurpose: string;
+  totalPrice: number;
+  isPhotoVerified: boolean;
+  space: HostReservationSpace;
+  guest: HostReservationGuest;
+}
+
+export interface ApiMySpace {
+  spaceId: number;
+  buildingName: string;
+  thumbnailUrl: string;
+  registeredAt: string;
+}
+
+// ─── Upload API types ─────────────────────────────────────────────
+
+export type UploadType =
+  | "SPACE_IMAGE"
+  | "BUSINESS_LICENSE"
+  | "BANKBOOK"
+  | "SIGNATURE"
+  | "CHECKOUT";
+
+export interface PresignedUploadItem {
+  presignedUrl: string;
+  fileUrl: string;
+}
+
+export interface PresignedUrlResult {
+  uploads: PresignedUploadItem[];
+}

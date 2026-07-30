@@ -1,13 +1,8 @@
-import type {
-  HostReservation,
-  MockGuestInfo,
-  MockHostSpace,
-} from "@/features/host-manage/api/mock_host_data";
+import type { ApiHostReservation, ReservationStatus } from "@/types";
 import iconPerson from "@/assets/icons/icon_person.svg";
+
 interface HostReservationCardProps {
-  reservation: HostReservation;
-  guest: MockGuestInfo;
-  space: MockHostSpace;
+  reservation: ApiHostReservation;
   onDetail?: () => void;
   onApprove?: () => void;
   onReject?: () => void;
@@ -16,8 +11,8 @@ interface HostReservationCardProps {
   onCheckoutReject?: () => void;
 }
 
-const STATUS_LABEL: Record<HostReservation["status"], string> = {
-  PENDING: "승인 대기",
+const STATUS_LABEL: Record<ReservationStatus, string> = {
+  PENDING_APPROVAL: "승인 대기",
   APPROVED: "계약 대기",
   CONTRACTED: "계약 완료",
   IN_USE: "사용 중",
@@ -34,8 +29,6 @@ const formatDate = (dateStr: string) => {
 
 export const HostReservationCard = ({
   reservation,
-  guest,
-  space,
   onDetail,
   onApprove,
   onReject,
@@ -43,8 +36,8 @@ export const HostReservationCard = ({
   onCheckoutApprove,
   onCheckoutReject,
 }: HostReservationCardProps) => {
-  const { status, startDate, endDate, totalPrice } = reservation;
-  const hasCheckoutPhoto = (reservation.checkoutPhotoUrls?.length ?? 0) > 0;
+  const { status, startDate, endDate, totalPrice, usagePurpose, guest, space } = reservation;
+  const hasCheckoutPhoto = reservation.isPhotoVerified;
 
   return (
     <div>
@@ -64,7 +57,7 @@ export const HostReservationCard = ({
             </span>
           </div>
           <p className="text-text-tag line-clamp-1 text-base font-medium">
-            {guest.businessDescription}
+            {usagePurpose}
           </p>
         </div>
       </div>
@@ -74,10 +67,10 @@ export const HostReservationCard = ({
         <div className="flex items-start gap-7">
           {/* 이미지 */}
           <div className="bg-thumbnail-bg h-[190px] w-[190px] flex-shrink-0 overflow-hidden">
-            {space.imageUrls[0] && (
+            {space.thumbnailUrl && (
               <img
-                src={space.imageUrls[0]}
-                alt={space.name}
+                src={space.thumbnailUrl}
+                alt={space.buildingName}
                 className="h-full w-full object-cover"
               />
             )}
@@ -90,7 +83,7 @@ export const HostReservationCard = ({
                 {STATUS_LABEL[status]}
               </span>
               <div className="flex flex-col items-start gap-1">
-                <p className="text-xl font-bold text-black">{space.name}</p>
+                <p className="text-xl font-bold text-black">{space.buildingName}</p>
                 <p className="text-text-primary text-base">
                   {formatDate(startDate)} ~ {formatDate(endDate)}
                 </p>
@@ -106,7 +99,6 @@ export const HostReservationCard = ({
 
         {/* 버튼 */}
         <div className="flex h-[190px] flex-shrink-0 flex-col items-end justify-end gap-2">
-          {/* 사용 완료 · 퇴실 사진 미등록 안내 */}
           {status === "COMPLETED" && !hasCheckoutPhoto && (
             <p className="text-primary text-base font-medium">
               퇴실 사진이 아직 등록되지 않았습니다.
@@ -114,7 +106,7 @@ export const HostReservationCard = ({
           )}
 
           <div className="flex items-center gap-1">
-            {status === "PENDING" && (
+            {status === "PENDING_APPROVAL" && (
               <>
                 <button
                   onClick={onDetail}

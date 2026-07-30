@@ -1,17 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "@/shared/components/Modal";
-import {
-  mockHostSpaces,
-  type MockHostSpace,
-} from "@/features/host-manage/api/mock_host_data";
+import { fetchMySpaces, deleteSpace } from "@/features/host-manage/api/hostApi";
+import type { ApiMySpace } from "@/types";
 import iconPlus from "@/assets/icons/icon_plus.svg";
 import { useRegisterStore } from "@/store/registerStore";
-
-const SPACE_STATUS_LABEL: Record<MockHostSpace["status"], string> = {
-  REGISTERED: "등록 완료",
-  PENDING_REVIEW: "심사중",
-};
 
 const formatDate = (dateStr: string) => {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -23,19 +16,36 @@ const formatDate = (dateStr: string) => {
 export const MySpacePage = () => {
   const reset = useRegisterStore((s) => s.reset);
   const navigate = useNavigate();
-  const [spaces, setSpaces] = useState<MockHostSpace[]>(mockHostSpaces);
+  const [spaces, setSpaces] = useState<ApiMySpace[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [editTargetId, setEditTargetId] = useState<number | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const loadSpaces = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const result = await fetchMySpaces({ size: 50 });
+      setSpaces(result.spaces ?? []);
+    } catch {
+      setSpaces([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSpaces();
+  }, [loadSpaces]);
+
   // 등록된 공간이 없으면 호스트 등록 온보딩부터 시작
   useEffect(() => {
-    if (spaces.length === 0) {
+    if (!isLoading && spaces.length === 0) {
       navigate("/host/host-register", { replace: true });
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isLoading, spaces.length, navigate]);
 
   // 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -48,9 +58,15 @@ export const MySpacePage = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteTargetId === null) return;
-    setSpaces((prev) => prev.filter((s) => s.id !== deleteTargetId));
+    try {
+      await deleteSpace(deleteTargetId);
+      setSpaces((prev) => prev.filter((s) => s.spaceId !== deleteTargetId));
+    } catch {
+      // 실패 시 목록 다시 로드
+      await loadSpaces();
+    }
     setDeleteTargetId(null);
   };
 
@@ -59,6 +75,14 @@ export const MySpacePage = () => {
     navigate(`/host/register/edit/${editTargetId}`);
     setEditTargetId(null);
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-tag-bg flex h-[224px] w-full items-center justify-center rounded-xl">
+        <p className="text-text-primary text-xl font-medium">불러오는 중...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -72,7 +96,7 @@ export const MySpacePage = () => {
         </div>
         <button
           onClick={() => {
-            reset(); // 수정 모드 해제 + 이전 폼 잔여값까지 초기화
+            reset();
             navigate("/host/register");
           }}
           className="bg-primary-hover flex items-center gap-1 rounded-lg px-4 py-3 text-base font-medium text-white"
@@ -91,20 +115,20 @@ export const MySpacePage = () => {
         <div className="flex flex-col bg-white">
           {spaces.map((space, index) => (
             <div
-              key={space.id}
+              key={space.spaceId}
               className={`relative flex items-end justify-between gap-7 py-5 ${
                 index !== spaces.length - 1 ? "border-divider border-b" : ""
               }`}
             >
-              {/* ... 드롭다운 — 카드 오른쪽 상단 */}
+              {/* 드롭다운 — 카드 오른쪽 상단 */}
               <div
                 className="absolute top-5 right-0"
-                ref={openMenuId === space.id ? menuRef : null}
+                ref={openMenuId === space.spaceId ? menuRef : null}
               >
                 <button
                   onClick={() =>
                     setOpenMenuId((prev) =>
-                      prev === space.id ? null : space.id,
+                      prev === space.spaceId ? null : space.spaceId,
                     )
                   }
                   className="text-text-secondary hover:text-text-primary flex h-10 w-10 items-center justify-center rounded-lg text-xl"
@@ -112,11 +136,11 @@ export const MySpacePage = () => {
                 >
                   ···
                 </button>
-                {openMenuId === space.id && (
+                {openMenuId === space.spaceId && (
                   <div className="absolute top-12 right-0 z-10 flex flex-col overflow-hidden rounded-[8px] border-2 border-[#d8d8d8] bg-white p-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]">
                     <button
                       onClick={() => {
-                        setEditTargetId(space.id);
+                        setEditTargetId(space.spaceId);
                         setOpenMenuId(null);
                       }}
                       className="rounded-[4px] px-7 py-2 text-center text-base font-bold whitespace-nowrap text-[#808080] hover:bg-[#f2f2f2]"
@@ -125,7 +149,7 @@ export const MySpacePage = () => {
                     </button>
                     <button
                       onClick={() => {
-                        setDeleteTargetId(space.id);
+                        setDeleteTargetId(space.spaceId);
                         setOpenMenuId(null);
                       }}
                       className="text-danger rounded-[4px] px-6 py-2 text-center text-base font-bold whitespace-nowrap hover:bg-[#f2f2f2]"
@@ -139,10 +163,10 @@ export const MySpacePage = () => {
               <div className="flex items-start gap-7">
                 {/* 공간 이미지 */}
                 <div className="bg-thumbnail-bg h-[190px] w-[190px] flex-shrink-0 overflow-hidden">
-                  {space.imageUrls[0] && (
+                  {space.thumbnailUrl && (
                     <img
-                      src={space.imageUrls[0]}
-                      alt={space.name}
+                      src={space.thumbnailUrl}
+                      alt={space.buildingName}
                       className="h-full w-full object-cover"
                     />
                   )}
@@ -150,11 +174,9 @@ export const MySpacePage = () => {
 
                 {/* 공간 정보 */}
                 <div className="flex flex-col items-start gap-2">
-                  <span className="text-primary text-base font-bold">
-                    {SPACE_STATUS_LABEL[space.status]}
-                  </span>
+                  <span className="text-primary text-base font-bold">등록 완료</span>
                   <div className="flex flex-col items-start gap-1">
-                    <p className="text-xl font-bold text-black">{space.name}</p>
+                    <p className="text-xl font-bold text-black">{space.buildingName}</p>
                     <p className="text-text-primary text-base">
                       {formatDate(space.registeredAt)}
                     </p>
@@ -164,7 +186,7 @@ export const MySpacePage = () => {
 
               {/* 공간 상세 버튼 */}
               <button
-                onClick={() => navigate(`/host/spaces/${space.id}`)}
+                onClick={() => navigate(`/host/spaces/${space.spaceId}`)}
                 className="bg-surface-blue text-text-primary h-10 flex-shrink-0 rounded-lg px-6 py-1.5 text-base font-bold"
               >
                 공간 상세

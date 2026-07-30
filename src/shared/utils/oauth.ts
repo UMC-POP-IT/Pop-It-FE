@@ -24,7 +24,8 @@ export async function startLogin(provider: "kakao" | "google"): Promise<void> {
   const verifier = generateVerifier();
   const challenge = await generateChallenge(verifier);
   sessionStorage.setItem("oauth_verifier", verifier);
-  window.location.href = `${BASE_URL}/api/v1/auth/oauth/${provider}?challenge=${challenge}`;
+  const params = new URLSearchParams({ challenge, origin: window.location.origin });
+  window.location.href = `${BASE_URL}/api/v1/auth/oauth/${provider}?${params.toString()}`;
 }
 
 /*
@@ -62,6 +63,75 @@ async function fetchMe(accessToken: string): Promise<User> {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) throw new Error(`Failed to fetch user: ${res.status}`);
+  const json = await res.json();
+  return json.result ?? json;
+}
+
+/*
+ * POST /api/v1/auth/reissue
+ * Request:  { refreshToken: string }
+ * Response: { result: { accessToken: string } }
+ * 401 응답 인터셉터에서 호출 — 갱신된 accessToken을 반환하고 localStorage 업데이트
+ */
+export async function reissueToken(): Promise<string> {
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) throw new Error("No refresh token");
+
+  const res = await fetch(`${BASE_URL}/api/v1/auth/reissue`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
+  if (!res.ok) throw new Error(`Reissue failed: ${res.status}`);
+  const json = await res.json();
+  const { accessToken } = json.result ?? json;
+  localStorage.setItem("access_token", accessToken);
+  return accessToken;
+}
+
+/*
+ * POST /api/v1/auth/logout
+ * Request body 없음 — Authorization 헤더로 식별
+ * 실패해도 로컬 토큰은 반드시 삭제
+ */
+export async function logoutApi(): Promise<void> {
+  const accessToken = localStorage.getItem("access_token");
+  if (accessToken) {
+    await fetch(`${BASE_URL}/api/v1/auth/logout`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }).catch(() => {});
+  }
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+}
+
+/*
+ * PATCH /api/v1/users/me/mode
+ * Request:  { targetMode: "HOST" | "GUEST" }
+ * Response: { currentMode: "HOST" | "GUEST" }
+ * 400: 호스트 미등록 → /host/host-register 로 라우팅
+ */
+export async function switchMode(
+  targetMode: "HOST" | "GUEST",
+): Promise<{ currentMode: "HOST" | "GUEST" }> {
+  const accessToken = localStorage.getItem("access_token");
+  const res = await fetch(`${BASE_URL}/api/v1/users/me/mode`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+    body: JSON.stringify({ targetMode }),
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => null);
+    const err = Object.assign(
+      new Error(json?.message ?? `Mode switch failed: ${res.status}`),
+      { status: res.status },
+    );
+    throw err;
+  }
   const json = await res.json();
   return json.result ?? json;
 }
