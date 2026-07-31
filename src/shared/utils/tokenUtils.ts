@@ -10,8 +10,16 @@ export async function reissueToken(): Promise<string> {
     body: JSON.stringify({ refreshToken }),
   });
   if (!res.ok) throw new Error(`Reissue failed: ${res.status}`);
-  const json = await res.json();
-  const { accessToken } = json.result ?? json;
-  localStorage.setItem("access_token", accessToken);
-  return accessToken;
+  const data: unknown = await res.json();
+  const raw = data as Record<string, unknown>;
+  const token =
+    typeof raw?.accessToken === "string" && raw.accessToken.trim()
+      ? raw.accessToken
+      : typeof (raw?.result as Record<string, unknown>)?.accessToken === "string" &&
+          ((raw?.result as Record<string, unknown>).accessToken as string).trim()
+        ? ((raw?.result as Record<string, unknown>).accessToken as string)
+        : null;
+  if (!token) throw new Error("Invalid reissue response: accessToken missing");
+  localStorage.setItem("access_token", token);
+  return token;
 }

@@ -28,8 +28,16 @@ export const MySpacePage = () => {
     try {
       setIsLoading(true);
       setIsError(false);
-      const result = await fetchMySpaces({ size: 50 });
-      setSpaces(result.spaces ?? []);
+      const all: ApiMySpace[] = [];
+      let page = 0;
+      let hasNext = true;
+      while (hasNext) {
+        const result = await fetchMySpaces({ size: 50, page });
+        all.push(...(result.spaces ?? []));
+        hasNext = result.hasNext;
+        page += 1;
+      }
+      setSpaces(all);
     } catch {
       setIsError(true);
     } finally {

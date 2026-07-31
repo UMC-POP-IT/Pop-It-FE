@@ -60,8 +60,14 @@ export const HostReservationPage = () => {
   const loadReservations = useCallback(async () => {
     try {
       setIsLoading(true);
-      const result = await fetchHostReservations({ size: 100 });
-      setReservations(result.reservations ?? []);
+      const all: ApiHostReservation[] = [];
+      let cursor: number | null | undefined = undefined;
+      do {
+        const result = await fetchHostReservations({ size: 50, cursor: cursor ?? undefined });
+        all.push(...(result.reservations ?? []));
+        cursor = result.hasNext ? result.nextCursor : null;
+      } while (cursor != null);
+      setReservations(all);
     } catch {
       setReservations([]);
     } finally {
