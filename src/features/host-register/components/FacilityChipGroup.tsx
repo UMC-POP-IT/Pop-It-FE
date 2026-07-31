@@ -1,3 +1,4 @@
+import { useId } from "react";
 import Chip from "@/shared/components/Chip";
 import type { FacilityItem } from "@/features/host-register/api/facility_api";
 
@@ -17,20 +18,34 @@ const FacilityChipGroup = ({
   items,
   selectedIds,
   onToggle,
-}: FacilityChipGroupProps) => (
-  <div className="flex flex-col gap-2">
-    <span className="text-text-tertiary text-xl font-bold">{label}</span>
-    <div className="flex flex-wrap gap-2">
-      {items.map((item) => (
-        <Chip
-          key={item.facilityId}
-          label={item.name}
-          selected={selectedIds.includes(item.facilityId)}
-          onClick={() => onToggle(item.facilityId)}
-        />
-      ))}
+}: FacilityChipGroupProps) => {
+  // 이 컴포넌트가 여러 번 렌더링돼 id가 겹치지 않도록 고유 id 생성
+  const labelId = useId();
+
+  return (
+    <div
+      className="flex flex-col gap-2"
+      role="group"
+      aria-labelledby={labelId}
+    >
+      <span
+        id={labelId}
+        className="text-text-tertiary text-xl font-bold"
+      >
+        {label}
+      </span>
+      <div className="flex flex-wrap gap-2">
+        {items.map((item) => (
+          <Chip
+            key={item.facilityId}
+            label={item.name}
+            selected={selectedIds.includes(item.facilityId)}
+            onClick={() => onToggle(item.facilityId)}
+          />
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default FacilityChipGroup;
