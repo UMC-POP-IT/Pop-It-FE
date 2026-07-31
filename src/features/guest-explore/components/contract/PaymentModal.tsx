@@ -47,17 +47,17 @@ const PaymentModal = ({
         <div className="border-border flex flex-col gap-2 border-t pt-4 text-sm">
           <div className="flex justify-between">
             <span className="text-text-secondary">임대료</span>
-            <span className="text-text-primary font-medium">{PaymentInfo.rentalFee}원</span>
+            <span className="text-text-primary font-medium">{PaymentInfo.rentalFee.toLocaleString()}원</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">보증금(에스크로)</span>
             {/* TODO: 보증금 계산 로직 확정 후 반영 */}
-            <span className="text-text-primary font-medium">{PaymentInfo.deposit}</span>
+            <span className="text-text-primary font-medium">{PaymentInfo.deposit.toLocaleString()}원</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">단기 공간 보험료 5% 적용</span>
             {/* TODO: 보험료 계산 로직 확정 후 반영 */}
-            <span className="text-text-primary font-medium">{PaymentInfo.insuranceFee}</span>
+            <span className="text-text-primary font-medium">{PaymentInfo.insuranceFee.toLocaleString()}원</span>
           </div>
         </div>
 

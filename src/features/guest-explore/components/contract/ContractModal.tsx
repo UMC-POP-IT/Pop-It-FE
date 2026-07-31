@@ -49,15 +49,15 @@ const ContractModal = ({ isOpen, reservation, PaymentInfo, onClose }: ContractMo
           <div className="border-border flex flex-col gap-2 border-t pt-4 text-sm">
             <div className="flex justify-between">
               <span className="text-text-secondary">임대료</span>
-              <span className="text-text-primary font-medium">{PaymentInfo.rentalFee}원</span>
+              <span className="text-text-primary font-medium">{PaymentInfo.rentalFee.toLocaleString()}원</span>
             </div>
             <div className="flex justify-between">
               <span className="text-text-secondary">보증금(에스크로)</span>
-              <span className="text-text-primary font-medium">{PaymentInfo.deposit}원</span>
+              <span className="text-text-primary font-medium">{PaymentInfo.deposit.toLocaleString()}원</span>
             </div>
             <div className="flex justify-between">
               <span className="text-text-secondary">단기 공간 보험료 5% 적용</span>
-              <span className="text-text-primary font-medium">{PaymentInfo.insuranceFee}원</span>
+              <span className="text-text-primary font-medium">{PaymentInfo.insuranceFee.toLocaleString()}원</span>
             </div>
           </div>
 
