@@ -10,16 +10,13 @@ export type PendingAction =
 
 interface AuthState {
   user: User | null;
-  accessToken: string | null; // 백엔드 API 인증용 accessToken (Authorization 헤더에 실어 보냄)
-  refreshToken: string | null; // accessToken 만료 시 재발급받는 데 사용
   mode: Mode;
   isLoginModalOpen: boolean;
   pendingAction: PendingAction | null;
   hasSeenHostIntro: boolean; // 호스트 등록 안내 모달을 이미 봤는지 (한 번만 노출)
 
   setUser: (user: User | null) => void;
-  login: (user: User, accessToken?: string, refreshToken?: string) => void;
-  setAccessToken: (accessToken: string) => void;
+  login: (user: User) => void;
   setMode: (mode: Mode) => void;
   openLoginModal: (pendingAction?: PendingAction) => void;
   closeLoginModal: () => void;
@@ -29,19 +26,17 @@ interface AuthState {
   logout: () => void;
 }
 
+// accessToken / refreshToken은 store에 두지 않고 localStorage에만 저장한다.
+// API 호출은 src/shared/utils/apiClient.ts의 apiFetch가 localStorage에서 직접 읽는다.
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  accessToken: null,
-  refreshToken: null,
   mode: "GUEST",
   isLoginModalOpen: false,
   pendingAction: null,
   hasSeenHostIntro: false,
 
   setUser: (user) => set({ user }),
-  login: (user, accessToken, refreshToken) =>
-    set({ user, accessToken: accessToken ?? null, refreshToken: refreshToken ?? null, isLoginModalOpen: false }),
-  setAccessToken: (accessToken) => set({ accessToken }),
+  login: (user) => set({ user, mode: user.currentMode, isLoginModalOpen: false }),
   setMode: (mode) => set({ mode }),
   openLoginModal: (pendingAction) =>
     set({ isLoginModalOpen: true, pendingAction: pendingAction ?? null }),
@@ -52,8 +47,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () =>
     set({
       user: null,
-      accessToken: null,
-      refreshToken: null,
       mode: "GUEST",
       pendingAction: null,
       hasSeenHostIntro: false, // 로그아웃 시 초기화 → 다음 사용자에게 다시 안내

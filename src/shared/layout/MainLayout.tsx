@@ -5,7 +5,7 @@ import Footer from "./Footer";
 import { LoginModal } from "@/shared/components/LoginModal";
 import { useAuthStore } from "@/store/authStore";
 import { useWishStore } from "@/store/wishStore";
-import { handleOAuthCallback } from "@/shared/utils/oauth";
+import { handleOAuthCallback, switchMode } from "@/shared/utils/oauth";
 
 const PendingActionExecutor = () => {
   const user = useAuthStore((s) => s.user);
@@ -25,8 +25,18 @@ const PendingActionExecutor = () => {
         navigate(pendingAction.path);
         break;
       case "modeToggle":
-        setMode(pendingAction.targetMode);
-        navigate(pendingAction.navigateTo);
+        switchMode(pendingAction.targetMode)
+          .then(() => {
+            setMode(pendingAction.targetMode);
+            navigate(pendingAction.navigateTo);
+          })
+          .catch((err: unknown) => {
+            const status = (err as { status?: number }).status;
+            if (status === 400) {
+              // 호스트 미등록 → 호스트 등록 안내 페이지로
+              navigate("/host/host-register");
+            }
+          });
         break;
     }
     clearPendingAction();
@@ -62,7 +72,7 @@ const OAuthCallbackHandler = () => {
     window.history.replaceState(null, "", window.location.pathname);
 
     handleOAuthCallback(code)
-      .then(({ user, accessToken, refreshToken }) => {
+      .then((user) => {
         // 리다이렉트 전에 저장했던 pendingAction 복원
         const saved = sessionStorage.getItem("oauth_pending_action");
         if (saved) {
@@ -73,7 +83,7 @@ const OAuthCallbackHandler = () => {
           }
           sessionStorage.removeItem("oauth_pending_action");
         }
-        login(user, accessToken, refreshToken);
+        login(user);
         navigate("/", { replace: true });
       })
       .catch((err) => {

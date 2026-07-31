@@ -13,9 +13,6 @@ interface ImportMetaEnv {
   readonly VITE_KAKAO_JS_KEY: string;
    // 백엔드 API 서버 주소 (https://api.popit.co.kr)
   readonly VITE_API_BASE_URL: string;
-  // 개발용 임시 로그인 accessToken / refreshToken (실제 로그인 API 연동 전까지 사용)
-  readonly VITE_DEV_ACCESS_TOKEN: string;
-  readonly VITE_DEV_REFRESH_TOKEN: string;
 }
 
 interface ImportMeta {

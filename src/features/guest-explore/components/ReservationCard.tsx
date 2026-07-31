@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Badge from "@/shared/components/Badge";
 import Button from "@/shared/components/Button";
 import Modal from "@/shared/components/Modal";
-import { GetCheckOutApproval, Reservation } from "../api/my_reservation_api";
+import { GetPaymentInfo, GetPaymentInfoResponse, GetPresignedURL, Reservation, Status, SubmitCheckOutPhoto, UploadFileToPresignedURL } from "../api/my_reservation_api";
 import PaymentModal from "@/features/guest-explore/components/contract/PaymentModal";
 import ContractModal from "@/features/guest-explore/components/contract/ContractModal";
 import PhotoVerificationModal from "@/features/guest-explore/components/PhotoVerificationModal";
@@ -36,14 +36,7 @@ export const isUsing = (start: string, end: string): boolean => {
   return today >= toDate(start) && today <= toDate(end);
 };
 
-// 시작일 ~ 종료일 기간(박/일) 계산
-export const getDuration = (start: string, end: string) => {
-  const nights = Math.round((toDate(end).getTime() - toDate(start).getTime()) / (1000 * 60 * 60 * 24));
-  return { nights, days: nights + 1 };
-};
-
 const getCardMeta = (r: Reservation): CardMeta => {
-
   if (r.status === "USAGE_COMPLETED" || r.status === "CHECKOUT_COMPLETED") {
       return {
         label: r.isPhotoVerified ? "퇴실 완료" : "이용 완료",
@@ -94,7 +87,9 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   const [isContractDone, setIsContractDone] = useState(false); // 계약 마무리 여부
   const [agreedToGuide, setAgreedToGuide] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false); // 퇴실 사진 인증 창 open 여부
-  const [isPhotoVerifiedDone, setIsPhotoVerifiedDone] = useState(false); // 사진 인증 완료 여부 (목업: 실제 업로드 API 연동 전까지 로컬로만 반영)
+  const [isPhotoVerifiedDone, setIsPhotoVerifiedDone] = useState(false); // 사진 인증 완료 여부
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false); // 사진 업로드 진행 중 여부
+  const [PaymentInfo, setPaymentInfo] = useState<GetPaymentInfoResponse | null>(null); // 결제 정보
 
   const label = isPhotoVerifiedDone ? "퇴실 완료" : cardMeta.label;
   const needsPhotoVerification = cardMeta.needsPhotoVerification && !isPhotoVerifiedDone;
@@ -102,11 +97,6 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   const { showCancel, showContract, isDone } = cardMeta;
 
   const navigate = useNavigate();
-
-  // useEffect(() => {
-  //   GetCheckOutApproval(reservation.reservationId)
-  //     .then((data) => {})
-  // }, [])
 
   const handleCancelReservation = async () => {
     if (isCancelling) return;
@@ -122,19 +112,46 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
     }
   };
 
-  const handlePhotoVerificationComplete = (files: File[]) => {
-    // TODO: 선택한 사진 서버 업로드
-    void files;
-    setIsPhotoModalOpen(false);
-    setIsPhotoVerifiedDone(true);
+  const handlePhotoVerificationComplete = async (files: File[]) => {
+    if (isUploadingPhotos) return;
+    try {
+      setIsUploadingPhotos(true);
+      const { uploads } = await GetPresignedURL({
+        uploadType: "CHECKOUT",
+        files: files.map((file) => ({ contentType: file.type })),
+      });
+
+      await Promise.all(uploads.map(({ presignedUrl }, index) => UploadFileToPresignedURL(presignedUrl, files[index])));
+
+      await SubmitCheckOutPhoto(reservation.reservationId, {
+        photoUrls: uploads.map(({ fileUrl }) => fileUrl),
+      });
+
+      setIsPhotoModalOpen(false);
+      setIsPhotoVerifiedDone(true);
+    } catch (error) {
+      console.error(error);
+      alert("사진 업로드에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setIsUploadingPhotos(false);
+    }
   };
 
   const handleSignContract = () => {
-    // TODO: 계약 전자 서명 창 open
     setisPaymentModalOpen(false);
     setAgreedToGuide(false);
     setIsContractModalOpen(true);
   };
+
+  useEffect(() => {
+    const _GetPaymentInfo = async (status: Status) => {
+      if (status === "APPROVED"){
+        const data = await GetPaymentInfo(reservation.reservationId);
+        setPaymentInfo(data);
+      }
+    }
+    _GetPaymentInfo(reservation.status);  
+  },[]);
 
   return (
     <div className="border-border flex flex-col gap-4 border-b py-4 last:border-none sm:flex-row">
@@ -215,25 +232,31 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
       />
 
       {/* Payment Modal */}
-      <PaymentModal
-        isOpen={isPaymentModalOpen}
-        reservation={reservation}
-        agreedToGuide={agreedToGuide}
-        onAgreedToGuideChange={setAgreedToGuide}
-        onClose={() => setisPaymentModalOpen(false)}
-        onSignContract={handleSignContract}
-      />
+      {PaymentInfo && (
+        <PaymentModal
+          isOpen={isPaymentModalOpen}
+          reservation={reservation}
+          agreedToGuide={agreedToGuide}
+          onAgreedToGuideChange={setAgreedToGuide}
+          onClose={() => setisPaymentModalOpen(false)}
+          onSignContract={handleSignContract}
+          PaymentInfo={PaymentInfo}
+        />
+      )}
 
       {/* Contract Modal */}
-      <ContractModal
-        isOpen={isContractModalOpen}
-        reservation={reservation}
-        onClose={() => setIsContractModalOpen(false)}
-        onComplete={() => {
-          setIsContractDone(true);
-          setIsContractModalOpen(false);
-        }}
-      />
+      {PaymentInfo && (
+        <ContractModal
+          isOpen={isContractModalOpen}
+          reservation={reservation}
+          PaymentInfo={PaymentInfo}
+          onClose={() => setIsContractModalOpen(false)}
+          onComplete={(bothSigned: boolean) => {
+            setIsContractDone(bothSigned);
+            setIsContractModalOpen(false);
+          }}
+        />
+      )}
 
       {/* Photo Verification Modal */}
       <PhotoVerificationModal

@@ -1,75 +1,8 @@
-import axios from "axios";
-import { useAuthStore } from "@/store/authStore";
-
-// 팀 공통 API client => #135 머지되면 없앨거
-export const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL,
-    headers: { "Content-Type": "application/json"},
-});
-
-// 로그인 시 저장된 accessToken을 매 요청에 실어 보냄
-api.interceptors.request.use((config) => {
-    const { accessToken } = useAuthStore.getState();
-    if (accessToken) {
-        config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-    return config;
-});
-
-// accessToken 만료(401) 시 refreshToken으로 재발급받아 원래 요청을 한 번 재시도
-let reissuePromise: Promise<string | null> | null = null;
-
-api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        const originalRequest = error.config;
-        if (error.response?.status !== 401 || !originalRequest || originalRequest._retry) {
-            return Promise.reject(error);
-        }
-        originalRequest._retry = true;
-
-        const { refreshToken, setAccessToken } = useAuthStore.getState();
-        if (!refreshToken) {
-            return Promise.reject(error);
-        }
-
-        try {
-            if (!reissuePromise) {
-                reissuePromise = axios
-                    .post<PopitResponse<{ accessToken: string }>>(
-                        `${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/reissue`,
-                        { refreshToken },
-                    )
-                    .then(({ data }) => {
-                        setAccessToken(data.result.accessToken);
-                        return data.result.accessToken;
-                    })
-                    .finally(() => {
-                        reissuePromise = null;
-                    });
-            }
-
-            const newAccessToken = await reissuePromise;
-            if (!newAccessToken) return Promise.reject(error);
-
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-            return api(originalRequest);
-        } catch (reissueError) {
-            return Promise.reject(reissueError);
-        }
-    },
-);
+import { apiFetch } from "@/shared/utils/apiClient";
 
 // 차례대로 승인 대기, 승인 완료, 계약 완료(이용 전), 사용 중, 사용 완료, 퇴실 완료, 취소
 export type Status = "PENDING_APPROVAL" | "APPROVED" | "CONTRACT_COMPLETED" | "IN_USE" | "USAGE_COMPLETED" | "CHECKOUT_COMPLETED" | "CANCELLED";
-
-export interface PopitResponse<T> {
-    isSuccess: boolean;
-    code: string;
-    message: string;
-    result: T;
-}
-
+export type ContractStatus = "HOST_PENDING_SIGNATURE" | "GUEST_PENDING_SIGNATURE" | "COMPLETED"
 export interface Reservation {
 	reservationId: number;
     status: Status;
@@ -87,25 +20,8 @@ export interface Reservation {
 	},
 	guest: {
 		userId: number;
-		nickname: string; 
+		nickname: string;
     }
-}
-
-export interface RequestReservatonRequest {
-    spaceId: number;
-    startDate: string;
-    endDate: string;
-    usagePurpose: string;
-}
-
-export interface RequestReservationResponse {
-    reservationId: number;
-    status: Status;
-    statusDescription: string;
-    rentalFee: number;
-    deposit: number;
-    insuranceFee: number;
-    totalPrice: number;
 }
 
 export interface GetReservationsResponse {
@@ -123,8 +39,8 @@ export interface SubmitCheckOutPhotoRequest {
     photoUrls: string[];
 }
 
-export interface SubmitCheckOutPhotoResponse { 
-	reservationId: number; 
+export interface SubmitCheckOutPhotoResponse {
+	reservationId: number;
 	status: Status;
 	statusDescription: string;
 }
@@ -155,135 +71,105 @@ export interface GetCheckOutApprovalResponse {
     checkoutRejectedAt: string | null;
 }
 
-// 게스트 - 예약 요청
-export const RequestReservation = async (request: RequestReservatonRequest) => {
-    try {
-        const { data } = await api.post<PopitResponse<RequestReservationResponse>>("/api/v1/reservations", request);
-        const { isSuccess, code, message, result } = data;
-
-        if (isSuccess) {
-            return result;
-        } else {
-            console.log(message)
-        }
-
-    } catch (error) {
-        if ((axios.isAxiosError(error))) {
-            console.log("에러 발생; ", error.response?.status);
-        }
-    }
+interface Upload {
+    presignedUrl: string;
+    fileUrl: string;
 }
 
-// 게스트 - 예약 목록 조회
-// cursor: 마지막으로 조회한 id
-// size: 페이지 크기
-// status: 상태 필터
-export const GetReservations = async (cursor?:number, size?:number, status?:string) => {
-    try {
-        const { data } = await api.get<PopitResponse<GetReservationsResponse>>(
-            "/api/v1/reservations/me",
-            {params: {cursor, size, status}}
-        );
-        const { isSuccess, code, message, result } = data;
-
-        if (isSuccess) {
-            return result;
-        } else {
-            console.log(message)
-        }
-    } catch (error) {
-        if ((axios.isAxiosError(error))) {
-            console.log("에러 발생; ", error.response?.status);
-        }
-    }
+interface PresignedURLFile {
+    contentType: string;
 }
 
-// 게스트 - 예약 취소
-export const CancelReservations = async (reservationId: number) => {
-    try {
-        const { data } = await api.post<PopitResponse<CancelReservationResponse>>(`/api/v1/reservations/${reservationId}/cancel`);
-        const { isSuccess, code, message, result } = data;
-
-        if (isSuccess) {
-            return result;
-        } else {
-            console.log(message)
-        }
-    } catch (error) {
-        if ((axios.isAxiosError(error))) {
-            console.log("에러 발생; ", error.response?.status);
-        }
-    }
+export interface GetPresignedURLRequest {
+    uploadType: "SPACE_IMAGE" | "BUSINESS_LICENSE" | "BANKBOOK" | "SIGNATURE" | "CHECKOUT";
+    files: PresignedURLFile[];
+}
+export interface GetPresignedURLResponse {
+    uploads: Upload[];
 }
 
-// 게스트 - 퇴실 증빙 사진 제출
-export const SubmitCheckOutPhoto = async (reservationId: number, request: SubmitCheckOutPhotoRequest) => {
-    try {
-        const { data } = await api.post<PopitResponse<SubmitCheckOutPhotoResponse>>(`/api/v1/reservations/${reservationId}/checkout`, request);
-        const { isSuccess, code, message, result } = data;
-
-        if (isSuccess) {
-            return result;
-        } else {
-            console.log(message)
-        }
-    } catch (error) {
-        if ((axios.isAxiosError(error))) {
-            console.log("에러 발생; ", error.response?.status);
-        }
-    }
+export interface SubmitSignatureRequest {
+    signatureUrl: string;
 }
 
-// 게스트 - 예약 상태별 개수 조회
-export const GetEachResStateCounts = async (reservationId: number) => {
-    try {
-        const { data } = await api.get<PopitResponse<GetEachResStateCountsResponse>>(`/api/v1/reservations/${reservationId}/checkout-photos`)
-        const { isSuccess, code, message, result } = data;
-
-        if (isSuccess) {
-            return result;
-        } else {
-            console.log(message)
-        }
-    } catch (error) {
-        if ((axios.isAxiosError(error))) {
-            console.log("에러 발생; ", error.response?.status);
-        }
-    }
+export interface SubmitSignatureResponse {
+    contractId: number;
+    contractStatus: ContractStatus;
+    bothSigned: boolean;
 }
 
-// 게스트 - 퇴실 증빙 사진 조회
-export const GetSubmitCheckoutPhotos = async (reservationId: number) => {
-    try {
-        const { data } = await api.get<PopitResponse<GetSubmitCheckoutPhotosResponse>>(`/api/v1/reservations/${reservationId}/checkout-photos`)
-        const { isSuccess, code, message, result } = data;
+export interface GetPaymentInfoResponse {
+    spaceName: string;
+    startDate: string;
+    endDate: string;
+    period: string;
+    rentalFee: number;
+    deposit: number;
+    insuranceFee: number;
+    totalPrice: number;
+  }
 
-        if (isSuccess) {
-            return result;
-        } else {
-            console.log(message)
-        }
-    } catch (error) {
-        if ((axios.isAxiosError(error))) {
-            console.log("에러 발생; ", error.response?.status);
-        }
+// 업로드 - 발급받은 presigned url 로 파일 직접 업로드 (S3 등 외부 스토리지로 전송되므로 apiFetch 미사용)
+export const UploadFileToPresignedURL = async (presignedUrl: string, file: File) => {
+    const res = await fetch(presignedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+    });
+    if (!res.ok) {
+        throw new Error(`파일 업로드에 실패했습니다: ${res.status}`);
     }
-}
+};
 
-// 퇴실 승인 여부 조회
-export const GetCheckOutApproval = async (reservationId: number) => {
-    try {
-        const { data } = await api.get<PopitResponse<GetCheckOutApprovalResponse>>(`/api/v1/reservations/${reservationId}/checkout-approval`)
-        const { isSuccess, code, message, result } = data;
+// 업로드 - presigned url 발급 ~ DONE
+export const GetPresignedURL = (request: GetPresignedURLRequest) =>
+    apiFetch<GetPresignedURLResponse>("/api/v1/uploads/presigned-url", {
+        method: "POST",
+        body: JSON.stringify(request),
+});
 
-        if (isSuccess) {
-            return result;
-        } else {
-            console.log(message)
-        }
-    } catch (error) {
-        if ((axios.isAxiosError(error))) {
-            console.log("에러 발생; ", error.response?.status);
-        }
-    }
-}
+// 게스트 - 예약 목록 조회 (cursor: 마지막으로 조회한 id, size: 페이지 크기, status: 상태 필터) ~ DONE
+export const GetReservations = (cursor?: number, size?: number, status?: string) => {
+    const query = new URLSearchParams();
+    if (cursor != null) query.set("cursor", String(cursor));
+    if (size != null) query.set("size", String(size));
+    if (status) query.set("status", status);
+    const qs = query.toString();
+    return apiFetch<GetReservationsResponse>(`/api/v1/reservations/me${qs ? `?${qs}` : ""}`);
+};
+
+// 게스트 - 예약 취소 ~ DONE
+export const CancelReservations = (reservationId: number) =>
+    apiFetch<CancelReservationResponse>(`/api/v1/reservations/${reservationId}/cancel`, {
+        method: "POST",
+});
+
+// 게스트 - 퇴실 증빙 사진 제출 ~ DONE
+export const SubmitCheckOutPhoto = (reservationId: number, request: SubmitCheckOutPhotoRequest) =>
+    apiFetch<SubmitCheckOutPhotoResponse>(`/api/v1/reservations/${reservationId}/checkout`, {
+        method: "POST",
+        body: JSON.stringify(request),
+});
+
+// 게스트 - 예약 상태별 개수 조회 ~ 딱히 필요 없을 듯
+export const GetEachResStateCounts = (reservationId: number) =>
+    apiFetch<GetEachResStateCountsResponse>(`/api/v1/reservations/${reservationId}/status-counts`);
+
+// 게스트 - 퇴실 증빙 사진 조회 ~ 아직 UI 디자인이 완성되지 않아 추후 연동 예정
+export const GetSubmitCheckoutPhotos = (reservationId: number) =>
+    apiFetch<GetSubmitCheckoutPhotosResponse>(`/api/v1/reservations/${reservationId}/checkout-photos`);
+
+// 호스트/게스트 공통 - 퇴실 승인 여부 조회 ~ 얘도 필요 없을 듯
+export const GetCheckOutApproval = (reservationId: number) =>
+    apiFetch<GetCheckOutApprovalResponse>(`/api/v1/reservations/${reservationId}/checkout-approval`);
+
+// 계약 - 전자 서명 제출 ~ DONE
+export const SubmitSignature = (reservationId: number, request: SubmitSignatureRequest) => 
+    apiFetch<SubmitSignatureResponse>(`/api/v1/reservations/${reservationId}/contracts/signatures`, {
+        method: "POST",
+        body: JSON.stringify(request),
+});
+
+// 결제 - 결제 예정 정보 조회 ~ DONE
+export const GetPaymentInfo = (reservationId: number) => 
+    apiFetch<GetPaymentInfoResponse>(`/api/v1/reservations/${reservationId}/contracts/payment-preview`);

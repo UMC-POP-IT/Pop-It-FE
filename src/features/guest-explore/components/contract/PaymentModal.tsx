@@ -1,8 +1,7 @@
 import Button from "@/shared/components/Button";
-import type { Reservation } from "@/features/guest-explore/api/my_reservation_api";
+import type { GetPaymentInfoResponse, Reservation } from "@/features/guest-explore/api/my_reservation_api";
 import { formatDate } from "@/shared/utils/date";
 import shieldCheckIcon from "@/features/guest-explore/icons/shield-check.svg";
-import { getDuration } from "@/features/guest-explore/components/ReservationCard";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -11,6 +10,7 @@ interface PaymentModalProps {
   onAgreedToGuideChange: (agreed: boolean) => void;
   onClose: () => void;
   onSignContract: () => void;
+  PaymentInfo: GetPaymentInfoResponse;
 }
 
 const PaymentModal = ({
@@ -20,9 +20,11 @@ const PaymentModal = ({
   onAgreedToGuideChange,
   onClose,
   onSignContract,
+  PaymentInfo
 }: PaymentModalProps) => {
-  if (!isOpen) return null;
 
+  if (!isOpen) return null;
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
@@ -37,7 +39,7 @@ const PaymentModal = ({
           <div className="flex justify-between">
             <span className="text-text-secondary">기간</span>
             <span className="text-text-primary font-medium">
-              {formatDate(reservation.startDate)} ~ {formatDate(reservation.endDate)} ({getDuration(reservation.startDate, reservation.endDate).days}일)
+              {formatDate(reservation.startDate)} ~ {formatDate(reservation.endDate)} ({PaymentInfo.period}일)
             </span>
           </div>
         </div>
@@ -45,23 +47,23 @@ const PaymentModal = ({
         <div className="border-border flex flex-col gap-2 border-t pt-4 text-sm">
           <div className="flex justify-between">
             <span className="text-text-secondary">임대료</span>
-            <span className="text-text-primary font-medium">{reservation.totalPrice.toLocaleString()}원</span>
+            <span className="text-text-primary font-medium">{PaymentInfo.rentalFee}원</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">보증금(에스크로)</span>
             {/* TODO: 보증금 계산 로직 확정 후 반영 */}
-            <span className="text-text-primary font-medium">-</span>
+            <span className="text-text-primary font-medium">{PaymentInfo.deposit}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">단기 공간 보험료 5% 적용</span>
             {/* TODO: 보험료 계산 로직 확정 후 반영 */}
-            <span className="text-text-primary font-medium">-</span>
+            <span className="text-text-primary font-medium">{PaymentInfo.insuranceFee}</span>
           </div>
         </div>
 
         <div className="border-border flex items-center justify-between border-t pt-4 font-bold">
           <span className="text-text-primary text-base">총 결제 금액</span>
-          <span className="text-lg">{reservation.totalPrice.toLocaleString()}원</span>
+          <span className="text-lg">{PaymentInfo.totalPrice}원</span>
         </div>
 
         <div className="bg-secure-payment-bg flex gap-2 rounded-lg p-3">
