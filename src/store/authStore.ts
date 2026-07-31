@@ -21,10 +21,13 @@ interface AuthState {
   openLoginModal: (pendingAction?: PendingAction) => void;
   closeLoginModal: () => void;
   clearPendingAction: () => void;
+  setPendingAction: (action: PendingAction) => void;
   setHostIntroSeen: () => void;
   logout: () => void;
 }
 
+// accessToken / refreshToken은 store에 두지 않고 localStorage에만 저장한다.
+// API 호출은 src/shared/utils/apiClient.ts의 apiFetch가 localStorage에서 직접 읽는다.
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   mode: "GUEST",
@@ -33,12 +36,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   hasSeenHostIntro: false,
 
   setUser: (user) => set({ user }),
-  login: (user) => set({ user, isLoginModalOpen: false }),
+  login: (user) => set({ user, mode: user.currentMode, isLoginModalOpen: false }),
   setMode: (mode) => set({ mode }),
   openLoginModal: (pendingAction) =>
     set({ isLoginModalOpen: true, pendingAction: pendingAction ?? null }),
   closeLoginModal: () => set({ isLoginModalOpen: false, pendingAction: null }),
   clearPendingAction: () => set({ pendingAction: null }),
+  setPendingAction: (action) => set({ pendingAction: action }),
   setHostIntroSeen: () => set({ hasSeenHostIntro: true }),
   logout: () =>
     set({

@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import RealTimeBanner from "@/features/guest-explore/components/RealTimeBanner";
-import type { RtSpace } from "../api/spaces_api";
+import type { recommendSpace } from "../api/spaces_api";
 import { ScrollButton } from "./ScrollButton";
 import { useNavigate } from "react-router-dom";
 import { getRealTimeRecommend } from "../api/spaces_api";
@@ -9,24 +9,15 @@ const RealTimeRecommendSpace = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
-  const [spaces, setSpaces] = useState<RtSpace[]>([]);
+  const [spaces, setSpaces] = useState<recommendSpace[]>([]);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     getRealTimeRecommend()
-      .then((data) => {setSpaces(data?.spaces ?? [])})
+      .then((data) => {setSpaces(data.spaces)})
       .catch((error) => console.error("실시간 추천 공간 조회 실패", error));
   }, []);
-
-  // const avgDayCost =
-  //   spaces.reduce((sum, space) => sum + Number(space.pricePerDay) , 0) /
-  //   spaces.length;
-
-  // const getRecommendReason = (space: RtSpace) => {
-  //   const cheaperPercent = Math.round((1 - Number(space.pricePerDay) / avgDayCost) * 100);
-  //   return `성수동 대비 ${cheaperPercent}% 저렴한 ${space.buildingName}`; // ex. 성수동 대비 15% 저렴한 팝업스토어
-  // };
 
   // 좌/우 스크롤 버튼 활성화 여부 업데이트
   const updateScrollButtons = () => {
@@ -82,7 +73,6 @@ const RealTimeRecommendSpace = () => {
             </div>
           ))}
         </div>
-
         {canScrollNext && <ScrollButton direction="next" position={"1/2"} onClick={() => scrollByCard(1)} />}
       </div>
     </section>

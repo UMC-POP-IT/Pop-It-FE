@@ -3,7 +3,6 @@ import Badge from "@/shared/components/Badge";
 
 interface SpaceCardProps {
   space: Space;
-  isWished?: boolean;
   onClick?: () => void;
   onWishToggle?: (e: React.MouseEvent) => void;
   /** 이미지 위 카테고리 뱃지 (ex. 팝업스토어) */
@@ -12,12 +11,8 @@ interface SpaceCardProps {
   matchReason?: string;
 }
 
-const WISHCOUNT = 50;
-const KEYWORDS = ["키워드", "키워드"]
-
 const SpaceCard = ({
   space,
-  isWished = false,
   onClick,
   onWishToggle,
   categoryTag,
@@ -49,9 +44,9 @@ const SpaceCard = ({
         }}
       >
         <span
-          className={`text-lg ${isWished ? "text-red-500" : "text-white drop-shadow"}`}
+          className={`text-lg ${space.isWishlisted ? "text-red-500" : "text-white drop-shadow"}`}
         >
-          {isWished ? "♥" : "♡"}
+          {space.isWishlisted ? "♥" : "♡"}
         </span>
       </button>
       {categoryTag && (
@@ -71,7 +66,7 @@ const SpaceCard = ({
               label={matchReason}
             />
             <span className="text-text-secondary flex shrink-0 items-center gap-0.5 text-xs">
-              ♡ {WISHCOUNT}
+              ♡ {space.wishCount}
             </span>
           </div>
           <span className="text-text-primary truncate text-sm font-semibold">
@@ -84,7 +79,7 @@ const SpaceCard = ({
             {space.buildingName}
           </span>
           <span className="text-text-secondary flex shrink-0 items-center gap-0.5 text-xs">
-            ♡ {WISHCOUNT}
+            ♡ {space.wishCount}
           </span>
         </div>
       )}
@@ -95,9 +90,9 @@ const SpaceCard = ({
         {Number(space.pricePerDay).toLocaleString()}원{" "}
         <span className="text-text-secondary text-xs font-normal">/일</span>
       </span>
-      {KEYWORDS.length > 0 && (
+      {space.keywords.length > 0 && (
         <div className="flex gap-1 pt-0.5">
-          {KEYWORDS.slice(0, 2).map((keyword, i) => (
+          {space.keywords.slice(0, 2).map((keyword, i) => (
             <span
               key={`${keyword}-${i}`}
               className="bg-tag-bg text-text-tag rounded-full px-2 py-0.5 text-xs"

@@ -1,7 +1,7 @@
-import type { Space } from "../api/spaces_api";
+import type { recommendSpace } from "../api/spaces_api";
 
 interface RealTimeBannerProps {
-  space: Space;
+  space: recommendSpace;
   onClick?: () => void;
 }
 
