@@ -44,10 +44,10 @@ export interface Reservation {
 export type ReservationStatus =
   | "PENDING_APPROVAL"
   | "APPROVED"
-  | "CONTRACTED"
+  | "CONTRACT_COMPLETED"
   | "IN_USE"
   | "USAGE_COMPLETED"
-  | "COMPLETED"
+  | "CHECKOUT_COMPLETED"
   | "CANCELLED";
 
 export interface HostReservationSpace {

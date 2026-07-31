@@ -18,19 +18,17 @@ import type { ApiHostReservation, ReservationStatus } from "@/types";
 const TAB_STATUS: ReservationStatus[] = [
   "PENDING_APPROVAL",
   "APPROVED",
-  "CONTRACTED",
+  "CONTRACT_COMPLETED",
   "IN_USE",
-  "USAGE_COMPLETED",
-  "COMPLETED",
+  "CHECKOUT_COMPLETED",
 ];
 
-const TAB_LABELS = ["승인 대기", "계약 대기", "계약 완료", "사용 중", "퇴실 확인 중", "사용 완료"];
+const TAB_LABELS = ["승인 대기", "계약 대기", "계약 완료", "사용 중", "사용 완료"];
 const EMPTY_MESSAGES = [
   "승인 대기 중인 예약이 없어요",
   "계약 대기 중인 예약이 없어요",
   "계약 완료된 예약이 없어요",
   "현재 사용 중인 예약이 없어요",
-  "퇴실 확인 중인 예약이 없어요",
   "사용 완료된 예약이 없어요",
 ];
 
@@ -49,21 +47,12 @@ export const HostReservationPage = () => {
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [agreedToGuide, setAgreedToGuide] = useState(false);
 
-  // 퇴실 사진 갤러리
-  const [photoViewTarget, setPhotoViewTarget] = useState<ApiHostReservation | null>(null);
-  const [checkoutPhotos, setCheckoutPhotos] = useState<string[]>([]);
-  const [isPhotosLoading, setIsPhotosLoading] = useState(false);
-  const [photoIndex, setPhotoIndex] = useState(0);
-
-  // 퇴실 승인/거부
-  const [checkoutApproveTargetId, setCheckoutApproveTargetId] = useState<number | null>(null);
-  const [checkoutRejectTargetId, setCheckoutRejectTargetId] = useState<number | null>(null);
 
   const loadReservations = useCallback(async () => {
     try {
       setIsLoading(true);
       const all: ApiHostReservation[] = [];
-      let cursor: number | undefined = undefined;
+      let cursor: string | undefined = undefined;
       while (true) {
         const result = await fetchHostReservations({ size: 50, cursor });
         all.push(...(result.reservations ?? []));
@@ -71,7 +60,8 @@ export const HostReservationPage = () => {
         cursor = result.nextCursor;
       }
       setReservations(all);
-    } catch {
+    } catch (e) {
+      console.error("[HostReservationPage] 예약 로드 실패:", e);
       setReservations([]);
     } finally {
       setIsLoading(false);
@@ -82,15 +72,27 @@ export const HostReservationPage = () => {
     loadReservations();
   }, [loadReservations]);
 
-  const countByStatus = (status: ReservationStatus) =>
-    reservations.filter((r) => r.status === status).length;
+  const matchesTab = (r: ApiHostReservation, status: ReservationStatus) =>
+    status === "CHECKOUT_COMPLETED"
+      ? r.status === "CHECKOUT_COMPLETED" || r.status === "USAGE_COMPLETED"
+      : r.status === status;
 
   const tabs = TAB_LABELS.map((label, i) => ({
     label,
-    count: countByStatus(TAB_STATUS[i]),
+    count: reservations.filter((r) => matchesTab(r, TAB_STATUS[i])).length,
   }));
 
-  const filtered = reservations.filter((r) => r.status === TAB_STATUS[activeTab]);
+  const filtered = reservations.filter((r) => matchesTab(r, TAB_STATUS[activeTab]));
+
+  // 퇴실 사진 갤러리
+  const [photoViewTarget, setPhotoViewTarget] = useState<ApiHostReservation | null>(null);
+  const [checkoutPhotos, setCheckoutPhotos] = useState<string[]>([]);
+  const [isPhotosLoading, setIsPhotosLoading] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
+
+  // 퇴실 승인/거부
+  const [checkoutApproveTargetId, setCheckoutApproveTargetId] = useState<number | null>(null);
+  const [checkoutRejectTargetId, setCheckoutRejectTargetId] = useState<number | null>(null);
 
   const rejectTarget = reservations.find((r) => r.reservationId === rejectTargetId);
   const checkoutApproveTarget = reservations.find((r) => r.reservationId === checkoutApproveTargetId);
@@ -270,7 +272,6 @@ export const HostReservationPage = () => {
             >
               ✕
             </button>
-
             {isPhotosLoading ? (
               <div className="flex h-[400px] w-full items-center justify-center rounded-xl bg-black/50">
                 <span className="text-white">사진 불러오는 중...</span>
@@ -289,18 +290,14 @@ export const HostReservationPage = () => {
                   <>
                     <button
                       className="absolute top-1/2 left-4 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow"
-                      onClick={() =>
-                        setPhotoIndex((i) => (i - 1 + checkoutPhotos.length) % checkoutPhotos.length)
-                      }
+                      onClick={() => setPhotoIndex((i) => (i - 1 + checkoutPhotos.length) % checkoutPhotos.length)}
                       aria-label="이전 사진"
                     >
                       ‹
                     </button>
                     <button
                       className="absolute top-1/2 right-4 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow"
-                      onClick={() =>
-                        setPhotoIndex((i) => (i + 1) % checkoutPhotos.length)
-                      }
+                      onClick={() => setPhotoIndex((i) => (i + 1) % checkoutPhotos.length)}
                       aria-label="다음 사진"
                     >
                       ›

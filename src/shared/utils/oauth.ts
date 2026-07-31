@@ -98,7 +98,7 @@ export async function switchMode(
 ): Promise<{ currentMode: "HOST" | "GUEST" }> {
   return apiFetch("/api/v1/users/me/mode", {
     method: "PATCH",
-    body: JSON.stringify({ targetMode }),
+    body: JSON.stringify({ mode: targetMode }),
   });
 }
 

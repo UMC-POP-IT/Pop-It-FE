@@ -32,13 +32,14 @@ export const MySpacePage = () => {
       const MAX_PAGES = 20;
       let page = 0;
       while (page < MAX_PAGES) {
-        const result = await fetchMySpaces({ size: 50, page });
+        const result = await fetchMySpaces({ size: 10, page });
         all.push(...(result.spaces ?? []));
         if (!result.hasNext) break;
         page += 1;
       }
       setSpaces(all);
-    } catch {
+    } catch (e) {
+      console.error("[MySpacePage] 내 공간 로드 실패:", e);
       setIsError(true);
     } finally {
       setIsLoading(false);
