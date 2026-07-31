@@ -1,8 +1,9 @@
-import type { Space } from "@/features/guest-explore/api/spaces_api";
+import type { Space } from "@/types";
 import Badge from "@/shared/components/Badge";
 
 interface SpaceCardProps {
   space: Space;
+  isWished?: boolean;
   onClick?: () => void;
   onWishToggle?: (e: React.MouseEvent) => void;
   /** 이미지 위 카테고리 뱃지 (ex. 팝업스토어) */
@@ -13,6 +14,7 @@ interface SpaceCardProps {
 
 const SpaceCard = ({
   space,
+  isWished = false,
   onClick,
   onWishToggle,
   categoryTag,
@@ -27,10 +29,10 @@ const SpaceCard = ({
   >
     {/* 이미지 */}
     <div className="bg-bg relative aspect-[4/3]">
-      {space.thumbnailUrl ? (
+      {space.imageUrls[0] ? (
         <img
-          src={space.thumbnailUrl}
-          alt={space.buildingName}
+          src={space.imageUrls[0]}
+          alt={space.name}
           className="h-full w-full object-cover"
         />
       ) : (
@@ -44,9 +46,9 @@ const SpaceCard = ({
         }}
       >
         <span
-          className={`text-lg ${space.isWishlisted ? "text-red-500" : "text-white drop-shadow"}`}
+          className={`text-lg ${isWished ? "text-red-500" : "text-white drop-shadow"}`}
         >
-          {space.isWishlisted ? "♥" : "♡"}
+          {isWished ? "♥" : "♡"}
         </span>
       </button>
       {categoryTag && (
@@ -66,28 +68,28 @@ const SpaceCard = ({
               label={matchReason}
             />
             <span className="text-text-secondary flex shrink-0 items-center gap-0.5 text-xs">
-              ♡ {space.wishCount}
+              ♡ {space.heartCount}
             </span>
           </div>
           <span className="text-text-primary truncate text-sm font-semibold">
-            {space.buildingName}
+            {space.name}
           </span>
         </>
       ) : (
         <div className="flex items-center justify-between gap-2">
           <span className="text-text-primary truncate text-sm font-semibold">
-            {space.buildingName}
+            {space.name}
           </span>
           <span className="text-text-secondary flex shrink-0 items-center gap-0.5 text-xs">
-            ♡ {space.wishCount}
+            ♡ {space.heartCount}
           </span>
         </div>
       )}
       <span className="text-text-secondary truncate text-xs">
-        {space.roadAddress}
+        {space.address}
       </span>
       <span className="text-text-primary text-sm font-bold">
-        {Number(space.pricePerDay).toLocaleString()}원{" "}
+        {space.cost.day.toLocaleString()}원{" "}
         <span className="text-text-secondary text-xs font-normal">/일</span>
       </span>
       {space.keywords.length > 0 && (

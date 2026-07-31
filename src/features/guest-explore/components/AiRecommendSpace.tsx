@@ -1,17 +1,45 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import SpaceCard from "@/shared/components/SpaceCard";
-import type { Space } from "../api/spaces_api";
+import type { Space } from "@/types";
+import type { Space as AiRecommendSpaceDto } from "../api/spaces_api";
 import { ScrollButton } from "./ScrollButton";
 import { useNavigate } from "react-router-dom";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
 
 import { getAiRecommend } from "../api/spaces_api";
 
+interface AiRecommendCard {
+  space: Space;
+  categoryTag: string;
+  matchReason: string;
+  isWished: boolean;
+}
+
+// AI 맞춤형 공간 API 응답(spaceId/buildingName/... 백엔드 필드명)을
+// 앱 전역에서 공용으로 쓰는 Space 모델(id/name/... )로 변환
+const toCard = (dto: AiRecommendSpaceDto): AiRecommendCard => ({
+  space: {
+    id: dto.spaceId,
+    hostId: 0,
+    imageUrls: dto.thumbnailUrl ? [dto.thumbnailUrl] : [],
+    heartCount: dto.wishCount,
+    name: dto.buildingName,
+    address: dto.roadAddress,
+    cost: { day: dto.pricePerDay },
+    keywords: dto.keywords,
+    description: "",
+    createdAt: "",
+  },
+  categoryTag: dto.spaceCategory,
+  matchReason: dto.tag,
+  isWished: dto.isWishlisted,
+});
+
 const AiRecommendSpace = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
-  const [spaces, setSpaces] = useState<Space[]>([]);
+  const [cards, setCards] = useState<AiRecommendCard[]>([]);
 
   const { handleWishToggle } = useWishGuard();
   const navigate = useNavigate();
@@ -41,7 +69,7 @@ const AiRecommendSpace = () => {
   // AI 맞춤형 공간 정보 조회
   useEffect(() => {
     getAiRecommend()
-    .then((data) => {setSpaces(data?.spaces ?? []);})
+    .then((data) => {setCards((data?.spaces ?? []).map(toCard));})
     .catch((error) => console.error("AI 맞춤형 공간 조회 실패", error));
   }, []);
 
@@ -65,23 +93,21 @@ const AiRecommendSpace = () => {
           ref={scrollRef}
           className="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {spaces.map((recSpace) => {
-            const space = spaces.find((s) => s.spaceId === recSpace.spaceId) ?? recSpace;
-            return (
-              <div
-                key={space.spaceId}
-                className="w-[calc(50%-0.5rem)] flex-none sm:w-[calc((100%-2*1rem)/3)] lg:w-[calc((100%-3*1rem)/4)]"
-              >
-                <SpaceCard
-                  space={space}
-                  categoryTag={space.spaceCategory}
-                  matchReason={space.tag}
-                  onWishToggle={() => handleWishToggle(space.spaceId)}
-                  onClick={() => navigate(`/spaces/${space.spaceId}`)}
-                />
-              </div>
-            );
-          })}
+          {cards.map(({ space, categoryTag, matchReason, isWished }) => (
+            <div
+              key={space.id}
+              className="w-[calc(50%-0.5rem)] flex-none sm:w-[calc((100%-2*1rem)/3)] lg:w-[calc((100%-3*1rem)/4)]"
+            >
+              <SpaceCard
+                space={space}
+                categoryTag={categoryTag}
+                matchReason={matchReason}
+                isWished={isWished}
+                onWishToggle={() => handleWishToggle(space.id)}
+                onClick={() => navigate(`/spaces/${space.id}`)}
+              />
+            </div>
+          ))}
         </div>
 
         {canScrollNext && <ScrollButton direction="next" position={"1/4"} onClick={() => scrollByCard(1)} />}
