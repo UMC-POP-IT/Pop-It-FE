@@ -5,11 +5,11 @@ import MapBackground from "./MapBackground";
 import { useKakaoLoader } from "@/shared/hooks/useKakaoLoader";
 import { useWishStore } from "@/store/wishStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
-import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
+import type { SpaceSummary } from "@/features/guest-explore/api/space_search_api";
 
 interface ExploreSpaceMapProps {
   /** 지도 위에 가격 마커로 노출할 공간 목록 */
-  spaces: ExploreSpaceDetail[];
+  spaces: SpaceSummary[];
   onSelectSpace: (spaceId: number) => void;
   onClose: () => void;
 }
@@ -57,7 +57,7 @@ const ExploreSpaceMap = ({
                     className={`rounded-full border px-3 py-1 text-sm font-bold whitespace-nowrap shadow-sm ${
                       space.id === selectedSpaceId
                         ? "border-primary bg-primary text-white"
-                        : "border-border bg-white text-text-primary"
+                        : "border-border text-text-primary bg-white"
                     }`}
                   >
                     {space.cost.day.toLocaleString()}원
