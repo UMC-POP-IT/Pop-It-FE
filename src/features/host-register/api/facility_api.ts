@@ -19,7 +19,13 @@ export interface FacilityListRes {
 }
 
 export const getFacilities = async () => {
-  const res =
+  const { data } =
     await api.get<PopitResponse<FacilityListRes>>("/api/v1/facilities");
-  return res.data.result;
+
+  // HTTP 200이어도 서버가 처리 실패로 답할 수 있어 isSuccess를 확인한다
+  if (!data.isSuccess) {
+    throw new Error(`[${data.code}] ${data.message}`);
+  }
+
+  return data.result;
 };
