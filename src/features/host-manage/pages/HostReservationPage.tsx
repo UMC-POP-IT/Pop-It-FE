@@ -61,12 +61,14 @@ export const HostReservationPage = () => {
     try {
       setIsLoading(true);
       const all: ApiHostReservation[] = [];
-      let cursor: number | null | undefined = undefined;
-      do {
-        const result = await fetchHostReservations({ size: 50, cursor: cursor ?? undefined });
+      let cursor: number | undefined = undefined;
+      let hasNext = true;
+      while (hasNext) {
+        const result = await fetchHostReservations({ size: 50, cursor });
         all.push(...(result.reservations ?? []));
-        cursor = result.hasNext ? result.nextCursor : null;
-      } while (cursor != null);
+        hasNext = result.hasNext;
+        cursor = result.nextCursor ?? undefined;
+      }
       setReservations(all);
     } catch {
       setReservations([]);
