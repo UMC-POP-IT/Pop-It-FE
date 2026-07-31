@@ -16,8 +16,8 @@ import { getFacilities } from "@/features/host-register/api/facility_api";
 import type {
   FacilityCategory,
   FacilityCategoryGroup,
-  FacilityItem,
 } from "@/features/host-register/api/facility_api";
+import FacilityChipGroup from "@/features/host-register/components/FacilityChipGroup";
 
 // 서버 카테고리 → 화면 라벨 (서버는 영어 enum, 화면은 한글)
 const FACILITY_CATEGORY_LABEL: Record<FacilityCategory, string> = {
@@ -300,30 +300,3 @@ const ChipGroup = ({
     </div>
   );
 };
-
-// 시설 칩 그룹 — 화면엔 이름을, 값으론 facilityId를 다룬다
-const FacilityChipGroup = ({
-  label,
-  items,
-  selectedIds,
-  onToggle,
-}: {
-  label: string;
-  items: FacilityItem[];
-  selectedIds: number[];
-  onToggle: (facilityId: number) => void;
-}) => (
-  <div className="flex flex-col gap-2">
-    <span className="text-text-tertiary text-xl font-bold">{label}</span>
-    <div className="flex flex-wrap gap-2">
-      {items.map((item) => (
-        <Chip
-          key={item.facilityId}
-          label={item.name}
-          selected={selectedIds.includes(item.facilityId)}
-          onClick={() => onToggle(item.facilityId)}
-        />
-      ))}
-    </div>
-  </div>
-);
