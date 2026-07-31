@@ -10,7 +10,7 @@ interface PaymentModalProps {
   onAgreedToGuideChange: (agreed: boolean) => void;
   onClose: () => void;
   onSignContract: () => void;
-  PaymentInfo: GetPaymentInfoResponse;
+  paymentInfo: GetPaymentInfoResponse;
 }
 
 const PaymentModal = ({
@@ -20,7 +20,7 @@ const PaymentModal = ({
   onAgreedToGuideChange,
   onClose,
   onSignContract,
-  PaymentInfo
+  paymentInfo
 }: PaymentModalProps) => {
 
   if (!isOpen) return null;
@@ -39,7 +39,7 @@ const PaymentModal = ({
           <div className="flex justify-between">
             <span className="text-text-secondary">기간</span>
             <span className="text-text-primary font-medium">
-              {formatDate(reservation.startDate)} ~ {formatDate(reservation.endDate)} ({PaymentInfo.period}일)
+              {formatDate(reservation.startDate)} ~ {formatDate(reservation.endDate)} ({paymentInfo.period}일)
             </span>
           </div>
         </div>
@@ -47,23 +47,23 @@ const PaymentModal = ({
         <div className="border-border flex flex-col gap-2 border-t pt-4 text-sm">
           <div className="flex justify-between">
             <span className="text-text-secondary">임대료</span>
-            <span className="text-text-primary font-medium">{PaymentInfo.rentalFee.toLocaleString()}원</span>
+            <span className="text-text-primary font-medium">{paymentInfo.rentalFee.toLocaleString()}원</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">보증금(에스크로)</span>
             {/* TODO: 보증금 계산 로직 확정 후 반영 */}
-            <span className="text-text-primary font-medium">{PaymentInfo.deposit.toLocaleString()}원</span>
+            <span className="text-text-primary font-medium">{paymentInfo.deposit.toLocaleString()}원</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">단기 공간 보험료 5% 적용</span>
             {/* TODO: 보험료 계산 로직 확정 후 반영 */}
-            <span className="text-text-primary font-medium">{PaymentInfo.insuranceFee.toLocaleString()}원</span>
+            <span className="text-text-primary font-medium">{paymentInfo.insuranceFee.toLocaleString()}원</span>
           </div>
         </div>
 
         <div className="border-border flex items-center justify-between border-t pt-4 font-bold">
           <span className="text-text-primary text-base">총 결제 금액</span>
-          <span className="text-lg">{PaymentInfo.totalPrice}원</span>
+          <span className="text-lg">{paymentInfo.totalPrice}원</span>
         </div>
 
         <div className="bg-secure-payment-bg flex gap-2 rounded-lg p-3">
