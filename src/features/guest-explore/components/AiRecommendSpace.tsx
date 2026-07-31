@@ -40,6 +40,8 @@ const AiRecommendSpace = () => {
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
   const [cards, setCards] = useState<AiRecommendCard[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   const { handleWishToggle } = useWishGuard();
   const navigate = useNavigate();
@@ -68,9 +70,27 @@ const AiRecommendSpace = () => {
 
   // AI 맞춤형 공간 정보 조회
   useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+    setIsError(false);
+
     getAiRecommend()
-    .then((data) => {setCards((data?.spaces ?? []).map(toCard));})
-    .catch((error) => console.error("AI 맞춤형 공간 조회 실패", error));
+      .then((data) => {
+        if (!isMounted) return;
+        setCards((data?.spaces ?? []).map(toCard));
+      })
+      .catch((error) => {
+        console.error("AI 맞춤형 공간 조회 실패", error);
+        if (!isMounted) return;
+        setIsError(true);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // SpaceCard 단위로 스크롤
@@ -93,21 +113,27 @@ const AiRecommendSpace = () => {
           ref={scrollRef}
           className="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {cards.map(({ space, categoryTag, matchReason, isWished }) => (
-            <div
-              key={space.id}
-              className="w-[calc(50%-0.5rem)] flex-none sm:w-[calc((100%-2*1rem)/3)] lg:w-[calc((100%-3*1rem)/4)]"
-            >
-              <SpaceCard
-                space={space}
-                categoryTag={categoryTag}
-                matchReason={matchReason}
-                isWished={isWished}
-                onWishToggle={() => handleWishToggle(space.id)}
-                onClick={() => navigate(`/spaces/${space.id}`)}
-              />
-            </div>
-          ))}
+          {isLoading ? (
+            <p className="text-text-secondary text-sm">추천 공간을 불러오는 중이에요...</p>
+          ) : isError ? (
+            <p className="text-text-secondary text-sm">추천 공간을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</p>
+          ) : (
+            cards.map(({ space, categoryTag, matchReason, isWished }) => (
+              <div
+                key={space.id}
+                className="w-[calc(50%-0.5rem)] flex-none sm:w-[calc((100%-2*1rem)/3)] lg:w-[calc((100%-3*1rem)/4)]"
+              >
+                <SpaceCard
+                  space={space}
+                  categoryTag={categoryTag}
+                  matchReason={matchReason}
+                  isWished={isWished}
+                  onWishToggle={() => handleWishToggle(space.id)}
+                  onClick={() => navigate(`/spaces/${space.id}`)}
+                />
+              </div>
+            ))
+          )}
         </div>
 
         {canScrollNext && <ScrollButton direction="next" position={"1/4"} onClick={() => scrollByCard(1)} />}
