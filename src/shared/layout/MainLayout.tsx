@@ -127,9 +127,20 @@ const TossPaymentResultHandler = () => {
     const orderId = params.get("orderId");
     const amount = params.get("amount");
 
+    let paymentId: number | undefined;
+    if (pendingRaw) {
+      try {
+        const parsed = JSON.parse(pendingRaw);
+        if (typeof parsed?.paymentId === "number") {
+          paymentId = parsed.paymentId;
+        }
+      } catch (error) {
+        console.error("Failed to parse pending payment info:", error);
+      }
+    }
+
     // 성공 리다이렉트: paymentKey/orderId/amount + 결제 요청 시 저장해둔 paymentId가 모두 있어야 승인 가능
-    if (paymentKey && orderId && amount && pendingRaw) {
-      const { paymentId } = JSON.parse(pendingRaw) as { paymentId: number };
+    if (paymentKey && orderId && amount && paymentId !== undefined) {
       PaymentApproval(paymentId, { paymentKey, orderId, amount: Number(amount) })
         .then(() => {
           setResult({
