@@ -125,8 +125,7 @@ export const HostReservationCard = ({
 
             {(status === "APPROVED" ||
               status === "CONTRACT_COMPLETED" ||
-              status === "IN_USE" ||
-              status === "CHECKOUT_COMPLETED") && (
+              status === "IN_USE") && (
               <button
                 onClick={onDetail}
                 className="bg-surface-blue text-text-primary h-10 rounded-lg px-6 py-1.5 text-base font-bold"

@@ -184,6 +184,7 @@ export async function fetchMySpaces(params?: {
 }
 
 export async function deleteSpace(spaceId: number): Promise<void> {
+  if (DEV_MOCK) return;
   await apiFetch(`/api/v1/spaces/${spaceId}`, { method: "DELETE" });
 }
 
