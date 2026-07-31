@@ -22,11 +22,12 @@ export const RegisterStep1 = () => {
   const navigate = useNavigate();
   const [isAddrOpen, setIsAddrOpen] = useState(false);
   const [addrError, setAddrError] = useState(""); // 서울 외 지역 선택 시 에러
-  const { isLoaded } = useKakaoLoader(); // 카카오 SDK 로드 (좌표 변환에 필요)
+  const { isLoaded, error: kakaoError } = useKakaoLoader(); // 카카오 SDK 로드 (좌표 변환에 필요)
   const isValid =
     form.buildingType !== "" &&
     form.address !== "" &&
     form.latitude !== null &&
+    form.longitude !== null &&
     form.detailAddress.trim() !== "";
 
   return (
@@ -108,7 +109,8 @@ export const RegisterStep1 = () => {
           {/* 안내문 (에러 없을 때만)주소만 있고 좌표가 없으면 재검색 유도 */}
           {!addrError && (
             <span className="text-text-placeholder text-base font-bold">
-              {form.address !== "" && form.latitude !== null
+              {form.address !== "" &&
+              (form.latitude === null || form.longitude === null)
                 ? "주소를 다시 검색해주세요"
                 : "현재 서울 지역만 등록 가능합니다"}
             </span>
@@ -157,7 +159,11 @@ export const RegisterStep1 = () => {
           }
           //지도 SDK 로드 전이면 변환 불가
           if (!isLoaded) {
-            setAddrError("지도를 불러오는 중입니다. 잠시후 다시 시도해주세요");
+            setAddrError(
+              kakaoError
+                ? "지도 서비스를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요"
+                : "지도를 불러오는 중입니다. 잠시 후 다시 시도해주세요",
+            );
             clearAddress();
             return;
           }
