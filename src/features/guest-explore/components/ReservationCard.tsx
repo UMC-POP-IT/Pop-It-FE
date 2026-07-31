@@ -88,7 +88,8 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false); // 퇴실 사진 인증 창 open 여부
   const [isPhotoVerifiedDone, setIsPhotoVerifiedDone] = useState(false); // 사진 인증 완료 여부
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false); // 사진 업로드 진행 중 여부
-  const [PaymentInfo, setPaymentInfo] = useState<GetPaymentInfoResponse | null>(null); // 결제 정보
+  const [paymentInfo, setPaymentInfo] = useState<GetPaymentInfoResponse | null>(null); // 결제 정보
+  const [isPaymentInfoError, setIsPaymentInfoError] = useState(false); // 결제 정보 조회 실패 여부
 
   const label = isPhotoVerifiedDone ? "퇴실 완료" : cardMeta.label;
   const needsPhotoVerification = cardMeta.needsPhotoVerification && !isPhotoVerifiedDone;
@@ -119,6 +120,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
         uploadType: "CHECKOUT",
         files: files.map((file) => ({ contentType: file.type })),
       });
+      if (uploads.length !== files.length) throw new Error("업로드 URL 개수가 파일 개수와 일치하지 않습니다.");
 
       await Promise.all(uploads.map(({ presignedUrl }, index) => UploadFileToPresignedURL(presignedUrl, files[index])));
 
@@ -143,14 +145,29 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   };
 
   useEffect(() => {
-    const _GetPaymentInfo = async (status: Status) => {
-      if (status === "APPROVED"){
+    let ignore = false;
+
+    const loadPaymentInfo = async (status: Status) => {
+      if (status !== "APPROVED") return;
+      setIsPaymentInfoError(false);
+      try {
         const data = await GetPaymentInfo(reservation.reservationId);
-        setPaymentInfo(data);
+        if (!ignore) setPaymentInfo(data);
+      } catch (error) {
+        if (!ignore) {
+          console.error(error);
+          setIsPaymentInfoError(true);
+        }
       }
-    }
-    _GetPaymentInfo(reservation.status);  
-  },[]);
+    };
+
+    setPaymentInfo(null);
+    loadPaymentInfo(reservation.status);
+
+    return () => {
+      ignore = true;
+    };
+  }, [reservation.reservationId, reservation.status]);
 
   return (
     <div className="border-border flex flex-col gap-4 border-b py-4 last:border-none sm:flex-row">
@@ -209,9 +226,17 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
                 </Button>
               )}
               {showContract && (
-                <Button variant="primary" size="sm" onClick={() => setisPaymentModalOpen(true)}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={!paymentInfo}
+                  onClick={() => setisPaymentModalOpen(true)}
+                >
                   계약 하기
                 </Button>
+              )}
+              {showContract && isPaymentInfoError && (
+                <span className="self-center text-red-400 text-sm">결제 정보를 불러오지 못했습니다</span>
               )}
             </div>
           </div>
@@ -231,7 +256,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
       />
 
       {/* Payment Modal */}
-      {PaymentInfo && (
+      {paymentInfo && (
         <PaymentModal
           isOpen={isPaymentModalOpen}
           reservation={reservation}
@@ -239,16 +264,16 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
           onAgreedToGuideChange={setAgreedToGuide}
           onClose={() => setisPaymentModalOpen(false)}
           onSignContract={handleSignContract}
-          PaymentInfo={PaymentInfo}
+          paymentInfo={paymentInfo}
         />
       )}
 
       {/* Contract Modal */}
-      {PaymentInfo && (
+      {paymentInfo && (
         <ContractModal
           isOpen={isContractModalOpen}
           reservation={reservation}
-          PaymentInfo={PaymentInfo}
+          paymentInfo={paymentInfo}
           onClose={() => setIsContractModalOpen(false)}
         />
       )}
