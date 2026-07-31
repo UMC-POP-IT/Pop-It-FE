@@ -5,7 +5,7 @@ export async function getPresignedUrls(
   uploadType: UploadType,
   files: { contentType: string }[],
 ): Promise<PresignedUrlResult> {
-  return apiFetch<PresignedUrlResult>("/uploads/presigned-url", {
+  return apiFetch<PresignedUrlResult>("/api/v1/uploads/presigned-url", {
     method: "POST",
     body: JSON.stringify({ uploadType, files }),
   });

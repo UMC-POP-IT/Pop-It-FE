@@ -1,6 +1,6 @@
 import { reissueToken } from "@/shared/utils/tokenUtils";
 
-const BASE_URL = "https://api.popit.co.kr";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
 interface ApiError extends Error {
   status: number;

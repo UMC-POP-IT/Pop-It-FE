@@ -1,4 +1,4 @@
-const BASE_URL = "https://api.popit.co.kr";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
 export async function reissueToken(): Promise<string> {
   const refreshToken = localStorage.getItem("refresh_token");

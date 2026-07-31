@@ -29,12 +29,12 @@ export const MySpacePage = () => {
       setIsLoading(true);
       setIsError(false);
       const all: ApiMySpace[] = [];
+      const MAX_PAGES = 20;
       let page = 0;
-      let hasNext = true;
-      while (hasNext) {
+      while (page < MAX_PAGES) {
         const result = await fetchMySpaces({ size: 50, page });
         all.push(...(result.spaces ?? []));
-        hasNext = result.hasNext;
+        if (!result.hasNext) break;
         page += 1;
       }
       setSpaces(all);

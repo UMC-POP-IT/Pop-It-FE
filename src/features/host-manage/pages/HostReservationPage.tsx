@@ -66,8 +66,8 @@ export const HostReservationPage = () => {
       while (hasNext) {
         const result = await fetchHostReservations({ size: 50, cursor });
         all.push(...(result.reservations ?? []));
-        hasNext = result.hasNext;
-        cursor = result.nextCursor ?? undefined;
+        if (!result.hasNext || result.nextCursor == null) break;
+        cursor = result.nextCursor;
       }
       setReservations(all);
     } catch {
@@ -120,10 +120,10 @@ export const HostReservationPage = () => {
   const handleReject = async () => {
     if (rejectTargetId === null) return;
     try {
-      await rejectReservation(rejectTargetId);
+      const result = await rejectReservation(rejectTargetId);
       setReservations((prev) =>
         prev.map((r) =>
-          r.reservationId === rejectTargetId ? { ...r, status: "CANCELLED" as ReservationStatus } : r,
+          r.reservationId === rejectTargetId ? { ...r, status: result.status } : r,
         ),
       );
     } catch {
@@ -135,8 +135,12 @@ export const HostReservationPage = () => {
   const handleCheckoutApprove = async () => {
     if (checkoutApproveTargetId === null) return;
     try {
-      await approveCheckout(checkoutApproveTargetId);
-      setReservations((prev) => prev.filter((r) => r.reservationId !== checkoutApproveTargetId));
+      const result = await approveCheckout(checkoutApproveTargetId);
+      setReservations((prev) =>
+        prev.map((r) =>
+          r.reservationId === checkoutApproveTargetId ? { ...r, status: result.status } : r,
+        ),
+      );
     } catch {
       await loadReservations();
     }
