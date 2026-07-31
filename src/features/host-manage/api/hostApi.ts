@@ -50,6 +50,17 @@ const mockReservations: ApiHostReservation[] = [
     guest: { userId: 13, nickname: "박플래그" },
   },
   {
+    reservationId: 110,
+    status: "USAGE_COMPLETED",
+    startDate: "2026-07-01",
+    endDate: "2026-07-10",
+    usagePurpose: "인디 뮤지션 팝업 음반 판매전",
+    totalPrice: 3200000,
+    isPhotoVerified: true,
+    space: { spaceId: 2, buildingName: "홍대 루프탑 스튜디오", address: "서울 마포구 와우산로 44", thumbnailUrl: "" },
+    guest: { userId: 11, nickname: "김팝업" },
+  },
+  {
     reservationId: 111,
     status: "CHECKOUT_COMPLETED",
     startDate: "2026-06-10",
@@ -110,6 +121,7 @@ export async function fetchHostReservations(params?: {
 export async function approveReservation(
   reservationId: number,
 ): Promise<ReservationActionResult> {
+  if (DEV_MOCK) return { reservationId, status: "APPROVED" };
   return apiFetch(`/api/v1/reservations/${reservationId}/approve`, {
     method: "POST",
   });
@@ -118,6 +130,7 @@ export async function approveReservation(
 export async function rejectReservation(
   reservationId: number,
 ): Promise<ReservationActionResult> {
+  if (DEV_MOCK) return { reservationId, status: "CANCELLED" };
   return apiFetch(`/api/v1/reservations/${reservationId}/reject`, {
     method: "POST",
   });
@@ -126,6 +139,7 @@ export async function rejectReservation(
 export async function approveCheckout(
   reservationId: number,
 ): Promise<ReservationActionResult> {
+  if (DEV_MOCK) return { reservationId, status: "CHECKOUT_COMPLETED" };
   return apiFetch(`/api/v1/reservations/${reservationId}/checkout/approve`, {
     method: "POST",
   });
@@ -134,14 +148,21 @@ export async function approveCheckout(
 export async function rejectCheckout(
   reservationId: number,
 ): Promise<ReservationActionResult> {
+  if (DEV_MOCK) return { reservationId, status: "USAGE_COMPLETED" };
   return apiFetch(`/api/v1/reservations/${reservationId}/checkout/reject`, {
     method: "POST",
   });
 }
 
+const MOCK_PHOTO_URLS = [
+  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+  "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800",
+];
+
 export async function fetchCheckoutPhotos(
   reservationId: number,
 ): Promise<string[]> {
+  if (DEV_MOCK) return MOCK_PHOTO_URLS;
   const result = await apiFetch<CheckoutPhotosResult>(
     `/api/v1/reservations/${reservationId}/checkout-images`,
   );

@@ -74,7 +74,7 @@ export const HostReservationPage = () => {
 
   const matchesTab = (r: ApiHostReservation, status: ReservationStatus) =>
     status === "CHECKOUT_COMPLETED"
-      ? r.status === "CHECKOUT_COMPLETED" || r.status === "USAGE_COMPLETED"
+      ? r.status === "USAGE_COMPLETED"
       : r.status === status;
 
   const tabs = TAB_LABELS.map((label, i) => ({
@@ -156,7 +156,9 @@ export const HostReservationPage = () => {
       const result = await rejectCheckout(checkoutRejectTargetId);
       setReservations((prev) =>
         prev.map((r) =>
-          r.reservationId === checkoutRejectTargetId ? { ...r, status: result.status } : r,
+          r.reservationId === checkoutRejectTargetId
+            ? { ...r, status: result.status, isPhotoVerified: false }
+            : r,
         ),
       );
     } catch {
