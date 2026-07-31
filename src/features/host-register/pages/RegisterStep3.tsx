@@ -42,8 +42,10 @@ export const RegisterStep3 = () => {
   useEffect(() => {
     getFacilities()
       .then((data) => setFacilityGroups(data.facilities))
-      .catch((err) => {
-        console.error("시설 목록 조회 실패", err);
+      .catch((err: unknown) => {
+        // AxiosError 전체를 찍으면 요청 헤더(토큰)까지 노출되므로 메시지만 남긴다
+        const message = err instanceof Error ? err.message : "알 수 없는 오류";
+        console.error("시설 목록 조회 실패:", message);
         setFacilityError(true);
       })
       .finally(() => setIsFacilityLoading(false));
@@ -200,11 +202,17 @@ export const RegisterStep3 = () => {
           시설 정보
         </span>
         {isFacilityLoading ? (
-          <span className="text-text-placeholder text-base font-bold">
+          <span
+            role="status"
+            className="text-text-placeholder text-base font-bold"
+          >
             시설 목록을 불러오는 중이에요...
           </span>
         ) : facilityError ? (
-          <span className="text-text-placeholder text-base font-bold">
+          <span
+            role="alert"
+            className="text-text-placeholder text-base font-bold"
+          >
             시설 목록을 불러오지 못했어요. 새로고침 후 다시 시도해주세요
           </span>
         ) : (
