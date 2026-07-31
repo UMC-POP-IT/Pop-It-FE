@@ -8,11 +8,11 @@ import { useRef, useState } from "react";
 interface ContractModalProps {
   isOpen: boolean;
   reservation: Reservation;
-  PaymentInfo: GetPaymentInfoResponse;
+  paymentInfo: GetPaymentInfoResponse;
   onClose: () => void;
 }
 
-const ContractModal = ({ isOpen, reservation, PaymentInfo, onClose }: ContractModalProps) => {
+const ContractModal = ({ isOpen, reservation, paymentInfo, onClose }: ContractModalProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSigned, setIsSigned] = useState(false);
   const signatureBoardRef = useRef<SignatureBoardRef>(null);
@@ -32,7 +32,7 @@ const ContractModal = ({ isOpen, reservation, PaymentInfo, onClose }: ContractMo
           <div className="flex flex-col gap-2 text-sm">
             <div className="flex justify-between">
               <span className="text-text-secondary">공간</span>
-              <span className="text-text-primary font-medium">{PaymentInfo.spaceName}</span>
+              <span className="text-text-primary font-medium">{paymentInfo.spaceName}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-text-secondary">주소</span>
@@ -41,7 +41,7 @@ const ContractModal = ({ isOpen, reservation, PaymentInfo, onClose }: ContractMo
             <div className="flex justify-between">
               <span className="text-text-secondary">기간</span>
               <span className="text-text-primary font-medium">
-                {formatDate(reservation.startDate)} ~ {formatDate(reservation.endDate)} ({PaymentInfo.period}일)
+                {formatDate(reservation.startDate)} ~ {formatDate(reservation.endDate)} ({paymentInfo.period}일)
               </span>
             </div>
           </div>
@@ -49,15 +49,15 @@ const ContractModal = ({ isOpen, reservation, PaymentInfo, onClose }: ContractMo
           <div className="border-border flex flex-col gap-2 border-t pt-4 text-sm">
             <div className="flex justify-between">
               <span className="text-text-secondary">임대료</span>
-              <span className="text-text-primary font-medium">{PaymentInfo.rentalFee.toLocaleString()}원</span>
+              <span className="text-text-primary font-medium">{paymentInfo.rentalFee.toLocaleString()}원</span>
             </div>
             <div className="flex justify-between">
               <span className="text-text-secondary">보증금(에스크로)</span>
-              <span className="text-text-primary font-medium">{PaymentInfo.deposit.toLocaleString()}원</span>
+              <span className="text-text-primary font-medium">{paymentInfo.deposit.toLocaleString()}원</span>
             </div>
             <div className="flex justify-between">
               <span className="text-text-secondary">단기 공간 보험료 5% 적용</span>
-              <span className="text-text-primary font-medium">{PaymentInfo.insuranceFee.toLocaleString()}원</span>
+              <span className="text-text-primary font-medium">{paymentInfo.insuranceFee.toLocaleString()}원</span>
             </div>
           </div>
 
