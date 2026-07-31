@@ -36,10 +36,17 @@ export const RegisterStep3 = () => {
     [],
   );
 
+  const [isFacilityLoading, setIsFacilityLoading] = useState(true);
+  const [facilityError, setFacilityError] = useState(false);
+
   useEffect(() => {
     getFacilities()
       .then((data) => setFacilityGroups(data.facilities))
-      .catch((err) => console.error("시설 목록 조회 실패", err));
+      .catch((err) => {
+        console.error("시설 목록 조회 실패", err);
+        setFacilityError(true);
+      })
+      .finally(() => setIsFacilityLoading(false));
   }, []);
 
   // 시설 선택 토글 — 이미 있으면 빼고, 없으면 넣는다
@@ -192,15 +199,25 @@ export const RegisterStep3 = () => {
         <span className="text-text-primary text-[22px] font-bold">
           시설 정보
         </span>
-        {facilityGroups.map((group) => (
-          <FacilityChipGroup
-            key={group.category}
-            label={FACILITY_CATEGORY_LABEL[group.category]}
-            items={group.items}
-            selectedIds={form.facilityIds}
-            onToggle={toggleFacility}
-          />
-        ))}
+        {isFacilityLoading ? (
+          <span className="text-text-placeholder text-base font-bold">
+            시설 목록을 불러오는 중이에요...
+          </span>
+        ) : facilityError ? (
+          <span className="text-text-placeholder text-base font-bold">
+            시설 목록을 불러오지 못했어요. 새로고침 후 다시 시도해주세요
+          </span>
+        ) : (
+          facilityGroups.map((group) => (
+            <FacilityChipGroup
+              key={group.category}
+              label={FACILITY_CATEGORY_LABEL[group.category]}
+              items={group.items}
+              selectedIds={form.facilityIds}
+              onToggle={toggleFacility}
+            />
+          ))
+        )}
       </div>
 
       {/* 이전 / 다음으로 (다음으로는 초기 비활성) */}
