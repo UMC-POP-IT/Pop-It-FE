@@ -19,7 +19,6 @@ export const MySpacePage = () => {
   const [spaces, setSpaces] = useState<ApiMySpace[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [editTargetId, setEditTargetId] = useState<number | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
@@ -203,17 +202,6 @@ export const MySpacePage = () => {
           </p>
         </div>
       )}
-
-      {/* 공간 등록 완료 모달 */}
-      <Modal
-        isOpen={showSuccessModal}
-        title="공간이 성공적으로 등록되었습니다!"
-        showCheckIcon
-        singleButton
-        confirmLabel="확인"
-        onConfirm={() => setShowSuccessModal(false)}
-        onCancel={() => setShowSuccessModal(false)}
-      />
 
       {/* 공간 수정 확인 모달 */}
       <Modal
