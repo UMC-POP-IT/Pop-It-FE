@@ -10,6 +10,7 @@ import {
   approveReservation,
   rejectReservation,
   approveCheckout,
+  rejectCheckout,
   fetchCheckoutPhotos,
 } from "@/features/host-manage/api/hostApi";
 import type { ApiHostReservation, ReservationStatus } from "@/types";
@@ -134,13 +135,18 @@ export const HostReservationPage = () => {
     setCheckoutApproveTargetId(null);
   };
 
-  const handleCheckoutReject = () => {
-    // 거절 시 게스트에게 알림 발송 — 프론트에서는 목록 유지 (isPhotoVerified → false 리셋)
-    setReservations((prev) =>
-      prev.map((r) =>
-        r.reservationId === checkoutRejectTargetId ? { ...r, isPhotoVerified: false } : r,
-      ),
-    );
+  const handleCheckoutReject = async () => {
+    if (checkoutRejectTargetId === null) return;
+    try {
+      await rejectCheckout(checkoutRejectTargetId);
+      setReservations((prev) =>
+        prev.map((r) =>
+          r.reservationId === checkoutRejectTargetId ? { ...r, isPhotoVerified: false } : r,
+        ),
+      );
+    } catch {
+      await loadReservations();
+    }
     setCheckoutRejectTargetId(null);
   };
 

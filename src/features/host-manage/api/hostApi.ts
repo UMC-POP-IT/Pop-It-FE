@@ -84,6 +84,14 @@ export async function fetchMySpaces(params?: {
   );
 }
 
+export async function rejectCheckout(
+  reservationId: number,
+): Promise<ReservationActionResult> {
+  return apiFetch(`/api/v1/reservations/${reservationId}/checkout/reject`, {
+    method: "POST",
+  });
+}
+
 export async function deleteSpace(spaceId: number): Promise<void> {
   await apiFetch(`/api/v1/spaces/${spaceId}`, { method: "DELETE" });
 }

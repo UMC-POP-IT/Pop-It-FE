@@ -1,4 +1,4 @@
-import { reissueToken } from "@/shared/utils/oauth";
+import { reissueToken } from "@/shared/utils/tokenUtils";
 
 const BASE_URL = "https://api.popit.co.kr";
 
