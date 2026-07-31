@@ -1,4 +1,4 @@
-import { apiFetch } from "@/shared/utils/apiClient";
+﻿import { apiFetch } from "@/shared/utils/apiClient";
 import type { ApiHostReservation, ApiMySpace, ReservationStatus } from "@/types";
 
 interface HostReservationsResult {
@@ -20,7 +20,7 @@ interface ReservationActionResult {
 }
 
 interface CheckoutPhotosResult {
-  imageUrls: string[];
+  photoUrls: string[];
 }
 
 export async function fetchHostReservations(params?: {
@@ -68,7 +68,7 @@ export async function fetchCheckoutPhotos(
   const result = await apiFetch<CheckoutPhotosResult>(
     `/api/v1/reservations/${reservationId}/checkout-images`,
   );
-  return result.imageUrls ?? [];
+  return result.photoUrls ?? [];
 }
 
 export async function fetchMySpaces(params?: {
@@ -95,3 +95,4 @@ export async function rejectCheckout(
 export async function deleteSpace(spaceId: number): Promise<void> {
   await apiFetch(`/api/v1/spaces/${spaceId}`, { method: "DELETE" });
 }
+

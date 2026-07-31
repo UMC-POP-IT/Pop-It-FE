@@ -20,15 +20,17 @@ const TAB_STATUS: ReservationStatus[] = [
   "APPROVED",
   "CONTRACTED",
   "IN_USE",
+  "USAGE_COMPLETED",
   "COMPLETED",
 ];
 
-const TAB_LABELS = ["승인 대기", "계약 대기", "계약 완료", "사용 중", "사용 완료"];
+const TAB_LABELS = ["승인 대기", "계약 대기", "계약 완료", "사용 중", "퇴실 확인 중", "사용 완료"];
 const EMPTY_MESSAGES = [
   "승인 대기 중인 예약이 없어요",
   "계약 대기 중인 예약이 없어요",
   "계약 완료된 예약이 없어요",
   "현재 사용 중인 예약이 없어요",
+  "퇴실 확인 중인 예약이 없어요",
   "사용 완료된 예약이 없어요",
 ];
 
@@ -62,8 +64,7 @@ export const HostReservationPage = () => {
       setIsLoading(true);
       const all: ApiHostReservation[] = [];
       let cursor: number | undefined = undefined;
-      let hasNext = true;
-      while (hasNext) {
+      while (true) {
         const result = await fetchHostReservations({ size: 50, cursor });
         all.push(...(result.reservations ?? []));
         if (!result.hasNext || result.nextCursor == null) break;
@@ -150,10 +151,10 @@ export const HostReservationPage = () => {
   const handleCheckoutReject = async () => {
     if (checkoutRejectTargetId === null) return;
     try {
-      await rejectCheckout(checkoutRejectTargetId);
+      const result = await rejectCheckout(checkoutRejectTargetId);
       setReservations((prev) =>
         prev.map((r) =>
-          r.reservationId === checkoutRejectTargetId ? { ...r, isPhotoVerified: false } : r,
+          r.reservationId === checkoutRejectTargetId ? { ...r, status: result.status } : r,
         ),
       );
     } catch {

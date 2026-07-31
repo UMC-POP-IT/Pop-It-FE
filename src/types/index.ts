@@ -46,6 +46,7 @@ export type ReservationStatus =
   | "APPROVED"
   | "CONTRACTED"
   | "IN_USE"
+  | "USAGE_COMPLETED"
   | "COMPLETED"
   | "CANCELLED";
 
