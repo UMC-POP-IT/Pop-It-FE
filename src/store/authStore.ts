@@ -34,6 +34,7 @@ interface AuthState {
   closeLoginModal: () => void;
   clearPendingAction: () => void;
   setHostRegistered: (isHostRegistered: boolean) => void;
+  setPendingAction: (action: PendingAction) => void;
   logout: () => void;
 }
 
@@ -52,6 +53,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   closeLoginModal: () => set({ isLoginModalOpen: false, pendingAction: null }),
   clearPendingAction: () => set({ pendingAction: null }),
   setHostRegistered: (isHostRegistered) => set({ isHostRegistered }),
+  setPendingAction: (action) => set({ pendingAction: action }),
   logout: () =>
     set({
       user: null,

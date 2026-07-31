@@ -21,10 +21,12 @@ export interface Space {
 
 export interface User {
   id: number;
-  email: string;
   nickname: string;
-  role: "GUEST" | "HOST";
-  profileImageUrl?: string;
+  currentMode: "GUEST" | "HOST";
+  socialProvider: "KAKAO" | "GOOGLE";
+  socialUid: string;
+  createdAt: string;
+  deletedAt: string | null;
 }
 
 export interface Reservation {

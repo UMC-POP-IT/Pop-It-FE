@@ -2,11 +2,11 @@ import { Fragment } from "react";
 import Logo from "@/shared/components/Logo";
 
 const FOOTER_LINKS = [
-  { label: "이용약관", href: "https://app.notion.com/p/3a47ff832aa380298623fb2bc0bd0e27" },
-  { label: "개인정보처리방침", href: "https://app.notion.com/p/3a47ff832aa3803c9439c22026742566" },
-  { label: "운영정책", href: "https://app.notion.com/p/3a47ff832aa380f99950de6e2b2c8606" },
-  { label: "호스트 이용약관", href: "https://app.notion.com/p/3a47ff832aa3801b9210cca3e675ae33" },
-  { label: "취소 및 환불 정책", href: "https://app.notion.com/p/3a47ff832aa380fa8f77ddffee35c6ae" },
+  { label: "이용약관", href: "https://giant-situation-2ce.notion.site/3a47ff832aa380298623fb2bc0bd0e27" },
+  { label: "개인정보처리방침", href: "https://giant-situation-2ce.notion.site/3a47ff832aa3803c9439c22026742566" },
+  { label: "운영정책", href: "https://giant-situation-2ce.notion.site/3a47ff832aa380f99950de6e2b2c8606" },
+  { label: "호스트 이용약관", href: "https://giant-situation-2ce.notion.site/3a47ff832aa3801b9210cca3e675ae33" },
+  { label: "취소 및 환불 정책", href: "https://giant-situation-2ce.notion.site/3a47ff832aa380fa8f77ddffee35c6ae" },
 ];
 
 const Footer = () => (
