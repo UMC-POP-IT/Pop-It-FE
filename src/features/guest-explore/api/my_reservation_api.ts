@@ -107,7 +107,32 @@ export interface GetPaymentInfoResponse {
     deposit: number;
     insuranceFee: number;
     totalPrice: number;
-  }
+}
+
+export interface PaymentRequestResponse {
+    paymentId: number;
+    orderId: string;
+    orderName: string;
+    amount: number;
+    rentFee: number;
+    deposit: number;
+    insuranceFee: number;
+    status: "PENDING" | "PAID" | "FAILED" | "EXPIRED";
+}
+
+export interface PaymentApprovalRequest {
+  paymentKey: string;
+  orderId: string;
+  amount: number;
+}
+
+export interface PaymentApprovalResponse {
+    paymentId: number;
+    orderId: string;
+    method: string;
+    status: "PENDING" | "PAID" | "FAILED" | "EXPIRED";
+    paidAt: string;
+}
 
 // 업로드 - 발급받은 presigned url 로 파일 직접 업로드 (S3 등 외부 스토리지로 전송되므로 apiFetch 미사용)
 export const UploadFileToPresignedURL = async (presignedUrl: string, file: File) => {
@@ -173,3 +198,17 @@ export const SubmitSignature = (reservationId: number, request: SubmitSignatureR
 // 결제 - 결제 예정 정보 조회 ~ DONE
 export const GetPaymentInfo = (reservationId: number) => 
     apiFetch<GetPaymentInfoResponse>(`/api/v1/reservations/${reservationId}/contracts/payment-preview`);
+
+// 결제 - 결제(요청)준비
+export const PaymentRequest = (contractId: number, idempotencyKey: string) =>
+    apiFetch<PaymentRequestResponse>(`/api/v1/contracts/${contractId}/payments`, {
+        method: "POST",
+        headers: { "Idempotency-Key": idempotencyKey },
+});
+
+// 결제 - 결제 승인
+export const PaymentApproval = (paymentId: number, request: PaymentApprovalRequest) => 
+    apiFetch<PaymentApprovalResponse>(`/api/v1/payments/${paymentId}/confirm`, {
+        method: "POST",
+        body: JSON.stringify(request),
+});

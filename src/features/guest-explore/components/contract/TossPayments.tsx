@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import Button from "@/shared/components/Button";
-import { GetPresignedURL, SubmitSignature, UploadFileToPresignedURL } from "@/features/guest-explore/api/my_reservation_api";
+import { GetPresignedURL, PaymentRequest, SubmitSignature, UploadFileToPresignedURL } from "@/features/guest-explore/api/my_reservation_api";
 
+export const TOSS_PENDING_PAYMENT_KEY = "toss_pending_payment";
 
 interface TossPaymentRequestOptions {
   method: "CARD";
   amount: { currency: "KRW"; value: number };
   orderId: string;
   orderName: string;
+  successUrl: string;
+  failUrl: string;
   customerEmail: string;
   customerName: string;
   customerMobilePhone: string;
@@ -38,29 +41,21 @@ const TOSS_SDK_SRC = "https://js.tosspayments.com/v2/standard";
 const CUSTOMER_KEY = "popit"
 
 interface TossPaymentsProps {
-  amount: number;
-  orderId: string; // 고유 주문번호
-  orderName: string; // 주문명
   customerEmail: string;
   customerName: string;
   customerMobilePhone: string;
   disabled: boolean;
   reservationId: number;
   getSignatureBlob: () => Promise<Blob | null>;
-  onComplete: (bothSigned: boolean) => void;
 }
 
 const TossPayments = ({
-  amount,
-  orderId,
-  orderName,
   customerEmail,
   customerName,
   customerMobilePhone,
   disabled,
   reservationId,
   getSignatureBlob,
-  onComplete
 }: TossPaymentsProps) => {
   const paymentRef = useRef<TossPayment | null>(null);
   const [isSdkReady, setIsSdkReady] = useState(false);
@@ -107,16 +102,28 @@ const TossPayments = ({
 
       const signatureFile = new File([signatureBlob], `signature_${reservationId}.png`, { type: "image/png" });
       await UploadFileToPresignedURL(presignedUrl, signatureFile);
-      const { bothSigned } = await SubmitSignature(reservationId, { signatureUrl: fileUrl });
+      const { contractId } = await SubmitSignature(reservationId, { signatureUrl: fileUrl });
 
-      // 결제를 요청하기 전에 orderId, amount를 서버에 저장
-      // 결제 과정에서 악의적으로 결제 금액이 바뀌는 것을 확인하는 용도
-      // @docs https://docs.tosspayments.com/sdk/v2/js#paymentrequestpayment
+      // 결제를 요청하기 전에 서버에 orderId, amount를 먼저 생성/저장
+      // 결제 과정에서 악의적으로 결제 금액이 바뀌는 것을 막기 위해, 이후 requestPayment에는
+      // 이 응답값(서버가 확정한 금액/주문정보)만 사용한다.
+      const idempotencyKey = crypto.randomUUID().replace(/-/g, "_");
+      const { paymentId, orderId, orderName, amount } = await PaymentRequest(contractId, idempotencyKey);
+
+      // Toss v2 CARD 결제는 페이지 전체를 successUrl/failUrl로 리다이렉트시키므로,
+      // 이 시점 이후 코드는 결제가 승인 창으로 넘어가기 전 취소/에러가 난 경우에만 실행된다.
+      // 실제 결제 승인은 리다이렉트 후 진입하는 결과 페이지에서 처리한다.
+      sessionStorage.setItem(TOSS_PENDING_PAYMENT_KEY, JSON.stringify({ paymentId }));
+
       await paymentRef.current.requestPayment({
         method: "CARD",
         amount: { currency: "KRW", value: amount },
         orderId,
         orderName,
+        // 성공/실패 모두 예약 목록 페이지로 돌아오며, tossPayment 마커로 결제 리다이렉트임을 식별해
+        // MainLayout의 TossPaymentResultHandler가 결과 모달을 띄운다.
+        successUrl: `${window.location.origin}/reservations?tossPayment=1`,
+        failUrl: `${window.location.origin}/reservations?tossPayment=1`,
         customerEmail,
         customerName,
         customerMobilePhone,
@@ -127,9 +134,8 @@ const TossPayments = ({
           useAppCardOnly: false,
         },
       });
-
-      onComplete(bothSigned); // 결제 결과 받은 뒤에만 호출하도록
     } catch (error) {
+      sessionStorage.removeItem(TOSS_PENDING_PAYMENT_KEY);
       console.error(error);
       alert("서명 저장 또는 결제 요청에 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {

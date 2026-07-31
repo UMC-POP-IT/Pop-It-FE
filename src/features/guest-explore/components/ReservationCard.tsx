@@ -84,7 +84,6 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   const [isCancelling, setIsCancelling] = useState(false); // 예약 취소 진행 중 여부
   const [isPaymentModalOpen, setisPaymentModalOpen] = useState(false); // 계약 전 결제 예정 / 총 결제 금액 창 open 여부
   const [isContractModalOpen, setIsContractModalOpen] = useState(false); // 계약서 확인 & 통합 본인 인증 & 전자서명 창 open 여부
-  const [isContractDone, setIsContractDone] = useState(false); // 계약 마무리 여부
   const [agreedToGuide, setAgreedToGuide] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false); // 퇴실 사진 인증 창 open 여부
   const [isPhotoVerifiedDone, setIsPhotoVerifiedDone] = useState(false); // 사진 인증 완료 여부
@@ -251,10 +250,6 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
           reservation={reservation}
           PaymentInfo={PaymentInfo}
           onClose={() => setIsContractModalOpen(false)}
-          onComplete={(bothSigned: boolean) => {
-            setIsContractDone(bothSigned);
-            setIsContractModalOpen(false);
-          }}
         />
       )}
 
@@ -263,16 +258,6 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
         isOpen={isPhotoModalOpen}
         onClose={() => setIsPhotoModalOpen(false)}
         onComplete={handlePhotoVerificationComplete}
-      />
-
-      {/* Complete Contract & Payment Modal */}
-      <Modal 
-        isOpen={isContractDone} 
-        title="계약작성 및 입금이 완료되었습니다" 
-        description="계약일부터 바로 이용을 시작하실 수 있습니다" 
-        singleButton={true}
-        confirmLabel="확인" 
-        onConfirm={() => {setIsContractDone(false)}}
       />
     </div>
   );

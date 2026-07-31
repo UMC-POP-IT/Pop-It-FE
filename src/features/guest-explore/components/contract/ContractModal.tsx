@@ -10,10 +10,9 @@ interface ContractModalProps {
   reservation: Reservation;
   PaymentInfo: GetPaymentInfoResponse;
   onClose: () => void;
-  onComplete: (bothSigned: boolean) => void;
 }
 
-const ContractModal = ({ isOpen, reservation, PaymentInfo, onClose, onComplete }: ContractModalProps) => {
+const ContractModal = ({ isOpen, reservation, PaymentInfo, onClose }: ContractModalProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSigned, setIsSigned] = useState(false);
   const signatureBoardRef = useRef<SignatureBoardRef>(null);
@@ -112,16 +111,12 @@ const ContractModal = ({ isOpen, reservation, PaymentInfo, onClose, onComplete }
               취소
             </button>
             <TossPayments
-              amount={PaymentInfo.totalPrice}
-              orderId={"pop_it_1"}
-              orderName={PaymentInfo.spaceName}
               customerEmail="popit@gmail.com"
               customerMobilePhone="01012341234"
               customerName="popit"
               disabled={!(isSigned && isAuthenticated)}
               reservationId={reservation.reservationId}
               getSignatureBlob={() => signatureBoardRef.current?.getSignatureBlob() ?? Promise.resolve(null)}
-              onComplete={onComplete}
             />
           </div>
         </div>
