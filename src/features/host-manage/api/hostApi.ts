@@ -102,6 +102,15 @@ interface CheckoutPhotosResult {
   photoUrls: string[];
 }
 
+interface IdentityVerificationResult {
+  isVerified: boolean;
+  verifiedAt: string | null;
+}
+
+interface StatusCountsResult {
+  countsByStatus: Record<string, number>;
+}
+
 export async function fetchHostReservations(params?: {
   status?: string;
   cursor?: string;
@@ -181,6 +190,36 @@ export async function fetchMySpaces(params?: {
   return apiFetch<MySpacesResult>(
     `/api/v1/spaces/my${qs ? `?${qs}` : ""}`,
   );
+}
+
+export async function verifyIdentity(identityVerificationId: string): Promise<IdentityVerificationResult> {
+  if (DEV_MOCK) return { isVerified: true, verifiedAt: new Date().toISOString() };
+  return apiFetch("/api/v1/users/me/verifications", {
+    method: "POST",
+    body: JSON.stringify({ identityVerificationId }),
+  });
+}
+
+export async function fetchIdentityVerificationStatus(): Promise<IdentityVerificationResult> {
+  if (DEV_MOCK) return { isVerified: false, verifiedAt: null };
+  return apiFetch("/api/v1/users/me/verifications");
+}
+
+export async function fetchHostReservationStatusCounts(): Promise<StatusCountsResult> {
+  if (DEV_MOCK) {
+    return {
+      countsByStatus: {
+        PENDING_APPROVAL: mockReservations.filter((r) => r.status === "PENDING_APPROVAL").length,
+        APPROVED: mockReservations.filter((r) => r.status === "APPROVED").length,
+        CONTRACT_COMPLETED: mockReservations.filter((r) => r.status === "CONTRACT_COMPLETED").length,
+        IN_USE: mockReservations.filter((r) => r.status === "IN_USE").length,
+        USAGE_COMPLETED: mockReservations.filter((r) => r.status === "USAGE_COMPLETED").length,
+        CHECKOUT_COMPLETED: mockReservations.filter((r) => r.status === "CHECKOUT_COMPLETED").length,
+        CANCELLED: mockReservations.filter((r) => r.status === "CANCELLED").length,
+      },
+    };
+  }
+  return apiFetch("/api/v1/reservations/host/status-counts");
 }
 
 export async function deleteSpace(spaceId: number): Promise<void> {
