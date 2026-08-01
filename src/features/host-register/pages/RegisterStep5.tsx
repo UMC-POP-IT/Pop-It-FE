@@ -124,7 +124,7 @@ export const RegisterStep5 = () => {
             </span>
             <input
               type="file"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png"
               multiple
               onChange={(e) =>
                 setValues({
