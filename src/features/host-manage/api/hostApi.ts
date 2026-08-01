@@ -41,8 +41,8 @@ const mockReservations: ApiHostReservation[] = [
   {
     reservationId: 108,
     status: "IN_USE",
-    startDate: "2026-07-20",
-    endDate: "2026-07-31",
+    startDate: "2026-08-01",
+    endDate: "2026-08-15",
     usagePurpose: "홈데코·소품 판매 플래그십",
     totalPrice: 7700000,
     isPhotoVerified: false,
