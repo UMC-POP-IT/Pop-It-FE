@@ -1,5 +1,4 @@
-import { api } from "@/shared/api/axios_instance";
-import type { PopitResponse } from "@/types/api";
+import { apiFetch } from "@/shared/utils/apiClient";
 import type { ExploreSpaceDetail } from "./mock_spaces";
 
 // ============================================================
@@ -50,20 +49,11 @@ export interface SpaceDetailRes {
  * 공간 상세 페이지에 필요한 정보를 조회한다.
  * 비로그인 상태에서도 호출 가능 (이 경우 isMine/isWishlisted는 항상 false).
  *
- * 404(존재하지 않거나 삭제된 공간)는 axios가 그대로 throw하므로,
- * 호출부에서 error.response?.status === 404 로 구분해 처리한다.
+ * 404(존재하지 않거나 삭제된 공간)는 apiFetch가 그대로 throw하므로,
+ * 호출부에서 error.status === 404 로 구분해 처리한다.
  */
-export const getSpaceDetail = async (spaceId: number) => {
-  const { data } = await api.get<PopitResponse<SpaceDetailRes>>(
-    `/api/v1/spaces/${spaceId}`,
-  );
-
-  if (!data.isSuccess) {
-    throw new Error(`[${data.code}] ${data.message}`);
-  }
-
-  return data.result;
-};
+export const getSpaceDetail = (spaceId: number) =>
+  apiFetch<SpaceDetailRes>(`/api/v1/spaces/${spaceId}`);
 
 // ------------------------------------------------------------
 // enum → 화면 표기 라벨

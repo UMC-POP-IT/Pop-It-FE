@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { isAxiosError } from "axios";
 import {
   getSpaceDetail,
   toExploreSpaceDetail,
@@ -59,7 +58,8 @@ export const SpaceDetailPage = () => {
       } catch (error) {
         if (ignore) return;
 
-        if (isAxiosError(error) && error.response?.status === 404) {
+        const status = error instanceof Error ? (error as { status?: number }).status : undefined;
+        if (status === 404) {
           setStatus("notfound");
         } else {
           setStatus("error");
