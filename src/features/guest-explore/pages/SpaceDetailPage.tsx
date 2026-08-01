@@ -8,6 +8,7 @@ import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_space
 import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDetailGallery";
 import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetailInfo";
 import ExploreReservationCard from "@/features/guest-explore/components/ExploreReservationCard";
+import Button from "@/shared/components/Button";
 import { useWishStore } from "@/store/wishStore";
 import { useAuthStore } from "@/store/authStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
@@ -52,14 +53,15 @@ export const SpaceDetailPage = () => {
 
         setSpace(toExploreSpaceDetail(detail));
         setIsMine(detail.isMine);
-        // 최초 진입 시에만 서버의 찜 여부로 로컬 상태를 맞춘다.
+        // 찜 API 연동 전까지는 이 공간을 세션 내에서 이미 동기화했다면 다시 덮어쓰지 않는다
+        // (그렇지 않으면 로컬에서 누른 찜 토글이 재방문 시 서버 기본값으로 되돌아간다).
         syncWished(detail.spaceId, detail.isWishlisted);
         setStatus("success");
       } catch (error) {
         if (ignore) return;
 
-        const status = error instanceof Error ? (error as { status?: number }).status : undefined;
-        if (status === 404) {
+        const httpStatus = error instanceof Error ? (error as { status?: number }).status : undefined;
+        if (httpStatus === 404) {
           setStatus("notfound");
         } else {
           setStatus("error");
@@ -72,14 +74,13 @@ export const SpaceDetailPage = () => {
     return () => {
       ignore = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, retryKey]);
+  }, [id, retryKey, syncWished]);
 
   const isWished = !!space && wishedIds.includes(space.id);
 
   if (status === "loading") {
     return (
-      <div className="bg-tag-bg flex h-[400px] w-full items-center justify-center rounded-xl">
+      <div className="bg-tag-bg flex h-[400px] w-full flex-col items-center justify-center gap-4 rounded-xl">
         <p className="text-text-primary text-xl font-medium">
           공간 정보를 불러오는 중이에요
         </p>
@@ -89,34 +90,26 @@ export const SpaceDetailPage = () => {
 
   if (status === "error") {
     return (
-      <div className="flex flex-col items-center gap-4 py-20">
-        <p className="text-text-secondary text-sm">
+      <div className="bg-tag-bg flex h-[400px] w-full flex-col items-center justify-center gap-4 rounded-xl">
+        <p className="text-text-primary text-xl font-medium">
           공간 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.
         </p>
-        <button
-          type="button"
-          onClick={() => setRetryKey((k) => k + 1)}
-          className="text-primary text-sm font-medium"
-        >
+        <Button variant="outline" size="sm" onClick={() => setRetryKey((k) => k + 1)}>
           다시 시도
-        </button>
+        </Button>
       </div>
     );
   }
 
   if (status === "notfound" || !space) {
     return (
-      <div className="flex flex-col items-center gap-4 py-20">
-        <p className="text-text-secondary text-sm">
+      <div className="bg-tag-bg flex h-[400px] w-full flex-col items-center justify-center gap-4 rounded-xl">
+        <p className="text-text-primary text-xl font-medium">
           공간 정보를 찾을 수 없어요.
         </p>
-        <button
-          type="button"
-          onClick={() => navigate("/explore")}
-          className="text-primary text-sm font-medium"
-        >
+        <Button variant="outline" size="sm" onClick={() => navigate("/explore")}>
           공간 탐색으로 돌아가기
-        </button>
+        </Button>
       </div>
     );
   }
