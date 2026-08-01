@@ -6,6 +6,7 @@ import {
   SPACE_CATEGORY_TO_ENUM,
   SPACE_TYPE_TO_ENUM,
 } from "@/features/host-register/constants/space_enums";
+import { toEnum } from "@/features/host-register/utils/to_enum";
 
 /** 카카오 주소검색은 "서울"을 주는데 서버는 "서울특별시"를 요구한다 */
 const CITY_TO_FULL: Record<string, string> = {
@@ -17,22 +18,6 @@ const FLOOR_TYPES_WITHOUT_NUMBER = ["반지층", "옥탑"];
 
 /** 만원 단위 입력 → 원 단위 정수 */
 const toWon = (manwon: string) => Number(manwon) * 10_000;
-
-/**
- * 매핑표에서 서버 값을 찾는다.
- * 표에 없으면 빈 값을 보내 400을 맞는 대신, 어느 항목이 문제인지 즉시 알린다.
- */
-const toEnum = <T extends string>(
-  map: Record<string, T>,
-  label: string,
-  fieldName: string,
-): T => {
-  const value = map[label];
-  if (!value) {
-    throw new Error(`${fieldName}을(를) 변환하지 못했습니다: "${label}"`);
-  }
-  return value;
-};
 
 /** POST /api/v1/spaces · PATCH /api/v1/spaces/{spaceId} 요청 본문 (스웨거 SpaceCreateReq) */
 export interface SpaceRequest {
