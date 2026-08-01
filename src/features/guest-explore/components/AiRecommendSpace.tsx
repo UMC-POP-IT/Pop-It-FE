@@ -5,6 +5,7 @@ import type { Space as AiRecommendSpaceDto } from "../api/spaces_api";
 import { ScrollButton } from "./ScrollButton";
 import { useNavigate } from "react-router-dom";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
+import { useAuthStore } from "@/store/authStore";
 
 import { getAiRecommend } from "../api/spaces_api";
 
@@ -44,7 +45,34 @@ const AiRecommendSpace = () => {
   const [isError, setIsError] = useState(false);
 
   const { handleWishToggle } = useWishGuard();
+  const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
+
+  // 찜 토글: 로그인 상태에서만 카드의 isWished를 낙관적으로 갱신하고,
+  // 실패 시 롤백한다. 비로그인 흐름은 로그인 모달만 띄우고 카드 상태는 건드리지 않는다.
+  const handleCardWishToggle = (spaceId: number) => {
+    if (!user) {
+      handleWishToggle(spaceId);
+      return;
+    }
+
+    setCards((prev) =>
+      prev.map((card) =>
+        card.space.id === spaceId ? { ...card, isWished: !card.isWished } : card,
+      ),
+    );
+
+    try {
+      handleWishToggle(spaceId);
+    } catch (error) {
+      console.error("찜 상태 변경 실패", error);
+      setCards((prev) =>
+        prev.map((card) =>
+          card.space.id === spaceId ? { ...card, isWished: !card.isWished } : card,
+        ),
+      );
+    }
+  };
 
   // 좌/우 스크롤 버튼 활성화 여부 업데이트
   const updateScrollButtons = () => {
@@ -66,7 +94,7 @@ const AiRecommendSpace = () => {
       container.removeEventListener("scroll", updateScrollButtons);
       window.removeEventListener("resize", updateScrollButtons);
     };
-  }, []);
+  }, [cards.length, isLoading]);
 
   // AI 맞춤형 공간 정보 조회
   useEffect(() => {
@@ -114,9 +142,13 @@ const AiRecommendSpace = () => {
           className="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {isLoading ? (
-            <p className="text-text-secondary text-sm">추천 공간을 불러오는 중이에요...</p>
+            <p role="status" aria-live="polite" className="text-text-secondary text-sm">
+              추천 공간 로딩 UI 추가 예정
+            </p>
           ) : isError ? (
-            <p className="text-text-secondary text-sm">추천 공간을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</p>
+            <p role="alert" aria-live="assertive" className="text-text-secondary text-sm">
+              추천 공간 조회 실패 UI 추가 예정
+            </p>
           ) : (
             cards.map(({ space, categoryTag, matchReason, isWished }) => (
               <div
@@ -128,7 +160,7 @@ const AiRecommendSpace = () => {
                   categoryTag={categoryTag}
                   matchReason={matchReason}
                   isWished={isWished}
-                  onWishToggle={() => handleWishToggle(space.id)}
+                  onWishToggle={() => handleCardWishToggle(space.id)}
                   onClick={() => navigate(`/spaces/${space.id}`)}
                 />
               </div>

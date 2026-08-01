@@ -59,7 +59,7 @@ const RealTimeRecommendSpace = () => {
       container.removeEventListener("scroll", updateScrollButtons);
       window.removeEventListener("resize", updateScrollButtons);
     };
-  }, []);
+  }, [spaces.length, isLoading]);
 
   // SpaceCard 단위로 스크롤
   const scrollByCard = (direction: 1 | -1) => {
@@ -82,9 +82,13 @@ const RealTimeRecommendSpace = () => {
           className="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {isLoading ? (
-            <p className="text-text-secondary text-sm">실시간 추천 공간을 불러오는 중이에요...</p>
+            <p role="status" aria-live="polite" className="text-text-secondary text-sm">
+              실시간 추천 공간 로딩 UI 추가 예정
+            </p>
           ) : isError ? (
-            <p className="text-text-secondary text-sm">실시간 추천 공간을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</p>
+            <p role="alert" aria-live="assertive" className="text-text-secondary text-sm">
+              실시간 추천 공간 조회 실패 UI 추가 예정
+            </p>
           ) : (
             spaces.map((space) => (
               <div
