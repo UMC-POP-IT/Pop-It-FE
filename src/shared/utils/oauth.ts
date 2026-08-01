@@ -1,5 +1,4 @@
 import type { User } from "@/types";
-import { apiFetch } from "@/shared/utils/apiClient";
 export { reissueToken } from "@/shared/utils/tokenUtils";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -68,28 +67,6 @@ async function fetchMe(accessToken: string): Promise<User> {
   if (!res.ok) throw new Error(`Failed to fetch user: ${res.status}`);
   const json = await res.json();
   return json.result ?? json;
-}
-
-/*
- * POST /api/v1/auth/reissue
- * Request:  { refreshToken: string }
- * Response: { result: { accessToken: string } }
- * 401 응답 인터셉터에서 호출 — 갱신된 accessToken을 반환하고 localStorage 업데이트
- */
-export async function reissueToken(): Promise<string> {
-  const refreshToken = localStorage.getItem("refresh_token");
-  if (!refreshToken) throw new Error("No refresh token");
-
-  const res = await fetch(`${BASE_URL}/api/v1/auth/reissue`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
-  });
-  if (!res.ok) throw new Error(`Reissue failed: ${res.status}`);
-  const json = await res.json();
-  const { accessToken } = json.result ?? json;
-  localStorage.setItem("access_token", accessToken);
-  return accessToken;
 }
 
 /*
