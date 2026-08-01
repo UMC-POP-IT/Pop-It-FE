@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { isAxiosError } from "axios";
 import SpaceCard from "@/shared/components/SpaceCard";
 import ExploreSearchFilterBar from "./ExploreSearchFilterBar";
 import ExplorePagination from "./ExplorePagination";
@@ -89,8 +88,13 @@ const ExploreSpace = () => {
       } catch (error) {
         if (ignore) return;
 
-        if (isAxiosError(error) && error.response?.status === 400) {
-          console.error("공간 탐색 요청 파라미터 오류:", error.response.data);
+        const httpStatus =
+          error instanceof Error ? (error as { status?: number }).status : undefined;
+        if (httpStatus === 400) {
+          console.error(
+            "공간 탐색 요청 파라미터 오류:",
+            error instanceof Error ? error.message : error,
+          );
         }
         setStatus("error");
       }

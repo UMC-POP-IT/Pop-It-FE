@@ -1,5 +1,4 @@
-import { api } from "@/shared/api/axios_instance";
-import type { PopitResponse } from "@/types/api";
+import { apiFetch } from "@/shared/utils/apiClient";
 import type { Space } from "@/types";
 
 // ============================================================
@@ -101,24 +100,14 @@ export interface SpaceSearchRes {
  * 빈 문자열 필터는 "전체"를 의미하므로 요청에서 아예 생략한다.
  */
 export const getSpaces = async (params: SpaceSearchParams = {}) => {
-  const { data } = await api.get<PopitResponse<SpaceSearchRes>>(
-    "/api/v1/spaces",
-    {
-      params: {
-        keyword: params.keyword || undefined,
-        spaceCategory: params.spaceCategory || undefined,
-        district: params.district || undefined,
-        page: params.page ?? 0,
-        size: params.size ?? DEFAULT_PAGE_SIZE,
-      },
-    },
-  );
+  const query = new URLSearchParams();
+  if (params.keyword) query.set("keyword", params.keyword);
+  if (params.spaceCategory) query.set("spaceCategory", params.spaceCategory);
+  if (params.district) query.set("district", params.district);
+  query.set("page", String(params.page ?? 0));
+  query.set("size", String(params.size ?? DEFAULT_PAGE_SIZE));
 
-  if (!data.isSuccess) {
-    throw new Error(`[${data.code}] ${data.message}`);
-  }
-
-  return data.result;
+  return apiFetch<SpaceSearchRes>(`/api/v1/spaces?${query.toString()}`);
 };
 
 /**
