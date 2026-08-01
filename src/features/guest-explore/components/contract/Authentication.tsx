@@ -15,17 +15,31 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
   const [status, setStatus] = useState<"idle" | "checking" | "pending" | "done" | "error">("checking");
 
   useEffect(() => {
-    const checkVerificationStatus = async () => {
-      const { isVerified } = await GetVerificationStatus();
+    let isStale = false;
 
-      if (isVerified) { // 이미 인증된 상태라면 인증 절차 없이 바로 완료 처리
-        setStatus("done");
-        onIsAuthenticated(true);
-      } else {
-        setStatus("idle");
+    const checkVerificationStatus = async () => {
+      try {
+        const { isVerified } = await GetVerificationStatus();
+        if (isStale) return;
+
+        if (isVerified) { // 이미 인증된 상태라면 인증 절차 없이 바로 완료 처리
+          setStatus("done");
+          onIsAuthenticated(true);
+        } else {
+          setStatus("idle");
+          onIsAuthenticated(false);
+        }
+      } catch {
+        if (isStale) return;
+        setStatus("error");
+        onIsAuthenticated(false);
       }
     };
     checkVerificationStatus();
+
+    return () => {
+      isStale = true;
+    };
   }, [onIsAuthenticated]);
 
   const handleVerify = async () => {
