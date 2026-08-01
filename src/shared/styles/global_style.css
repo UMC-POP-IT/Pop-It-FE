@@ -82,7 +82,7 @@
   --color-naver: #00cb4b; /* 네이버 공식 컬러 | 네이버 버튼 배경 */
   --color-naver-text: #ffffff; /* Grey/white       | 네이버 버튼 텍스트 */
   --color-google: #ffffff; /* 구글 버튼 배경 */
-  --color-google-text: #5b5b5b; /* 구글 버튼 텍스트 */
+  --color-google-text: #1f1f1f; /* 구글 버튼 텍스트 | 구글 공식 가이드라인 */
   --color-google-border: #e0e0e0; /* 구글 버튼 테두리 */
 }
 

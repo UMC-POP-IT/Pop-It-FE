@@ -21,10 +21,12 @@ export interface Space {
 
 export interface User {
   id: number;
-  email: string;
   nickname: string;
-  role: "GUEST" | "HOST";
-  profileImageUrl?: string;
+  currentMode: "GUEST" | "HOST";
+  socialProvider: "KAKAO" | "GOOGLE";
+  socialUid: string;
+  createdAt: string;
+  deletedAt: string | null;
 }
 
 export interface Reservation {
@@ -35,4 +37,64 @@ export interface Reservation {
   endDate: string;
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "IN_USE" | "COMPLETED";
   totalPrice: number;
+}
+
+// ─── Host API types ───────────────────────────────────────────────
+
+export type ReservationStatus =
+  | "PENDING_APPROVAL"
+  | "APPROVED"
+  | "CONTRACT_COMPLETED"
+  | "IN_USE"
+  | "USAGE_COMPLETED"
+  | "CHECKOUT_COMPLETED"
+  | "CANCELLED";
+
+export interface HostReservationSpace {
+  spaceId: number;
+  buildingName: string;
+  address: string;
+  thumbnailUrl: string;
+}
+
+export interface HostReservationGuest {
+  userId: number;
+  nickname: string;
+}
+
+export interface ApiHostReservation {
+  reservationId: number;
+  status: ReservationStatus;
+  startDate: string;
+  endDate: string;
+  usagePurpose: string;
+  totalPrice: number;
+  isPhotoVerified: boolean;
+  space: HostReservationSpace;
+  guest: HostReservationGuest;
+}
+
+export interface ApiMySpace {
+  spaceId: number;
+  buildingName: string;
+  thumbnailUrl: string;
+  registeredAt: string;
+}
+
+// ─── Upload API types ─────────────────────────────────────────────
+
+export type UploadType =
+  | "SPACE_IMAGE"
+  | "BUSINESS_LICENSE"
+  | "BANKBOOK"
+  | "SIGNATURE"
+  | "CHECKOUT";
+
+export interface PresignedUploadItem {
+  presignedUrl: string;
+  fileUrl: string;
+}
+
+export interface PresignedUrlResult {
+  uploads: PresignedUploadItem[];
 }
