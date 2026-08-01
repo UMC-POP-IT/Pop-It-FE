@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { User } from "@/types";
+import { useWishStore } from "@/store/wishStore";
 
 type Mode = "GUEST" | "HOST";
 
@@ -46,7 +47,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   isHostRegistered: false,
 
   setUser: (user) => set({ user }),
-  login: (user) => set({ user, mode: user.currentMode, isLoginModalOpen: false }),
+  login: (user) => {
+    // 이전 사용자의 찜 동기화 상태가 다음 로그인 사용자에게 그대로 남지 않도록 초기화
+    useWishStore.getState().reset();
+    set({ user, mode: user.currentMode, isLoginModalOpen: false });
+  },
   setMode: (mode) => set({ mode }),
   openLoginModal: (pendingAction) =>
     set({ isLoginModalOpen: true, pendingAction: pendingAction ?? null }),
@@ -54,11 +59,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   clearPendingAction: () => set({ pendingAction: null }),
   setHostRegistered: (isHostRegistered) => set({ isHostRegistered }),
   setPendingAction: (action) => set({ pendingAction: action }),
-  logout: () =>
+  logout: () => {
+    useWishStore.getState().reset();
     set({
       user: null,
       mode: "GUEST",
       pendingAction: null,
       isHostRegistered: false, // 로그아웃 시 초기화 → 다음 사용자에게 다시 안내
-    }),
+    });
+  },
 }));

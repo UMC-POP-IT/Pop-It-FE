@@ -8,28 +8,68 @@ interface WishState {
    * 서버가 내려준 찜 여부(isWishlisted)로 로컬 상태를 맞춘다.
    * toggleWish와 달리 heartCount를 건드리지 않는다 - 서버 응답의 wishCount를
    * 그대로 신뢰하는 화면(공간 탐색/상세)에서 최초 진입 시 상태만 동기화하기 위한 용도.
+   *
+   * 찜 API가 아직 연동되지 않아 toggleWish는 로컬 상태만 바꾼다. 그래서 이미
+   * 한 번 동기화한 spaceId는 재방문 시 다시 동기화하지 않는다 - 그렇지 않으면
+   * 세션 내에서 로컬로 누른 토글이 페이지를 나갔다 들어올 때마다 서버 기본값(false)
+   * 으로 되돌아간다. 찜 API 연동 후에는 이 가드를 제거하고 서버 값을 항상 신뢰하면 된다.
    */
   syncWished: (spaceId: number, isWished: boolean) => void;
+  syncedSpaceIds: number[];
+  /**
+   * 서버 동기화 여부와 무관하게, 세션 중 사용자가 직접 토글한 spaceId 집합.
+   * toggleWish가 syncWished보다 먼저 호출된 경우(예: 로그인 리다이렉트 후
+   * pendingAction으로 toggleWish가 실행되고, 그 뒤에 상세 페이지의 최초
+   * 동기화가 일어나는 경우) syncedSpaceIds만으로는 막을 수 없어 별도로 둔다.
+   */
+  syncedButLocallyToggled: number[];
+  /**
+   * wishedIds/syncedSpaceIds/syncedButLocallyToggled를 비운다. 이 상태는 특정
+   * 사용자의 서버 동기화 결과를 담고 있어서, 로그인/로그아웃으로 사용자가 바뀔 때
+   * 초기화하지 않으면 이전 사용자의 찜 상태가 다음 사용자에게 그대로 보일 수
+   * 있다 (authStore에서 호출).
+   */
+  reset: () => void;
 }
 
 export const useWishStore = create<WishState>((set, get) => ({
   wishedIds: [],
+  syncedSpaceIds: [],
+  syncedButLocallyToggled: [],
   toggleWish: (spaceId) => {
     const isWished = get().wishedIds.includes(spaceId);
     set((state) => ({
       wishedIds: isWished
         ? state.wishedIds.filter((id) => id !== spaceId) // 이미 찜한 공간이면 제거
         : [...state.wishedIds, spaceId], // 찜하지 않은 공간이면 추가
+      syncedButLocallyToggled: state.syncedButLocallyToggled.includes(spaceId)
+        ? state.syncedButLocallyToggled
+        : [...state.syncedButLocallyToggled, spaceId],
     }));
     useSpaceStore.getState().adjustHeartCount(spaceId, isWished ? -1 : 1);
   },
   syncWished: (spaceId, isWished) => {
+    // 이미 한 번 동기화했거나(순서: 동기화 → 토글), 동기화 전/도중에 사용자가
+    // 직접 토글한 적이 있으면(순서: 토글 → 동기화) 서버 기본값으로 덮어쓰지 않는다.
+    // 아직 손대지 않은 공간은 기존과 동일하게 매번 서버 값으로 동기화한다.
+    if (
+      get().syncedSpaceIds.includes(spaceId) ||
+      get().syncedButLocallyToggled.includes(spaceId)
+    ) {
+      return;
+    }
+
     const alreadyWished = get().wishedIds.includes(spaceId);
-    if (alreadyWished === isWished) return;
     set((state) => ({
-      wishedIds: isWished
-        ? [...state.wishedIds, spaceId]
-        : state.wishedIds.filter((id) => id !== spaceId),
+      wishedIds:
+        alreadyWished === isWished
+          ? state.wishedIds
+          : isWished
+            ? [...state.wishedIds, spaceId]
+            : state.wishedIds.filter((id) => id !== spaceId),
+      syncedSpaceIds: [...state.syncedSpaceIds, spaceId],
     }));
   },
+  reset: () =>
+    set({ wishedIds: [], syncedSpaceIds: [], syncedButLocallyToggled: [] }),
 }));
