@@ -1,3 +1,9 @@
+import { uploadFiles } from "@/features/host-register/api/upload_api";
+import { toSpaceRequest } from "@/features/host-register/utils/to_space_request";
+import {
+  createSpace,
+  updateSpace,
+} from "@/features/host-register/api/space_api";
 import StepIndicator from "@/shared/components/StepIndicator";
 import Button from "@/shared/components/Button";
 import iconCamera from "@/assets/icons/icon_camera.svg";
@@ -14,22 +20,59 @@ export const RegisterStep5 = () => {
   const editSpaceId = useRegisterStore((s) => s.editSpaceId);
   const navigate = useNavigate();
   const [modal, setModal] = useState<"confirm" | "success" | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false); // 제출 진행 중 (중복 클릭 방지)
+  const [submitError, setSubmitError] = useState(""); // 실패 사유 (빈 문자열이면 정상)
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
   const reset = useRegisterStore((s) => s.reset);
 
-  // 최종 제출 (지금은 Mock: 콘솔 출력. 실제 POST/PATCH /spaces는 2차 API 때)
-  const handleSubmit = () => {
-    if (import.meta.env.DEV) {
-      console.log(
-        isEdit
-          ? `공간 수정 제출 데이터 (id=${editSpaceId}):`
-          : "공간 등록 제출 데이터:",
-        form,
+  /**
+   * 최종 제출: 사진 업로드 → 서버 형식 변환 → 등록(또는 수정)
+   * 서버 응답을 받은 뒤에만 성공 모달을 띄운다.
+   */
+  const handleSubmit = async () => {
+    if (isSubmitting) return; // 중복 클릭 방지
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    try {
+      // ① 새로 고른 사진만 업로드한다 (수정 시 기존 사진은 이미 서버에 있음)
+      const newFiles = form.photoList.flatMap((photo) =>
+        photo.kind === "new" ? [photo.file] : [],
       );
+      const uploadedUrls = await uploadFiles(newFiles, "SPACE_IMAGE");
+
+      // 업로드 결과를 원래 순서대로 되돌린다 (첫 장 = 대표사진)
+      let uploadedIndex = 0;
+      const imageUrls = form.photoList.map((photo) =>
+        photo.kind === "existing" ? photo.url : uploadedUrls[uploadedIndex++],
+      );
+
+      // ② 폼 값을 서버 형식으로 변환
+      const request = toSpaceRequest(form, imageUrls);
+
+      // ③ 등록 또는 수정
+      if (isEdit && editSpaceId !== null) {
+        await updateSpace(editSpaceId, request);
+      } else {
+        await createSpace(request);
+      }
+
+      setModal("success"); // 여기까지 왔으면 서버가 받아들인 것
+    } catch (error) {
+      // 에러 객체 전체를 찍으면 요청 정보가 노출될 수 있어 메시지만 남긴다
+      const message =
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다";
+      console.error(isEdit ? "공간 수정 실패:" : "공간 등록 실패:", message);
+      setSubmitError(message);
+      setModal(null); // 확인 모달을 닫아 에러 문구가 보이게 한다
+    } finally {
+      setIsSubmitting(false);
     }
-    setModal("success");
   };
+
   // 성공 확인 → 보관함 비우고 '내 공간'으로 이동
   const handleDone = () => {
     reset();
@@ -130,6 +173,10 @@ export const RegisterStep5 = () => {
         </div>
       </div>
 
+      {submitError && (
+        <span className="text-danger self-end text-sm">{submitError}</span>
+      )}
+
       {/* 이전 / 완료 버튼 (우측 정렬)
           TODO(2차): 사진 3장 이상일 때만 활성화(유효성) + 최종 제출(POST /spaces) */}
       <div className="flex justify-end gap-2">
@@ -139,10 +186,20 @@ export const RegisterStep5 = () => {
             isEdit ? "공간을 수정하시겠습니까?" : "공간을 등록하시겠습니까?"
           }
           cancelLabel="돌아가기"
-          confirmLabel={isEdit ? "공간 수정하기" : "공간 등록하기"}
+          confirmLabel={
+            isSubmitting
+              ? isEdit
+                ? "수정 중..."
+                : "등록 중..."
+              : isEdit
+                ? "공간 수정하기"
+                : "공간 등록하기"
+          }
+          confirmDisabled={isSubmitting}
           onCancel={() => setModal(null)}
           onConfirm={handleSubmit}
         />
+
         <Modal
           isOpen={modal === "success"}
           title={
