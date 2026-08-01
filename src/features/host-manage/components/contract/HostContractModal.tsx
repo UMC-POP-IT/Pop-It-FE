@@ -29,11 +29,17 @@ const HostContractModal = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSigned, setIsSigned] = useState(false);
 
+  const [verifyStatusError, setVerifyStatusError] = useState(false);
+
   useEffect(() => {
     if (!isOpen) return;
+    setVerifyStatusError(false);
     fetchIdentityVerificationStatus()
       .then(({ isVerified }) => { if (isVerified) setIsAuthenticated(true); })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("[HostContractModal] 본인인증 상태 조회 실패:", err);
+        setVerifyStatusError(true);
+      });
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -126,6 +132,11 @@ const HostContractModal = ({
             </div>
           </div>
 
+          {verifyStatusError && (
+            <p className="text-sm font-medium text-[#f74b4b]">
+              인증 상태를 확인하지 못했습니다. 아래에서 본인인증을 다시 진행해주세요.
+            </p>
+          )}
           <Authentication
             onIsAuthenticated={setIsAuthenticated}
             onVerified={async (id) => {
