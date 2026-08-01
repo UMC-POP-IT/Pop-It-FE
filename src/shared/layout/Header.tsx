@@ -3,28 +3,34 @@ import Logo from "@/shared/components/Logo";
 import { useAuthStore } from "@/store/authStore";
 
 const Header = () => {
-  const { user, mode, setMode, openLoginModal, isHostRegistered } =
+  const { user, mode, setMode, openLoginModal, hostStatus, refreshHostStatus } =
     useAuthStore();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
 
-  const handleModeToggle = () => {
-    // 게스트→호스트 '첫' 전환이면 호스트 등록 안내 모달로, 이후엔 내 공간으로
-    const hostDest = isHostRegistered ? "/host/spaces" : "/host/host-register";
+  const handleModeToggle = async () => {
+    // 비로그인: 호스트 여부를 조회할 수 없으므로(401) 등록 화면을 기본값으로 둔다
     if (!user) {
       const targetMode = mode === "GUEST" ? "HOST" : "GUEST";
-      const navigateTo = mode === "GUEST" ? hostDest : "/";
+      const navigateTo = mode === "GUEST" ? "/host/host-register" : "/";
       openLoginModal({ type: "modeToggle", targetMode, navigateTo });
       return;
     }
-    if (mode === "GUEST") {
-      setMode("HOST");
-      navigate(hostDest);
-    } else {
+
+    // 호스트 → 게스트: 호스트 여부와 무관하므로 조회하지 않는다
+    if (mode === "HOST") {
       setMode("GUEST");
       navigate("/");
+      return;
     }
+
+    // 게스트 → 호스트: 아직 안 물어봤으면 지금 물어보고 결과를 기다린다
+    const status =
+      hostStatus === "unknown" ? await refreshHostStatus() : hostStatus;
+
+    setMode("HOST");
+    navigate(status === "registered" ? "/host/spaces" : "/host/host-register");
   };
 
   return (

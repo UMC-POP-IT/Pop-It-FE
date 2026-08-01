@@ -1,7 +1,14 @@
 import { create } from "zustand";
 import type { User } from "@/types";
+import { getMyHost } from "@/shared/utils/oauth";
 
 type Mode = "GUEST" | "HOST";
+
+/**
+ * 호스트 등록 여부.
+ * unknown = 아직 서버에 안 물어본 상태 (미등록과 반드시 구분해야 한다)
+ */
+export type HostStatus = "unknown" | "registered" | "unregistered";
 
 export type PendingAction =
   | { type: "wish"; spaceId: number }
@@ -13,19 +20,20 @@ interface AuthState {
   mode: Mode;
   isLoginModalOpen: boolean;
   pendingAction: PendingAction | null;
-    /**
-   * 호스트 등록 완료 여부 (클라이언트 임시 상태)
+  /**
+   * 호스트 등록 여부 (GET /api/v1/hosts/me 결과)
    *
-   * ⚠️ 현재는 Zustand 메모리에만 존재해 새로고침 시 false로 초기화된다.
-   *    등록을 마친 사용자도 새로고침하면 등록 화면으로 되돌아간다.
+   * unknown      → 아직 조회하지 않음. 이 상태에서는 등록/미등록을 단정하지 않는다.
+   * registered   → 200. 호스트 프로필이 있다.
+   * unregistered → 404. 아직 등록하지 않았다 (오류가 아니라 정상 상태).
    *
-   * TODO(호스트 등록 API 연동): GET /api/v1/hosts/me 응답으로 복원한다.
-   *   - 200 → 등록됨 / 404 → 미등록 (404는 에러가 아니라 정상 상태)
-   *   - 조회 중(미확정)과 미등록을 boolean으로는 구분할 수 없어
-   *     "unknown" | "registered" | "unregistered" 형태로 확장 필요.
-   *     (미확정을 false로 두면 조회 완료 전에 가드가 잘못 튕겨낸다)
+   * 새로고침하면 unknown으로 돌아가고, 앱 시작 시 다시 조회해 채운다.
    */
-  isHostRegistered: boolean;
+  hostStatus: HostStatus;
+
+  setHostStatus: (hostStatus: HostStatus) => void;
+  /** 서버에 물어 hostStatus를 갱신하고, 갱신된 값을 돌려준다 */
+  refreshHostStatus: () => Promise<HostStatus>;
 
   setUser: (user: User | null) => void;
   login: (user: User) => void;
@@ -33,7 +41,6 @@ interface AuthState {
   openLoginModal: (pendingAction?: PendingAction) => void;
   closeLoginModal: () => void;
   clearPendingAction: () => void;
-  setHostRegistered: (isHostRegistered: boolean) => void;
   setPendingAction: (action: PendingAction) => void;
   logout: () => void;
 }
@@ -43,22 +50,37 @@ export const useAuthStore = create<AuthState>((set) => ({
   mode: "GUEST",
   isLoginModalOpen: false,
   pendingAction: null,
-  isHostRegistered: false,
+  hostStatus: "unknown",
+
+  setHostStatus: (hostStatus) => set({ hostStatus }),
+
+  refreshHostStatus: async () => {
+    try {
+      const host = await getMyHost();
+      const status: HostStatus = host ? "registered" : "unregistered";
+      set({ hostStatus: status });
+      return status;
+    } catch (error) {
+      // 네트워크 오류·인증 만료 등. 미등록으로 단정하면 안 되므로 unknown을 유지한다.
+      console.error("호스트 상태 조회 실패:", error);
+      return "unknown";
+    }
+  },
 
   setUser: (user) => set({ user }),
-  login: (user) => set({ user, mode: user.currentMode, isLoginModalOpen: false }),
+  login: (user) =>
+    set({ user, mode: user.currentMode, isLoginModalOpen: false }),
   setMode: (mode) => set({ mode }),
   openLoginModal: (pendingAction) =>
     set({ isLoginModalOpen: true, pendingAction: pendingAction ?? null }),
   closeLoginModal: () => set({ isLoginModalOpen: false, pendingAction: null }),
   clearPendingAction: () => set({ pendingAction: null }),
-  setHostRegistered: (isHostRegistered) => set({ isHostRegistered }),
   setPendingAction: (action) => set({ pendingAction: action }),
   logout: () =>
     set({
       user: null,
       mode: "GUEST",
       pendingAction: null,
-      isHostRegistered: false, // 로그아웃 시 초기화 → 다음 사용자에게 다시 안내
+      hostStatus: "unknown", // 다음 사용자로 바뀔 수 있어 다시 조회하도록 되돌린다
     }),
 }));
