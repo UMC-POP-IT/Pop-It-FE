@@ -3,7 +3,7 @@ import Logo from "@/shared/components/Logo";
 import { useAuthStore } from "@/store/authStore";
 
 const Header = () => {
-  const { user, mode, setMode, openLoginModal, hasSeenHostIntro } =
+  const { user, mode, setMode, openLoginModal, isHostRegistered } =
     useAuthStore();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -11,7 +11,7 @@ const Header = () => {
 
   const handleModeToggle = () => {
     // 게스트→호스트 '첫' 전환이면 호스트 등록 안내 모달로, 이후엔 내 공간으로
-    const hostDest = hasSeenHostIntro ? "/host/spaces" : "/host/host-register";
+    const hostDest = isHostRegistered ? "/host/spaces" : "/host/host-register";
     if (!user) {
       const targetMode = mode === "GUEST" ? "HOST" : "GUEST";
       const navigateTo = mode === "GUEST" ? hostDest : "/";
