@@ -1,14 +1,16 @@
 import Button from "@/shared/components/Button";
-import type {
-  HostReservation,
-  MockHostSpace,
-} from "@/features/host-manage/api/mock_host_data";
+import type { ApiHostReservation } from "@/types";
 import { formatHostDate, getDurationDays } from "@/features/host-manage/utils/dateUtils";
+
+interface SpaceBasicInfo {
+  name: string;
+  address: string;
+}
 
 interface HostPaymentModalProps {
   isOpen: boolean;
-  reservation: HostReservation;
-  space: MockHostSpace;
+  reservation: ApiHostReservation;
+  space: SpaceBasicInfo;
   agreedToGuide: boolean;
   onAgreedToGuideChange: (agreed: boolean) => void;
   onClose: () => void;
