@@ -21,7 +21,8 @@ export const HostRegisterStep1 = () => {
     form.taxpayerType !== "" &&
     form.businessNumber !== "" &&
     form.storeName.trim() !== "" &&
-    form.businessAddress.trim() !== "";
+    form.businessAddress.trim() !== "" &&
+    form.businessLicenseImage !== null;
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
@@ -108,6 +109,8 @@ export const HostRegisterStep1 = () => {
           label="사업자 등록증 사본"
           placeholder="사업자 등록증 사본 파일을 첨부해주세요"
           hint="* JPG, PNG, PDF 최대 10MB"
+          file={form.businessLicenseImage}
+          onFileChange={(file) => setValues({ businessLicenseImage: file })}
         />
 
         {/* 상호명 */}
@@ -149,7 +152,8 @@ export const HostRegisterStep1 = () => {
               size="md"
               onClick={() => {
                 setAddrError("");
-                setIsAddrOpen(true)}}
+                setIsAddrOpen(true);
+              }}
             >
               주소 찾기
             </Button>

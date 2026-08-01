@@ -36,7 +36,8 @@ export const HostRegisterStep2 = () => {
   const isValid =
     form.bankName !== "" &&
     form.accountNumber !== "" &&
-    form.accountHolder.trim() !== "";
+    form.accountHolder.trim() !== "" &&
+    form.bankbookImage !== null;
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
@@ -68,6 +69,8 @@ export const HostRegisterStep2 = () => {
           label="통장 사본"
           placeholder="통장 사본 파일을 첨부해주세요"
           hint="* JPG, PNG, PDF 최대 10MB"
+          file={form.bankbookImage}
+          onFileChange={(file) => setValues({ bankbookImage: file })}
         />
 
         {/* 은행 (공통 select) */}
