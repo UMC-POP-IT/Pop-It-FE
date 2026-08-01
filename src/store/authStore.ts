@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isHostRegistered: false,
 
   setUser: (user) => set({ user }),
-  login: (user) => set({ user, isLoginModalOpen: false }),
+  login: (user) => set({ user, mode: user.currentMode, isLoginModalOpen: false }),
   setMode: (mode) => set({ mode }),
   openLoginModal: (pendingAction) =>
     set({ isLoginModalOpen: true, pendingAction: pendingAction ?? null }),

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Tab from "@/shared/components/Tab";
 import Modal from "@/shared/components/Modal";
@@ -6,37 +6,36 @@ import { HostReservationCard } from "@/features/host-manage/components/HostReser
 import HostPaymentModal from "@/features/host-manage/components/contract/HostPaymentModal";
 import HostContractModal from "@/features/host-manage/components/contract/HostContractModal";
 import {
-  mockHostReservations,
-  mockGuests,
-  mockHostSpaces,
-  type HostReservation,
-} from "@/features/host-manage/api/mock_host_data";
+  fetchHostReservations,
+  approveReservation,
+  rejectReservation,
+  approveCheckout,
+  rejectCheckout,
+  fetchCheckoutPhotos,
+} from "@/features/host-manage/api/hostApi";
+import type { ApiHostReservation, ReservationStatus } from "@/types";
 
-const TAB_STATUS: HostReservation["status"][] = [
-  "PENDING",
+const TAB_STATUS: ReservationStatus[] = [
+  "PENDING_APPROVAL",
   "APPROVED",
-  "CONTRACTED",
+  "CONTRACT_COMPLETED",
   "IN_USE",
-  "COMPLETED",
+  "CHECKOUT_COMPLETED",
 ];
 
-const getEffectiveStatus = (r: HostReservation): HostReservation["status"] => {
-  if (r.status === "CONTRACTED") {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const start = new Date(r.startDate + "T00:00:00");
-    const end = new Date(r.endDate + "T00:00:00");
-    if (start <= today && today <= end) return "IN_USE";
-  }
-  return r.status;
-};
-
-const filterByTab = (list: HostReservation[], tab: number): HostReservation[] =>
-  list.filter((r) => getEffectiveStatus(r) === TAB_STATUS[tab]);
+const TAB_LABELS = ["승인 대기", "계약 대기", "계약 완료", "사용 중", "사용 완료"];
+const EMPTY_MESSAGES = [
+  "승인 대기 중인 예약이 없어요",
+  "계약 대기 중인 예약이 없어요",
+  "계약 완료된 예약이 없어요",
+  "현재 사용 중인 예약이 없어요",
+  "사용 완료된 예약이 없어요",
+];
 
 export const HostReservationPage = () => {
   const navigate = useNavigate();
-  const [reservations, setReservations] = useState<HostReservation[]>(mockHostReservations);
+  const [reservations, setReservations] = useState<ApiHostReservation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
 
   // 예약 거절
@@ -48,39 +47,56 @@ export const HostReservationPage = () => {
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [agreedToGuide, setAgreedToGuide] = useState(false);
 
+
+  const loadReservations = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const all: ApiHostReservation[] = [];
+      let cursor: string | undefined = undefined;
+      while (true) {
+        const result = await fetchHostReservations({ size: 50, cursor });
+        all.push(...(result.reservations ?? []));
+        if (!result.hasNext || result.nextCursor == null) break;
+        cursor = result.nextCursor;
+      }
+      setReservations(all);
+    } catch (e) {
+      console.error("[HostReservationPage] 예약 로드 실패:", e);
+      setReservations([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadReservations();
+  }, [loadReservations]);
+
+  const matchesTab = (r: ApiHostReservation, status: ReservationStatus) =>
+    status === "CHECKOUT_COMPLETED"
+      ? r.status === "USAGE_COMPLETED"
+      : r.status === status;
+
+  const tabs = TAB_LABELS.map((label, i) => ({
+    label,
+    count: reservations.filter((r) => matchesTab(r, TAB_STATUS[i])).length,
+  }));
+
+  const filtered = reservations.filter((r) => matchesTab(r, TAB_STATUS[activeTab]));
+
   // 퇴실 사진 갤러리
-  const [photoViewTarget, setPhotoViewTarget] = useState<HostReservation | null>(null);
+  const [photoViewTarget, setPhotoViewTarget] = useState<ApiHostReservation | null>(null);
+  const [checkoutPhotos, setCheckoutPhotos] = useState<string[]>([]);
+  const [isPhotosLoading, setIsPhotosLoading] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
 
   // 퇴실 승인/거부
   const [checkoutApproveTargetId, setCheckoutApproveTargetId] = useState<number | null>(null);
   const [checkoutRejectTargetId, setCheckoutRejectTargetId] = useState<number | null>(null);
 
-  const countByStatus = (status: HostReservation["status"]) =>
-    reservations.filter((r) => getEffectiveStatus(r) === status).length;
-
-  const tabs = [
-    { label: "승인 대기", count: countByStatus("PENDING") },
-    { label: "계약 대기", count: countByStatus("APPROVED") },
-    { label: "계약 완료", count: countByStatus("CONTRACTED") },
-    { label: "사용 중", count: countByStatus("IN_USE") },
-    { label: "사용 완료", count: countByStatus("COMPLETED") },
-  ];
-
-  const filtered = filterByTab(reservations, activeTab);
-
-  const rejectTarget = reservations.find((r) => r.id === rejectTargetId);
-  const rejectGuest = rejectTarget ? mockGuests[rejectTarget.guestId] : null;
-
-  const checkoutApproveTarget = reservations.find((r) => r.id === checkoutApproveTargetId);
-  const checkoutApproveGuest = checkoutApproveTarget
-    ? mockGuests[checkoutApproveTarget.guestId]
-    : null;
-
-  const checkoutRejectTarget = reservations.find((r) => r.id === checkoutRejectTargetId);
-  const checkoutRejectGuest = checkoutRejectTarget
-    ? mockGuests[checkoutRejectTarget.guestId]
-    : null;
+  const rejectTarget = reservations.find((r) => r.reservationId === rejectTargetId);
+  const checkoutApproveTarget = reservations.find((r) => r.reservationId === checkoutApproveTargetId);
+  const checkoutRejectTarget = reservations.find((r) => r.reservationId === checkoutRejectTargetId);
 
   const handleApproveClick = (id: number) => {
     setApproveTargetId(id);
@@ -88,46 +104,85 @@ export const HostReservationPage = () => {
     setIsPaymentModalOpen(true);
   };
 
-  const handleContractComplete = () => {
+  const handleContractComplete = async () => {
     if (approveTargetId === null) return;
-    setReservations((prev) =>
-      prev.map((r) => (r.id === approveTargetId ? { ...r, status: "CONTRACTED" } : r)),
-    );
+    try {
+      const result = await approveReservation(approveTargetId);
+      setReservations((prev) =>
+        prev.map((r) =>
+          r.reservationId === approveTargetId ? { ...r, status: result.status } : r,
+        ),
+      );
+    } catch {
+      await loadReservations();
+    }
     setIsContractModalOpen(false);
     setApproveTargetId(null);
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (rejectTargetId === null) return;
-    setReservations((prev) =>
-      prev.map((r) => (r.id === rejectTargetId ? { ...r, status: "CANCELLED" } : r)),
-    );
+    try {
+      const result = await rejectReservation(rejectTargetId);
+      setReservations((prev) =>
+        prev.map((r) =>
+          r.reservationId === rejectTargetId ? { ...r, status: result.status } : r,
+        ),
+      );
+    } catch {
+      await loadReservations();
+    }
     setRejectTargetId(null);
   };
 
-  const handleCheckoutApprove = () => {
+  const handleCheckoutApprove = async () => {
     if (checkoutApproveTargetId === null) return;
-    setReservations((prev) => prev.filter((r) => r.id !== checkoutApproveTargetId));
+    try {
+      const result = await approveCheckout(checkoutApproveTargetId);
+      setReservations((prev) =>
+        prev.map((r) =>
+          r.reservationId === checkoutApproveTargetId ? { ...r, status: result.status } : r,
+        ),
+      );
+    } catch {
+      await loadReservations();
+    }
     setCheckoutApproveTargetId(null);
   };
 
-  const handleCheckoutReject = () => {
+  const handleCheckoutReject = async () => {
     if (checkoutRejectTargetId === null) return;
-    // 거절 시 게스트에게 재인증 요청 → 목록에서는 그대로 유지 (사진만 초기화)
-    setReservations((prev) =>
-      prev.map((r) =>
-        r.id === checkoutRejectTargetId ? { ...r, checkoutPhotoUrls: [] } : r,
-      ),
-    );
+    try {
+      const result = await rejectCheckout(checkoutRejectTargetId);
+      setReservations((prev) =>
+        prev.map((r) =>
+          r.reservationId === checkoutRejectTargetId
+            ? { ...r, status: result.status, isPhotoVerified: false }
+            : r,
+        ),
+      );
+    } catch {
+      await loadReservations();
+    }
     setCheckoutRejectTargetId(null);
   };
 
-  const openPhotoView = (reservation: HostReservation) => {
+  const openPhotoView = async (reservation: ApiHostReservation) => {
     setPhotoViewTarget(reservation);
     setPhotoIndex(0);
+    setCheckoutPhotos([]);
+    setIsPhotosLoading(true);
+    try {
+      const photos = await fetchCheckoutPhotos(reservation.reservationId);
+      setCheckoutPhotos(photos);
+    } catch {
+      setCheckoutPhotos([]);
+    } finally {
+      setIsPhotosLoading(false);
+    }
   };
 
-  const photos = photoViewTarget?.checkoutPhotoUrls ?? [];
+  const approveTarget = reservations.find((r) => r.reservationId === approveTargetId);
 
   return (
     <div className="flex flex-col gap-10">
@@ -141,36 +196,29 @@ export const HostReservationPage = () => {
       <div className="flex flex-col gap-5">
         <Tab tabs={tabs} activeIndex={activeTab} onChange={setActiveTab} />
 
-        {filtered.length > 0 ? (
+        {isLoading ? (
+          <div className="bg-tag-bg flex h-[224px] w-full items-center justify-center rounded-xl">
+            <p className="text-text-primary text-xl font-medium">불러오는 중...</p>
+          </div>
+        ) : filtered.length > 0 ? (
           <div className="flex flex-col">
-            {filtered.map((reservation) => {
-              const guest = mockGuests[reservation.guestId];
-              const space = mockHostSpaces.find((s) => s.id === reservation.spaceId);
-              if (!guest || !space) return null;
-              return (
-                <HostReservationCard
-                  key={reservation.id}
-                  reservation={reservation}
-                  guest={guest}
-                  space={space}
-                  onDetail={() => navigate(`/host/spaces/${space.id}`)}
-                  onApprove={() => handleApproveClick(reservation.id)}
-                  onReject={() => setRejectTargetId(reservation.id)}
-                  onPhotoView={() => openPhotoView(reservation)}
-                  onCheckoutApprove={() => setCheckoutApproveTargetId(reservation.id)}
-                  onCheckoutReject={() => setCheckoutRejectTargetId(reservation.id)}
-                />
-              );
-            })}
+            {filtered.map((reservation) => (
+              <HostReservationCard
+                key={reservation.reservationId}
+                reservation={reservation}
+                onDetail={() => navigate(`/host/spaces/${reservation.space.spaceId}`)}
+                onApprove={() => handleApproveClick(reservation.reservationId)}
+                onReject={() => setRejectTargetId(reservation.reservationId)}
+                onPhotoView={() => openPhotoView(reservation)}
+                onCheckoutApprove={() => setCheckoutApproveTargetId(reservation.reservationId)}
+                onCheckoutReject={() => setCheckoutRejectTargetId(reservation.reservationId)}
+              />
+            ))}
           </div>
         ) : (
           <div className="bg-tag-bg flex h-[224px] w-full items-center justify-center rounded-xl">
             <p className="text-text-primary text-xl font-medium">
-              {activeTab === 0 && "승인 대기 중인 예약이 없어요"}
-              {activeTab === 1 && "계약 대기 중인 예약이 없어요"}
-              {activeTab === 2 && "계약 완료된 예약이 없어요"}
-              {activeTab === 3 && "현재 사용 중인 예약이 없어요"}
-              {activeTab === 4 && "사용 완료된 예약이 없어요"}
+              {EMPTY_MESSAGES[activeTab]}
             </p>
           </div>
         )}
@@ -179,7 +227,7 @@ export const HostReservationPage = () => {
       {/* 예약 거절 모달 */}
       <Modal
         isOpen={rejectTargetId !== null}
-        title={`${rejectGuest?.nickname ?? ""}님을\n예약 거절하시겠습니까?`}
+        title={`${rejectTarget?.guest.nickname ?? ""}님을\n예약 거절하시겠습니까?`}
         description="예약을 거절하면 승인대기 목록에서 삭제됩니다"
         confirmLabel="예약 거절"
         cancelLabel="돌아가기"
@@ -190,7 +238,7 @@ export const HostReservationPage = () => {
       {/* 퇴실 승인 모달 */}
       <Modal
         isOpen={checkoutApproveTargetId !== null}
-        title={`${checkoutApproveGuest?.nickname ?? ""}님의 퇴실을\n승인하시겠습니까?`}
+        title={`${checkoutApproveTarget?.guest.nickname ?? ""}님의 퇴실을\n승인하시겠습니까?`}
         description="승인 시 게스트에게 보증금이 전액 환불됩니다"
         confirmLabel="승인하기"
         cancelLabel="돌아가기"
@@ -201,7 +249,7 @@ export const HostReservationPage = () => {
       {/* 퇴실 거부 모달 */}
       <Modal
         isOpen={checkoutRejectTargetId !== null}
-        title={`${checkoutRejectGuest?.nickname ?? ""}님의 퇴실 인증을\n거절하시겠습니까?`}
+        title={`${checkoutRejectTarget?.guest.nickname ?? ""}님의 퇴실 인증을\n거절하시겠습니까?`}
         description={`거절 시 게스트에게 알림이 발송되며,\n재인증 전까지 보증금 환불이 보류됩니다`}
         confirmLabel="거절하기"
         cancelLabel="돌아가기"
@@ -210,7 +258,7 @@ export const HostReservationPage = () => {
       />
 
       {/* 퇴실 사진 갤러리 모달 */}
-      {photoViewTarget && photos.length > 0 && (
+      {photoViewTarget && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
           onClick={() => setPhotoViewTarget(null)}
@@ -219,7 +267,6 @@ export const HostReservationPage = () => {
             className="relative flex w-full max-w-[800px] flex-col items-center"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* 닫기 */}
             <button
               className="absolute -top-10 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black"
               onClick={() => setPhotoViewTarget(null)}
@@ -227,77 +274,84 @@ export const HostReservationPage = () => {
             >
               ✕
             </button>
-
-            {/* 사진 */}
-            <img
-              src={photos[photoIndex]}
-              alt={`퇴실 사진 ${photoIndex + 1}`}
-              className="max-h-[600px] w-full rounded-xl object-contain"
-            />
-
-            {/* 인디케이터 */}
-            <span className="mt-3 rounded-full bg-black/50 px-3 py-1 text-sm text-white">
-              {photoIndex + 1} / {photos.length}
-            </span>
-
-            {/* 이전 */}
-            {photos.length > 1 && (
+            {isPhotosLoading ? (
+              <div className="flex h-[400px] w-full items-center justify-center rounded-xl bg-black/50">
+                <span className="text-white">사진 불러오는 중...</span>
+              </div>
+            ) : checkoutPhotos.length > 0 ? (
               <>
-                <button
-                  className="absolute top-1/2 left-4 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow"
-                  onClick={() => setPhotoIndex((i) => (i - 1 + photos.length) % photos.length)}
-                  aria-label="이전 사진"
-                >
-                  ‹
-                </button>
-                <button
-                  className="absolute top-1/2 right-4 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow"
-                  onClick={() => setPhotoIndex((i) => (i + 1) % photos.length)}
-                  aria-label="다음 사진"
-                >
-                  ›
-                </button>
+                <img
+                  src={checkoutPhotos[photoIndex]}
+                  alt={`퇴실 사진 ${photoIndex + 1}`}
+                  className="max-h-[600px] w-full rounded-xl object-contain"
+                />
+                <span className="mt-3 rounded-full bg-black/50 px-3 py-1 text-sm text-white">
+                  {photoIndex + 1} / {checkoutPhotos.length}
+                </span>
+                {checkoutPhotos.length > 1 && (
+                  <>
+                    <button
+                      className="absolute top-1/2 left-4 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow"
+                      onClick={() => setPhotoIndex((i) => (i - 1 + checkoutPhotos.length) % checkoutPhotos.length)}
+                      aria-label="이전 사진"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      className="absolute top-1/2 right-4 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow"
+                      onClick={() => setPhotoIndex((i) => (i + 1) % checkoutPhotos.length)}
+                      aria-label="다음 사진"
+                    >
+                      ›
+                    </button>
+                  </>
+                )}
               </>
+            ) : (
+              <div className="flex h-[400px] w-full items-center justify-center rounded-xl bg-black/50">
+                <span className="text-white">사진을 불러올 수 없습니다</span>
+              </div>
             )}
           </div>
         </div>
       )}
 
       {/* 입금 예정 / 계약서 모달 */}
-      {(() => {
-        const reservation = reservations.find((r) => r.id === approveTargetId);
-        const space = reservation ? mockHostSpaces.find((s) => s.id === reservation.spaceId) : null;
-        if (!reservation || !space) return null;
-        return (
-          <>
-            <HostPaymentModal
-              isOpen={isPaymentModalOpen}
-              reservation={reservation}
-              space={space}
-              agreedToGuide={agreedToGuide}
-              onAgreedToGuideChange={setAgreedToGuide}
-              onClose={() => {
-                setIsPaymentModalOpen(false);
-                setApproveTargetId(null);
-              }}
-              onSignContract={() => {
-                setIsPaymentModalOpen(false);
-                setIsContractModalOpen(true);
-              }}
-            />
-            <HostContractModal
-              isOpen={isContractModalOpen}
-              reservation={reservation}
-              space={space}
-              onClose={() => {
-                setIsContractModalOpen(false);
-                setApproveTargetId(null);
-              }}
-              onComplete={handleContractComplete}
-            />
-          </>
-        );
-      })()}
+      {approveTarget && (
+        <>
+          <HostPaymentModal
+            isOpen={isPaymentModalOpen}
+            reservation={approveTarget}
+            space={{
+              name: approveTarget.space.buildingName,
+              address: approveTarget.space.address,
+            }}
+            agreedToGuide={agreedToGuide}
+            onAgreedToGuideChange={setAgreedToGuide}
+            onClose={() => {
+              setIsPaymentModalOpen(false);
+              setApproveTargetId(null);
+            }}
+            onSignContract={() => {
+              setIsPaymentModalOpen(false);
+              setIsContractModalOpen(true);
+            }}
+          />
+          <HostContractModal
+            isOpen={isContractModalOpen}
+            reservation={approveTarget}
+            space={{
+              name: approveTarget.space.buildingName,
+              address: approveTarget.space.address,
+            }}
+            onClose={() => {
+              setIsContractModalOpen(false);
+              setApproveTargetId(null);
+            }}
+            onComplete={handleContractComplete}
+          />
+        </>
+      )}
     </div>
   );
 };
