@@ -134,6 +134,20 @@ export interface PaymentApprovalResponse {
     paidAt: string;
 }
 
+export interface GetVerificationStatusResponse {
+    isVerified: boolean;
+    verifiedAt: string;
+}
+
+export interface RequestVerificationRequest {
+    identityVerificationId: string;
+}
+
+export interface RequestVerificationResponse {
+    isVerified: boolean;
+    verifiedAt: string;
+}
+
 // 업로드 - 발급받은 presigned url 로 파일 직접 업로드 (S3 등 외부 스토리지로 전송되므로 apiFetch 미사용)
 export const UploadFileToPresignedURL = async (presignedUrl: string, file: File) => {
     const res = await fetch(presignedUrl, {
@@ -199,7 +213,7 @@ export const SubmitSignature = (reservationId: number, request: SubmitSignatureR
 export const GetPaymentInfo = (reservationId: number) => 
     apiFetch<GetPaymentInfoResponse>(`/api/v1/reservations/${reservationId}/contracts/payment-preview`);
 
-// 결제 - 결제(요청)준비
+// 결제 - 결제(요청)준비 ~ DONE
 export const PaymentRequest = (contractId: number, idempotencyKey: string) =>
     apiFetch<PaymentRequestResponse>(`/api/v1/contracts/${contractId}/payments`, {
         method: "POST",
@@ -211,4 +225,15 @@ export const PaymentApproval = (paymentId: number, request: PaymentApprovalReque
     apiFetch<PaymentApprovalResponse>(`/api/v1/payments/${paymentId}/confirm`, {
         method: "POST",
         body: JSON.stringify(request),
+});
+
+// 본인 인증 -  본인 인증 여부 조회
+export const GetVerificationStatus = () => 
+    apiFetch<GetVerificationStatusResponse>(`/api/v1/users/me/verifications`);
+
+// 본인 인증 - 본인인증 요청
+export const RequestVerification = (request: RequestVerificationRequest) => 
+    apiFetch<RequestVerificationResponse>(`/api/v1/users/me/verifications`, {
+        method: "POST",
+        body: JSON.stringify(request), 
 });
