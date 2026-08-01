@@ -12,6 +12,7 @@ import {
   approveCheckout,
   rejectCheckout,
   fetchCheckoutPhotos,
+  fetchHostReservationStatusCounts,
 } from "@/features/host-manage/api/hostApi";
 import type { ApiHostReservation, ReservationStatus } from "@/types";
 
@@ -35,6 +36,7 @@ const EMPTY_MESSAGES = [
 export const HostReservationPage = () => {
   const navigate = useNavigate();
   const [reservations, setReservations] = useState<ApiHostReservation[]>([]);
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
 
@@ -51,18 +53,23 @@ export const HostReservationPage = () => {
   const loadReservations = useCallback(async () => {
     try {
       setIsLoading(true);
-      const all: ApiHostReservation[] = [];
-      let cursor: string | undefined = undefined;
-      while (true) {
-        const result = await fetchHostReservations({ size: 50, cursor });
-        all.push(...(result.reservations ?? []));
-        if (!result.hasNext || result.nextCursor == null) break;
-        cursor = result.nextCursor;
-      }
-      setReservations(all);
-    } catch (e) {
-      console.error("[HostReservationPage] 예약 로드 실패:", e);
-      setReservations([]);
+      const [reservationResult, countsResult] = await Promise.allSettled([
+        (async () => {
+          const all: ApiHostReservation[] = [];
+          let cursor: string | undefined = undefined;
+          while (true) {
+            const result = await fetchHostReservations({ size: 50, cursor });
+            all.push(...(result.reservations ?? []));
+            if (!result.hasNext || result.nextCursor == null) break;
+            cursor = result.nextCursor;
+          }
+          return all;
+        })(),
+        fetchHostReservationStatusCounts(),
+      ]);
+      if (reservationResult.status === "fulfilled") setReservations(reservationResult.value);
+      else { console.error("[HostReservationPage] 예약 로드 실패:", reservationResult.reason); setReservations([]); }
+      if (countsResult.status === "fulfilled") setStatusCounts(countsResult.value.countsByStatus);
     } finally {
       setIsLoading(false);
     }
@@ -77,9 +84,14 @@ export const HostReservationPage = () => {
       ? r.status === "USAGE_COMPLETED"
       : r.status === status;
 
+  const getTabCount = (status: ReservationStatus) => {
+    const key = status === "CHECKOUT_COMPLETED" ? "USAGE_COMPLETED" : status;
+    return statusCounts[key] ?? reservations.filter((r) => matchesTab(r, status)).length;
+  };
+
   const tabs = TAB_LABELS.map((label, i) => ({
     label,
-    count: reservations.filter((r) => matchesTab(r, TAB_STATUS[i])).length,
+    count: getTabCount(TAB_STATUS[i]),
   }));
 
   const filtered = reservations.filter((r) => matchesTab(r, TAB_STATUS[activeTab]));

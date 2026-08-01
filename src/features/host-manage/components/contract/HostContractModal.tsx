@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "@/shared/components/Button";
 import type { ApiHostReservation } from "@/types";
 import Authentication from "@/features/guest-explore/components/contract/Authentication";
 import SignatureBoard from "@/features/guest-explore/components/contract/SignatureBoard";
 import { formatHostDate, getDurationDays } from "@/features/host-manage/utils/dateUtils";
+import { verifyIdentity, fetchIdentityVerificationStatus } from "@/features/host-manage/api/hostApi";
 
 interface SpaceBasicInfo {
   name: string;
@@ -27,6 +28,13 @@ const HostContractModal = ({
 }: HostContractModalProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSigned, setIsSigned] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    fetchIdentityVerificationStatus().then(({ isVerified }) => {
+      if (isVerified) setIsAuthenticated(true);
+    });
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -118,7 +126,10 @@ const HostContractModal = ({
             </div>
           </div>
 
-          <Authentication onIsAuthenticated={setIsAuthenticated} />
+          <Authentication
+            onIsAuthenticated={setIsAuthenticated}
+            onVerified={async (id) => { await verifyIdentity(id); }}
+          />
           <SignatureBoard onIsSigned={setIsSigned} />
 
           <div className="flex flex-row justify-center gap-5">
