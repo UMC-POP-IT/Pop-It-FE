@@ -18,10 +18,12 @@ interface PresignedUrlListRes {
 
 /**
  * ① 업로드할 주소 발급받기
- * POST /api/v1/uploads/presigned-url
+ * POST /uploads/presigned-url
+ *
+ * 다른 API와 달리 /api/v1 접두어가 없다 (스웨거 기준, 41개 중 이것만).
  */
 const getPresignedUrls = (uploadType: UploadType, files: File[]) =>
-  apiFetch<PresignedUrlListRes>("/api/v1/uploads/presigned-url", {
+  apiFetch<PresignedUrlListRes>("/uploads/presigned-url", {
     method: "POST",
     body: JSON.stringify({
       uploadType,

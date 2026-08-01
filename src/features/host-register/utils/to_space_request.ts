@@ -100,8 +100,6 @@ export const toSpaceRequest = (
     parkingAvailable: form.hasParking,
     description: form.description,
     imageUrls,
-    // TODO(#135 머지 후): facilityIds 추가.
-    // 지금 store에는 시설이 한글 배열(heatingList 등)로만 있어 서버 id를 알 수 없다.
-    // 스웨거상 facilityIds는 필수가 아니라 우선 생략한다.
+    facilityIds: form.facilityIds,
   };
 };
