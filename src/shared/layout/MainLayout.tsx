@@ -104,7 +104,7 @@ const RouteModeSync = () => {
   useEffect(() => {
     // /host/* 직접 접근 시 헤더 모드를 URL에 맞게 동기화
     setMode(pathname.startsWith("/host") ? "HOST" : "GUEST");
-  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps (setMode는 stable ref)
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps -- setMode는 stable ref
 
   return null;
 };
