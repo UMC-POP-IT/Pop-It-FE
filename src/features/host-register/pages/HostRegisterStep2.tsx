@@ -10,16 +10,29 @@ import {
 } from "@/features/host-register/api/mock_register";
 import { useHostRegisterStore } from "@/store/registerStore";
 import { sanitizeNumber } from "@/shared/utils/sanitizeNumber";
+import { useAuthStore } from "@/store/authStore";
 
 export const HostRegisterStep2 = () => {
   const navigate = useNavigate();
   const form = useHostRegisterStore((s) => s.form);
   const setValues = useHostRegisterStore((s) => s.setValues);
-  //최종 제출 (Mock: 콘솔 출력, 실제 POST /hosts는 2차)
+  const setHostRegistered = useAuthStore((s) => s.setHostRegistered);
+  /**
+   * 최종 제출 (Mock: 콘솔 출력, 실제 POST /api/v1/hosts는 API 연동 이슈에서)
+   *
+   * ⚠️ 지금은 서버 호출 없이 곧바로 등록 완료로 처리한다.
+   * TODO(호스트 등록 API 연동): 아래 순서로 바꿀 것
+   *   1) POST /api/v1/hosts 호출
+   *   2) 성공(201) 응답을 받은 뒤에만 setHostRegistered(true) + navigate 실행
+   *   3) 실패 시 화면에 에러 표시 (400 형식 오류 / 409 이미 등록된 호스트)
+   *   지금처럼 응답 전에 상태를 바꾸면 서버가 거절해도 등록 완료로 보이게 된다.
+   */
   const handleSubmit = () => {
     if (import.meta.env.DEV) console.log("호스트 등록 제출 데이터", form);
+    setHostRegistered(true); //등록완료-> 이후 호스트 모드 진입 허용
     navigate("/host/host-register/complete");
   };
+
   const isValid =
     form.bankName !== "" &&
     form.accountNumber !== "" &&

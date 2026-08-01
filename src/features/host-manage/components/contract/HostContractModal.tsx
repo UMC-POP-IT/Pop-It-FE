@@ -1,17 +1,19 @@
 import { useState } from "react";
 import Button from "@/shared/components/Button";
-import type {
-  HostReservation,
-  MockHostSpace,
-} from "@/features/host-manage/api/mock_host_data";
+import type { ApiHostReservation } from "@/types";
 import Authentication from "@/features/guest-explore/components/contract/Authentication";
 import SignatureBoard from "@/features/guest-explore/components/contract/SignatureBoard";
 import { formatHostDate, getDurationDays } from "@/features/host-manage/utils/dateUtils";
 
+interface SpaceBasicInfo {
+  name: string;
+  address: string;
+}
+
 interface HostContractModalProps {
   isOpen: boolean;
-  reservation: HostReservation;
-  space: MockHostSpace;
+  reservation: ApiHostReservation;
+  space: SpaceBasicInfo;
   onClose: () => void;
   onComplete: () => void;
 }

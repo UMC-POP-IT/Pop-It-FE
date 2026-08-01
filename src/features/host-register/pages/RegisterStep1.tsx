@@ -11,6 +11,8 @@ import {
 } from "@/features/host-register/api/mock_register";
 import { useState } from "react";
 import AddressSearchModal from "@/features/host-register/components/AddressSearchModal";
+import { useKakaoLoader } from "@/shared/hooks/useKakaoLoader";
+import { geocodeAddress } from "@/shared/utils/geocodeAddress";
 
 export const RegisterStep1 = () => {
   const isEdit = useRegisterStore((s) => s.isEdit);
@@ -20,9 +22,12 @@ export const RegisterStep1 = () => {
   const navigate = useNavigate();
   const [isAddrOpen, setIsAddrOpen] = useState(false);
   const [addrError, setAddrError] = useState(""); // 서울 외 지역 선택 시 에러
+  const { isLoaded, error: kakaoError } = useKakaoLoader(); // 카카오 SDK 로드 (좌표 변환에 필요)
   const isValid =
     form.buildingType !== "" &&
     form.address !== "" &&
+    form.latitude !== null &&
+    form.longitude !== null &&
     form.detailAddress.trim() !== "";
 
   return (
@@ -101,10 +106,13 @@ export const RegisterStep1 = () => {
               주소 찾기
             </Button>
           </div>
-          {/* 안내문 (에러 없을 때만) */}
+          {/* 안내문 (에러 없을 때만)주소만 있고 좌표가 없으면 재검색 유도 */}
           {!addrError && (
             <span className="text-text-placeholder text-base font-bold">
-              현재 서울 지역만 등록 가능합니다
+              {form.address !== "" &&
+              (form.latitude === null || form.longitude === null)
+                ? "주소를 다시 검색해주세요"
+                : "현재 서울 지역만 등록 가능합니다"}
             </span>
           )}
 
@@ -132,15 +140,50 @@ export const RegisterStep1 = () => {
       <AddressSearchModal
         isOpen={isAddrOpen}
         onClose={() => setIsAddrOpen(false)}
-        onComplete={({ address, sido, sigungu }) => {
+        onComplete={async ({ address, sido, sigungu }) => {
+          //주소가 무효가 되면 좌표도 반드시 함께 비운다 (이전 좌표 잔류 방지)
+          const clearAddress = () =>
+            setValues({
+              address: "",
+              city: "",
+              district: "",
+              latitude: null,
+              longitude: null,
+            });
+
           // 서울 외 지역 → 빨간 에러 + 기존 주소값 비우기 (유효성 우회 방지)
           if (!sido.startsWith("서울")) {
             setAddrError("서울 외 지역은 선택하실 수 없습니다");
-            setValues({ address: "", city: "", district: "" });
+            clearAddress();
+            return;
+          }
+          //지도 SDK 로드 전이면 변환 불가
+          if (!isLoaded) {
+            setAddrError(
+              kakaoError
+                ? "지도 서비스를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요"
+                : "지도를 불러오는 중입니다. 잠시 후 다시 시도해주세요",
+            );
+            clearAddress();
+            return;
+          }
+
+          const coordinate = await geocodeAddress(address);
+          if (!coordinate) {
+            setAddrError(
+              "주소의 좌표를 찾지 못했습니다. 다른 주소로 검색해주세요",
+            );
+            clearAddress();
             return;
           }
           setAddrError("");
-          setValues({ address, city: sido, district: sigungu });
+          setValues({
+            address,
+            city: sido,
+            district: sigungu,
+            latitude: coordinate.latitude,
+            longitude: coordinate.longitude,
+          });
         }}
       />
     </div>
