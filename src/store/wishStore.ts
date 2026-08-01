@@ -16,6 +16,12 @@ interface WishState {
    */
   syncWished: (spaceId: number, isWished: boolean) => void;
   syncedSpaceIds: number[];
+  /**
+   * wishedIds/syncedSpaceIds를 비운다. 이 상태는 특정 사용자의 서버 동기화 결과를
+   * 담고 있어서, 로그인/로그아웃으로 사용자가 바뀔 때 초기화하지 않으면 이전
+   * 사용자의 찜 상태가 다음 사용자에게 그대로 보일 수 있다 (authStore에서 호출).
+   */
+  reset: () => void;
 }
 
 export const useWishStore = create<WishState>((set, get) => ({
@@ -46,4 +52,5 @@ export const useWishStore = create<WishState>((set, get) => ({
       syncedSpaceIds: [...state.syncedSpaceIds, spaceId],
     }));
   },
+  reset: () => set({ wishedIds: [], syncedSpaceIds: [] }),
 }));
