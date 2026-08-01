@@ -1,6 +1,9 @@
 import type { User } from "@/types";
+import { apiFetch } from "@/shared/utils/apiClient";
+export { reissueToken } from "@/shared/utils/tokenUtils";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+if (!BASE_URL) throw new Error("VITE_API_BASE_URL 환경변수가 설정되지 않았습니다.");
 
 function generateVerifier(): string {
   const array = new Uint8Array(32);

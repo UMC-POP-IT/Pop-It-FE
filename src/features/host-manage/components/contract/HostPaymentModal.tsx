@@ -1,14 +1,16 @@
 import Button from "@/shared/components/Button";
-import type {
-  HostReservation,
-  MockHostSpace,
-} from "@/features/host-manage/api/mock_host_data";
+import type { ApiHostReservation } from "@/types";
 import { formatHostDate, getDurationDays } from "@/features/host-manage/utils/dateUtils";
+
+interface SpaceBasicInfo {
+  name: string;
+  address: string;
+}
 
 interface HostPaymentModalProps {
   isOpen: boolean;
-  reservation: HostReservation;
-  space: MockHostSpace;
+  reservation: ApiHostReservation;
+  space: SpaceBasicInfo;
   agreedToGuide: boolean;
   onAgreedToGuideChange: (agreed: boolean) => void;
   onClose: () => void;
@@ -27,8 +29,6 @@ const HostPaymentModal = ({
   if (!isOpen) return null;
 
   const { startDate, endDate, totalPrice } = reservation;
-  const deposit = Math.round(totalPrice * 0.2);
-  const insurance = Math.round(totalPrice * 0.05);
   const platformFee = Math.round(totalPrice * 0.1);
   const netAmount = totalPrice - platformFee;
   const days = getDurationDays(startDate, endDate);
@@ -56,14 +56,6 @@ const HostPaymentModal = ({
           <div className="flex justify-between">
             <span className="text-text-secondary">임대료</span>
             <span className="text-text-primary font-medium">{totalPrice.toLocaleString()}원</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-text-secondary">보증금 (에스크로)</span>
-            <span className="text-text-primary font-medium">{deposit.toLocaleString()}원</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-text-secondary">보험료</span>
-            <span className="text-text-primary font-medium">{insurance.toLocaleString()}원</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">플랫폼 수수료 10%</span>

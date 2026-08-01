@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import StepIndicator from "@/shared/components/StepIndicator";
 import Button from "@/shared/components/Button";
 import Logo from "@/shared/components/Logo";
@@ -9,16 +8,11 @@ import { useAuthStore } from "@/store/authStore";
 
 // 호스트 등록 시작 모달 (인트로)
 //  - [등록 시작하기] → step1(사업자 정보) 화면으로 이동
-//  - [X] → 게스트홈(/)으로 복귀
+//  - [X] → 게스트 모드로 복귀 + 게스트홈(/)으로 이동
 // TODO(2차): 모달 열림/닫힘 상태 관리
 export const HostRegisterStart = () => {
   const navigate = useNavigate();
-  const setHostIntroSeen = useAuthStore((s) => s.setHostIntroSeen);
-
-  // 이 안내 모달이 한 번 뜨면 '봤음'으로 표시 → 이후 호스트 전환 시 재노출 안 함
-  useEffect(() => {
-    setHostIntroSeen();
-  }, [setHostIntroSeen]);
+  const setMode = useAuthStore((s) => s.setMode);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -31,7 +25,10 @@ export const HostRegisterStart = () => {
         <button
           type="button"
           aria-label="닫기"
-          onClick={() => navigate("/")}
+          onClick={() => {
+            setMode("GUEST"); // 호스트 전환 취소 → 게스트 모드로 복귀
+            navigate("/");
+          }}
           className="text-text-secondary hover:text-text-primary absolute top-4 right-4 text-xl"
         >
           <img
