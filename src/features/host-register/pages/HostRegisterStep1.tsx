@@ -17,9 +17,16 @@ export const HostRegisterStep1 = () => {
   const setValues = useHostRegisterStore((s) => s.setValues);
   const [isAddrOpen, setIsAddrOpen] = useState(false);
   const [addrError, setAddrError] = useState(""); // 서울 외 지역 선택 시 에러
+  // 서버 규칙: 숫자 10자리 (스웨거 businessRegistrationNumber)
+  // 입력을 시작한 뒤에만 문구를 띄운다 — 빈 칸에 빨간 글씨가 먼저 뜨면 거슬린다
+  const businessNumberError =
+    form.businessNumber !== "" && form.businessNumber.length !== 10
+      ? "사업자등록번호는 숫자 10자리여야 합니다"
+      : "";
+
   const isValid =
     form.taxpayerType !== "" &&
-    form.businessNumber !== "" &&
+    form.businessNumber.length === 10 &&
     form.storeName.trim() !== "" &&
     form.businessAddress.trim() !== "" &&
     form.businessLicenseImage !== null;
@@ -95,12 +102,16 @@ export const HostRegisterStep1 = () => {
           <Input
             id="business-number"
             placeholder="000-00-00000"
+            inputMode="numeric"
             value={form.businessNumber}
             onChange={(e) =>
               setValues({
-                businessNumber: e.target.value.replace(/[^0-9]/g, ""),
+                businessNumber: e.target.value
+                  .replace(/[^0-9]/g, "")
+                  .slice(0, 10),
               })
             }
+            error={businessNumberError}
           />
         </div>
 
