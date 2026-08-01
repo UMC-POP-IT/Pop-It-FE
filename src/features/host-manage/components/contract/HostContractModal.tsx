@@ -31,9 +31,9 @@ const HostContractModal = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    fetchIdentityVerificationStatus().then(({ isVerified }) => {
-      if (isVerified) setIsAuthenticated(true);
-    });
+    fetchIdentityVerificationStatus()
+      .then(({ isVerified }) => { if (isVerified) setIsAuthenticated(true); })
+      .catch(() => {});
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -128,7 +128,10 @@ const HostContractModal = ({
 
           <Authentication
             onIsAuthenticated={setIsAuthenticated}
-            onVerified={async (id) => { await verifyIdentity(id); }}
+            onVerified={async (id) => {
+              const result = await verifyIdentity(id);
+              if (!result.isVerified) throw new Error("Identity verification was not completed");
+            }}
           />
           <SignatureBoard onIsSigned={setIsSigned} />
 
