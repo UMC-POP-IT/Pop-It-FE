@@ -39,6 +39,8 @@ interface AuthState {
   logout: () => void;
 }
 
+// accessToken / refreshToken은 store에 두지 않고 localStorage에만 저장한다.
+// API 호출은 src/shared/utils/apiClient.ts의 apiFetch가 localStorage에서 직접 읽는다.
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   mode: "GUEST",

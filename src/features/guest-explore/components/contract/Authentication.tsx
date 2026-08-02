@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as PortOne from "@portone/browser-sdk/v2";
 import kakaoIcon from "@/features/guest-explore/icons/Kakao.png";
 import naverIcon from "@/features/guest-explore/icons/Naver.png";
 import passIcon from "@/features/guest-explore/icons/PASS.png";
 import tossIcon from "@/features/guest-explore/icons/Toss.png";
+import { GetVerificationStatus, RequestVerification } from "@/features/guest-explore/api/my_reservation_api";
 
 interface AuthenticationProps {
   onVerified?: (identityVerificationId: string) => Promise<void>;
@@ -11,7 +12,35 @@ interface AuthenticationProps {
 }
 
 const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) => {
-  const [status, setStatus] = useState<"idle" | "pending" | "done" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "checking" | "pending" | "done" | "error">("checking");
+
+  useEffect(() => {
+    let isStale = false;
+
+    const checkVerificationStatus = async () => {
+      try {
+        const { isVerified } = await GetVerificationStatus();
+        if (isStale) return;
+
+        if (isVerified) { // 이미 인증된 상태라면 인증 절차 없이 바로 완료 처리
+          setStatus("done");
+          onIsAuthenticated(true);
+        } else {
+          setStatus("idle");
+          onIsAuthenticated(false);
+        }
+      } catch {
+        if (isStale) return;
+        setStatus("error");
+        onIsAuthenticated(false);
+      }
+    };
+    checkVerificationStatus();
+
+    return () => {
+      isStale = true;
+    };
+  }, [onIsAuthenticated]);
 
   const handleVerify = async () => {
     if (status === "pending" || status === "done") return;
@@ -32,6 +61,7 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
     }
 
     try {
+      await RequestVerification({ identityVerificationId });
       await onVerified?.(identityVerificationId);
       setStatus("done");
       onIsAuthenticated(true); // 인증 성공 처리
@@ -47,7 +77,7 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
       <button
         type="button"
         onClick={handleVerify}
-        disabled={status === "pending" || status === "done"}
+        disabled={status === "checking" || status === "pending" || status === "done"}
         className="border-border flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 disabled:cursor-not-allowed hover:bg-bg"
       >
         <div className="flex items-center gap-1">
@@ -58,6 +88,7 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
         </div>
 
         <span className="text-text-primary shrink-0 text-sm font-medium">
+          {status === "checking" && "확인 중..."}
           {status === "pending" && "인증 중..."}
           {status === "done" && "인증 완료"}
           {status === "error" && "다시 시도"}

@@ -1,28 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Tab from "@/shared/components/Tab";
-import {
-  reservations,
-  getReservationStatus,
-  cancelReservation,
-  type ReservationStatus,
-} from "@/features/guest-explore/api/mock_spaces";
+import { CancelReservations, GetReservations, Reservation, Status } from "../api/my_reservation_api";
 import { ReservationCard } from "@/features/guest-explore/components/ReservationCard";
 import MyReservationListEmptyState from "@/features/guest-explore/components/MyReservationListEmptyState";
 
-const TAB_STATUSES: ReservationStatus[] = ["예약 예정", "승인 완료", "계약 완료", "사용 중" ,"지난 예약"];
+const TAB_STATUSES = ["예약 예정", "승인 완료", "계약 완료", "사용 중", "지난 예약"];
+
+// TAB_STATUSES와 순서를 맞춘 탭별 매칭 상태값
+const TAB_STATUS_MAP: Status[][] = [
+  ["PENDING_APPROVAL"],
+  ["APPROVED"],
+  ["CONTRACT_COMPLETED"],
+  ["IN_USE"],
+  ["USAGE_COMPLETED", "CHECKOUT_COMPLETED"],
+];
 
 export const MyReservationList = () => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [reservationList, setReservationList] = useState(() => [...reservations]);
+  const [reservationList, setReservationList] = useState<Reservation[]>([]);
 
-  const handleCancelReservation = async (id: number) => {
-    await cancelReservation(id);
-    setReservationList((prev) => prev.filter((r) => r.id !== id));
+  useEffect(() => {
+    GetReservations()
+      .then((data) => setReservationList(data?.reservations ?? []))
+      .catch((error) => console.error("게스트 - 나의 예약 내역 조회 실패", error));
+  }, []);
+
+  const handleCancelReservation = async (reservationId: number) => {
+    await CancelReservations(reservationId);
+    setReservationList((prev) => prev.filter((r) => r.reservationId !== reservationId));
   };
 
-  const grouped = TAB_STATUSES.map((status) =>
-    reservationList.filter((r) => getReservationStatus(r) === status),
+  const grouped = TAB_STATUS_MAP.map((statuses) =>
+    reservationList.filter((r) => statuses.includes(r.status)),
   );
+
   const activeReservations = grouped[activeIndex];
 
   return (
@@ -42,9 +53,9 @@ export const MyReservationList = () => {
         ) : (
           activeReservations.map((reservation) => (
             <ReservationCard
-              key={reservation.id}
+              key={reservation.reservationId}
               reservation={reservation}
-              onCancel={() => handleCancelReservation(reservation.id)}
+              onCancel={() => handleCancelReservation(reservation.reservationId)}
             />
           ))
         )}

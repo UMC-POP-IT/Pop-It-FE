@@ -25,6 +25,18 @@ async function parseResponse<T>(res: Response): Promise<T> {
   return json.result ?? json;
 }
 
+// 여러 요청이 동시에 401을 맞아도 reissueToken()은 한 번만 호출되도록 공유
+let reissuePromise: Promise<string> | null = null;
+
+function reissueOnce(): Promise<string> {
+  if (!reissuePromise) {
+    reissuePromise = reissueToken().finally(() => {
+      reissuePromise = null;
+    });
+  }
+  return reissuePromise;
+}
+
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
@@ -34,7 +46,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   // 401 → 토큰 재발급 후 1회 재시도
   if (res.status === 401) {
     try {
-      await reissueToken();
+      await reissueOnce();
     } catch {
       const err = new Error("Unauthorized") as ApiError;
       err.status = 401;

@@ -1,0 +1,239 @@
+import { apiFetch } from "@/shared/utils/apiClient";
+
+// 차례대로 승인 대기, 승인 완료, 계약 완료(이용 전), 사용 중, 사용 완료, 퇴실 완료, 취소
+export type Status = "PENDING_APPROVAL" | "APPROVED" | "CONTRACT_COMPLETED" | "IN_USE" | "USAGE_COMPLETED" | "CHECKOUT_COMPLETED" | "CANCELLED";
+export type ContractStatus = "HOST_PENDING_SIGNATURE" | "GUEST_PENDING_SIGNATURE" | "COMPLETED"
+export interface Reservation {
+	reservationId: number;
+    status: Status;
+    statusDescription: string;
+    startDate: string;
+    endDate: string;
+    usagePurpose: string;
+	totalPrice: number;
+	isPhotoVerified: boolean;
+	space: {
+		spaceId: number;
+		buildingName: string;
+		address: string;
+		thumbnailUrl: string;
+	},
+	guest: {
+		userId: number;
+		nickname: string;
+    }
+}
+
+export interface GetReservationsResponse {
+    reservations: Reservation[];
+    hasNext: boolean;
+    nextCursor: number | null;
+}
+
+export interface CancelReservationResponse {
+    reservationId: number;
+    status: Status;
+}
+
+export interface SubmitCheckOutPhotoRequest {
+    photoUrls: string[];
+}
+
+export interface SubmitCheckOutPhotoResponse {
+	reservationId: number;
+	status: Status;
+	statusDescription: string;
+}
+
+export interface GetEachResStateCountsResponse {
+    countsByStatus: {
+      PENDING_APPROVAL: number;
+      APPROVED: number;
+      CONTRACT_COMPLETED: number;
+      IN_USE: number;
+      USAGE_COMPLETED: number;
+      CHECKOUT_COMPLETED: number;
+      CANCELLED: number;
+    }
+}
+
+export interface GetSubmitCheckoutPhotosResponse {
+    checkoutRejected: boolean;
+    photoUrls: string[];
+}
+
+export interface GetCheckOutApprovalResponse {
+    reservationId: number;
+    status: Status,
+    statusDescription: string;
+    checkoutRejected: boolean;
+    checkoutSubmittedAt: string | null;
+    checkoutRejectedAt: string | null;
+}
+
+interface Upload {
+    presignedUrl: string;
+    fileUrl: string;
+}
+
+interface PresignedURLFile {
+    contentType: string;
+}
+
+export interface GetPresignedURLRequest {
+    uploadType: "SPACE_IMAGE" | "HOST_DOCUMENT" | "CONTRACT_SIGNATURE" | "SCENE_IMAGE" | "CHECKOUT_IMAGE";
+    files: PresignedURLFile[];
+}
+export interface GetPresignedURLResponse {
+    uploads: Upload[];
+}
+
+export interface SubmitSignatureRequest {
+    signatureUrl: string;
+}
+
+export interface SubmitSignatureResponse {
+    contractId: number;
+    contractStatus: ContractStatus;
+    bothSigned: boolean;
+}
+
+export interface GetPaymentInfoResponse {
+    spaceName: string;
+    startDate: string;
+    endDate: string;
+    period: string;
+    rentalFee: number;
+    deposit: number;
+    insuranceFee: number;
+    totalPrice: number;
+}
+
+export interface PaymentRequestResponse {
+    paymentId: number;
+    orderId: string;
+    orderName: string;
+    amount: number;
+    rentFee: number;
+    deposit: number;
+    insuranceFee: number;
+    status: "PENDING" | "PAID" | "FAILED" | "EXPIRED";
+}
+
+export interface PaymentApprovalRequest {
+  paymentKey: string;
+  orderId: string;
+  amount: number;
+}
+
+export interface PaymentApprovalResponse {
+    paymentId: number;
+    orderId: string;
+    method: string;
+    status: "PENDING" | "PAID" | "FAILED" | "EXPIRED";
+    paidAt: string;
+}
+
+export interface GetVerificationStatusResponse {
+    isVerified: boolean;
+    verifiedAt: string;
+}
+
+export interface RequestVerificationRequest {
+    identityVerificationId: string;
+}
+
+export interface RequestVerificationResponse {
+    isVerified: boolean;
+    verifiedAt: string;
+}
+
+// 업로드 - 발급받은 presigned url 로 파일 직접 업로드 (S3 등 외부 스토리지로 전송되므로 apiFetch 미사용)
+export const UploadFileToPresignedURL = async (presignedUrl: string, file: File) => {
+    const res = await fetch(presignedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+    });
+    if (!res.ok) {
+        throw new Error(`파일 업로드에 실패했습니다: ${res.status}`);
+    }
+};
+
+// 업로드 - presigned url 발급 ~ DONE
+export const GetPresignedURL = (request: GetPresignedURLRequest) =>
+    apiFetch<GetPresignedURLResponse>("/uploads/presigned-url", {
+        method: "POST",
+        body: JSON.stringify(request),
+});
+
+// 게스트 - 예약 목록 조회 (cursor: 마지막으로 조회한 id, size: 페이지 크기, status: 상태 필터) ~ DONE
+export const GetReservations = (cursor?: number, size?: number, status?: string) => {
+    const query = new URLSearchParams();
+    if (cursor != null) query.set("cursor", String(cursor));
+    if (size != null) query.set("size", String(size));
+    if (status) query.set("status", status);
+    const qs = query.toString();
+    return apiFetch<GetReservationsResponse>(`/api/v1/reservations/me${qs ? `?${qs}` : ""}`);
+};
+
+// 게스트 - 예약 취소 ~ DONE
+export const CancelReservations = (reservationId: number) =>
+    apiFetch<CancelReservationResponse>(`/api/v1/reservations/${reservationId}/cancel`, {
+        method: "POST",
+});
+
+// 게스트 - 퇴실 증빙 사진 제출 ~ DONE
+export const SubmitCheckOutPhoto = (reservationId: number, request: SubmitCheckOutPhotoRequest) =>
+    apiFetch<SubmitCheckOutPhotoResponse>(`/api/v1/reservations/${reservationId}/checkout`, {
+        method: "POST",
+        body: JSON.stringify(request),
+});
+
+// 게스트 - 예약 상태별 개수 조회 ~ 딱히 필요 없을 듯
+export const GetEachResStateCounts = (reservationId: number) =>
+    apiFetch<GetEachResStateCountsResponse>(`/api/v1/reservations/${reservationId}/status-counts`);
+
+// 게스트 - 퇴실 증빙 사진 조회 ~ 아직 UI 디자인이 완성되지 않아 추후 연동 예정
+export const GetSubmitCheckoutPhotos = (reservationId: number) =>
+    apiFetch<GetSubmitCheckoutPhotosResponse>(`/api/v1/reservations/${reservationId}/checkout-photos`);
+
+// 호스트/게스트 공통 - 퇴실 승인 여부 조회 ~ 얘도 필요 없을 듯
+export const GetCheckOutApproval = (reservationId: number) =>
+    apiFetch<GetCheckOutApprovalResponse>(`/api/v1/reservations/${reservationId}/checkout-approval`);
+
+// 계약 - 전자 서명 제출 ~ DONE
+export const SubmitSignature = (reservationId: number, request: SubmitSignatureRequest) => 
+    apiFetch<SubmitSignatureResponse>(`/api/v1/reservations/${reservationId}/contracts/signatures`, {
+        method: "POST",
+        body: JSON.stringify(request),
+});
+
+// 결제 - 결제 예정 정보 조회 ~ DONE
+export const GetPaymentInfo = (reservationId: number) => 
+    apiFetch<GetPaymentInfoResponse>(`/api/v1/reservations/${reservationId}/contracts/payment-preview`);
+
+// 결제 - 결제(요청)준비 ~ DONE
+export const PaymentRequest = (contractId: number, idempotencyKey: string) =>
+    apiFetch<PaymentRequestResponse>(`/api/v1/contracts/${contractId}/payments`, {
+        method: "POST",
+        headers: { "Idempotency-Key": idempotencyKey },
+});
+
+// 결제 - 결제 승인
+export const PaymentApproval = (paymentId: number, request: PaymentApprovalRequest) => 
+    apiFetch<PaymentApprovalResponse>(`/api/v1/payments/${paymentId}/confirm`, {
+        method: "POST",
+        body: JSON.stringify(request),
+});
+
+// 본인 인증 -  본인 인증 여부 조회
+export const GetVerificationStatus = () => 
+    apiFetch<GetVerificationStatusResponse>(`/api/v1/users/me/verifications`);
+
+// 본인 인증 - 본인인증 요청
+export const RequestVerification = (request: RequestVerificationRequest) => 
+    apiFetch<RequestVerificationResponse>(`/api/v1/users/me/verifications`, {
+        method: "POST",
+        body: JSON.stringify(request), 
+});
