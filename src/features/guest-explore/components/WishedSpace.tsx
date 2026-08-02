@@ -119,14 +119,25 @@ export const WishedSpace = () => {
 
   // 이 목록의 카드는 전부 "이미 찜한 공간"이므로, 하트를 누르면 항상 찜 해제이다.
   // 낙관적으로 목록에서 먼저 제거하고, API 실패 시 원래 목록으로 되돌린다.
+  // 두 카드를 연속으로 해제하면 각 호출이 서로 다른 시점의 목록을 스냅샷으로 들고
+  // 있게 되는데, 롤백 시 그 스냅샷 전체로 덮어써 버리면 그 사이에 성공적으로 끝난
+  // 다른 해제 결과까지 되살아난다. 그래서 실패한 카드의 원래 위치/데이터만 기억해뒀다가
+  // 롤백 시 그 카드 하나만 현재(최신) 목록에 되돌려 넣는다.
   const handleUnwish = async (spaceId: number) => {
-    const previous = wishedSpaces;
+    const removedIndex = wishedSpaces.findIndex((space) => space.spaceId === spaceId);
+    if (removedIndex === -1) return;
+    const removedSpace = wishedSpaces[removedIndex];
+
     setWishedSpaces((prev) => prev.filter((space) => space.spaceId !== spaceId));
     try {
       await handleWishToggle(spaceId);
     } catch (error) {
       console.error("찜 해제 실패", error);
-      setWishedSpaces(previous);
+      setWishedSpaces((prev) => {
+        const restored = [...prev];
+        restored.splice(Math.min(removedIndex, restored.length), 0, removedSpace);
+        return restored;
+      });
     }
   };
 
