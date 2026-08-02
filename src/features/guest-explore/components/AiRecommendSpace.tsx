@@ -50,7 +50,7 @@ const AiRecommendSpace = () => {
 
   // 찜 토글: 로그인 상태에서만 카드의 isWished를 낙관적으로 갱신하고,
   // 실패 시 롤백한다. 비로그인 흐름은 로그인 모달만 띄우고 카드 상태는 건드리지 않는다.
-  const handleCardWishToggle = (spaceId: number) => {
+  const handleCardWishToggle = async (spaceId: number) => {
     if (!user) {
       handleWishToggle(spaceId);
       return;
@@ -63,7 +63,7 @@ const AiRecommendSpace = () => {
     );
 
     try {
-      handleWishToggle(spaceId);
+      await handleWishToggle(spaceId);
     } catch (error) {
       console.error("찜 상태 변경 실패", error);
       setCards((prev) =>
