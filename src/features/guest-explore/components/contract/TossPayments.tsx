@@ -126,7 +126,7 @@ const TossPayments = ({
         if (!signatureBlob) throw new Error("서명 이미지를 생성하지 못했습니다.");
 
         const { uploads } = await GetPresignedURL({
-          uploadType: "SIGNATURE",
+          uploadType: "CONTRACT_SIGNATURE",
           files: [{ contentType: "image/png" }],
         });
         if (uploads.length === 0) throw new Error("서명 업로드용 URL을 발급받지 못했습니다.");
