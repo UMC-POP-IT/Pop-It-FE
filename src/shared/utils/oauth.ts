@@ -98,6 +98,10 @@ export async function switchMode(
   const accessToken = localStorage.getItem("access_token");
   const res = await fetch(`${BASE_URL}/api/v1/users/me/mode`, {
     method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
     body: JSON.stringify({ targetMode }),
   });
   if (!res.ok) {
