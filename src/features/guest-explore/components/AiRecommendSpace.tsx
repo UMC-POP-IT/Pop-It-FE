@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import SpaceCard from "@/shared/components/SpaceCard";
 import type { Space } from "@/types";
-import type { Space as AiRecommendSpaceDto } from "../api/spaces_api";
+import type { RecommendedSpace } from "../api/spaces_api";
 import { ScrollButton } from "./ScrollButton";
 import { useNavigate } from "react-router-dom";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
@@ -18,7 +18,7 @@ interface AiRecommendCard {
 
 // AI 맞춤형 공간 API 응답(spaceId/buildingName/... 백엔드 필드명)을
 // 앱 전역에서 공용으로 쓰는 Space 모델(id/name/... )로 변환
-const toCard = (dto: AiRecommendSpaceDto): AiRecommendCard => ({
+const toCard = (dto: RecommendedSpace): AiRecommendCard => ({
   space: {
     id: dto.spaceId,
     hostId: 0,
