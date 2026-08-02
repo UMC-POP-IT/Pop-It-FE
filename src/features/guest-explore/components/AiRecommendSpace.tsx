@@ -1,39 +1,78 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import SpaceCard from "@/shared/components/SpaceCard";
-import { recommendSpaces } from "@/features/guest-explore/api/mock_spaces";
 import type { Space } from "@/types";
+import type { RecommendedSpace } from "../api/spaces_api";
 import { ScrollButton } from "./ScrollButton";
-import { useWishStore } from "@/store/wishStore";
 import { useNavigate } from "react-router-dom";
-import { useSpaceStore } from "@/store/spaceStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
+import { useAuthStore } from "@/store/authStore";
 
-const avgDayCost =
-  recommendSpaces.reduce((sum, space) => sum + space.cost.day, 0) /
-  recommendSpaces.length;
+import { getAiRecommend } from "../api/spaces_api";
 
-// AI 추천 이유 뱃지
-const getMatchReason = (space: Space) => {
-  const cheaperPercent = Math.round((1 - space.cost.day / avgDayCost) * 100);
+interface AiRecommendCard {
+  space: Space;
+  categoryTag: string;
+  matchReason: string;
+  isWished: boolean;
+}
 
-  // [case 1] 최근 본 공간보다 5% 이상 저렴하면 "최근 본 공간보다 XX% 저렴해요" 뱃지 표시
-  if (cheaperPercent >= 5) return `최근 본 공간보다 ${cheaperPercent}% 저렴해요`;
-
-  // [case 2] case 1이 아닌 경우, 좋아요 개수가 150개 이상이면 "지금 인기 급상승 중이에요" 뱃지 표시
-  if (space.heartCount >= 150) return "지금 인기 급상승 중이에요";
-
-    // [case 3] case 1, 2 모두 아닌 경우, "AI가 취향에 맞춰 골랐어요" 뱃지 표시
-  return "AI가 취향에 맞춰 골랐어요";
-};
+// AI 맞춤형 공간 API 응답(spaceId/buildingName/... 백엔드 필드명)을
+// 앱 전역에서 공용으로 쓰는 Space 모델(id/name/... )로 변환
+const toCard = (dto: RecommendedSpace): AiRecommendCard => ({
+  space: {
+    id: dto.spaceId,
+    hostId: 0,
+    imageUrls: dto.thumbnailUrl ? [dto.thumbnailUrl] : [],
+    heartCount: dto.wishCount,
+    name: dto.buildingName,
+    address: dto.roadAddress,
+    cost: { day: dto.pricePerDay },
+    keywords: dto.keywords,
+    description: "",
+    createdAt: "",
+  },
+  categoryTag: dto.spaceCategory,
+  matchReason: dto.tag,
+  isWished: dto.isWishlisted,
+});
 
 const AiRecommendSpace = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
-  const spaces = useSpaceStore((state) => state.spaces);
-  const wishedIds = useWishStore((state) => state.wishedIds);
+  const [cards, setCards] = useState<AiRecommendCard[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
   const { handleWishToggle } = useWishGuard();
+  const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
+
+  // 찜 토글: 로그인 상태에서만 카드의 isWished를 낙관적으로 갱신하고,
+  // 실패 시 롤백한다. 비로그인 흐름은 로그인 모달만 띄우고 카드 상태는 건드리지 않는다.
+  const handleCardWishToggle = async (spaceId: number) => {
+    if (!user) {
+      handleWishToggle(spaceId);
+      return;
+    }
+
+    setCards((prev) =>
+      prev.map((card) =>
+        card.space.id === spaceId ? { ...card, isWished: !card.isWished } : card,
+      ),
+    );
+
+    try {
+      await handleWishToggle(spaceId);
+    } catch (error) {
+      console.error("찜 상태 변경 실패", error);
+      setCards((prev) =>
+        prev.map((card) =>
+          card.space.id === spaceId ? { ...card, isWished: !card.isWished } : card,
+        ),
+      );
+    }
+  };
 
   // 좌/우 스크롤 버튼 활성화 여부 업데이트
   const updateScrollButtons = () => {
@@ -54,6 +93,31 @@ const AiRecommendSpace = () => {
     return () => {
       container.removeEventListener("scroll", updateScrollButtons);
       window.removeEventListener("resize", updateScrollButtons);
+    };
+  }, [cards.length, isLoading]);
+
+  // AI 맞춤형 공간 정보 조회
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+    setIsError(false);
+
+    getAiRecommend()
+      .then((data) => {
+        if (!isMounted) return;
+        setCards((data?.spaces ?? []).map(toCard));
+      })
+      .catch((error) => {
+        console.error("AI 맞춤형 공간 조회 실패", error);
+        if (!isMounted) return;
+        setIsError(true);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
     };
   }, []);
 
@@ -77,24 +141,31 @@ const AiRecommendSpace = () => {
           ref={scrollRef}
           className="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {recommendSpaces.map((recSpace) => {
-            const space = spaces.find((s) => s.id === recSpace.id) ?? recSpace;
-            return (
+          {isLoading ? (
+            <p role="status" aria-live="polite" className="text-text-secondary text-sm">
+              추천 공간 로딩 UI 추가 예정
+            </p>
+          ) : isError ? (
+            <p role="alert" aria-live="assertive" className="text-text-secondary text-sm">
+              추천 공간 조회 실패 UI 추가 예정
+            </p>
+          ) : (
+            cards.map(({ space, categoryTag, matchReason, isWished }) => (
               <div
                 key={space.id}
                 className="w-[calc(50%-0.5rem)] flex-none sm:w-[calc((100%-2*1rem)/3)] lg:w-[calc((100%-3*1rem)/4)]"
               >
                 <SpaceCard
                   space={space}
-                  categoryTag={space.keywords[0]}
-                  matchReason={getMatchReason(space)}
-                  isWished={wishedIds.includes(space.id)}
-                  onWishToggle={() => handleWishToggle(space.id)}
+                  categoryTag={categoryTag}
+                  matchReason={matchReason}
+                  isWished={isWished}
+                  onWishToggle={() => handleCardWishToggle(space.id)}
                   onClick={() => navigate(`/spaces/${space.id}`)}
                 />
               </div>
-            );
-          })}
+            ))
+          )}
         </div>
 
         {canScrollNext && <ScrollButton direction="next" position={"1/4"} onClick={() => scrollByCard(1)} />}
