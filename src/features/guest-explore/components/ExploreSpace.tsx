@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SpaceCard from "@/shared/components/SpaceCard";
 import ExploreSearchFilterBar from "./ExploreSearchFilterBar";
@@ -34,6 +34,10 @@ const ExploreSpace = () => {
   const [spaces, setSpaces] = useState<SpaceSummary[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [retryKey, setRetryKey] = useState(0);
+  // 최초 조회 성공 이후에는 페이지/필터가 바뀌어도 전체 로딩 화면으로 목록을
+  // 가리지 않고, 기존 목록을 유지한 채 배경에서 갱신한다(깜빡임 방지).
+  const [isRefetching, setIsRefetching] = useState(false);
+  const hasLoadedOnceRef = useRef(false);
 
   const wishedIds = useWishStore((state) => state.wishedIds);
   const syncWished = useWishStore((state) => state.syncWished);
@@ -64,7 +68,13 @@ const ExploreSpace = () => {
     let ignore = false;
 
     const load = async () => {
-      setStatus("loading");
+      // 최초 조회일 때만 전체 로딩 화면을 띄운다. 이미 한 번 성공한 뒤라면
+      // 기존 목록은 그대로 두고 배경에서만 다시 조회한다.
+      if (hasLoadedOnceRef.current) {
+        setIsRefetching(true);
+      } else {
+        setStatus("loading");
+      }
 
       try {
         const result = await getSpaces({
@@ -85,18 +95,17 @@ const ExploreSpace = () => {
         setSpaces(summaries);
         setTotalCount(result.totalCount);
         setStatus("success");
+        hasLoadedOnceRef.current = true;
       } catch (error) {
         if (ignore) return;
 
-        const httpStatus =
-          error instanceof Error ? (error as { status?: number }).status : undefined;
-        if (httpStatus === 400) {
-          console.error(
-            "공간 탐색 요청 파라미터 오류:",
-            error instanceof Error ? error.message : error,
-          );
-        }
+        // 상태 코드와 무관하게 항상 콘솔에 남긴다 - 화면에는 재시도 버튼이 뜨지만
+        // 500/네트워크 오류처럼 사용자가 재현하기 어려운 문제는 로그가 없으면
+        // 원인 파악이 안 된다.
+        console.error("공간 탐색 요청 실패:", error);
         setStatus("error");
+      } finally {
+        if (!ignore) setIsRefetching(false);
       }
     };
 
@@ -184,7 +193,11 @@ const ExploreSpace = () => {
 
       {status === "success" && !isMapView && spaces.length > 0 && (
         <>
-          <div className="mt-6 grid grid-cols-4 gap-x-6 gap-y-10">
+          <div
+            className={`mt-6 grid grid-cols-4 gap-x-6 gap-y-10 transition-opacity ${
+              isRefetching ? "pointer-events-none opacity-50" : ""
+            }`}
+          >
             {spaces.map((space) => (
               <SpaceCard
                 key={space.spaceId}
