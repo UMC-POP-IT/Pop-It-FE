@@ -5,6 +5,7 @@ import WishedSpaceEmptyState from "@/features/guest-explore/components/WishedSpa
 import type { Space } from "@/types";
 import { useNavigate } from "react-router-dom";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
+import { useWishStore } from "@/store/wishStore";
 import { getWishList, wishedSpace } from "@/features/guest-explore/api/spaces_api";
 
 const WISH_PAGE_SIZE = 12;
@@ -47,10 +48,30 @@ export const WishedSpace = () => {
   const { handleWishToggle } = useWishGuard();
   const navigate = useNavigate();
 
+  // 이번 전체 목록 조회(재시도 포함)에서 서버가 실제로 찜했다고 확인해준 spaceId 누적 집합.
+  // GET /users/me/wishlist는 페이지네이션이라, 한 페이지만 보고 "없으면 해제"를 단정하면
+  // 아직 안 불러온 다음 페이지의 항목까지 잘못 해제 처리하게 된다. 그래서 hasNext가
+  // false가 되어 전체를 다 불러온 시점에만 전역 wishedIds와 비교해서 해제를 확정한다.
+  const confirmedIdsRef = useRef<Set<number>>(new Set());
+
+  const confirmServerWishState = (pageItems: wishedSpace[], isLastPage: boolean) => {
+    const { syncWished, wishedIds } = useWishStore.getState();
+    pageItems.forEach((item) => {
+      confirmedIdsRef.current.add(item.spaceId);
+      syncWished(item.spaceId, true);
+    });
+    if (isLastPage) {
+      wishedIds
+        .filter((id) => !confirmedIdsRef.current.has(id))
+        .forEach((id) => syncWished(id, false));
+    }
+  };
+
   // 최초 페이지(0)만 조회한다. 다음 페이지는 스크롤이 끝에 닿을 때 loadMore로 이어붙인다.
   useEffect(() => {
     let ignore = false;
     setStatus("loading");
+    confirmedIdsRef.current = new Set();
     getWishList(0, WISH_PAGE_SIZE)
       .then((data) => {
         if (ignore) return;
@@ -58,6 +79,7 @@ export const WishedSpace = () => {
         setHasNext(data.hasNext);
         setPage(0);
         setStatus("success");
+        confirmServerWishState(data.wishlist, !data.hasNext);
       })
       .catch((error) => {
         if (ignore) return;
@@ -79,6 +101,7 @@ export const WishedSpace = () => {
       setWishedSpaces((prev) => [...prev, ...data.wishlist]);
       setHasNext(data.hasNext);
       setPage(nextPage);
+      confirmServerWishState(data.wishlist, !data.hasNext);
     } catch (error) {
       console.error("찜한 공간 추가 조회 실패", error);
     } finally {
