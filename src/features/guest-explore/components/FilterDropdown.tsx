@@ -40,7 +40,7 @@ const Chevron = ({ open }: { open: boolean }) => (
   </svg>
 );
 
-function FilterDropdown<T extends string>({
+const FilterDropdown = function <T extends string>({
   ariaLabel,
   options,
   value,
@@ -106,6 +106,6 @@ function FilterDropdown<T extends string>({
       )}
     </div>
   );
-}
+};
 
 export default FilterDropdown;
