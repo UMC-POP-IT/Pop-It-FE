@@ -81,7 +81,7 @@ interface PresignedURLFile {
 }
 
 export interface GetPresignedURLRequest {
-    uploadType: "SPACE_IMAGE" | "BUSINESS_LICENSE" | "BANKBOOK" | "SIGNATURE" | "CHECKOUT";
+    uploadType: "SPACE_IMAGE" | "HOST_DOCUMENT" | "CONTRACT_SIGNATURE" | "SCENE_IMAGE" | "CHECKOUT_IMAGE";
     files: PresignedURLFile[];
 }
 export interface GetPresignedURLResponse {
@@ -162,7 +162,7 @@ export const UploadFileToPresignedURL = async (presignedUrl: string, file: File)
 
 // 업로드 - presigned url 발급 ~ DONE
 export const GetPresignedURL = (request: GetPresignedURLRequest) =>
-    apiFetch<GetPresignedURLResponse>("/api/v1/uploads/presigned-url", {
+    apiFetch<GetPresignedURLResponse>("/uploads/presigned-url", {
         method: "POST",
         body: JSON.stringify(request),
 });

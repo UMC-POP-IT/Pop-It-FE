@@ -43,7 +43,11 @@ const getCardMeta = (r: Reservation): CardMeta => {
         showCancel: false,
         showContract: false,
         needsPhotoVerification: !r.isPhotoVerified,
-        isPhotoRejected: r.status === "USAGE_COMPLETED",
+        // TODO: 거절 여부는 GetCheckOutApprovalResponse/GetSubmitCheckoutPhotosResponse의
+        // checkoutRejected 필드로만 판단 가능. Reservation 응답에 해당 필드가 추가되면 교체할 것.
+        // USAGE_COMPLETED는 "아직 사진 미제출" 정상 케이스도 포함하므로, 그때까지는 오탐(정상 케이스에
+        // 거절 문구 노출)을 막기 위해 항상 false로 둔다.
+        isPhotoRejected: false,
         isDone: true
       };
   }
@@ -117,7 +121,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
     try {
       setIsUploadingPhotos(true);
       const { uploads } = await GetPresignedURL({
-        uploadType: "CHECKOUT",
+        uploadType: "CHECKOUT_IMAGE",
         files: files.map((file) => ({ contentType: file.type })),
       });
       if (uploads.length !== files.length) throw new Error("업로드 URL 개수가 파일 개수와 일치하지 않습니다.");
