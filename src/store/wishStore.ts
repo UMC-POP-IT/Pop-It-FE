@@ -3,24 +3,26 @@ import { useSpaceStore } from "@/store/spaceStore";
 
 interface WishState {
   wishedIds: number[];
-  toggleWish: (spaceId: number) => void;
+  localWishToggle: (spaceId: number) => void;
   /**
    * 서버가 내려준 찜 여부(isWishlisted)로 로컬 상태를 맞춘다.
-   * toggleWish와 달리 heartCount를 건드리지 않는다 - 서버 응답의 wishCount를
+   * localWishToggle와 달리 heartCount를 건드리지 않는다 - 서버 응답의 wishCount를
    * 그대로 신뢰하는 화면(공간 탐색/상세)에서 최초 진입 시 상태만 동기화하기 위한 용도.
    *
-   * 찜 API가 아직 연동되지 않아 toggleWish는 로컬 상태만 바꾼다. 그래서 이미
-   * 한 번 동기화한 spaceId는 재방문 시 다시 동기화하지 않는다 - 그렇지 않으면
-   * 세션 내에서 로컬로 누른 토글이 페이지를 나갔다 들어올 때마다 서버 기본값(false)
-   * 으로 되돌아간다. 찜 API 연동 후에는 이 가드를 제거하고 서버 값을 항상 신뢰하면 된다.
+   * 찜 토글 API는 useWishGuard.handleWishToggle에서 실제로 호출되지만, 그 요청이
+   * 응답을 받기 전에 필터 변경/페이지네이션/재시도 등으로 목록·상세 조회가 다시
+   * 일어나면 아직 토글 반영 전인 stale한 서버 값이 syncWished로 들어올 수 있다.
+   * 이미 한 번 동기화했거나 로컬에서 토글된 적 있는 spaceId는 재동기화하지 않아
+   * 이 경쟁 상태에서 로컬 상태가 되돌아가는 것을 막는다.
    */
   syncWished: (spaceId: number, isWished: boolean) => void;
   syncedSpaceIds: number[];
   /**
    * 서버 동기화 여부와 무관하게, 세션 중 사용자가 직접 토글한 spaceId 집합.
-   * toggleWish가 syncWished보다 먼저 호출된 경우(예: 로그인 리다이렉트 후
-   * pendingAction으로 toggleWish가 실행되고, 그 뒤에 상세 페이지의 최초
-   * 동기화가 일어나는 경우) syncedSpaceIds만으로는 막을 수 없어 별도로 둔다.
+   * localWishToggle이 syncWished보다 먼저 호출된 경우(예: 로그인 리다이렉트 후
+   * pendingAction으로 handleWishToggle이 실행되며 localWishToggle이 먼저 반영되고,
+   * 그 뒤에 상세 페이지의 최초 동기화가 일어나는 경우) syncedSpaceIds만으로는
+   * 막을 수 없어 별도로 둔다.
    */
   syncedButLocallyToggled: number[];
   /**
@@ -36,7 +38,7 @@ export const useWishStore = create<WishState>((set, get) => ({
   wishedIds: [],
   syncedSpaceIds: [],
   syncedButLocallyToggled: [],
-  toggleWish: (spaceId) => {
+  localWishToggle: (spaceId) => {
     const isWished = get().wishedIds.includes(spaceId);
     set((state) => ({
       wishedIds: isWished
