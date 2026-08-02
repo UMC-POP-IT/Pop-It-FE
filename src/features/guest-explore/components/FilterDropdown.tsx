@@ -58,7 +58,7 @@ const FilterDropdown = function <T extends string>({
     <div className="relative" ref={containerRef}>
       <button
         type="button"
-        aria-haspopup="listbox"
+        aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-label={ariaLabel}
         onClick={() => setIsOpen((prev) => !prev)}
@@ -72,7 +72,7 @@ const FilterDropdown = function <T extends string>({
 
       {isOpen && (
         <ul
-          role="listbox"
+          role="menu"
           aria-label={ariaLabel}
           className="border-divider absolute top-full left-0 z-20 mt-2 w-max min-w-full overflow-y-auto rounded-xl border-2 bg-white p-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#d8d8d8] [&::-webkit-scrollbar-track]:bg-transparent"
           style={
@@ -84,9 +84,11 @@ const FilterDropdown = function <T extends string>({
           {options.map((option) => {
             const isSelected = option.value === value;
             return (
-              <li key={option.value || "all"} role="option" aria-selected={isSelected}>
+              <li key={option.value || "all"} role="none">
                 <button
                   type="button"
+                  role="menuitemradio"
+                  aria-checked={isSelected}
                   onClick={() => {
                     onChange(option.value);
                     setIsOpen(false);
