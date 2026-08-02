@@ -225,6 +225,7 @@ const ExploreSpace = () => {
           spaces={spaces}
           onSelectSpace={(spaceId) => navigate(`/spaces/${spaceId}`)}
           onClose={() => setIsMapView(false)}
+          onWishToggle={onWishToggle}
         />
       )}
 
