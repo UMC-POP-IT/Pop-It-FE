@@ -1,5 +1,4 @@
 import type { User } from "@/types";
-import { apiFetch } from "@/shared/utils/apiClient";
 export { reissueToken } from "@/shared/utils/tokenUtils";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -96,10 +95,21 @@ export async function logoutApi(): Promise<void> {
 export async function switchMode(
   targetMode: "HOST" | "GUEST",
 ): Promise<{ currentMode: "HOST" | "GUEST" }> {
-  return apiFetch("/api/v1/users/me/mode", {
+  const accessToken = localStorage.getItem("access_token");
+  const res = await fetch(`${BASE_URL}/api/v1/users/me/mode`, {
     method: "PATCH",
     body: JSON.stringify({ targetMode }),
   });
+  if (!res.ok) {
+    const json = await res.json().catch(() => null);
+    const err = Object.assign(
+      new Error(json?.message ?? `Mode switch failed: ${res.status}`),
+      { status: res.status },
+    );
+    throw err;
+  }
+  const json = await res.json();
+  return json.result ?? json;
 }
 
 export async function handleOAuthCallback(code: string): Promise<User> {
