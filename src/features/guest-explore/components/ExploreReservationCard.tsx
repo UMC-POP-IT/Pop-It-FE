@@ -1,11 +1,24 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "@/store/authStore";
+import { CreateReservation } from "@/features/guest-explore/api/my_reservation_api";
+import ReservationRequestModal from "@/features/guest-explore/components/ReservationRequestModal";
+import Modal from "@/shared/components/Modal";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 interface ExploreReservationCardProps {
+  spaceId: number;
   dayCost: number;
   onLoginRequired?: () => void;
 }
+
+const toApiDateString = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
 
 const formatDate = (date: Date) => {
   const y = date.getFullYear();
@@ -23,13 +36,21 @@ const isSameDay = (a: Date, b: Date) =>
 const diffDays = (a: Date, b: Date) =>
   Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-const ExploreReservationCard = ({ dayCost, onLoginRequired }: ExploreReservationCardProps) => {
+const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreReservationCardProps) => {
+  const navigate = useNavigate();
+  const guestName = useAuthStore((s) => s.user?.nickname) ?? "";
+
   const today = useMemo(() => new Date(), []);
   const [viewDate, setViewDate] = useState(
     new Date(today.getFullYear(), today.getMonth(), 1),
   );
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
+
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
 
   const calendarDays = useMemo(() => {
     const year = viewDate.getFullYear();
@@ -69,6 +90,43 @@ const ExploreReservationCard = ({ dayCost, onLoginRequired }: ExploreReservation
 
   const totalDays = startDate && endDate ? diffDays(startDate, endDate) : 0;
   const totalPrice = totalDays * dayCost;
+
+  const periodLabel =
+    startDate && endDate ? `${formatDate(startDate)} ~ ${formatDate(endDate)}` : "";
+
+  const handleOpenRequestModal = () => {
+    if (!(startDate && endDate)) return;
+    setSubmitError(null);
+    setIsRequestModalOpen(true);
+  };
+
+  const handleSubmitRequest = async (usagePurpose: string) => {
+    if (!(startDate && endDate)) return;
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      await CreateReservation({
+        spaceId,
+        startDate: toApiDateString(startDate),
+        endDate: toApiDateString(endDate),
+        usagePurpose,
+      });
+      setIsRequestModalOpen(false);
+      setIsCompleteModalOpen(true);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : "예약 요청에 실패했어요. 잠시 후 다시 시도해주세요.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCompleteConfirm = () => {
+    setIsCompleteModalOpen(false);
+    handleReset();
+    navigate("/reservations");
+  };
 
   const getDayClassName = (date: Date) => {
     const isCurrentMonth = date.getMonth() === viewDate.getMonth();
@@ -196,6 +254,7 @@ const ExploreReservationCard = ({ dayCost, onLoginRequired }: ExploreReservation
             </button>
             <button
               type="button"
+              onClick={handleOpenRequestModal}
               disabled={!(startDate && endDate)}
               className="bg-primary-hover flex h-[52px] flex-1 items-center justify-center rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
@@ -204,6 +263,27 @@ const ExploreReservationCard = ({ dayCost, onLoginRequired }: ExploreReservation
           </div>
         </div>
       </div>
+
+      <ReservationRequestModal
+        isOpen={isRequestModalOpen}
+        guestName={guestName}
+        periodLabel={periodLabel}
+        totalPrice={totalPrice}
+        isSubmitting={isSubmitting}
+        submitError={submitError}
+        onCancel={() => setIsRequestModalOpen(false)}
+        onSubmit={handleSubmitRequest}
+      />
+
+      <Modal
+        isOpen={isCompleteModalOpen}
+        showCheckIcon
+        singleButton
+        title="예약 요청이 완료 되었습니다"
+        description="나의 예약 > 예약 예정"
+        confirmLabel="확인"
+        onConfirm={handleCompleteConfirm}
+      />
     </div>
   );
 };
