@@ -17,6 +17,19 @@ const getOrCreateIdempotencyKey = (reservationId: number): string => {
   return newKey;
 };
 
+// 서명 제출(SubmitSignature) 성공 후 결제 단계(PaymentRequest/requestPayment)에서 실패하면,
+// 서명·계약은 이미 서버에 생성된 상태로 남는다. 백엔드에 삭제/finalize API가 없는 현재 구조에서는
+// 재시도 시 서명을 다시 업로드해 중복 계약을 만드는 대신, 확보해둔 contractId로 결제 단계부터
+// 이어서 재시도하도록 캐시해 데이터 불일치(서명만 쌓이는 현상)를 최소화한다.
+const getCachedContractId = (reservationId: number): number | null => {
+  const raw = sessionStorage.getItem(`toss_contract_id_${reservationId}`);
+  return raw ? Number(raw) : null;
+};
+
+const setCachedContractId = (reservationId: number, contractId: number): void => {
+  sessionStorage.setItem(`toss_contract_id_${reservationId}`, String(contractId));
+};
+
 interface TossPaymentRequestOptions {
   method: "CARD";
   amount: { currency: "KRW"; value: number };
@@ -104,19 +117,26 @@ const TossPayments = ({
     try {
       setIsSubmitting(true);
 
-      const signatureBlob = await getSignatureBlob();
-      if (!signatureBlob) throw new Error("서명 이미지를 생성하지 못했습니다.");
+      // 이전 시도에서 서명 제출(SubmitSignature)까지는 성공했지만 결제 단계에서 실패한 경우,
+      // 서명을 다시 업로드해 중복 계약을 만들지 않고 확보해둔 contractId로 결제 단계부터 재시도한다.
+      let contractId = getCachedContractId(reservationId);
 
-      const { uploads } = await GetPresignedURL({
-        uploadType: "SIGNATURE",
-        files: [{ contentType: "image/png" }],
-      });
-      if (uploads.length === 0) throw new Error("서명 업로드용 URL을 발급받지 못했습니다.");
-      const [{ presignedUrl, fileUrl }] = uploads;
+      if (contractId === null) {
+        const signatureBlob = await getSignatureBlob();
+        if (!signatureBlob) throw new Error("서명 이미지를 생성하지 못했습니다.");
 
-      const signatureFile = new File([signatureBlob], `signature_${reservationId}.png`, { type: "image/png" });
-      await UploadFileToPresignedURL(presignedUrl, signatureFile);
-      const { contractId } = await SubmitSignature(reservationId, { signatureUrl: fileUrl });
+        const { uploads } = await GetPresignedURL({
+          uploadType: "SIGNATURE",
+          files: [{ contentType: "image/png" }],
+        });
+        if (uploads.length === 0) throw new Error("서명 업로드용 URL을 발급받지 못했습니다.");
+        const [{ presignedUrl, fileUrl }] = uploads;
+
+        const signatureFile = new File([signatureBlob], `signature_${reservationId}.png`, { type: "image/png" });
+        await UploadFileToPresignedURL(presignedUrl, signatureFile);
+        ({ contractId } = await SubmitSignature(reservationId, { signatureUrl: fileUrl }));
+        setCachedContractId(reservationId, contractId);
+      }
 
       // 결제를 요청하기 전에 서버에 orderId, amount를 먼저 생성/저장
       // 결제 과정에서 악의적으로 결제 금액이 바뀌는 것을 막기 위해, 이후 requestPayment에는
