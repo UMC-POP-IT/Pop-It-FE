@@ -1,16 +1,13 @@
-import type { Space } from "@/types";
+import type { recommendSpace } from "../api/spaces_api";
 
 interface RealTimeBannerProps {
-  space: Space;
+  space: recommendSpace;
   onClick?: () => void;
-  /** AI 추천 이유 뱃지 (ex. 최근 본 공간보다 15% 저렴해요) */
-  matchReason?: string;
 }
 
 const RealTimeBanner = ({
   space,
   onClick,
-  matchReason,
 }: RealTimeBannerProps) => (
   <div className="border-border group border-transparent cursor-pointer overflow-hidden border bg-white transition-shadow hover:shadow-md">
     {/* 이미지 */}
@@ -19,10 +16,10 @@ const RealTimeBanner = ({
       onClick={onClick}
       className="bg-bg relative aspect-[4/5] group-hover:cursor-pointer"
     >
-      {space.imageUrls[0] ? (
+      {space.thumbnailUrl ? (
         <img
-          src={space.imageUrls[0]}
-          alt={space.name}
+          src={space.thumbnailUrl}
+          alt={String(space.spaceId)}
           className="h-full w-full object-cover transition-[filter] duration-500 group-hover:brightness-75"
         />
       ) : (
@@ -31,9 +28,9 @@ const RealTimeBanner = ({
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
       <div className="absolute bottom-0 left-0 flex flex-col gap-1 p-4 mb-4 text-left">
         <span className="text-2xl leading-snug font-bold text-white whitespace-pre-wrap">
-          {"이번 주, 놓치면 아쉬운\n강남 팝업 특가"}
+          {space.title}
         </span>
-        <span className="text-sm text-white/80">{matchReason}</span>
+        <span className="text-sm text-white/80">{space.subtitle}</span>
       </div>
     </button>
   </div>

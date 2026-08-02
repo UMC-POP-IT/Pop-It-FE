@@ -1,11 +1,14 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
+import Modal from "@/shared/components/Modal";
 import { LoginModal } from "@/shared/components/LoginModal";
 import { useAuthStore } from "@/store/authStore";
 import { useWishStore } from "@/store/wishStore";
 import { handleOAuthCallback, switchMode } from "@/shared/utils/oauth";
+import { PaymentApproval } from "@/features/guest-explore/api/my_reservation_api";
+import { TOSS_PENDING_PAYMENT_KEY } from "@/features/guest-explore/components/contract/TossPayments";
 
 const PendingActionExecutor = () => {
   const user = useAuthStore((s) => s.user);
@@ -54,6 +57,10 @@ const OAuthCallbackHandler = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
+    // Toss 결제 리다이렉트(code/message를 자체적으로 붙여서 돌아옴)는
+    // TossPaymentResultHandler가 처리하므로 OAuth 콜백으로 오인하지 않도록 제외
+    if (params.get("tossPayment")) return;
+
     // 카카오/구글에서 에러 파라미터로 돌아온 경우
     const error = params.get("error");
     if (error) {
@@ -97,6 +104,83 @@ const OAuthCallbackHandler = () => {
   return null;
 };
 
+interface TossPaymentResultState {
+  success: boolean;
+  title: string;
+  description: string;
+}
+
+const TossPaymentResultHandler = () => {
+  const [result, setResult] = useState<TossPaymentResultState | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get("tossPayment")) return;
+
+    // URL에서 결제 파라미터 제거 (히스토리 오염 방지 및 새로고침 중복 실행 방지)
+    window.history.replaceState(null, "", window.location.pathname);
+
+    const pendingRaw = sessionStorage.getItem(TOSS_PENDING_PAYMENT_KEY);
+    sessionStorage.removeItem(TOSS_PENDING_PAYMENT_KEY);
+
+    const paymentKey = params.get("paymentKey");
+    const orderId = params.get("orderId");
+    const amount = params.get("amount");
+
+    let paymentId: number | undefined;
+    if (pendingRaw) {
+      try {
+        const parsed = JSON.parse(pendingRaw);
+        if (typeof parsed?.paymentId === "number") {
+          paymentId = parsed.paymentId;
+        }
+      } catch (error) {
+        console.error("Failed to parse pending payment info:", error);
+      }
+    }
+
+    // 성공 리다이렉트: paymentKey/orderId/amount + 결제 요청 시 저장해둔 paymentId가 모두 있어야 승인 가능
+    if (paymentKey && orderId && amount && paymentId !== undefined) {
+      PaymentApproval(paymentId, { paymentKey, orderId, amount: Number(amount) })
+        .then(() => {
+          setResult({
+            success: true,
+            title: "계약 작성 및 결제가 완료되었습니다",
+            description: "계약일부터 바로 이용을 시작하실 수 있습니다",
+          });
+        })
+        .catch((error) => {
+          console.error("Toss payment approval failed:", error);
+          setResult({
+            success: false,
+            title: "결제 처리에 실패했습니다",
+            description: "결제 승인에 실패했습니다. 잠시 후 다시 시도해주세요.",
+          });
+        });
+      return;
+    }
+
+    // 실패/취소 리다이렉트
+    setResult({
+      success: false,
+      title: "결제에 실패했습니다",
+      description: params.get("message") ?? "결제가 취소되었거나 실패했습니다.",
+    });
+  }, []);
+
+  return (
+    <Modal
+      isOpen={!!result}
+      title={result?.title ?? ""}
+      description={result?.description}
+      showCheckIcon={result?.success}
+      singleButton
+      confirmLabel="확인"
+      onConfirm={() => setResult(null)}
+    />
+  );
+};
+
 const RouteModeSync = () => {
   const { pathname } = useLocation();
   const setMode = useAuthStore((s) => s.setMode);
@@ -120,5 +204,6 @@ export const MainLayout = () => (
     <PendingActionExecutor />
     <RouteModeSync />
     <OAuthCallbackHandler />
+    <TossPaymentResultHandler />
   </div>
 );

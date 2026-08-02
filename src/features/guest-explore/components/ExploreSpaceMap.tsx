@@ -12,6 +12,13 @@ interface ExploreSpaceMapProps {
   spaces: SpaceSummary[];
   onSelectSpace: (spaceId: number) => void;
   onClose: () => void;
+  /**
+   * 찜 토글 핸들러. 넘기지 않으면 컴포넌트 내부에서 로그인 가드만 거쳐 바로
+   * 토글한다 - 그 경우 wishStore의 wishedIds는 갱신되지만, 목록 뷰(ExploreSpace)가
+   * 들고 있는 카드별 heartCount는 갱신되지 않는다. 지도 위 찜하기가 목록의
+   * heartCount에도 반영되게 하려면 ExploreSpace의 onWishToggle을 그대로 넘긴다.
+   */
+  onWishToggle?: (space: SpaceSummary) => void;
 }
 
 const DEFAULT_LEVEL = 6;
@@ -22,6 +29,7 @@ const ExploreSpaceMap = ({
   spaces,
   onSelectSpace,
   onClose,
+  onWishToggle,
 }: ExploreSpaceMapProps) => {
   const { isLoaded, error } = useKakaoLoader();
   const [selectedSpaceId, setSelectedSpaceId] = useState<number | null>(null);
@@ -110,7 +118,11 @@ const ExploreSpaceMap = ({
                           ? "찜 해제하기"
                           : "찜하기"
                       }
-                      onClick={() => handleWishToggle(selectedSpace.id)}
+                      onClick={() =>
+                        onWishToggle
+                          ? onWishToggle(selectedSpace)
+                          : handleWishToggle(selectedSpace.id)
+                      }
                       className={`text-lg leading-none ${
                         wishedIds.includes(selectedSpace.id)
                           ? "text-red-500"

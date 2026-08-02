@@ -19,6 +19,44 @@ type FetchStatus = "loading" | "success" | "error";
 
 const KEYWORD_DEBOUNCE_MS = 400;
 
+/**
+ * 새로 받아온 목록(summaries)에 로컬 찜 상태로 인한 낙관적 heartCount 보정을
+ * 다시 적용한다. 찜 API가 아직 연동되지 않아 서버는 항상 예전 wishCount를
+ * 내려주는데, setSpaces(summaries)로 그대로 덮어쓰면 onWishToggle에서 반영한
+ * ±1 낙관적 갱신이 필터/페이지 변경 재조회 때마다 사라진다(wishedIds 자체는
+ * wishStore의 syncedSpaceIds/syncedButLocallyToggled 가드로 보존되지만,
+ * heartCount는 이 컴포넌트가 직접 들고 있어 별도로 지켜줘야 한다).
+ */
+const reconcileHeartCounts = (
+  summaries: SpaceSummary[],
+  prevSpaces: SpaceSummary[],
+  wishedIds: number[],
+): SpaceSummary[] => {
+  const prevById = new Map(prevSpaces.map((space) => [space.spaceId, space]));
+
+  return summaries.map((summary) => {
+    const isLocallyWished = wishedIds.includes(summary.spaceId);
+    if (isLocallyWished === summary.isWishlisted) {
+      // 로컬/서버가 일치하면 낙관적 보정이 필요 없다 - 서버 값을 그대로 신뢰한다.
+      return summary;
+    }
+
+    const prev = prevById.get(summary.spaceId);
+    if (prev) {
+      // 직전까지 이 화면에 떠 있던 카드면, 이미 반영해둔 개수를 그대로 유지한다.
+      return { ...summary, heartCount: prev.heartCount };
+    }
+
+    // 이 화면에서는 처음 보는 카드인데 로컬 상태가 서버와 다르면(다른 화면/
+    // 이전 검색에서 토글한 경우) 서버 값에 ±1 보정만 적용한다.
+    const correction = isLocallyWished ? 1 : -1;
+    return {
+      ...summary,
+      heartCount: Math.max(summary.heartCount + correction, 0),
+    };
+  });
+};
+
 const ExploreSpace = () => {
   const navigate = useNavigate();
   const [isMapView, setIsMapView] = useState(false);
@@ -92,7 +130,12 @@ const ExploreSpace = () => {
           syncWished(space.spaceId, space.isWishlisted),
         );
 
-        setSpaces(summaries);
+        // syncWished 직후의 최신 wishedIds를 기준으로, 로컬 찜 상태가 서버와
+        // 다른 카드는 heartCount를 그대로 덮어쓰지 않고 보정해서 병합한다.
+        const freshWishedIds = useWishStore.getState().wishedIds;
+        setSpaces((prev) =>
+          reconcileHeartCounts(summaries, prev, freshWishedIds),
+        );
         setTotalCount(result.totalCount);
         setStatus("success");
         hasLoadedOnceRef.current = true;
@@ -177,11 +220,18 @@ const ExploreSpace = () => {
         </div>
       )}
 
-      {status === "success" && isMapView && (
+      {status === "success" && isMapView && spaces.length === 0 && (
+        <div className="mt-6 flex h-[300px] w-full items-center justify-center">
+          <p className="text-text-secondary text-sm">검색 결과가 없어요.</p>
+        </div>
+      )}
+
+      {status === "success" && isMapView && spaces.length > 0 && (
         <ExploreSpaceMap
           spaces={spaces}
           onSelectSpace={(spaceId) => navigate(`/spaces/${spaceId}`)}
           onClose={() => setIsMapView(false)}
+          onWishToggle={onWishToggle}
         />
       )}
 
