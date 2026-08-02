@@ -220,7 +220,13 @@ const ExploreSpace = () => {
         </div>
       )}
 
-      {status === "success" && isMapView && (
+      {status === "success" && isMapView && spaces.length === 0 && (
+        <div className="mt-6 flex h-[300px] w-full items-center justify-center">
+          <p className="text-text-secondary text-sm">검색 결과가 없어요.</p>
+        </div>
+      )}
+
+      {status === "success" && isMapView && spaces.length > 0 && (
         <ExploreSpaceMap
           spaces={spaces}
           onSelectSpace={(spaceId) => navigate(`/spaces/${spaceId}`)}
