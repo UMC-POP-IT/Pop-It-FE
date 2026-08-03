@@ -9,6 +9,27 @@ export type UploadType = "SPACE_IMAGE" | "HOST_DOCUMENT";
 /** 서버가 허용하는 파일 형식 (스웨거 UploadFileInfoReq.contentType) */
 const ALLOWED_CONTENT_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 
+/** File.type이 비어 있을 때 확장자로 보완하기 위한 표 */
+const EXTENSION_TO_CONTENT_TYPE: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  pdf: "application/pdf",
+};
+
+/**
+ * 파일의 MIME type.
+ * 브라우저가 OS에서 확장자를 못 찾으면 File.type을 빈 문자열로 준다.
+ * 검사·presigned 발급·S3 업로드가 모두 이 함수를 써야 한다.
+ * (발급 때 알린 contentType과 업로드 때 보내는 Content-Type이 다르면
+ *  S3가 403 SignatureDoesNotMatch로 거절한다)
+ */
+const getContentType = (file: File): string => {
+  if (file.type) return file.type;
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return EXTENSION_TO_CONTENT_TYPE[extension] ?? "";
+};
+
 /** 한 번에 발급 가능한 최대 개수 (스웨거 PresignedUrlReq.files.maxItems) */
 const MAX_FILES = 10;
 
@@ -21,7 +42,7 @@ export const MAX_FILE_SIZE = 10 * 1024 * 1024;
  * throw 하지 않는 이유: 파일을 고르는 순간 화면에 문구로 띄워야 해서.
  */
 export const validateFile = (file: File): string | null => {
-  if (!ALLOWED_CONTENT_TYPES.includes(file.type)) {
+  if (!ALLOWED_CONTENT_TYPES.includes(getContentType(file))) {
     return "JPG, PNG, PDF 파일만 첨부할 수 있습니다";
   }
   if (file.size > MAX_FILE_SIZE) {
@@ -29,7 +50,6 @@ export const validateFile = (file: File): string | null => {
   }
   return null;
 };
-
 
 interface PresignedUrlListRes {
   uploads: { presignedUrl: string; fileUrl: string }[];
@@ -46,7 +66,7 @@ const getPresignedUrls = (uploadType: UploadType, files: File[]) =>
     method: "POST",
     body: JSON.stringify({
       uploadType,
-      files: files.map((file) => ({ contentType: file.type })),
+      files: files.map((file) => ({ contentType: getContentType(file) })),
     }),
   });
 
@@ -57,7 +77,7 @@ const getPresignedUrls = (uploadType: UploadType, files: File[]) =>
 const uploadToS3 = async (presignedUrl: string, file: File) => {
   const res = await fetch(presignedUrl, {
     method: "PUT",
-    headers: { "Content-Type": file.type },
+    headers: { "Content-Type": getContentType(file) },
     body: file,
   });
   if (!res.ok) {
