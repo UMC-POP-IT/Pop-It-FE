@@ -70,6 +70,13 @@ const Banner = () => {
     setIsPaused(true);
   };
 
+  // 터치 종료/취소 시 스와이프 상태를 초기화하고 자동 재생을 재개한다
+  const resetTouchState = () => {
+    touchStartX.current = null;
+    touchStartY.current = null;
+    setIsPaused(false);
+  };
+
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current !== null && touchStartY.current !== null) {
       const deltaX = e.changedTouches[0].clientX - touchStartX.current;
@@ -82,9 +89,7 @@ const Banner = () => {
         }
       }
     }
-    touchStartX.current = null;
-    touchStartY.current = null;
-    setIsPaused(false);
+    resetTouchState();
   };
 
   // 헤더의 "호스트 전환" 버튼과 동일한 동작
@@ -105,6 +110,7 @@ const Banner = () => {
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      onTouchCancel={resetTouchState}
     >
       <div
         className={`relative mx-auto flex h-full w-full max-w-screen-xl flex-col justify-center gap-4 px-10 md:px-16 ${slide.textClassName}`}
