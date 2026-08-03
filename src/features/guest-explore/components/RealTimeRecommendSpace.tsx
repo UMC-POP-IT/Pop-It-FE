@@ -61,12 +61,14 @@ const RealTimeRecommendSpace = () => {
     };
   }, [spaces.length, isLoading]);
 
-  // SpaceCard 단위로 스크롤
+  // SpaceCard 3개 단위로 스크롤
+  const CARDS_PER_SCROLL = 3;
   const scrollByCard = (direction: 1 | -1) => {
     const container = scrollRef.current;
     if (!container) return;
     const card = container.firstElementChild as HTMLElement | null;
-    const step = (card?.clientWidth ?? container.clientWidth) + 16;
+    const cardWidth = card?.clientWidth ?? container.clientWidth;
+    const step = (cardWidth + 16) * CARDS_PER_SCROLL;
     container.scrollBy({ left: direction * step, behavior: "smooth" });
   };
 
