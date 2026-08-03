@@ -1,100 +1,80 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  useRegisterStore,
-  type SpaceRegisterForm,
-} from "@/store/registerStore";
-import {
-  mockHostSpaces,
-  type MockHostSpace,
-} from "@/features/host-manage/api/mock_host_data";
-import { USAGE_OPTIONS } from "@/features/host-register/api/mock_register";
+import Button from "@/shared/components/Button";
+import { useRegisterStore } from "@/store/registerStore";
+import { getSpaceDetail } from "@/features/guest-explore/api/space_api";
+import { toRegisterForm } from "@/features/host-register/utils/to_register_form";
 
-// 공간 수정 진입점: spaceId로 기존 값을 채우고 수정 모드로 등록폼에 보낸다.
+// 공간 수정 진입점: spaceId로 서버에서 기존 값을 받아 수정 모드로 등록폼에 보낸다.
 export const SpaceEditEntry = () => {
   const { spaceId } = useParams();
   const navigate = useNavigate();
   const setValues = useRegisterStore((s) => s.setValues);
   const setEdit = useRegisterStore((s) => s.setEdit);
   const reset = useRegisterStore((s) => s.reset);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    // useParams는 문자열을 주므로 id(number)와 비교할 때 형변환 필요
-    const targetSpace = mockHostSpaces.find((s) => String(s.id) === spaceId);
-
-    // 대상 공간을 못 찾으면 빈 폼을 열지 않고 목록으로 되돌림
-    if (!targetSpace) {
+    // useParams는 문자열을 주므로 숫자로 바꾸고, 이상한 값이면 조회하지 않는다
+    const id = Number(spaceId);
+    if (!Number.isInteger(id) || id <= 0) {
       navigate("/host/spaces", { replace: true });
       return;
     }
 
-    reset(); // 이전 등록/수정에서 남은 값 제거
-    setValues(toRegisterForm(targetSpace)); // 기존 값 채우기
-    setEdit(true, targetSpace.id); // 수정 모드 ON + 대상 id 보관
-    navigate("/host/register", { replace: true }); // 등록폼으로 이동
+    // 응답이 늦게 온 사이 사용자가 다른 화면으로 갔으면 반영하지 않는다
+    let ignore = false;
+
+    getSpaceDetail(id)
+      .then((detail) => {
+        if (ignore) return;
+
+        // 남의 공간은 수정할 수 없다 (서버도 PATCH에서 막지만 미리 끊는다)
+        if (!detail.isMine) {
+          setError("내가 등록한 공간만 수정할 수 있습니다");
+          return;
+        }
+
+        reset(); // 이전 등록/수정에서 남은 값 제거
+        setValues(toRegisterForm(detail)); // 서버 값을 폼 형식으로 채우기
+        setEdit(true, detail.spaceId); // 수정 모드 ON + 대상 id 보관
+        navigate("/host/register", { replace: true });
+      })
+      .catch((err: unknown) => {
+        if (ignore) return;
+        // 에러 객체 전체를 찍으면 요청 정보가 노출될 수 있어 메시지만 남긴다
+        const message = err instanceof Error ? err.message : "알 수 없는 오류";
+        console.error("공간 조회 실패:", message);
+        setError(
+          (err as { status?: number }).status === 404
+            ? "존재하지 않거나 삭제된 공간입니다"
+            : "공간 정보를 불러오지 못했습니다",
+        );
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, [spaceId, navigate, reset, setValues, setEdit]);
 
-  return null; // 화면엔 아무것도 안 그림 (바로 넘김)
-};
-
-// mock/API의 category → 등록 폼 용도(USAGE_OPTIONS) 라벨 매핑
-// 데이터 쪽 라벨("갤러리")과 폼 옵션("전시/갤러리")이 달라 명시적 변환이 필요
-const USAGE_BY_CATEGORY: Record<string, string> = {
-  팝업스토어: "팝업스토어",
-  갤러리: "전시/갤러리",
-  "전시/갤러리": "전시/갤러리",
-  복합문화: "복합공간",
-  복합공간: "복합공간",
-  쇼룸: "쇼룸",
-  "카페/F&B": "카페/F&B",
-};
-
-// "서울 강남구 역삼동 130-3" → 시/도·시군구 분리
-// (주소 찾기 모달만 city/district를 채우므로, 수정 진입 시 같은 형태로 복원)
-const toAddressParts = (address: string) => {
-  const [city = "", district = ""] = address.split(" ");
-  return {
-    city: city.startsWith("서울") ? city : "",
-    district: district.endsWith("구") ? district : "",
-  };
-};
-
-// "66.5m²" → "66.5" — 소수점을 보존해 면적이 조용히 바뀌지 않게 함
-const toAreaValue = (area: string) =>
-  area.replace(/,/g, "").match(/[\d.]+/)?.[0] ?? "";
-
-// 원 단위 금액 → 만원 단위 정수 (Step2 대여료 입력이 "만원/일" 정수라서 필요)
-// 만원 단위가 아니면 반올림되므로 조용히 넘기지 않고 DEV에서 알린다
-const toPriceDay = (won: number) => {
-  if (import.meta.env.DEV && won % 10000 !== 0) {
-    console.warn(
-      `[SpaceEditEntry] 대여료 ${won}원은 만원 단위가 아니어서 반올림됩니다. API 연동 시 금액 단위 정책 확정 필요.`,
+  if (error) {
+    return (
+      <div className="bg-tag-bg mx-auto mt-20 flex h-[224px] w-full max-w-[794px] flex-col items-center justify-center gap-4 rounded-xl">
+        <p className="text-text-primary text-xl font-medium">{error}</p>
+        <Button
+          variant="primary"
+          size="md"
+          onClick={() => navigate("/host/spaces", { replace: true })}
+        >
+          내 공간으로
+        </Button>
+      </div>
     );
   }
-  return String(Math.round(won / 10000));
-};
 
-// category → 용도. 매핑에 없거나 폼 옵션에 없는 값이면 빈 값 + DEV 경고
-const toUsage = (category: string) => {
-  const mapped = USAGE_BY_CATEGORY[category] ?? "";
-  const isValidUsage = USAGE_OPTIONS.includes(mapped);
-  if (import.meta.env.DEV && !isValidUsage) {
-    console.warn(
-      `[SpaceEditEntry] category "${category}"를 용도로 매핑하지 못했습니다. USAGE_BY_CATEGORY 확인 필요.`,
-    );
-  }
-  return isValidUsage ? mapped : "";
+  return (
+    <div className="bg-tag-bg mx-auto mt-20 flex h-[224px] w-full max-w-[794px] items-center justify-center rounded-xl">
+      <p className="text-text-primary text-xl font-medium">불러오는 중...</p>
+    </div>
+  );
 };
-
-// Mock 공간 데이터 → 등록 폼 형태로 변환 (매핑 가능한 필드만)
-// TODO(다음주 API): getSpace(spaceId) 응답으로 교체.
-// detailAddress는 mock에 없어 비워두며, Step1 유효성 검사가 빈 값 제출을 막는다.
-const toRegisterForm = (space: MockHostSpace): Partial<SpaceRegisterForm> => ({
-  buildingName: space.name,
-  address: space.address,
-  ...toAddressParts(space.address), // city / district — 주소와 함께 복원
-  area: toAreaValue(space.area),
-  priceDay: toPriceDay(space.cost.day),
-  description: space.description,
-  usage: toUsage(space.category),
-});

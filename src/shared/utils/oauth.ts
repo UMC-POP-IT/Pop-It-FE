@@ -2,7 +2,8 @@ import type { User } from "@/types";
 export { reissueToken } from "@/shared/utils/tokenUtils";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-if (!BASE_URL) throw new Error("VITE_API_BASE_URL 환경변수가 설정되지 않았습니다.");
+if (!BASE_URL)
+  throw new Error("VITE_API_BASE_URL 환경변수가 설정되지 않았습니다.");
 
 function generateVerifier(): string {
   const array = new Uint8Array(32);
@@ -26,7 +27,10 @@ export async function startLogin(provider: "kakao" | "google"): Promise<void> {
   const verifier = generateVerifier();
   const challenge = await generateChallenge(verifier);
   sessionStorage.setItem("oauth_verifier", verifier);
-  const params = new URLSearchParams({ challenge, origin: window.location.origin });
+  const params = new URLSearchParams({
+    challenge,
+    origin: window.location.origin,
+  });
   window.location.href = `${BASE_URL}/api/v1/auth/oauth/${provider}?${params.toString()}`;
 }
 
@@ -41,7 +45,10 @@ export async function startLogin(provider: "kakao" | "google"): Promise<void> {
  *   - TODO: XSS 보안 강화를 위해 백엔드와 협의 후 HttpOnly 쿠키 방식으로 전환 필요
  *   - refreshToken 갱신: 추후 401 응답 인터셉터에서 POST /api/v1/auth/reissue 호출 예정
  */
-async function exchangeTokens(code: string, verifier: string): Promise<{ accessToken: string; refreshToken: string }> {
+async function exchangeTokens(
+  code: string,
+  verifier: string,
+): Promise<{ accessToken: string; refreshToken: string }> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
 
@@ -129,3 +136,32 @@ export async function handleOAuthCallback(code: string): Promise<User> {
 
   return fetchMe(accessToken);
 }
+
+/*
+ * GET /api/v1/hosts/me
+ * 200 → 호스트로 등록됨 / 404 → 아직 미등록 (오류가 아니라 정상 상태)
+ * 그 외(401·500 등)는 진짜 오류라 그대로 던진다.
+ */
+export interface HostProfileRes {
+  id: number;
+  userId: number;
+  taxationType: string;
+  businessRegistrationNumber: string;
+  businessLicenseUrl: string;
+  businessName: string;
+  businessAddress: string;
+  bank: string;
+  settlementAccountNumber: string;
+  accountHolder: string;
+  bankbookCopyUrl: string;
+  createdAt: string;
+}
+
+export const getMyHost = async (): Promise<HostProfileRes | null> => {
+  try {
+    return await apiFetch<HostProfileRes>("/api/v1/hosts/me");
+  } catch (error) {
+    if ((error as { status?: number }).status === 404) return null;
+    throw error;
+  }
+};
