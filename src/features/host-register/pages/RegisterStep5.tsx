@@ -15,6 +15,9 @@ import { useRegisterStore, type SpacePhoto } from "@/store/registerStore";
 import { STEPS, GUIDE_ITEMS } from "@/features/host-register/api/mock_register";
 import iconTrash from "@/assets/icons/icon_trash.svg";
 
+/** 공간 사진 최대 장수 (스웨거 SpaceCreateReq.imageUrls maxItems) */
+const MAX_PHOTOS = 10;
+
 export const RegisterStep5 = () => {
   const isEdit = useRegisterStore((s) => s.isEdit);
   const editSpaceId = useRegisterStore((s) => s.editSpaceId);
@@ -22,6 +25,7 @@ export const RegisterStep5 = () => {
   const [modal, setModal] = useState<"confirm" | "success" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false); // 제출 진행 중 (중복 클릭 방지)
   const [submitError, setSubmitError] = useState(""); // 실패 사유 (빈 문자열이면 정상)
+  const [photoNotice, setPhotoNotice] = useState(""); // 개수 제한으로 빠진 사진 안내
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
   const reset = useRegisterStore((s) => s.reset);
@@ -126,21 +130,32 @@ export const RegisterStep5 = () => {
             />
             {/* 업로드 매수 실시간 카운트 (챈 디자인 크기 + store의 photoList 길이) */}
             <span className="text-xl font-medium">
-              {form.photoList.length}/10장
+              {form.photoList.length}/{MAX_PHOTOS}장
             </span>
             <input
               type="file"
               accept=".jpg,.jpeg,.png"
               multiple
               onChange={(e) => {
+                const picked = Array.from(e.target.files ?? []);
+                const room = Math.max(0, MAX_PHOTOS - form.photoList.length);
+                const accepted = picked.slice(0, room);
+                const dropped = picked.length - accepted.length;
+
                 setValues({
                   photoList: [
                     ...form.photoList,
-                    ...Array.from(e.target.files ?? [])
-                      .slice(0, Math.max(0, 10 - form.photoList.length))
-                      .map((file): SpacePhoto => ({ kind: "new", file })),
+                    ...accepted.map(
+                      (file): SpacePhoto => ({ kind: "new", file }),
+                    ),
                   ],
                 });
+                // 넘친 만큼은 조용히 버리지 않고 몇 장이 빠졌는지 알린다
+                setPhotoNotice(
+                  dropped > 0
+                    ? `사진은 최대 ${MAX_PHOTOS}장까지 등록할 수 있어 ${dropped}장은 추가되지 않았습니다`
+                    : "",
+                );
                 e.target.value = ""; // 같은 파일을 다시 골라도 onChange가 뜨도록 비운다
               }}
               className="sr-only"
@@ -161,6 +176,16 @@ export const RegisterStep5 = () => {
             />
           ))}
         </div>
+
+        {/* 개수 제한으로 빠진 사진 안내 — 나타나는 순간 스크린 리더가 읽도록 role="alert" */}
+        {photoNotice && (
+          <span
+            role="alert"
+            className="text-danger text-sm"
+          >
+            {photoNotice}
+          </span>
+        )}
 
         {/* 사진 촬영 가이드 박스 */}
         <div className="bg-tag-bg flex flex-col gap-2 rounded-lg p-4">
