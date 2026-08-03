@@ -20,6 +20,7 @@ export const WishedSpace = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+  const [imageCenter, setImageCenter] = useState(0);
   const spaces = useSpaceStore((state) => state.spaces);
   const wishedIds = useWishStore((state) => state.wishedIds);
   const { handleWishToggle } = useWishGuard();
@@ -41,17 +42,28 @@ export const WishedSpace = () => {
     );
   };
 
+  // 화살표 버튼을 카드 전체가 아닌 사진 영역 세로 중앙에 맞추기 위한 오프셋 계산
+  const updateImageCenter = () => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const image = container.querySelector<HTMLElement>("[data-card-image]");
+    if (image) setImageCenter(image.clientHeight / 2);
+  };
+
   useLayoutEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
     updateScrollButtons();
+    updateImageCenter();
     container.addEventListener("scroll", updateScrollButtons);
     window.addEventListener("resize", updateScrollButtons);
+    window.addEventListener("resize", updateImageCenter);
     return () => {
       container.removeEventListener("scroll", updateScrollButtons);
       window.removeEventListener("resize", updateScrollButtons);
+      window.removeEventListener("resize", updateImageCenter);
     };
-  }, []);
+  }, [wishedSpaces.length]);
 
   // SpaceCard 4개 단위로 스크롤
   const CARDS_PER_SCROLL = 4;
@@ -70,7 +82,7 @@ export const WishedSpace = () => {
         <span className="text-text-secondary text-sm">관심 있는 공간을 한 눈에 확인해 보세요!</span>
 
         <div className="relative">
-            {canScrollPrev && <ScrollButton direction="prev" position={"1/2"} onClick={() => scrollByCard(-1)} />}
+            {canScrollPrev && <ScrollButton direction="prev" topOffset={imageCenter} onClick={() => scrollByCard(-1)} />}
             <div
             ref={scrollRef}
             className="flex gap-4 overflow-x-hidden scroll-smooth"
@@ -90,7 +102,7 @@ export const WishedSpace = () => {
                 </div>
             )) : <WishedSpaceEmptyState />}
             </div>
-            {canScrollNext && <ScrollButton direction="next" position={"1/2"} onClick={() => scrollByCard(1)} />}
+            {canScrollNext && <ScrollButton direction="next" topOffset={imageCenter} onClick={() => scrollByCard(1)} />}
         </div>
     </section>
   );

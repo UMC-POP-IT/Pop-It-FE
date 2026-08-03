@@ -43,6 +43,7 @@ const AiRecommendSpace = () => {
   const [cards, setCards] = useState<AiRecommendCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [imageCenter, setImageCenter] = useState(0);
 
   const { handleWishToggle } = useWishGuard();
   const user = useAuthStore((s) => s.user);
@@ -84,15 +85,26 @@ const AiRecommendSpace = () => {
     );
   };
 
+  // 화살표 버튼을 카드 전체가 아닌 사진 영역 세로 중앙에 맞추기 위한 오프셋 계산
+  const updateImageCenter = () => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const image = container.querySelector<HTMLElement>("[data-card-image]");
+    if (image) setImageCenter(image.clientHeight / 2);
+  };
+
   useLayoutEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
     updateScrollButtons();
+    updateImageCenter();
     container.addEventListener("scroll", updateScrollButtons);
     window.addEventListener("resize", updateScrollButtons);
+    window.addEventListener("resize", updateImageCenter);
     return () => {
       container.removeEventListener("scroll", updateScrollButtons);
       window.removeEventListener("resize", updateScrollButtons);
+      window.removeEventListener("resize", updateImageCenter);
     };
   }, [cards.length, isLoading]);
 
@@ -137,7 +149,7 @@ const AiRecommendSpace = () => {
       <h2 className="text-text-primary text-2xl font-bold">AI 맞춤형 공간</h2>
 
       <div className="relative">
-        {canScrollPrev && <ScrollButton direction="prev" position={"1/2"} onClick={() => scrollByCard(-1)} />}
+        {canScrollPrev && <ScrollButton direction="prev" topOffset={imageCenter} onClick={() => scrollByCard(-1)} />}
 
         <div
           ref={scrollRef}
@@ -170,7 +182,7 @@ const AiRecommendSpace = () => {
           )}
         </div>
 
-        {canScrollNext && <ScrollButton direction="next" position={"1/2"} onClick={() => scrollByCard(1)} />}
+        {canScrollNext && <ScrollButton direction="next" topOffset={imageCenter} onClick={() => scrollByCard(1)} />}
       </div>
     </section>
   );
