@@ -52,6 +52,7 @@ const Banner = () => {
   const [isPaused, setIsPaused] = useState(false);
   const total = slides.length;
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
 
   useEffect(() => {
     if (isPaused) return;
@@ -65,19 +66,24 @@ const Banner = () => {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
     setIsPaused(true);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current !== null) {
+    if (touchStartX.current !== null && touchStartY.current !== null) {
       const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-      if (deltaX > SWIPE_THRESHOLD_PX) {
-        goTo(current - 1);
-      } else if (deltaX < -SWIPE_THRESHOLD_PX) {
-        goTo(current + 1);
+      const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+      if (Math.abs(deltaY) < Math.abs(deltaX)) { // 수평 스와이프 감지
+        if (deltaX > SWIPE_THRESHOLD_PX) {
+          goTo(current - 1);
+        } else if (deltaX < -SWIPE_THRESHOLD_PX) {
+          goTo(current + 1);
+        }
       }
     }
     touchStartX.current = null;
+    touchStartY.current = null;
     setIsPaused(false);
   };
 
