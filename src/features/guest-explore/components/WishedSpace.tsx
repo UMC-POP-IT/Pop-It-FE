@@ -68,7 +68,7 @@ export const WishedSpace = () => {
         <span className="text-text-secondary text-sm">관심 있는 공간을 한 눈에 확인해 보세요!</span>
 
         <div className="relative">
-            {canScrollPrev && <ScrollButton direction="prev" position={"1/4"} onClick={() => scrollByCard(-1)} />}
+            {canScrollPrev && <ScrollButton direction="prev" position={"1/2"} onClick={() => scrollByCard(-1)} />}
             <div
             ref={scrollRef}
             className="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -88,7 +88,7 @@ export const WishedSpace = () => {
                 </div>
             )) : <WishedSpaceEmptyState />}
             </div>
-            {canScrollNext && <ScrollButton direction="next" position={"1/4"} onClick={() => scrollByCard(1)} />}
+            {canScrollNext && <ScrollButton direction="next" position={"1/2"} onClick={() => scrollByCard(1)} />}
         </div>
     </section>
   );

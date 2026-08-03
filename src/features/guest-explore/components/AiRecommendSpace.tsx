@@ -135,7 +135,7 @@ const AiRecommendSpace = () => {
       <h2 className="text-text-primary text-2xl font-bold">AI 맞춤형 공간</h2>
 
       <div className="relative">
-        {canScrollPrev && <ScrollButton direction="prev" position={"1/4"} onClick={() => scrollByCard(-1)} />}
+        {canScrollPrev && <ScrollButton direction="prev" position={"1/2"} onClick={() => scrollByCard(-1)} />}
 
         <div
           ref={scrollRef}
@@ -168,7 +168,7 @@ const AiRecommendSpace = () => {
           )}
         </div>
 
-        {canScrollNext && <ScrollButton direction="next" position={"1/4"} onClick={() => scrollByCard(1)} />}
+        {canScrollNext && <ScrollButton direction="next" position={"1/2"} onClick={() => scrollByCard(1)} />}
       </div>
     </section>
   );
