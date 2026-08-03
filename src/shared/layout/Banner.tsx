@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import iconChevronRight from "@/assets/icons/icon_chevron_right.svg";
 import background1 from "@/assets/banner/background_1.jpg";
@@ -43,6 +43,7 @@ const slides: BannerSlide[] = [
 ];
 
 const AUTOPLAY_INTERVAL_MS = 5000;
+const SWIPE_THRESHOLD_PX = 50;
 
 const Banner = () => {
   const navigate = useNavigate();
@@ -50,6 +51,7 @@ const Banner = () => {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const total = slides.length;
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     if (isPaused) return;
@@ -60,6 +62,24 @@ const Banner = () => {
   }, [isPaused, total]);
 
   const goTo = (index: number) => setCurrent((index + total) % total);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    setIsPaused(true);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current !== null) {
+      const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+      if (deltaX > SWIPE_THRESHOLD_PX) {
+        goTo(current - 1);
+      } else if (deltaX < -SWIPE_THRESHOLD_PX) {
+        goTo(current + 1);
+      }
+    }
+    touchStartX.current = null;
+    setIsPaused(false);
+  };
 
   // 헤더의 "호스트 전환" 버튼과 동일한 동작
   const startHosting = () => {
@@ -77,6 +97,8 @@ const Banner = () => {
       style={{ backgroundImage: `url(${slide.image})` }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       <div
         className={`relative mx-auto flex h-full w-full max-w-screen-xl flex-col justify-center gap-4 px-10 md:px-16 ${slide.textClassName}`}
