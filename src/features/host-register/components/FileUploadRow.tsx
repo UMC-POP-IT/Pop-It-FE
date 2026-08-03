@@ -1,3 +1,6 @@
+import { useState, type ChangeEvent } from "react";
+import { validateFile } from "@/features/host-register/api/upload_api";
+
 interface FileUploadRowProps {
   label: string;
   placeholder: string;
@@ -15,6 +18,25 @@ const FileUploadRow = ({
   file,
   onFileChange,
 }: FileUploadRowProps) => {
+  const [error, setError] = useState(""); // 검사 실패 사유 (빈 문자열이면 정상)
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0] ?? null;
+    e.target.value = ""; // 같은 파일을 다시 골라도 onChange가 뜨도록 비워둔다
+
+    if (!selected) return; // 선택창을 취소한 경우 — 기존 파일을 그대로 둔다
+
+    const message = validateFile(selected);
+    if (message) {
+      setError(message);
+      onFileChange(null); // 잘못된 파일이 제출되지 않도록 이전 파일까지 비운다
+      return;
+    }
+
+    setError("");
+    onFileChange(selected);
+  };
+
   return (
     <div className="flex flex-col gap-2">
       <span className="text-text-primary text-sm font-bold">{label}</span>
@@ -35,12 +57,22 @@ const FileUploadRow = ({
           <input
             type="file"
             accept=".jpg,.jpeg,.png,.pdf"
-            onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
+            onChange={handleChange}
             className="sr-only"
           />
         </label>
       </div>
-      <span className="text-text-disabled text-xs">{hint}</span>
+      {/* 검사 실패 시에만 새 요소로 나타나야 스크린 리더가 읽어준다 */}
+      {error ? (
+        <span
+          role="alert"
+          className="text-danger text-xs"
+        >
+          {error}
+        </span>
+      ) : (
+        <span className="text-text-disabled text-xs">{hint}</span>
+      )}
     </div>
   );
 };

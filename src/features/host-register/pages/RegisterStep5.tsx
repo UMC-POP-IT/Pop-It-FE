@@ -52,7 +52,13 @@ export const RegisterStep5 = () => {
       const request = toSpaceRequest(form, imageUrls);
 
       // ③ 등록 또는 수정
-      if (isEdit && editSpaceId !== null) {
+      if (isEdit) {
+        // 수정인데 대상 id가 없으면 조용히 새 공간을 만들지 않고 여기서 멈춘다
+        if (editSpaceId === null) {
+          throw new Error(
+            "수정할 공간 정보를 찾을 수 없습니다. 목록에서 다시 들어와주세요",
+          );
+        }
         await updateSpace(editSpaceId, request);
       } else {
         await createSpace(request);
@@ -126,7 +132,7 @@ export const RegisterStep5 = () => {
               type="file"
               accept=".jpg,.jpeg,.png"
               multiple
-              onChange={(e) =>
+              onChange={(e) => {
                 setValues({
                   photoList: [
                     ...form.photoList,
@@ -134,8 +140,9 @@ export const RegisterStep5 = () => {
                       .slice(0, Math.max(0, 10 - form.photoList.length))
                       .map((file): SpacePhoto => ({ kind: "new", file })),
                   ],
-                })
-              }
+                });
+                e.target.value = ""; // 같은 파일을 다시 골라도 onChange가 뜨도록 비운다
+              }}
               className="sr-only"
             />
           </label>
@@ -174,11 +181,15 @@ export const RegisterStep5 = () => {
       </div>
 
       {submitError && (
-        <span className="text-danger self-end text-sm">{submitError}</span>
+        <span
+          role="alert"
+          className="text-danger self-end text-sm"
+        >
+          {submitError}
+        </span>
       )}
 
-      {/* 이전 / 완료 버튼 (우측 정렬)
-          TODO(2차): 사진 3장 이상일 때만 활성화(유효성) + 최종 제출(POST /spaces) */}
+      {/* 이전 / 완료 버튼 (우측 정렬) */}
       <div className="flex justify-end gap-2">
         <Modal
           isOpen={modal === "confirm"}

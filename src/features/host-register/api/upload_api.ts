@@ -12,6 +12,25 @@ const ALLOWED_CONTENT_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 /** 한 번에 발급 가능한 최대 개수 (스웨거 PresignedUrlReq.files.maxItems) */
 const MAX_FILES = 10;
 
+/** 파일 한 개 최대 크기 (화면 안내문 "최대 10MB" 기준) */
+export const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+/**
+ * 파일 한 개를 검사한다.
+ * 문제가 없으면 null, 있으면 사용자에게 보여줄 문구를 돌려준다.
+ * throw 하지 않는 이유: 파일을 고르는 순간 화면에 문구로 띄워야 해서.
+ */
+export const validateFile = (file: File): string | null => {
+  if (!ALLOWED_CONTENT_TYPES.includes(file.type)) {
+    return "JPG, PNG, PDF 파일만 첨부할 수 있습니다";
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    return "파일 크기는 10MB 이하여야 합니다";
+  }
+  return null;
+};
+
+
 interface PresignedUrlListRes {
   uploads: { presignedUrl: string; fileUrl: string }[];
 }
@@ -60,13 +79,9 @@ export const uploadFiles = async (
     throw new Error(`파일은 한 번에 ${MAX_FILES}개까지 올릴 수 있습니다`);
   }
 
-  const invalidFile = files.find(
-    (file) => !ALLOWED_CONTENT_TYPES.includes(file.type),
-  );
-  if (invalidFile) {
-    throw new Error(
-      `지원하지 않는 파일 형식입니다: ${invalidFile.name} (JPG·PNG·PDF만 가능)`,
-    );
+  for (const file of files) {
+    const error = validateFile(file);
+    if (error) throw new Error(`${file.name}: ${error}`);
   }
 
   const { uploads } = await getPresignedUrls(uploadType, files);

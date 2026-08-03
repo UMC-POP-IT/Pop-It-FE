@@ -1,4 +1,5 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
 import Logo from "@/shared/components/Logo";
 import { useAuthStore } from "@/store/authStore";
 
@@ -8,8 +9,11 @@ const Header = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
+  const [modeError, setModeError] = useState(""); // 모드 전환 실패 사유
 
   const handleModeToggle = async () => {
+    setModeError(""); // 이전 실패 문구 지우기
+
     // 비로그인: 호스트 여부를 조회할 수 없으므로(401) 등록 화면을 기본값으로 둔다
     if (!user) {
       const targetMode = mode === "GUEST" ? "HOST" : "GUEST";
@@ -28,6 +32,15 @@ const Header = () => {
     // 게스트 → 호스트: 아직 안 물어봤으면 지금 물어보고 결과를 기다린다
     const status =
       hostStatus === "unknown" ? await refreshHostStatus() : hostStatus;
+
+    // 조회에 실패하면 등록/미등록을 알 수 없다.
+    // 미등록으로 단정하면 이미 등록한 호스트를 등록 화면으로 보내게 되므로 여기서 멈춘다.
+    if (status === "unknown") {
+      setModeError(
+        "호스트 정보를 확인하지 못했습니다. 잠시 후 다시 시도해주세요",
+      );
+      return;
+    }
 
     setMode("HOST");
     navigate(status === "registered" ? "/host/spaces" : "/host/host-register");
@@ -172,6 +185,16 @@ const Header = () => {
           )}
         </div>
       </div>
+
+      {/* 모드 전환 실패 안내 — 나타나는 순간 스크린 리더가 읽도록 role="alert" */}
+      {modeError && (
+        <div
+          role="alert"
+          className="border-danger text-danger mx-auto max-w-screen-xl border-t px-10 py-2 text-sm"
+        >
+          {modeError}
+        </div>
+      )}
     </header>
   );
 };

@@ -62,8 +62,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ hostStatus: status });
       return status;
     } catch (error) {
-      // 네트워크 오류·인증 만료 등. 미등록으로 단정하면 안 되므로 unknown을 유지한다.
+      // 네트워크 오류·인증 만료 등. 미등록으로 단정할 수 없으므로 unknown으로 되돌린다.
+      // (set 없이 return만 하면 store에 이전 값이 남아 반환값과 어긋난다)
       console.error("호스트 상태 조회 실패:", error);
+      set({ hostStatus: "unknown" });
       return "unknown";
     }
   },

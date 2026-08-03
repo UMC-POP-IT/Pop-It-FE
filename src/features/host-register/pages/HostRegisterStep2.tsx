@@ -26,6 +26,18 @@ export const HostRegisterStep2 = () => {
   const [submitError, setSubmitError] = useState(""); // 실패 사유
 
   /**
+   * 토큰에 role이 박혀 있어(ROLE_GUEST) 새 토큰을 받아야 호스트 권한이 반영된다.
+   * 등록 자체는 이미 끝났으므로 재발급이 실패해도 흐름을 막지 않는다.
+   */
+  const refreshRole = async () => {
+    try {
+      await reissueToken();
+    } catch (error) {
+      console.error("토큰 재발급 실패 — 다시 로그인하면 반영됩니다:", error);
+    }
+  };
+
+  /**
    * 최종 제출: 서류 업로드 → 서버 형식 변환 → 호스트 등록
    * 서버 응답을 받은 뒤에만 상태를 바꾸고 완료 화면으로 넘어간다.
    */
@@ -54,13 +66,8 @@ export const HostRegisterStep2 = () => {
       // ③ 등록
       await registerHost(request);
 
-      // ④ 토큰에 role이 박혀 있어(ROLE_GUEST) 새 토큰을 받아야 호스트 권한이 반영된다.
-      //    등록 자체는 이미 끝났으므로 재발급이 실패해도 흐름을 막지 않는다.
-      try {
-        await reissueToken();
-      } catch (error) {
-        console.error("토큰 재발급 실패 — 다시 로그인하면 반영됩니다:", error);
-      }
+      // ④ 새 토큰을 받아 role을 갱신한다
+      await refreshRole();
 
       setHostStatus("registered");
       navigate("/host/host-register/complete");
@@ -68,17 +75,20 @@ export const HostRegisterStep2 = () => {
       const status = (error as { status?: number }).status;
 
       if (status === 409) {
-        // 이미 등록된 계정. 실패지만 결과적으로는 호스트가 맞으므로 상태를 맞춰준다
+        // 이미 등록된 계정. 실패지만 결과적으로는 호스트가 맞으므로
+        // 성공과 같은 자리로 보내 같은 제출을 반복하지 않게 한다.
         setHostStatus("registered");
-        setSubmitError("이미 호스트로 등록된 계정입니다");
-      } else {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "알 수 없는 오류가 발생했습니다";
-        console.error("호스트 등록 실패:", message);
-        setSubmitError(message);
+        await refreshRole(); // 이 브라우저 토큰의 role이 낡았을 수 있다
+        navigate("/host/host-register/complete");
+        return;
       }
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다";
+      console.error("호스트 등록 실패:", message);
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -181,7 +191,12 @@ export const HostRegisterStep2 = () => {
       </div>
 
       {submitError && (
-        <span className="text-danger self-end text-sm">{submitError}</span>
+        <span
+          role="alert"
+          className="text-danger self-end text-sm"
+        >
+          {submitError}
+        </span>
       )}
 
       {/* 이전 / 다음으로 버튼 (우측 정렬) */}
