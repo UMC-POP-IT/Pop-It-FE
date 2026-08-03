@@ -81,7 +81,7 @@ const RealTimeRecommendSpace = () => {
 
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex gap-4 overflow-x-hidden scroll-smooth"
         >
           {isLoading ? (
             <p role="status" aria-live="polite" className="text-text-secondary text-sm">

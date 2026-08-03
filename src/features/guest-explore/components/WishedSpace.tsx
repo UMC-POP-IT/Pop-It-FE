@@ -73,7 +73,7 @@ export const WishedSpace = () => {
             {canScrollPrev && <ScrollButton direction="prev" position={"1/2"} onClick={() => scrollByCard(-1)} />}
             <div
             ref={scrollRef}
-            className="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex gap-4 overflow-x-hidden scroll-smooth"
             >
             {(wishedSpaces.length > 0) ? wishedSpaces.map((space) => (
                 <div
