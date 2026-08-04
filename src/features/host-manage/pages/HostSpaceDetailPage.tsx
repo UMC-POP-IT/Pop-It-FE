@@ -15,6 +15,7 @@ export const HostSpaceDetailPage = () => {
   const [status, setStatus] = useState<FetchStatus>("loading");
   const [space, setSpace] = useState<ExploreSpaceDetail | null>(null);
   const [unavailablePeriods, setUnavailablePeriods] = useState<UnavailablePeriod[]>([]);
+  const [retryKey, setRetryKey] = useState(0);
 
   const id = Number(spaceId);
 
@@ -62,7 +63,7 @@ export const HostSpaceDetailPage = () => {
     return () => {
       ignore = true;
     };
-  }, [id]);
+  }, [id, retryKey]);
 
   if (status === "loading") {
     return (
@@ -82,7 +83,7 @@ export const HostSpaceDetailPage = () => {
         </p>
         <button
           type="button"
-          onClick={() => setStatus("loading")}
+          onClick={() => setRetryKey((k) => k + 1)}
           className="text-primary text-sm font-medium"
         >
           다시 시도

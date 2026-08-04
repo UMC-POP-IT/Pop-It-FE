@@ -18,7 +18,10 @@ const SessionBootstrap = () => {
   useEffect(() => {
     if (!localStorage.getItem("access_token")) return;
     getCurrentUser()
-      .then((user) => login(user))
+      .then((user) => {
+        const isHostPath = window.location.pathname.startsWith("/host");
+        login(isHostPath ? { ...user, currentMode: "HOST" } : user);
+      })
       .catch(() => {
         // accessToken/refreshToken 모두 만료 등 복원 실패 → 남은 토큰 정리
         localStorage.removeItem("access_token");
