@@ -74,7 +74,7 @@ export const RegisterStep4 = () => {
           </div>
         </div>
         {/* TIP 박스 */}
-        <div className="bg-tag-bg flex flex-col gap-2 rounded-lg p-4">
+        <div className="bg-info-bg flex flex-col gap-2 rounded-lg p-4">
           <span className="text-primary-hover text-xl font-bold">
             TIP : 이렇게 적어보세요!
           </span>
@@ -90,7 +90,7 @@ export const RegisterStep4 = () => {
           TODO(2차): 유효성 검사 통과 시 활성화 */}
       <div className="flex justify-end gap-2">
         <Button
-          variant="gray"
+          variant="secondary"
           size="nav"
           onClick={() => navigate("/host/register/step3")}
         >

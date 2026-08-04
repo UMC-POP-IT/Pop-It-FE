@@ -4,7 +4,7 @@ interface StepIndicatorProps {
 }
 
 const StepIndicator = ({ steps, currentStep }: StepIndicatorProps) => (
-  <div className="flex w-full items-start px-4 py-3">
+  <div className="flex w-full items-start px-10 py-3">
     {steps.map((step, i) => (
       <div
         key={i}
@@ -14,10 +14,10 @@ const StepIndicator = ({ steps, currentStep }: StepIndicatorProps) => (
           <div
             className={`flex size-[56px] items-center justify-center rounded-full text-[32px] font-bold transition-colors ${
               i < currentStep
-                ? "border-4 border-primary text-primary"
+                ? "border-primary text-primary border-4"
                 : i === currentStep
                   ? "bg-primary text-white"
-                  : "bg-border text-text-secondary"
+                  : "bg-divider text-white"
             } `}
           >
             {i < currentStep ? (
@@ -39,14 +39,25 @@ const StepIndicator = ({ steps, currentStep }: StepIndicatorProps) => (
               i + 1
             )}
           </div>
-          <span className="text-text-primary text-center text-base font-bold whitespace-nowrap">
+          <span
+            className={`text-center text-base font-bold whitespace-nowrap ${
+              i < currentStep || i === currentStep
+                ? "text-text-primary"
+                : "text-text-tertiary"
+            }`}
+          >
             {step}
           </span>
         </div>
         {i < steps.length - 1 && (
-          <div
-            className={`mx-1 mt-7 h-0.5 flex-1 ${i < currentStep ? "bg-primary" : "bg-border"} `}
-          />
+          <div className="mt-6 flex flex-1 items-center justify-center gap-2">
+            {[0, 1].map((dot) => (
+              <div
+                key={dot}
+                className={`size-2 rounded-full ${i < currentStep ? "bg-primary" : "bg-divider"}`}
+              />
+            ))}
+          </div>
         )}
       </div>
     ))}
