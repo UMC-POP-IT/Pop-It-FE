@@ -4,7 +4,8 @@ import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 interface ReservationRequestModalProps {
   isOpen: boolean;
   guestName: string;
-  periodLabel: string;
+  /** 시작일/종료일이 아직 선택되지 않은 경우 undefined일 수 있다 */
+  periodLabel?: string;
   totalPrice: number;
   isSubmitting: boolean;
   submitError?: string | null;
@@ -79,7 +80,7 @@ const ReservationRequestModal = ({
           </div>
           <div className="flex gap-4">
             <span className="text-text-tertiary w-20 shrink-0">기간:</span>
-            <span className="font-medium">{periodLabel}</span>
+            <span className="font-medium">{periodLabel ?? "-"}</span>
           </div>
           <div className="flex gap-4">
             <span className="text-text-tertiary w-20 shrink-0">총 금액:</span>

@@ -185,7 +185,7 @@ export const GetPresignedURL = (request: GetPresignedURLRequest) =>
 });
 
 // 게스트 - 예약 요청 (spaceId/기간/사업 설명을 전달하면 대여료·보험료(대여료의 5%)·보증금을 서버가 계산해 총 결제 금액과 함께 PENDING_APPROVAL 상태의 예약을 생성) ~ DONE
-export const CreateReservation = (request: CreateReservationRequest) =>
+export const createReservation = (request: CreateReservationRequest) =>
     apiFetch<CreateReservationResponse>(`/api/v1/reservations`, {
         method: "POST",
         body: JSON.stringify(request),

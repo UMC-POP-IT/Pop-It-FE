@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
-import { CreateReservation } from "@/features/guest-explore/api/my_reservation_api";
+import { createReservation } from "@/features/guest-explore/api/my_reservation_api";
 import ReservationRequestModal from "@/features/guest-explore/components/ReservationRequestModal";
 import Modal from "@/shared/components/Modal";
 
@@ -38,12 +38,16 @@ const diffDays = (a: Date, b: Date) =>
 
 const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreReservationCardProps) => {
   const navigate = useNavigate();
-  const guestName = useAuthStore((s) => s.user?.nickname) ?? "";
+  const user = useAuthStore((s) => s.user);
+  const guestName = user?.nickname ?? "";
 
-  const today = useMemo(() => new Date(), []);
-  const [viewDate, setViewDate] = useState(
-    new Date(today.getFullYear(), today.getMonth(), 1),
-  );
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const [viewDate, setViewDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
 
@@ -66,10 +70,11 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
   }, [viewDate]);
 
   const handleSelectDate = (date: Date) => {
-    if (onLoginRequired) {
-      onLoginRequired();
+    if (!user) {
+      onLoginRequired?.();
       return;
     }
+    if (date < todayStart) return;
     if (!startDate || endDate) {
       setStartDate(date);
       setEndDate(null);
@@ -91,8 +96,8 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
   const totalDays = startDate && endDate ? diffDays(startDate, endDate) : 0;
   const totalPrice = totalDays * dayCost;
 
-  const periodLabel =
-    startDate && endDate ? `${formatDate(startDate)} ~ ${formatDate(endDate)}` : "";
+  const periodLabel: string | undefined =
+    startDate && endDate ? `${formatDate(startDate)} ~ ${formatDate(endDate)}` : undefined;
 
   const handleOpenRequestModal = () => {
     if (!(startDate && endDate)) return;
@@ -105,7 +110,7 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      await CreateReservation({
+      await createReservation({
         spaceId,
         startDate: toApiDateString(startDate),
         endDate: toApiDateString(endDate),
@@ -123,14 +128,17 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
   };
 
   const handleCompleteConfirm = () => {
+    // navigate 이후 이 컴포넌트는 언마운트되므로 날짜 상태를 별도로 초기화할 필요는 없다.
     setIsCompleteModalOpen(false);
-    handleReset();
     navigate("/reservations");
   };
 
   const getDayClassName = (date: Date) => {
     const isCurrentMonth = date.getMonth() === viewDate.getMonth();
 
+    if (date < todayStart) {
+      return "text-text-disabled cursor-not-allowed";
+    }
     if (startDate && !endDate && isSameDay(date, startDate)) {
       return "bg-primary-100 rounded-full text-text-primary";
     }
@@ -218,7 +226,8 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
                     type="button"
                     key={date.toISOString()}
                     onClick={() => handleSelectDate(date)}
-                    className={`flex w-full items-center justify-center p-3 text-base font-bold ${getDayClassName(date)}`}
+                    disabled={date < todayStart}
+                    className={`flex w-full items-center justify-center p-3 text-base font-bold disabled:cursor-not-allowed ${getDayClassName(date)}`}
                   >
                     {date.getDate()}
                   </button>
