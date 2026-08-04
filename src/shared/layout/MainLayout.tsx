@@ -224,7 +224,9 @@ const RouteModeSync = () => {
 };
 
 export const MainLayout = () => (
-  <div className="bg-bg flex min-h-screen flex-col">
+  // overflow-x-clip: Banner의 -mx-[50vw] w-screen full-bleed가 스크롤바 너비만큼
+  // 뷰포트를 넘겨 가로 스크롤을 유발하므로, 뷰포트 폭인 이 루트에서 그 여분만 잘라낸다.
+  <div className="bg-bg flex min-h-screen flex-col overflow-x-clip">
     <Header />
     <main className="mx-auto w-full max-w-screen-xl flex-1 px-6 py-8">
       <Outlet />
