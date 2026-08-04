@@ -1,84 +1,46 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  mockHostSpaces,
-  mockHostReservations,
-  type MockHostSpace,
-} from "@/features/host-manage/api/mock_host_data";
-import {
-  scatterCoordinate,
-  type ExploreSpaceDetail,
-} from "@/features/guest-explore/api/mock_spaces";
+import { getSpaceDetail, toExploreSpaceDetail } from "@/features/guest-explore/api/space_api";
+import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
+import { fetchHostReservations } from "@/features/host-manage/api/hostApi";
 import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDetailGallery";
 import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetailInfo";
 import HostReservationCalendar, { type UnavailablePeriod } from "@/features/host-manage/components/HostReservationCalendar";
 
 type FetchStatus = "loading" | "success" | "notfound" | "error";
 
-/**
- * 호스트가 등록한 공간(MockHostSpace)을
- * 게스트 공간 상세 UI(ExploreSpaceDetail)에서 재사용 가능한 형태로 변환
- */
-const toExploreSpaceDetail = (space: MockHostSpace): ExploreSpaceDetail => {
-  const areaNumber = Number(space.area.replace(/[^0-9.]/g, "")) || 0;
-
-  return {
-    id: space.id,
-    hostId: 0, // 호스트 본인 공간 상세이므로 별도 참조 불필요
-    imageUrls: space.imageUrls,
-    heartCount: 0, // 호스트 화면에서는 찜 개수를 노출하지 않음
-    name: space.name,
-    address: space.address,
-    cost: {
-      day: space.cost.day,
-    },
-    keywords: space.facilities,
-    description: space.description,
-    createdAt: space.registeredAt,
-    category: space.category,
-    area: areaNumber,
-    facilities: space.facilities,
-    spaceInfo: space.spaceInfo,
-    // 지도 표시용 좌표 (백엔드 연동 전까지 목업 스캐터 처리)
-    ...scatterCoordinate(space.id),
-  };
-};
-
-// TODO: 백엔드 연동 전까지 목업 데이터 조회를 비동기 API 호출처럼 흉내낸다
-const fetchHostSpaceById = (id: number): Promise<MockHostSpace | undefined> =>
-  new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(mockHostSpaces.find((space) => space.id === id));
-    }, 300);
-  });
-
 export const HostSpaceDetailPage = () => {
   const { spaceId } = useParams<{ spaceId: string }>();
   const navigate = useNavigate();
   const [status, setStatus] = useState<FetchStatus>("loading");
-  const [space, setSpace] = useState<MockHostSpace | null>(null);
+  const [space, setSpace] = useState<ExploreSpaceDetail | null>(null);
+  const [unavailablePeriods, setUnavailablePeriods] = useState<UnavailablePeriod[]>([]);
 
   const id = Number(spaceId);
 
   useEffect(() => {
-    let ignore = false;
-    setStatus("loading");
-    setSpace(null);
-
     if (!Number.isFinite(id)) {
       setStatus("notfound");
       return;
     }
 
-    fetchHostSpaceById(id)
-      .then((result) => {
+    let ignore = false;
+    setStatus("loading");
+    setSpace(null);
+
+    Promise.all([
+      getSpaceDetail(id),
+      fetchHostReservations({ size: 50 }),
+    ])
+      .then(([detail, reservationsResult]) => {
         if (ignore) return;
-        if (result) {
-          setSpace(result);
-          setStatus("success");
-        } else {
-          setStatus("notfound");
-        }
+        setSpace(toExploreSpaceDetail(detail));
+
+        const periods: UnavailablePeriod[] = (reservationsResult.reservations ?? [])
+          .filter((r) => r.space.spaceId === id && r.status !== "CANCELLED")
+          .map((r) => ({ startDate: r.startDate, endDate: r.endDate }));
+        setUnavailablePeriods(periods);
+        setStatus("success");
       })
       .catch(() => {
         if (!ignore) setStatus("error");
@@ -107,24 +69,7 @@ export const HostSpaceDetailPage = () => {
         </p>
         <button
           type="button"
-          onClick={() => {
-            setStatus("loading");
-            setSpace(null);
-            if (!Number.isFinite(id)) {
-              setStatus("notfound");
-              return;
-            }
-            fetchHostSpaceById(id)
-              .then((result) => {
-                if (result) {
-                  setSpace(result);
-                  setStatus("success");
-                } else {
-                  setStatus("notfound");
-                }
-              })
-              .catch(() => setStatus("error"));
-          }}
+          onClick={() => setStatus("loading")}
           className="text-primary text-sm font-medium"
         >
           다시 시도
@@ -150,19 +95,13 @@ export const HostSpaceDetailPage = () => {
     );
   }
 
-  const detail = toExploreSpaceDetail(space);
-
-  const unavailablePeriods: UnavailablePeriod[] = mockHostReservations
-    .filter((r) => r.spaceId === id && r.status !== "CANCELLED")
-    .map((r) => ({ startDate: r.startDate, endDate: r.endDate }));
-
   return (
     <div className="mx-auto flex w-[1200px] flex-col gap-5">
-      <ExploreDetailGallery space={detail} />
+      <ExploreDetailGallery space={space} />
 
       <div className="flex w-full items-start gap-[23px]">
         <div className="w-[689px] shrink-0">
-          <ExploreDetailInfo space={detail} variant="host" />
+          <ExploreDetailInfo space={space} variant="host" />
         </div>
         <HostReservationCalendar unavailablePeriods={unavailablePeriods} />
       </div>

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useAuthStore } from "@/store/authStore";
 import Logo from "@/shared/components/Logo";
 import Button from "@/shared/components/Button";
@@ -14,17 +15,42 @@ const savePendingAndLogin = (provider: "kakao" | "google", pendingAction: unknow
 
 export const LoginModal = () => {
   const { isLoginModalOpen, closeLoginModal, pendingAction } = useAuthStore();
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // 열릴 때 닫기 버튼으로 포커스 이동
+  useEffect(() => {
+    if (isLoginModalOpen) {
+      closeButtonRef.current?.focus();
+    }
+  }, [isLoginModalOpen]);
+
+  // Escape 키로 닫기
+  useEffect(() => {
+    if (!isLoginModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeLoginModal();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isLoginModalOpen, closeLoginModal]);
 
   if (!isLoginModalOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/40"
         onClick={closeLoginModal}
+        aria-hidden="true"
       />
-      <div className="relative z-10 flex w-full max-w-[840px] items-center gap-[14px] rounded-xl bg-white px-[72px] py-14">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="로그인"
+        className="relative z-10 flex w-full max-w-[840px] items-center gap-[14px] rounded-xl bg-white px-[72px] py-14"
+      >
         <button
+          ref={closeButtonRef}
           onClick={closeLoginModal}
           aria-label="닫기"
           className="text-text-secondary hover:text-text-primary absolute top-14 right-[72px] size-[34px] text-[21px]"
@@ -32,9 +58,10 @@ export const LoginModal = () => {
           ✕
         </button>
 
-        <div className="bg-[#c5c5c5] h-[354px] w-[342px] shrink-0" />
+        {/* 이미지 영역 — 작은 화면에서는 숨김 */}
+        <div className="bg-[#c5c5c5] hidden h-[354px] w-[342px] shrink-0 md:block" />
 
-        <div className="flex h-[354px] w-[342px] flex-col items-center justify-end">
+        <div className="flex h-[354px] w-full flex-col items-center justify-end md:w-[342px]">
           <div className="flex w-full flex-col items-center gap-[84px]">
             <div className="flex flex-col items-center">
               <Logo variant="login" />

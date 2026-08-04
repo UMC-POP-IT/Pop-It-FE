@@ -1,5 +1,5 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Logo from "@/shared/components/Logo";
 import { useAuthStore } from "@/store/authStore";
 import { logoutApi, switchMode } from "@/shared/utils/oauth";
@@ -13,23 +13,43 @@ const Header = () => {
   const [modeError, setModeError] = useState(""); // 모드 전환 실패 사유
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
+
+  const closeProfileMenu = useCallback(() => setIsProfileMenuOpen(false), []);
 
   // 프로필 메뉴 외부 클릭 시 닫기
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
-        setIsProfileMenuOpen(false);
+      if (
+        profileMenuRef.current &&
+        e.target instanceof Node &&
+        !profileMenuRef.current.contains(e.target)
+      ) {
+        closeProfileMenu();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [closeProfileMenu]);
 
-  const handleLogout = async () => {
+  // 프로필 메뉴 Escape 닫기
+  useEffect(() => {
+    if (!isProfileMenuOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeProfileMenu();
+        profileButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isProfileMenuOpen, closeProfileMenu]);
+
+  const handleLogout = () => {
     setIsProfileMenuOpen(false);
-    await logoutApi();
     logout();
     navigate("/");
+    logoutApi().catch((err) => console.error("[Header] 로그아웃 서버 요청 실패:", err));
   };
 
   const handleModeToggle = async () => {
@@ -191,7 +211,11 @@ const Header = () => {
               ref={profileMenuRef}
             >
               <button
+                ref={profileButtonRef}
                 onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+                aria-haspopup="menu"
+                aria-expanded={isProfileMenuOpen}
+                aria-controls="profile-menu"
                 className="text-text-primary flex h-[74px] w-[164px] items-center justify-center gap-[12px] py-[14px] text-base"
               >
                 <div className="bg-primary-light flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full p-[8px]">
@@ -220,8 +244,13 @@ const Header = () => {
                 {user.nickname} 님
               </button>
               {isProfileMenuOpen && (
-                <div className="absolute top-[64px] right-0 z-10 flex flex-col overflow-hidden rounded-[8px] border border-[#f2f2f2] bg-white px-[6px] py-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]">
+                <div
+                  id="profile-menu"
+                  role="menu"
+                  className="absolute top-[64px] right-0 z-10 flex flex-col overflow-hidden rounded-[8px] border border-[#f2f2f2] bg-white px-[6px] py-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]"
+                >
                   <button
+                    role="menuitem"
                     onClick={handleLogout}
                     className="text-text-primary rounded-[4px] px-8 py-2 text-center text-base font-bold whitespace-nowrap hover:bg-[#f2f2f2]"
                   >
