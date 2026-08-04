@@ -22,7 +22,9 @@ const PendingActionExecutor = () => {
     if (!user || !pendingAction) return;
     switch (pendingAction.type) {
       case "wish":
-        handleWishToggle(pendingAction.spaceId);
+        handleWishToggle(pendingAction.spaceId).catch((err: unknown) => {
+          console.error("Pending wishToggle 실패: ", err);
+        });
         break;
       case "navigate":
         navigate(pendingAction.path);
