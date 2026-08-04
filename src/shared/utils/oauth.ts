@@ -2,6 +2,14 @@ import type { User } from "@/types";
 import { apiFetch } from "@/shared/utils/apiClient";
 export { reissueToken } from "@/shared/utils/tokenUtils";
 
+// 서버 응답 전용 타입 (/api/v1/users/me 실제 응답 스펙)
+interface UserApi {
+  userId: number;
+  nickname: string;
+  currentMode: "HOST" | "GUEST";
+  hasHostProfile: boolean;
+}
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 if (!BASE_URL)
   throw new Error("VITE_API_BASE_URL 환경변수가 설정되지 않았습니다.");
@@ -74,7 +82,13 @@ async function fetchMe(accessToken: string): Promise<User> {
   });
   if (!res.ok) throw new Error(`Failed to fetch user: ${res.status}`);
   const json = await res.json();
-  return json.result ?? json;
+  const api: UserApi = json.result ?? json;
+  return {
+    id: api.userId,
+    nickname: api.nickname,
+    currentMode: api.currentMode,
+    hasHostProfile: api.hasHostProfile,
+  };
 }
 
 /*
@@ -131,7 +145,13 @@ export async function switchMode(
  * apiFetch를 통해 호출하므로 accessToken이 만료됐어도 401 시 자동으로 재발급 후 재시도한다.
  */
 export async function getCurrentUser(): Promise<User> {
-  return apiFetch<User>("/api/v1/users/me");
+  const res = await apiFetch<UserApi>("/api/v1/users/me");
+  return {
+    id: res.userId,
+    nickname: res.nickname,
+    currentMode: res.currentMode,
+    hasHostProfile: res.hasHostProfile,
+  };
 }
 
 export async function handleOAuthCallback(code: string): Promise<User> {

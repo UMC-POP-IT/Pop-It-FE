@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getSpaceDetail, toExploreSpaceDetail } from "@/features/guest-explore/api/space_api";
-import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
+import { fetchSpaceDetail, toHostSpaceDetail, type HostSpaceDetail } from "@/features/host-manage/api/spaceDetailApi";
 import { fetchUnavailableDates } from "@/features/host-manage/api/hostApi";
 import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDetailGallery";
 import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetailInfo";
@@ -13,7 +12,7 @@ export const HostSpaceDetailPage = () => {
   const { spaceId } = useParams<{ spaceId: string }>();
   const navigate = useNavigate();
   const [status, setStatus] = useState<FetchStatus>("loading");
-  const [space, setSpace] = useState<ExploreSpaceDetail | null>(null);
+  const [space, setSpace] = useState<HostSpaceDetail | null>(null);
   const [unavailablePeriods, setUnavailablePeriods] = useState<UnavailablePeriod[]>([]);
   const [retryKey, setRetryKey] = useState(0);
 
@@ -31,12 +30,12 @@ export const HostSpaceDetailPage = () => {
 
     const fetchAll = async () => {
       const [detail, unavailable] = await Promise.all([
-        getSpaceDetail(id),
+        fetchSpaceDetail(id),
         fetchUnavailableDates(id),
       ]);
 
       if (ignore) return;
-      setSpace(toExploreSpaceDetail(detail));
+      setSpace(toHostSpaceDetail(detail));
       setUnavailablePeriods(unavailable);
       setStatus("success");
     };
