@@ -2,7 +2,7 @@ import { useState } from "react";
 import { uploadFiles } from "@/features/host-register/api/upload_api";
 import { toHostRequest } from "@/features/host-register/utils/to_host_request";
 import { registerHost } from "@/features/host-register/api/host_api";
-import { reissueToken } from "@/shared/utils/oauth";
+import { reissueToken, getMyHost } from "@/shared/utils/oauth";
 import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
@@ -73,20 +73,30 @@ export const HostRegisterStep2 = () => {
       navigate("/host/host-register/complete");
     } catch (error) {
       const status = (error as { status?: number }).status;
-
-      if (status === 409) {
-        // 이미 등록된 계정. 실패지만 결과적으로는 호스트가 맞으므로
-        // 성공과 같은 자리로 보내 같은 제출을 반복하지 않게 한다.
-        setHostStatus("registered");
-        await refreshRole(); // 이 브라우저 토큰의 role이 낡았을 수 있다
-        navigate("/host/host-register/complete");
-        return;
-      }
-
       const message =
         error instanceof Error
           ? error.message
           : "알 수 없는 오류가 발생했습니다";
+
+      if (status === 409) {
+        // 409는 두 가지를 뜻할 수 있다.
+        // - 이 계정이 이미 호스트 → 완료 화면으로 보내 같은 제출을 반복하지 않게 한다
+        // - HOST409_2: 사업자등록번호가 다른 계정에 쓰임 → 등록 실패, 사유를 띄운다
+        // 코드 문자열에 기대지 않도록 서버에 실제 호스트 여부를 직접 묻는다.
+        // 조회 자체가 실패하면 null로 보고 완료 화면으로 보내지 않는다 (미등록을 등록으로 오인하면
+        // 이후 호스트 요청이 전부 403이 나면서 원인을 알 수 없게 된다).
+        const host = await getMyHost().catch(() => null);
+        if (host) {
+          setHostStatus("registered");
+          await refreshRole(); // 이 브라우저 토큰의 role이 낡았을 수 있다
+          navigate("/host/host-register/complete");
+          return;
+        }
+        console.error("호스트 등록 실패:", message);
+        setSubmitError(message);
+        return;
+      }
+
       console.error("호스트 등록 실패:", message);
       setSubmitError(message);
     } finally {
