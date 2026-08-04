@@ -37,6 +37,7 @@ export const HostSpaceDetailPage = () => {
           let cursor: string | undefined;
           while (true) {
             const result = await fetchHostReservations({ size: 50, cursor });
+            if (ignore) break;
             all.push(...(result.reservations ?? []));
             if (!result.hasNext || result.nextCursor == null) break;
             cursor = result.nextCursor;

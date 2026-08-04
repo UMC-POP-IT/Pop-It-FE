@@ -101,18 +101,18 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-40 w-full bg-white drop-shadow-[0px_4px_5px_rgba(0,0,0,0.12)]">
       {/* 피그마: 전체 px-[40px], 좌측 gap-[32px](로고↔nav), 우측 gap-[20px] */}
-      <div className="mx-auto flex h-[74px] w-full max-w-screen-xl items-center px-[76px]">
+      <div className="mx-auto flex h-[74px] w-full max-w-screen-xl items-center px-4 md:px-10 xl:px-[76px]">
         {/* 좌측: 로고 + nav (gap-[32px]) */}
         <div className="flex items-center gap-8">
           <NavLink
             to={mode === "HOST" ? "/host/spaces" : "/"}
-            className="flex h-[74px] w-[180px] flex-shrink-0 items-center justify-center"
+            className="flex h-[74px] w-[120px] flex-shrink-0 items-center justify-center xl:w-[180px]"
           >
             <Logo variant="header" />
           </NavLink>
 
-          {/* nav: 아이템 간 gap 없음, 각 아이템 w-[112px] px-[10px] */}
-          <nav className="flex h-[74px]">
+          {/* nav: 아이템 간 gap 없음, 각 아이템 w-[112px] px-[10px] — 작은 화면에서 숨김 */}
+          <nav className="hidden h-[74px] md:flex">
             {mode === "HOST" ? (
               <>
                 <NavLink
@@ -217,7 +217,7 @@ const Header = () => {
                 aria-haspopup="menu"
                 aria-expanded={isProfileMenuOpen}
                 aria-controls="profile-menu"
-                className="text-text-primary flex h-[74px] w-[164px] items-center justify-center gap-[12px] py-[14px] text-base"
+                className="text-text-primary flex h-[74px] w-auto items-center justify-center gap-2 py-[14px] text-base xl:w-[164px] xl:gap-[12px]"
               >
                 <div className="bg-primary-light flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full p-[8px]">
                   <svg
@@ -242,7 +242,7 @@ const Header = () => {
                     />
                   </svg>
                 </div>
-                {user.nickname} 님
+                <span className="hidden md:inline">{user.nickname} 님</span>
               </button>
               {isProfileMenuOpen && (
                 <div
