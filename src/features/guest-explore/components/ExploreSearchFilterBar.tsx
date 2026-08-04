@@ -5,14 +5,20 @@ import {
 } from "@/features/guest-explore/api/space_search_api";
 import FilterDropdown from "./FilterDropdown";
 
+// "전체"(선택 해제) 옵션은 항상 맨 위에 고정하고, 나머지만 가나다순으로 정렬한다.
+const byKoreanLabel = <T extends { label: string }>(a: T, b: T) =>
+  a.label.localeCompare(b.label, "ko");
+
 const CATEGORY_OPTIONS: { value: SpaceCategory | ""; label: string }[] = [
   { value: "", label: "전체" },
-  ...SPACE_CATEGORY_OPTIONS,
+  ...[...SPACE_CATEGORY_OPTIONS].sort(byKoreanLabel),
 ];
 
 const DISTRICT_OPTIONS: { value: string; label: string }[] = [
   { value: "", label: "지역 전체" },
-  ...SEOUL_DISTRICTS.map((district) => ({ value: district, label: district })),
+  ...SEOUL_DISTRICTS.map((district) => ({ value: district, label: district })).sort(
+    byKoreanLabel,
+  ),
 ];
 
 // [지역] 드롭다운은 25개 구 + 전체라 한 화면에 다 안 들어온다. 다른 드롭다운과
@@ -91,34 +97,6 @@ const ExploreSearchFilterBar = ({
             onChange={onDistrictChange}
             maxVisibleOptions={DISTRICT_MAX_VISIBLE_OPTIONS}
           />
-
-          {/*
-            "일 단위"(가격 단위 전환) 필터는 GET /api/v1/spaces 응답/파라미터에
-            대응하는 값이 없어 이번 API 연동(#145) 범위에서 제외한다.
-            디자인만 유지하고, 관련 API가 나오면 그때 연결한다.
-          */}
-          <button
-            type="button"
-            disabled
-            className="bg-tag-bg text-text-primary flex cursor-not-allowed items-center justify-center gap-5 rounded-lg px-4 py-3 text-lg opacity-50"
-          >
-            <span>일 단위</span>
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M6 9L12 15L18 9"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
         </div>
 
         <button
