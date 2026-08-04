@@ -18,8 +18,13 @@ interface FilterDropdownProps<T extends string> {
   maxVisibleOptions?: number;
 }
 
-// 옵션 한 줄의 대략적인 높이(px) - maxVisibleOptions로 패널 높이를 계산할 때 쓴다.
-const OPTION_ROW_HEIGHT = 48;
+// 옵션 버튼 한 줄의 실제 높이(px) - py-3(24px) + text-lg 기본 줄높이(28px).
+// maxVisibleOptions로 패널 높이를 계산할 때 쓴다.
+const OPTION_ROW_HEIGHT = 52;
+// <ul>에 적용된 p-2(위아래 8px씩)만큼도 높이 예산에 더해야 마지막 옵션 줄이
+// 잘리지 않는다 - 이걸 빼먹으면 maxVisibleOptions만큼 다 안 보이고 스크롤이
+// 먼저 발생해버린다.
+const LIST_PADDING_Y = 16;
 
 const Chevron = ({ open }: { open: boolean }) => (
   <svg
@@ -133,7 +138,10 @@ const FilterDropdown = function <T extends string>({
           className="border-divider absolute top-full left-0 z-20 mt-2 w-max min-w-full overflow-y-auto rounded-xl border-2 bg-white p-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#d8d8d8] [&::-webkit-scrollbar-track]:bg-transparent"
           style={
             maxVisibleOptions
-              ? { maxHeight: maxVisibleOptions * OPTION_ROW_HEIGHT }
+              ? {
+                  maxHeight:
+                    maxVisibleOptions * OPTION_ROW_HEIGHT + LIST_PADDING_Y,
+                }
               : undefined
           }
         >
