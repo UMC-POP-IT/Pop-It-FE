@@ -61,7 +61,11 @@ const FilterDropdown = function <T extends string>({
 
   useOutsideClick(containerRef, () => setIsOpen(false), isOpen);
 
-  const selected = options.find((option) => option.value === value) ?? options[0];
+  // value가 options에 없는 경우(현재는 그런 경로가 없지만, 추후 URL
+  // 쿼리에서 필터를 복원하는 기능이 붙으면 잘못된 값이 들어올 수 있다)
+  // options[0]("전체")로 조용히 폴백하면 실제 필터 조건과 트리거에 보이는
+  // 라벨이 어긋난다. 그런 상황에서는 라벨을 비워 보여줘서 문제를 드러낸다.
+  const selected = options.find((option) => option.value === value);
 
   // 열릴 때 선택된 옵션으로 포커스를 옮기고, 이후 activeIndex가 바뀔 때마다
   // (화살표 키 이동) 실제 DOM 포커스도 함께 옮긴다. setActiveIndex 업데이터
@@ -102,6 +106,13 @@ const FilterDropdown = function <T extends string>({
       case "Escape":
         e.preventDefault();
         closeAndReturnFocus();
+        break;
+      case "Tab":
+        // preventDefault를 호출하지 않아 브라우저가 포커스를 다음 요소로
+        // 자연스럽게 옮기게 두고, 패널만 닫는다. 열린 채로 Tab이 나가면
+        // useOutsideClick(mousedown 전용)이 감지하지 못해 패널이 화면에
+        // 계속 떠 있게 되는 문제를 막는다.
+        setIsOpen(false);
         break;
       // Enter/Space는 각 옵션이 실제 <button>이라 브라우저 기본 동작으로
       // 이미 onClick이 호출된다 - 별도 처리가 필요 없다.
