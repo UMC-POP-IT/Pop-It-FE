@@ -1,5 +1,5 @@
-import arrowLeft from "@/features/guest-explore/icons/arrow_left.png";
-import arrowRight from "@/features/guest-explore/icons/arrow_right.png";
+import arrowLeft from "@/features/guest-explore/icons/arrow_left.svg";
+import arrowRight from "@/features/guest-explore/icons/arrow_right.svg";
 
 export const ScrollButton = ({
   direction,
