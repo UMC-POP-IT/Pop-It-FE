@@ -39,6 +39,11 @@ export const MySpacePage = () => {
       }
       setSpaces(all);
     } catch (e) {
+      const status = (e as { status?: number }).status;
+      if (status === 403) {
+        navigate("/host/host-register", { replace: true });
+        return;
+      }
       console.error("[MySpacePage] 내 공간 로드 실패:", e);
       setIsError(true);
     } finally {
@@ -50,12 +55,6 @@ export const MySpacePage = () => {
     loadSpaces();
   }, [loadSpaces]);
 
-  // 등록된 공간이 없으면 호스트 등록 온보딩부터 시작
-  useEffect(() => {
-    if (!isLoading && !isError && spaces.length === 0) {
-      navigate("/host/host-register", { replace: true });
-    }
-  }, [isLoading, isError, spaces.length, navigate]);
 
   // 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -94,8 +93,22 @@ export const MySpacePage = () => {
     );
   }
 
+  if (isError) {
+    return (
+      <div className="bg-tag-bg flex h-[224px] w-full flex-col items-center justify-center gap-3 rounded-xl">
+        <p className="text-text-primary text-xl font-medium">공간 목록을 불러오지 못했어요</p>
+        <button
+          onClick={loadSpaces}
+          className="bg-primary text-white rounded-lg px-5 py-2 text-sm font-medium"
+        >
+          다시 시도
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 pt-[48px]">
       {/* 페이지 헤더 */}
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-1">
@@ -109,7 +122,7 @@ export const MySpacePage = () => {
             reset();
             navigate("/host/register");
           }}
-          className="bg-primary-hover flex items-center gap-1 rounded-lg px-4 py-3 text-base font-medium text-white"
+          className="bg-primary-hover hover:bg-primary flex items-center gap-1 rounded-lg px-4 py-3 text-base font-bold text-white"
         >
           <img
             src={iconPlus}
@@ -141,30 +154,30 @@ export const MySpacePage = () => {
                       prev === space.spaceId ? null : space.spaceId,
                     )
                   }
-                  className="text-text-secondary hover:text-text-primary flex h-10 w-10 items-center justify-center rounded-lg text-xl"
+                  className="text-text-secondary hover:text-text-primary flex h-7 w-7 items-center justify-center rounded text-xl"
                   aria-label="더보기"
                 >
                   ···
                 </button>
                 {openMenuId === space.spaceId && (
-                  <div className="absolute top-12 right-0 z-10 flex flex-col overflow-hidden rounded-[8px] border-2 border-[#d8d8d8] bg-white p-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]">
+                  <div className="absolute top-9 right-0 z-10 flex flex-col overflow-hidden rounded-[8px] border border-[#f2f2f2] bg-white px-[6px] py-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]">
                     <button
                       onClick={() => {
                         setEditTargetId(space.spaceId);
                         setOpenMenuId(null);
                       }}
-                      className="rounded-[4px] px-7 py-2 text-center text-base font-bold whitespace-nowrap text-[#808080] hover:bg-[#f2f2f2]"
+                      className="text-text-primary rounded-[4px] px-8 py-2 text-center text-base font-bold whitespace-nowrap hover:bg-[#f2f2f2]"
                     >
-                      공간수정
+                      공간 수정
                     </button>
                     <button
                       onClick={() => {
                         setDeleteTargetId(space.spaceId);
                         setOpenMenuId(null);
                       }}
-                      className="text-danger rounded-[4px] px-6 py-2 text-center text-base font-bold whitespace-nowrap hover:bg-[#f2f2f2]"
+                      className="rounded-[4px] px-8 py-2 text-center text-base font-bold whitespace-nowrap text-[#f74b4b] hover:bg-[#f2f2f2]"
                     >
-                      공간삭제
+                      공간 삭제
                     </button>
                   </div>
                 )}
@@ -197,7 +210,7 @@ export const MySpacePage = () => {
               {/* 공간 상세 버튼 */}
               <button
                 onClick={() => navigate(`/host/spaces/${space.spaceId}`)}
-                className="bg-surface-blue text-text-primary h-10 flex-shrink-0 rounded-lg px-6 py-1.5 text-base font-bold"
+                className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 flex-shrink-0 rounded-lg px-6 py-1.5 text-base font-bold"
               >
                 공간 상세
               </button>
