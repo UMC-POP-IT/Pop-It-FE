@@ -29,6 +29,13 @@ interface IdentityVerificationResult {
 }
 
 
+export async function fetchUnavailableDates(spaceId: number): Promise<{ startDate: string; endDate: string }[]> {
+  const result = await apiFetch<{ unavailableDates: { startDate: string; endDate: string }[] }>(
+    `/api/v1/reservations/${spaceId}/unavailable-dates`,
+  );
+  return result.unavailableDates ?? [];
+}
+
 export async function fetchHostReservations(params?: {
   status?: string;
   cursor?: string;

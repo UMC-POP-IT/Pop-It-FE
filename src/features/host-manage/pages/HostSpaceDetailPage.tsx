@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getSpaceDetail, toExploreSpaceDetail } from "@/features/guest-explore/api/space_api";
 import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
-import { fetchHostReservations } from "@/features/host-manage/api/hostApi";
+import { fetchUnavailableDates } from "@/features/host-manage/api/hostApi";
 import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDetailGallery";
 import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetailInfo";
 import HostReservationCalendar, { type UnavailablePeriod } from "@/features/host-manage/components/HostReservationCalendar";
@@ -30,30 +30,14 @@ export const HostSpaceDetailPage = () => {
     setSpace(null);
 
     const fetchAll = async () => {
-      const [detail, allReservations] = await Promise.all([
+      const [detail, unavailable] = await Promise.all([
         getSpaceDetail(id),
-        (async () => {
-          const all = [];
-          let cursor: string | undefined;
-          while (true) {
-            const result = await fetchHostReservations({ size: 50, cursor });
-            if (ignore) break;
-            all.push(...(result.reservations ?? []));
-            if (!result.hasNext || result.nextCursor == null) break;
-            cursor = result.nextCursor;
-          }
-          return all;
-        })(),
+        fetchUnavailableDates(id),
       ]);
 
       if (ignore) return;
       setSpace(toExploreSpaceDetail(detail));
-
-      const ACTIVE_STATUSES = ["PENDING_APPROVAL", "APPROVED", "CONTRACT_COMPLETED", "IN_USE"];
-      const periods: UnavailablePeriod[] = allReservations
-        .filter((r) => r.space.spaceId === id && ACTIVE_STATUSES.includes(r.status))
-        .map((r) => ({ startDate: r.startDate, endDate: r.endDate }));
-      setUnavailablePeriods(periods);
+      setUnavailablePeriods(unavailable);
       setStatus("success");
     };
 
