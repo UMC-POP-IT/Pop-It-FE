@@ -91,6 +91,7 @@ const RealTimeRecommendSpace = () => {
       <div className="relative">
         {canScrollPrev && <ScrollButton direction="prev" topOffset={imageCenter} onClick={() => scrollByCard(-1)} />}
 
+        {/* overflow-x-hidden은 휠/트랙패드/드래그 스크롤을 의도적으로 차단하기 위함 (화살표 버튼의 scrollBy만 허용) */}
         <div
           ref={scrollRef}
           className="flex gap-4 overflow-x-hidden scroll-smooth"
