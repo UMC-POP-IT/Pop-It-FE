@@ -83,12 +83,8 @@ async function fetchMe(accessToken: string): Promise<User> {
   if (!res.ok) throw new Error(`Failed to fetch user: ${res.status}`);
   const json = await res.json();
   const api: UserApi = json.result ?? json;
-  return {
-    id: api.userId,
-    nickname: api.nickname,
-    currentMode: api.currentMode,
-    hasHostProfile: api.hasHostProfile,
-  };
+  // TODO: User 타입과 서버 응답(UserApi) 불일치 — #150 팀 논의 후 User 타입 수정 필요
+  return { id: api.userId, nickname: api.nickname, currentMode: api.currentMode } as User;
 }
 
 /*
@@ -146,12 +142,8 @@ export async function switchMode(
  */
 export async function getCurrentUser(): Promise<User> {
   const res = await apiFetch<UserApi>("/api/v1/users/me");
-  return {
-    id: res.userId,
-    nickname: res.nickname,
-    currentMode: res.currentMode,
-    hasHostProfile: res.hasHostProfile,
-  };
+  // TODO: User 타입과 서버 응답(UserApi) 불일치 — #150 팀 논의 후 User 타입 수정 필요
+  return { id: res.userId, nickname: res.nickname, currentMode: res.currentMode } as User;
 }
 
 export async function handleOAuthCallback(code: string): Promise<User> {
