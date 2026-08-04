@@ -28,23 +28,35 @@ export const HostSpaceDetailPage = () => {
     setStatus("loading");
     setSpace(null);
 
-    Promise.all([
-      getSpaceDetail(id),
-      fetchHostReservations({ size: 50 }),
-    ])
-      .then(([detail, reservationsResult]) => {
-        if (ignore) return;
-        setSpace(toExploreSpaceDetail(detail));
+    const fetchAll = async () => {
+      const [detail, allReservations] = await Promise.all([
+        getSpaceDetail(id),
+        (async () => {
+          const all = [];
+          let cursor: string | undefined;
+          while (true) {
+            const result = await fetchHostReservations({ size: 50, cursor });
+            all.push(...(result.reservations ?? []));
+            if (!result.hasNext || result.nextCursor == null) break;
+            cursor = result.nextCursor;
+          }
+          return all;
+        })(),
+      ]);
 
-        const periods: UnavailablePeriod[] = (reservationsResult.reservations ?? [])
-          .filter((r) => r.space.spaceId === id && r.status !== "CANCELLED")
-          .map((r) => ({ startDate: r.startDate, endDate: r.endDate }));
-        setUnavailablePeriods(periods);
-        setStatus("success");
-      })
-      .catch(() => {
-        if (!ignore) setStatus("error");
-      });
+      if (ignore) return;
+      setSpace(toExploreSpaceDetail(detail));
+
+      const periods: UnavailablePeriod[] = allReservations
+        .filter((r) => r.space.spaceId === id && r.status !== "CANCELLED")
+        .map((r) => ({ startDate: r.startDate, endDate: r.endDate }));
+      setUnavailablePeriods(periods);
+      setStatus("success");
+    };
+
+    fetchAll().catch(() => {
+      if (!ignore) setStatus("error");
+    });
 
     return () => {
       ignore = true;
