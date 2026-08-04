@@ -54,6 +54,12 @@ export const WishedSpace = () => {
   // false가 되어 전체를 다 불러온 시점에만 전역 wishedIds와 비교해서 해제를 확정한다.
   const confirmedIdsRef = useRef<Set<number>>(new Set());
 
+  // mount 조회/loadMore/찜 해제 후 재동기화가 동시에 진행될 수 있는데, 응답이 요청
+  // 순서와 다르게 도착하면 먼저 시작된(하지만 나중에 도착한) 응답이 이미 최신인
+  // wishedSpaces를 stale한 데이터로 덮어쓸 수 있다. 목록을 바꾸는 요청을 시작할 때마다
+  // 값을 올리고, 응답을 반영하기 직전 "여전히 최신 요청인지"를 확인해 그렇지 않으면 버린다.
+  const fetchGenRef = useRef(0);
+
   const confirmServerWishState = (pageItems: wishedSpace[], isLastPage: boolean) => {
     const { syncWished, reconcileWished, wishedIds } = useWishStore.getState();
     pageItems.forEach((item) => {
@@ -69,12 +75,12 @@ export const WishedSpace = () => {
 
   // 최초 페이지(0)만 조회한다. 다음 페이지는 스크롤이 끝에 닿을 때 loadMore로 이어붙인다.
   useEffect(() => {
-    let ignore = false;
+    const gen = ++fetchGenRef.current;
     setStatus("loading");
     confirmedIdsRef.current = new Set();
     getWishList(0, WISH_PAGE_SIZE)
       .then((data) => {
-        if (ignore) return;
+        if (gen !== fetchGenRef.current) return;
         setWishedSpaces(data.wishlist);
         setHasNext(data.hasNext);
         setPage(0);
@@ -82,13 +88,10 @@ export const WishedSpace = () => {
         confirmServerWishState(data.wishlist, !data.hasNext);
       })
       .catch((error) => {
-        if (ignore) return;
+        if (gen !== fetchGenRef.current) return;
         console.error("내가 찜한 공간 불러오기 실패", error);
         setStatus("error");
       });
-    return () => {
-      ignore = true;
-    };
   }, [retryKey]);
 
   // 다음 페이지를 이어붙인다. 항상 최신 page/hasNext를 참조하도록 아래 loadMoreRef를 통해서만 호출한다.
@@ -96,16 +99,39 @@ export const WishedSpace = () => {
     if (!hasNext || isFetchingNext) return;
     setIsFetchingNext(true);
     const nextPage = page + 1;
+    const gen = ++fetchGenRef.current;
     try {
       const data = await getWishList(nextPage, WISH_PAGE_SIZE);
+      if (gen !== fetchGenRef.current) return;
       setWishedSpaces((prev) => [...prev, ...data.wishlist]);
       setHasNext(data.hasNext);
       setPage(nextPage);
       confirmServerWishState(data.wishlist, !data.hasNext);
     } catch (error) {
+      if (gen !== fetchGenRef.current) return;
       console.error("찜한 공간 추가 조회 실패", error);
     } finally {
       setIsFetchingNext(false);
+    }
+  };
+
+  // 찜 해제 성공 후, 현재까지 로드된 범위(0 ~ page)를 서버 기준으로 다시 맞춘다.
+  // offset 페이지네이션(page*size)에서 이미 로드한 항목 하나가 서버에서 빠지면 이후
+  // 항목들의 서버상 offset이 한 칸씩 당겨지는데, 로컬 page 값은 그대로라 다음 loadMore가
+  // 이미 밀려난 항목을 건너뛰게 된다. size를 (page+1)*WISH_PAGE_SIZE로 늘려 같은 창을
+  // 한 번에 다시 조회하면 이후 loadMore(page+1)가 다시 정확한 offset을 가리키게 된다.
+  const resyncWishList = async (loadedPage: number) => {
+    const gen = ++fetchGenRef.current;
+    try {
+      const data = await getWishList(0, (loadedPage + 1) * WISH_PAGE_SIZE);
+      if (gen !== fetchGenRef.current) return;
+      confirmedIdsRef.current = new Set();
+      setWishedSpaces(data.wishlist);
+      setHasNext(data.hasNext);
+      confirmServerWishState(data.wishlist, !data.hasNext);
+    } catch (error) {
+      if (gen !== fetchGenRef.current) return;
+      console.error("찜 해제 후 목록 재조회 실패", error);
     }
   };
 
@@ -127,12 +153,19 @@ export const WishedSpace = () => {
     const removedIndex = wishedSpaces.findIndex((space) => space.spaceId === spaceId);
     if (removedIndex === -1) return;
     const removedSpace = wishedSpaces[removedIndex];
+    const genBeforeToggle = fetchGenRef.current;
 
     setWishedSpaces((prev) => prev.filter((space) => space.spaceId !== spaceId));
     try {
       await handleWishToggle(spaceId);
+      // 서버에서 실제로 빠졌으니 offset 정합을 위해 로드된 범위를 다시 맞춘다.
+      await resyncWishList(page);
     } catch (error) {
       console.error("찜 해제 실패", error);
+      // 실패했다면 서버에는 원래대로 남아있는 항목이라, 그 사이에 resyncWishList가
+      // 이미 실행돼 서버 최신 목록으로 교체됐다면 그 안에 이 항목이 다시 포함돼 있다.
+      // 그런 경우 여기서 스냅샷을 또 끼워 넣으면 중복/위치 어긋남이 생기므로 건너뛴다.
+      if (fetchGenRef.current !== genBeforeToggle) return;
       setWishedSpaces((prev) => {
         const restored = [...prev];
         restored.splice(Math.min(removedIndex, restored.length), 0, removedSpace);
