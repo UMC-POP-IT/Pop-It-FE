@@ -25,6 +25,9 @@ const ReservationRequestModal = ({
   const [usagePurpose, setUsagePurpose] = useState("");
   const [showValidationError, setShowValidationError] = useState(false);
   const titleId = useId();
+  const textareaId = useId();
+  const validationErrorId = useId();
+  const submitErrorId = useId();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dialogRef = useDialogA11y<HTMLDivElement>({
     isOpen,
@@ -33,6 +36,11 @@ const ReservationRequestModal = ({
   });
 
   if (!isOpen) return null;
+
+  const describedByIds =
+    [showValidationError ? validationErrorId : null, submitError ? submitErrorId : null]
+      .filter(Boolean)
+      .join(" ") || undefined;
 
   const handleSubmit = () => {
     if (!usagePurpose.trim()) {
@@ -80,8 +88,11 @@ const ReservationRequestModal = ({
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-text-primary text-base font-bold">사업 설명</span>
+          <label htmlFor={textareaId} className="text-text-primary text-base font-bold">
+            사업 설명
+          </label>
           <textarea
+            id={textareaId}
             ref={textareaRef}
             value={usagePurpose}
             onChange={(e) => {
@@ -90,6 +101,9 @@ const ReservationRequestModal = ({
             }}
             placeholder="운영하실 팝업 또는 사업의 내용을 간략히 설명해주세요. 호스트가 검토 후 승인합니다."
             rows={4}
+            aria-required="true"
+            aria-invalid={showValidationError}
+            aria-describedby={describedByIds}
             className={`text-text-primary placeholder:text-text-placeholder resize-none rounded-lg border-2 bg-white p-3 text-sm transition-colors focus:outline-none focus:ring-2 ${
               showValidationError
                 ? "border-danger focus:ring-danger"
@@ -97,12 +111,14 @@ const ReservationRequestModal = ({
             }`}
           />
           {showValidationError && (
-            <span className="text-danger text-xs">
+            <span id={validationErrorId} role="alert" className="text-danger text-xs">
               예약 요청을 위해 사업 설명을 입력해 주세요.
             </span>
           )}
           {submitError && (
-            <span className="text-danger text-xs">{submitError}</span>
+            <span id={submitErrorId} role="alert" className="text-danger text-xs">
+              {submitError}
+            </span>
           )}
         </div>
 
