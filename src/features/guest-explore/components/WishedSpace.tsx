@@ -55,7 +55,7 @@ export const WishedSpace = () => {
   const confirmedIdsRef = useRef<Set<number>>(new Set());
 
   const confirmServerWishState = (pageItems: wishedSpace[], isLastPage: boolean) => {
-    const { syncWished, wishedIds } = useWishStore.getState();
+    const { syncWished, reconcileWished, wishedIds } = useWishStore.getState();
     pageItems.forEach((item) => {
       confirmedIdsRef.current.add(item.spaceId);
       syncWished(item.spaceId, true);
@@ -63,7 +63,7 @@ export const WishedSpace = () => {
     if (isLastPage) {
       wishedIds
         .filter((id) => !confirmedIdsRef.current.has(id))
-        .forEach((id) => syncWished(id, false));
+        .forEach((id) => reconcileWished(id, false));
     }
   };
 
@@ -162,7 +162,7 @@ export const WishedSpace = () => {
       container.removeEventListener("scroll", updateScrollButtons);
       window.removeEventListener("resize", updateScrollButtons);
     };
-  }, []);
+  }, [status]);
 
   // SpaceCard 단위로 스크롤
   const scrollByCard = (direction: 1 | -1) => {

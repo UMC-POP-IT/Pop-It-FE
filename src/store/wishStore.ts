@@ -16,6 +16,15 @@ interface WishState {
    * 이 경쟁 상태에서 로컬 상태가 되돌아가는 것을 막는다.
    */
   syncWished: (spaceId: number, isWished: boolean) => void;
+  /**
+   * 찜 목록을 끝까지(hasNext=false) 다 받아 서버 기준 전체 상태를 확정할 수 있을 때만
+   * 쓰는 함수. syncWished와 달리 syncedSpaceIds 가드를 무시하고 서버 값으로 덮어쓴다 -
+   * 이미 한 번 동기화됐다는 이유만으로 "확정된 최신 서버 상태" 반영을 막으면 안 되기
+   * 때문이다. 다만 syncedButLocallyToggled(세션 중 사용자가 직접 토글한 spaceId)는
+   * 여전히 존중해서, 목록을 불러오는 동안 사용자가 다른 화면에서 막 토글한 결과가
+   * 이 확정 로직에 덮어써지지 않게 한다.
+   */
+  reconcileWished: (spaceId: number, isWished: boolean) => void;
   syncedSpaceIds: number[];
   /**
    * 서버 동기화 여부와 무관하게, 세션 중 사용자가 직접 토글한 spaceId 집합.
@@ -70,6 +79,24 @@ export const useWishStore = create<WishState>((set, get) => ({
             ? [...state.wishedIds, spaceId]
             : state.wishedIds.filter((id) => id !== spaceId),
       syncedSpaceIds: [...state.syncedSpaceIds, spaceId],
+    }));
+  },
+  reconcileWished: (spaceId, isWished) => {
+    if (get().syncedButLocallyToggled.includes(spaceId)) {
+      return;
+    }
+
+    const alreadyWished = get().wishedIds.includes(spaceId);
+    set((state) => ({
+      wishedIds:
+        alreadyWished === isWished
+          ? state.wishedIds
+          : isWished
+            ? [...state.wishedIds, spaceId]
+            : state.wishedIds.filter((id) => id !== spaceId),
+      syncedSpaceIds: state.syncedSpaceIds.includes(spaceId)
+        ? state.syncedSpaceIds
+        : [...state.syncedSpaceIds, spaceId],
     }));
   },
   reset: () =>
