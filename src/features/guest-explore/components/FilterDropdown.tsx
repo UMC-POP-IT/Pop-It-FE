@@ -63,15 +63,14 @@ const FilterDropdown = function <T extends string>({
 
   const selected = options.find((option) => option.value === value) ?? options[0];
 
-  // 열릴 때 현재 선택된 옵션으로 포커스를 옮긴다.
+  // 열릴 때 선택된 옵션으로 포커스를 옮기고, 이후 activeIndex가 바뀔 때마다
+  // (화살표 키 이동) 실제 DOM 포커스도 함께 옮긴다. setActiveIndex 업데이터
+  // 안에서 직접 focus()를 호출하면 impure해지므로 여기 effect로 분리한다.
   useEffect(() => {
     if (isOpen) {
       optionRefs.current[activeIndex]?.focus();
     }
-    // isOpen이 true로 바뀌는 시점에만 포커스를 옮기면 되고, activeIndex는 그
-    // 직전에 openDropdown에서 함께 정해두므로 여기서는 isOpen만 감지한다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, activeIndex]);
 
   const openDropdown = () => {
     const selectedIndex = options.findIndex((option) => option.value === value);
