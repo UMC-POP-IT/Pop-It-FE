@@ -47,7 +47,7 @@ export const RegisterStep4 = () => {
             placeholder="예: 성수 000 건물"
             value={form.buildingName}
             onChange={(e) => setValues({ buildingName: e.target.value })}
-            maxLength={30}
+            maxLength={20}
           />
         </div>
         {/* 공간 설명

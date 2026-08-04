@@ -1,3 +1,5 @@
+import iconCheckBigSized from "@/assets/icons/icon_check_big_sized.svg";
+
 interface ModalProps {
   isOpen: boolean;
   title: string;
@@ -38,22 +40,12 @@ const Modal = ({
         <div className="flex flex-col items-center gap-5">
           {/* 체크 아이콘 */}
           {showCheckIcon && (
-            <div className="bg-primary-hover flex h-[72px] w-[72px] items-center justify-center rounded-full">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M5 12L10 17L19 8"
-                  stroke="white"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+            <div className="flex h-[72px] w-[72px] items-center justify-center">
+              <img
+                src={iconCheckBigSized}
+                alt=""
+                className="h-[72px] w-[72px]"
+              />
             </div>
           )}
 
@@ -63,7 +55,7 @@ const Modal = ({
             </h3>
 
             {description && (
-              <p className="text-text-tertiary whitespace-pre-line text-base font-medium">
+              <p className="text-text-tertiary text-base font-medium whitespace-pre-line">
                 {description}
               </p>
             )}
