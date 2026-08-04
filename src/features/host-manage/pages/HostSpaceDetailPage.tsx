@@ -47,8 +47,9 @@ export const HostSpaceDetailPage = () => {
       if (ignore) return;
       setSpace(toExploreSpaceDetail(detail));
 
+      const ACTIVE_STATUSES = ["PENDING_APPROVAL", "APPROVED", "CONTRACT_COMPLETED", "IN_USE"];
       const periods: UnavailablePeriod[] = allReservations
-        .filter((r) => r.space.spaceId === id && r.status !== "CANCELLED")
+        .filter((r) => r.space.spaceId === id && ACTIVE_STATUSES.includes(r.status))
         .map((r) => ({ startDate: r.startDate, endDate: r.endDate }));
       setUnavailablePeriods(periods);
       setStatus("success");

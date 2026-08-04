@@ -28,9 +28,6 @@ interface IdentityVerificationResult {
   verifiedAt: string | null;
 }
 
-interface StatusCountsResult {
-  countsByStatus: Record<string, number>;
-}
 
 export async function fetchHostReservations(params?: {
   status?: string;
@@ -112,9 +109,6 @@ export async function fetchIdentityVerificationStatus(): Promise<IdentityVerific
   return apiFetch("/api/v1/users/me/verifications");
 }
 
-export async function fetchHostReservationStatusCounts(): Promise<StatusCountsResult> {
-  return apiFetch("/api/v1/reservations/host/status-counts");
-}
 
 export async function deleteSpace(spaceId: number): Promise<void> {
   await apiFetch(`/api/v1/spaces/${spaceId}`, { method: "DELETE" });

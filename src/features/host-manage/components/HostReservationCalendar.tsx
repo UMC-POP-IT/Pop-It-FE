@@ -21,12 +21,24 @@ const isSameDay = (a: Date, b: Date) =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 
-const isUnavailable = (date: Date, periods: UnavailablePeriod[]) =>
-  periods.some(({ startDate, endDate }) => {
+const BOOKING_WINDOW_DAYS = 90;
+
+const toDateOnly = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+const isUnavailable = (date: Date, periods: UnavailablePeriod[], today: Date) => {
+  const todayOnly = toDateOnly(today);
+  const maxDate = new Date(todayOnly);
+  maxDate.setDate(maxDate.getDate() + BOOKING_WINDOW_DAYS);
+
+  // 과거 또는 오늘, 90일 이후는 예약 불가
+  if (date <= todayOnly || date > maxDate) return true;
+
+  return periods.some(({ startDate, endDate }) => {
     const start = parseDate(startDate);
     const end = parseDate(endDate);
     return date >= start && date <= end;
   });
+};
 
 const HostReservationCalendar = ({
   unavailablePeriods = [],
@@ -51,7 +63,7 @@ const HostReservationCalendar = ({
   const getDayClassName = (date: Date) => {
     const isCurrentMonth = date.getMonth() === viewDate.getMonth();
     if (!isCurrentMonth) return "text-text-disabled";
-    if (isUnavailable(date, unavailablePeriods)) {
+    if (isUnavailable(date, unavailablePeriods, today)) {
       return "text-white bg-[#d0d0d0] rounded-full";
     }
     if (isSameDay(date, today)) {

@@ -17,8 +17,9 @@ const Header = () => {
 
   const closeProfileMenu = useCallback(() => setIsProfileMenuOpen(false), []);
 
-  // 프로필 메뉴 외부 클릭 시 닫기
+  // 프로필 메뉴 외부 클릭 시 닫기 — 메뉴가 열려있을 때만 등록
   useEffect(() => {
+    if (!isProfileMenuOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
       if (
         profileMenuRef.current &&
@@ -30,7 +31,7 @@ const Header = () => {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [closeProfileMenu]);
+  }, [isProfileMenuOpen, closeProfileMenu]);
 
   // 프로필 메뉴 Escape 닫기
   useEffect(() => {
@@ -100,7 +101,7 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-40 w-full bg-white drop-shadow-[0px_4px_5px_rgba(0,0,0,0.12)]">
       {/* 피그마: 전체 px-[40px], 좌측 gap-[32px](로고↔nav), 우측 gap-[20px] */}
-      <div className="flex h-[74px] items-center px-[76px]">
+      <div className="mx-auto flex h-[74px] w-full max-w-screen-xl items-center px-[76px]">
         {/* 좌측: 로고 + nav (gap-[32px]) */}
         <div className="flex items-center gap-8">
           <NavLink
