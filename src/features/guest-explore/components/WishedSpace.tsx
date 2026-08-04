@@ -185,6 +185,9 @@ export const WishedSpace = () => {
     if (isNearEnd) loadMoreRef.current();
   };
 
+  // status가 "success"로 유지된 채 wishedSpaces만 바뀌는 경우(찜 해제/loadMore/재동기화)에도
+  // 콘텐츠 크기가 바뀌므로 스크롤 버튼 상태를 다시 계산해야 한다.
+  const successItemCount = status === "success" ? wishedSpaces.length : null;
   useLayoutEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
@@ -195,7 +198,7 @@ export const WishedSpace = () => {
       container.removeEventListener("scroll", updateScrollButtons);
       window.removeEventListener("resize", updateScrollButtons);
     };
-  }, [status]);
+  }, [status, successItemCount]);
 
   // SpaceCard 단위로 스크롤
   const scrollByCard = (direction: 1 | -1) => {
