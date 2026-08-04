@@ -5,6 +5,7 @@ import { fetchMySpaces, deleteSpace } from "@/features/host-manage/api/hostApi";
 import type { ApiMySpace } from "@/types";
 import iconPlus from "@/assets/icons/icon_plus.svg";
 import { useRegisterStore } from "@/store/registerStore";
+import { switchMode } from "@/shared/utils/oauth";
 
 const formatDate = (dateStr: string) => {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -41,7 +42,13 @@ export const MySpacePage = () => {
     } catch (e) {
       const status = (e as { status?: number }).status;
       if (status === 403) {
-        navigate("/host/host-register", { replace: true });
+        // 호스트 등록은 됐지만 서버 currentMode가 GUEST일 수 있음 → 전환 후 재시도
+        try {
+          await switchMode("HOST");
+          await loadSpaces();
+        } catch {
+          navigate("/host/host-register", { replace: true });
+        }
         return;
       }
       console.error("[MySpacePage] 내 공간 로드 실패:", e);
