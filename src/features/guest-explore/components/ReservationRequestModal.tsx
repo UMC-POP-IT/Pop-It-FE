@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
+import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 
 interface ReservationRequestModalProps {
   isOpen: boolean;
@@ -23,6 +24,13 @@ const ReservationRequestModal = ({
 }: ReservationRequestModalProps) => {
   const [usagePurpose, setUsagePurpose] = useState("");
   const [showValidationError, setShowValidationError] = useState(false);
+  const titleId = useId();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const dialogRef = useDialogA11y<HTMLDivElement>({
+    isOpen,
+    onClose: isSubmitting ? undefined : onCancel,
+    initialFocusRef: textareaRef,
+  });
 
   if (!isOpen) return null;
 
@@ -44,8 +52,17 @@ const ReservationRequestModal = ({
           onCancel();
         }}
       />
-      <div className="relative z-10 flex w-[590px] flex-col gap-6 rounded-xl bg-white p-8">
-        <h3 className="text-text-primary text-[22px] font-bold">예약 요청</h3>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="relative z-10 flex w-[590px] flex-col gap-6 rounded-xl bg-white p-8"
+      >
+        <h3 id={titleId} className="text-text-primary text-[22px] font-bold">
+          예약 요청
+        </h3>
 
         <div className="text-text-primary flex flex-col gap-2 text-base">
           <div className="flex gap-4">
@@ -65,6 +82,7 @@ const ReservationRequestModal = ({
         <div className="flex flex-col gap-2">
           <span className="text-text-primary text-base font-bold">사업 설명</span>
           <textarea
+            ref={textareaRef}
             value={usagePurpose}
             onChange={(e) => {
               setUsagePurpose(e.target.value);

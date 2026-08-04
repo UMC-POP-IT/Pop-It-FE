@@ -1,3 +1,6 @@
+import { useId } from "react";
+import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
+
 interface ModalProps {
   isOpen: boolean;
   title: string;
@@ -26,6 +29,12 @@ const Modal = ({
   onConfirm,
   onCancel,
 }: ModalProps) => {
+  const titleId = useId();
+  const dialogRef = useDialogA11y<HTMLDivElement>({
+    isOpen,
+    onClose: onCancel,
+  });
+
   if (!isOpen) return null;
 
   return (
@@ -34,7 +43,14 @@ const Modal = ({
         className="absolute inset-0 bg-black/40"
         onClick={onCancel}
       />
-      <div className="relative z-10 flex w-[590px] flex-col items-center gap-10 rounded-xl bg-white py-8">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="relative z-10 flex w-[590px] flex-col items-center gap-10 rounded-xl bg-white py-8"
+      >
         <div className="flex flex-col items-center gap-5">
           {/* 체크 아이콘 */}
           {showCheckIcon && (
@@ -58,7 +74,10 @@ const Modal = ({
           )}
 
           <div className="flex flex-col items-center gap-2 text-center">
-            <h3 className="text-text-primary text-[22px] font-bold whitespace-pre-line">
+            <h3
+              id={titleId}
+              className="text-text-primary text-[22px] font-bold whitespace-pre-line"
+            >
               {title}
             </h3>
 
