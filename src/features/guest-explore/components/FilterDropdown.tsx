@@ -86,9 +86,7 @@ const FilterDropdown = function <T extends string>({
 
   const moveActiveIndex = (delta: 1 | -1) => {
     setActiveIndex((prev) => {
-      const next = (prev + delta + options.length) % options.length;
-      optionRefs.current[next]?.focus();
-      return next;
+      return (prev + delta + options.length) % options.length;
     });
   };
 
