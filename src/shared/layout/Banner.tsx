@@ -8,7 +8,6 @@ import { useAuthStore } from "@/store/authStore";
 
 // TODO: 실제 노션 소개 페이지 URL로 교체
 const NOTION_INTRO_URL = "https://giant-situation-2ce.notion.site/3a57ff832aa380ffbd83d16c56788eea";
-
 interface BannerSlide {
   title: string;
   subtitle: string;
@@ -51,6 +50,8 @@ const Banner = () => {
   const [isPaused, setIsPaused] = useState(false);
   const total = slides.length;
 
+  const { user, hostStatus, refreshHostStatus, openLoginModal } = useAuthStore();
+
   useEffect(() => {
     if (isPaused) return;
     const timer = setInterval(() => {
@@ -60,11 +61,17 @@ const Banner = () => {
   }, [isPaused, total]);
 
   const goTo = (index: number) => setCurrent((index + total) % total);
+  const startHosting = async () => {
+    if (!user) { // 로그인하지 않았다면 로그인 모달을 열고, 로그인 후 호스트 모드로 이동
+      const navigateTo = hostStatus === "registered" ? "/host/spaces" : "/host/host-register";
+      openLoginModal({ type: "modeToggle", targetMode: "HOST", navigateTo });
+      return;
+    }
 
-  // 헤더의 "호스트 전환" 버튼과 동일한 동작
-  const startHosting = () => {
+    // 로그인한 상태 → hostStatus가 아직 조회 전(unknown)이면 서버에 실제 등록 여부를 물어본다
+    const status = hostStatus === "unknown" ? await refreshHostStatus() : hostStatus;
     setMode("HOST");
-    navigate("/host/spaces");
+    navigate(status === "registered" ? "/host/spaces" : "/host/host-register");
   };
 
   const slide = slides[current];

@@ -14,7 +14,7 @@ const RealTimeBanner = ({
     <button
       type="button"
       onClick={onClick}
-      className="bg-bg relative aspect-[4/5] group-hover:cursor-pointer"
+      className="bg-bg relative block w-full aspect-[4/5] group-hover:cursor-pointer"
     >
       {space.thumbnailUrl ? (
         <img

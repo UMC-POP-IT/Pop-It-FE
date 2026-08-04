@@ -37,6 +37,7 @@ const PendingActionExecutor = () => {
   const pendingAction = useAuthStore((s) => s.pendingAction);
   const clearPendingAction = useAuthStore((s) => s.clearPendingAction);
   const setMode = useAuthStore((s) => s.setMode);
+  const refreshHostStatus = useAuthStore((s) => s.refreshHostStatus);
   const toggleWish = useWishStore((s) => s.toggleWish);
   const navigate = useNavigate();
 
@@ -51,13 +52,20 @@ const PendingActionExecutor = () => {
         break;
       case "modeToggle":
         switchMode(pendingAction.targetMode)
-          .then(() => {
+          .then(async () => {
             setMode(pendingAction.targetMode);
-            navigate(pendingAction.navigateTo);
+            // 로그인 전에 저장해둔 navigateTo는 그 시점엔 hostStatus를 알 수 없어 신뢰할 수 없다.
+            // HOST 전환이면 로그인 직후 실제 등록 여부를 다시 조회해 목적지를 정한다.
+            if (pendingAction.targetMode === "HOST") {
+              const status = await refreshHostStatus();
+              navigate(status === "registered" ? "/host/spaces" : "/host/host-register");
+            } else {
+              navigate(pendingAction.navigateTo);
+            }
           })
           .catch((err: unknown) => {
             const status = (err as { status?: number }).status;
-            if (status === 400) {
+            if (status === 403) {
               // 호스트 미등록 → 호스트 등록 안내 페이지로
               navigate("/host/host-register");
             }
