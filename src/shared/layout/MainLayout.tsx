@@ -6,8 +6,6 @@ import Modal from "@/shared/components/Modal";
 import { LoginModal } from "@/shared/components/LoginModal";
 import { useAuthStore } from "@/store/authStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
-import { handleOAuthCallback, switchMode } from "@/shared/utils/oauth";
-import { useWishStore } from "@/store/wishStore";
 import { handleOAuthCallback, switchMode, getCurrentUser } from "@/shared/utils/oauth";
 import { PaymentApproval } from "@/features/guest-explore/api/my_reservation_api";
 import { TOSS_PENDING_PAYMENT_KEY } from "@/features/guest-explore/components/contract/TossPayments";
