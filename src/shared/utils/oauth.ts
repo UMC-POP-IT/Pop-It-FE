@@ -1,4 +1,5 @@
 import type { User } from "@/types";
+import { apiFetch } from "@/shared/utils/apiClient";
 export { reissueToken } from "@/shared/utils/tokenUtils";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -95,13 +96,14 @@ export async function logoutApi(): Promise<void> {
 
 /*
  * PATCH /api/v1/users/me/mode
- * Request:  { targetMode: "HOST" | "GUEST" }
- * Response: { currentMode: "HOST" | "GUEST" }
- * 400: 호스트 미등록 → /host/host-register 로 라우팅
+ * Request:  { mode: "HOST" | "GUEST" }
+ * Response: UserInfoRes { userId, nickname, currentMode, hasHostProfile }
+ * 400: 필수값 누락/형식 오류
+ * 403: 호스트 미등록 상태에서 HOST로 전환 시도 → /host/host-register 로 라우팅
  */
 export async function switchMode(
   targetMode: "HOST" | "GUEST",
-): Promise<{ currentMode: "HOST" | "GUEST" }> {
+): Promise<User> {
   const accessToken = localStorage.getItem("access_token");
   const res = await fetch(`${BASE_URL}/api/v1/users/me/mode`, {
     method: "PATCH",
@@ -109,7 +111,7 @@ export async function switchMode(
       "Content-Type": "application/json",
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
-    body: JSON.stringify({ targetMode }),
+    body: JSON.stringify({ mode: targetMode }),
   });
   if (!res.ok) {
     const json = await res.json().catch(() => null);
@@ -121,6 +123,15 @@ export async function switchMode(
   }
   const json = await res.json();
   return json.result ?? json;
+}
+
+/*
+ * GET /api/v1/users/me — 새로고침 등으로 앱이 다시 시작될 때
+ * localStorage에 남아있는 토큰으로 로그인 상태를 복원하기 위해 사용.
+ * apiFetch를 통해 호출하므로 accessToken이 만료됐어도 401 시 자동으로 재발급 후 재시도한다.
+ */
+export async function getCurrentUser(): Promise<User> {
+  return apiFetch<User>("/api/v1/users/me");
 }
 
 export async function handleOAuthCallback(code: string): Promise<User> {

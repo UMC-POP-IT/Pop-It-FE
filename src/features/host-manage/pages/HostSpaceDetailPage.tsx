@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   mockHostSpaces,
+  mockHostReservations,
   type MockHostSpace,
 } from "@/features/host-manage/api/mock_host_data";
 import {
@@ -10,6 +11,7 @@ import {
 } from "@/features/guest-explore/api/mock_spaces";
 import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDetailGallery";
 import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetailInfo";
+import HostReservationCalendar, { type UnavailablePeriod } from "@/features/host-manage/components/HostReservationCalendar";
 
 type FetchStatus = "loading" | "success" | "notfound" | "error";
 
@@ -150,15 +152,19 @@ export const HostSpaceDetailPage = () => {
 
   const detail = toExploreSpaceDetail(space);
 
+  const unavailablePeriods: UnavailablePeriod[] = mockHostReservations
+    .filter((r) => r.spaceId === id && r.status !== "CANCELLED")
+    .map((r) => ({ startDate: r.startDate, endDate: r.endDate }));
+
   return (
     <div className="mx-auto flex w-[1200px] flex-col gap-5">
       <ExploreDetailGallery space={detail} />
 
       <div className="flex w-full items-start gap-[23px]">
-        <ExploreDetailInfo
-          space={detail}
-          variant="host"
-        />
+        <div className="w-[689px] shrink-0">
+          <ExploreDetailInfo space={detail} variant="host" />
+        </div>
+        <HostReservationCalendar unavailablePeriods={unavailablePeriods} />
       </div>
     </div>
   );

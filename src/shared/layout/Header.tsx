@@ -1,15 +1,36 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Logo from "@/shared/components/Logo";
 import { useAuthStore } from "@/store/authStore";
+import { logoutApi, switchMode } from "@/shared/utils/oauth";
 
 const Header = () => {
-  const { user, mode, setMode, openLoginModal, hostStatus, refreshHostStatus } =
+  const { user, mode, setMode, openLoginModal, hostStatus, refreshHostStatus, logout } =
     useAuthStore();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
   const [modeError, setModeError] = useState(""); // 모드 전환 실패 사유
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // 프로필 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    setIsProfileMenuOpen(false);
+    await logoutApi();
+    logout();
+    navigate("/");
+  };
 
   const handleModeToggle = async () => {
     setModeError(""); // 이전 실패 문구 지우기
@@ -26,6 +47,10 @@ const Header = () => {
     if (mode === "HOST") {
       setMode("GUEST");
       navigate("/");
+      // 서버 쪽 currentMode도 동기화 (실패해도 화면 전환은 이미 끝났으니 막지 않는다)
+      switchMode("GUEST").catch((err) => {
+        console.error("[Header] 게스트 모드 전환 서버 동기화 실패:", err);
+      });
       return;
     }
 
@@ -44,89 +69,101 @@ const Header = () => {
 
     setMode("HOST");
     navigate(status === "registered" ? "/host/spaces" : "/host/host-register");
+    if (status === "registered") {
+      // 서버 쪽 currentMode도 동기화 (실패해도 화면 전환은 이미 끝났으니 막지 않는다)
+      switchMode("HOST").catch((err) => {
+        console.error("[Header] 호스트 모드 전환 서버 동기화 실패:", err);
+      });
+    }
   };
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white drop-shadow-[0px_4px_5px_rgba(0,0,0,0.12)]">
-      <div className="mx-auto flex h-[74px] max-w-screen-xl items-center gap-8 px-10">
-        <NavLink
-          to={mode === "HOST" ? "/host/spaces" : "/"}
-          className="flex-shrink-0"
-        >
-          <Logo variant="header" />
-        </NavLink>
+      {/* 피그마: 전체 px-[40px], 좌측 gap-[32px](로고↔nav), 우측 gap-[20px] */}
+      <div className="flex h-[74px] items-center px-[76px]">
+        {/* 좌측: 로고 + nav (gap-[32px]) */}
+        <div className="flex items-center gap-8">
+          <NavLink
+            to={mode === "HOST" ? "/host/spaces" : "/"}
+            className="flex h-[74px] w-[180px] flex-shrink-0 items-center justify-center"
+          >
+            <Logo variant="header" />
+          </NavLink>
 
-        <nav className="flex gap-6">
-          {mode === "HOST" ? (
-            <>
-              <NavLink
-                to="/host/spaces"
-                className={({ isActive }) =>
-                  `pb-0.5 text-base font-bold transition-colors ${
-                    isActive
-                      ? "text-primary border-primary border-b-2"
-                      : "text-text-primary"
-                  }`
-                }
-              >
-                내 공간
-              </NavLink>
-              <NavLink
-                to="/host/reservations"
-                className={({ isActive }) =>
-                  `pb-0.5 text-base font-bold transition-colors ${
-                    isActive
-                      ? "text-primary border-primary border-b-2"
-                      : "text-text-primary"
-                  }`
-                }
-              >
-                예약 관리
-              </NavLink>
-            </>
-          ) : (
-            <>
-              <NavLink
-                to="/"
-                className={({ isActive }) =>
-                  `pb-0.5 text-base font-bold transition-colors ${
-                    isActive
-                      ? "text-primary border-primary border-b-2"
-                      : "text-text-primary"
-                  }`
-                }
-              >
-                공간탐색
-              </NavLink>
-              <button
-                onClick={() => {
-                  if (!user) {
-                    openLoginModal({ type: "navigate", path: "/reservations" });
-                    return;
+          {/* nav: 아이템 간 gap 없음, 각 아이템 w-[112px] px-[10px] */}
+          <nav className="flex h-[74px]">
+            {mode === "HOST" ? (
+              <>
+                <NavLink
+                  to="/host/spaces"
+                  className={({ isActive }) =>
+                    `flex h-full w-[112px] items-center justify-center px-[10px] text-base font-bold transition-colors ${
+                      isActive
+                        ? "text-primary [&>span]:border-b-2 [&>span]:border-[#0564f5]"
+                        : "text-text-primary"
+                    }`
                   }
-                  navigate("/reservations");
-                }}
-                aria-current={pathname === "/reservations" ? "page" : undefined}
-                className={`pb-0.5 text-base font-bold transition-colors ${
-                  pathname === "/reservations"
-                    ? "text-primary border-primary border-b-2"
-                    : "text-text-primary"
-                }`}
-              >
-                나의 예약
-              </button>
-            </>
-          )}
-        </nav>
+                >
+                  <span className="flex h-full w-[72px] items-center justify-center">내 공간</span>
+                </NavLink>
+                <NavLink
+                  to="/host/reservations"
+                  className={({ isActive }) =>
+                    `flex h-full w-[112px] items-center justify-center px-[10px] text-base font-bold transition-colors ${
+                      isActive
+                        ? "text-primary [&>span]:border-b-2 [&>span]:border-[#0564f5]"
+                        : "text-text-primary"
+                    }`
+                  }
+                >
+                  <span className="flex h-full w-[72px] items-center justify-center">예약 관리</span>
+                </NavLink>
+              </>
+            ) : (
+              <>
+                <NavLink
+                  to="/"
+                  className={({ isActive }) =>
+                    `flex h-full w-[112px] items-center justify-center px-[10px] text-base font-bold transition-colors ${
+                      isActive
+                        ? "text-primary [&>span]:border-b-2 [&>span]:border-[#0564f5]"
+                        : "text-text-primary"
+                    }`
+                  }
+                >
+                  <span className="flex h-full w-[72px] items-center justify-center">공간탐색</span>
+                </NavLink>
+                <button
+                  onClick={() => {
+                    if (!user) {
+                      openLoginModal({ type: "navigate", path: "/reservations" });
+                      return;
+                    }
+                    navigate("/reservations");
+                  }}
+                  aria-current={pathname === "/reservations" ? "page" : undefined}
+                  className={`flex h-full w-[112px] items-center justify-center px-[10px] text-base font-bold transition-colors ${
+                    pathname === "/reservations"
+                      ? "text-primary [&>span]:border-b-2 [&>span]:border-[#0564f5]"
+                      : "text-text-primary"
+                  }`}
+                >
+                  <span className="flex h-full w-[72px] items-center justify-center">나의 예약</span>
+                </button>
+              </>
+            )}
+          </nav>
+        </div>
 
+        {/* 우측: 모드전환 + 프로필 (gap-[20px]) */}
         <div className="ml-auto flex items-center gap-5">
           {/* 모드 전환 버튼 — 게스트 모드 나의 예약 탭에서는 숨김 */}
           {!hideModeToggle && (
             <button
               onClick={handleModeToggle}
-              className="bg-primary-light text-text-primary flex items-center gap-1 rounded p-1 pl-1 text-base transition-colors"
+              className="bg-primary-light text-text-primary flex items-center rounded p-[4px] text-base transition-colors"
             >
-              <span className="px-1">
+              <span className="px-[4px]">
                 {mode === "GUEST" ? "호스트 전환" : "게스트 전환"}
               </span>
               <svg
@@ -149,36 +186,54 @@ const Header = () => {
 
           {/* 로그인 상태에 따라 분기 */}
           {user ? (
-            <button className="text-text-primary flex items-center gap-3 text-base">
-              <div className="bg-primary-light flex h-9 w-9 items-center justify-center rounded-full p-2">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <circle
-                    cx="12"
-                    cy="8"
-                    r="4"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  />
-                  <path
-                    d="M4 20c0-4 4-6 8-6s8 2 8 6"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-              {user.nickname} 님
-            </button>
+            <div
+              className="relative"
+              ref={profileMenuRef}
+            >
+              <button
+                onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+                className="text-text-primary flex h-[74px] w-[164px] items-center justify-center gap-[12px] py-[14px] text-base"
+              >
+                <div className="bg-primary-light flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full p-[8px]">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      cx="12"
+                      cy="8"
+                      r="4"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M4 20c0-4 4-6 8-6s8 2 8 6"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+                {user.nickname} 님
+              </button>
+              {isProfileMenuOpen && (
+                <div className="absolute top-[64px] right-0 z-10 flex flex-col overflow-hidden rounded-[8px] border border-[#f2f2f2] bg-white px-[6px] py-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]">
+                  <button
+                    onClick={handleLogout}
+                    className="text-text-primary rounded-[4px] px-8 py-2 text-center text-base font-bold whitespace-nowrap hover:bg-[#f2f2f2]"
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <button
               onClick={() => openLoginModal()}
-              className="text-primary text-sm font-medium"
+              className="text-primary flex h-[74px] w-[164px] items-center justify-center text-base font-medium"
             >
               로그인
             </button>

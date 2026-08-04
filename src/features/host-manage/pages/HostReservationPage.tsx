@@ -12,7 +12,6 @@ import {
   approveCheckout,
   rejectCheckout,
   fetchCheckoutPhotos,
-  fetchHostReservationStatusCounts,
 } from "@/features/host-manage/api/hostApi";
 import type { ApiHostReservation, ReservationStatus } from "@/types";
 
@@ -26,7 +25,7 @@ const TAB_STATUS: ReservationStatus[] = [
 
 const TAB_LABELS = ["승인 대기", "계약 대기", "계약 완료", "사용 중", "사용 완료"];
 const EMPTY_MESSAGES = [
-  "승인 대기 중인 예약이 없어요",
+  "아직 연락 온 게스트가 없어요",
   "계약 대기 중인 예약이 없어요",
   "계약 완료된 예약이 없어요",
   "현재 사용 중인 예약이 없어요",
@@ -36,7 +35,6 @@ const EMPTY_MESSAGES = [
 export const HostReservationPage = () => {
   const navigate = useNavigate();
   const [reservations, setReservations] = useState<ApiHostReservation[]>([]);
-  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
@@ -51,41 +49,22 @@ export const HostReservationPage = () => {
   const [agreedToGuide, setAgreedToGuide] = useState(false);
 
 
-  const refreshCounts = useCallback(async () => {
-    try {
-      const result = await fetchHostReservationStatusCounts();
-      setStatusCounts(result.countsByStatus);
-    } catch {
-      setStatusCounts({});
-    }
-  }, []);
-
   const loadReservations = useCallback(async () => {
     try {
       setIsLoading(true);
       setLoadError(false);
-      const [reservationResult, countsResult] = await Promise.allSettled([
-        (async () => {
-          const all: ApiHostReservation[] = [];
-          let cursor: string | undefined = undefined;
-          while (true) {
-            const result = await fetchHostReservations({ size: 50, cursor });
-            all.push(...(result.reservations ?? []));
-            if (!result.hasNext || result.nextCursor == null) break;
-            cursor = result.nextCursor;
-          }
-          return all;
-        })(),
-        fetchHostReservationStatusCounts(),
-      ]);
-      if (reservationResult.status === "fulfilled") {
-        setReservations(reservationResult.value);
-      } else {
-        console.error("[HostReservationPage] 예약 로드 실패:", reservationResult.reason);
-        setLoadError(true);
+      const all: ApiHostReservation[] = [];
+      let cursor: string | undefined = undefined;
+      while (true) {
+        const result = await fetchHostReservations({ size: 50, cursor });
+        all.push(...(result.reservations ?? []));
+        if (!result.hasNext || result.nextCursor == null) break;
+        cursor = result.nextCursor;
       }
-      if (countsResult.status === "fulfilled") setStatusCounts(countsResult.value.countsByStatus);
-      else setStatusCounts({});
+      setReservations(all);
+    } catch (err) {
+      console.error("[HostReservationPage] 예약 로드 실패:", err);
+      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -100,10 +79,8 @@ export const HostReservationPage = () => {
       ? r.status === "USAGE_COMPLETED"
       : r.status === status;
 
-  const getTabCount = (status: ReservationStatus) => {
-    const key = status === "CHECKOUT_COMPLETED" ? "USAGE_COMPLETED" : status;
-    return statusCounts[key] ?? reservations.filter((r) => matchesTab(r, status)).length;
-  };
+  const getTabCount = (status: ReservationStatus) =>
+    reservations.filter((r) => matchesTab(r, status)).length;
 
   const tabs = TAB_LABELS.map((label, i) => ({
     label,
@@ -141,7 +118,6 @@ export const HostReservationPage = () => {
           r.reservationId === approveTargetId ? { ...r, status: result.status } : r,
         ),
       );
-      await refreshCounts();
     } catch {
       await loadReservations();
     }
@@ -158,7 +134,6 @@ export const HostReservationPage = () => {
           r.reservationId === rejectTargetId ? { ...r, status: result.status } : r,
         ),
       );
-      await refreshCounts();
     } catch {
       await loadReservations();
     }
@@ -174,7 +149,6 @@ export const HostReservationPage = () => {
           r.reservationId === checkoutApproveTargetId ? { ...r, status: result.status } : r,
         ),
       );
-      await refreshCounts();
     } catch {
       await loadReservations();
     }
@@ -192,7 +166,6 @@ export const HostReservationPage = () => {
             : r,
         ),
       );
-      await refreshCounts();
     } catch {
       await loadReservations();
     }
