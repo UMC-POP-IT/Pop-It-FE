@@ -34,11 +34,11 @@ const config: Record<
   },
   login: {
     showIcon: true,
-    iconSize: 60,
-    textWidth: 270,
-    textHeight: 52,
+    iconSize: 42,
+    textWidth: 189,
+    textHeight: 36,
     direction: "flex-row",
-    gap: "gap-[30px]",
+    gap: "gap-[21px]",
   },
 };
 

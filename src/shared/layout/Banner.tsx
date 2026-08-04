@@ -7,7 +7,7 @@ import background3 from "@/assets/banner/background_3.jpg";
 import { useAuthStore } from "@/store/authStore";
 
 // TODO: 실제 노션 소개 페이지 URL로 교체
-const NOTION_INTRO_URL = "";
+const NOTION_INTRO_URL = "https://giant-situation-2ce.notion.site/3a57ff832aa380ffbd83d16c56788eea";
 
 interface BannerSlide {
   title: string;
