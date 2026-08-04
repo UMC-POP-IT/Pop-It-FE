@@ -37,6 +37,10 @@ export interface wishedSpace {
   pricePerMonth: number;
   thumbnailUrl: string;
   wishCount: number;
+  // 백엔드에 카테고리 뱃지 & 키워드 노출을 위해 필드 추가 요청해둔 상태.
+  // 배포 전까지는 응답에 없을 수 있어 optional로 둔다.
+  spaceCategory?: string;
+  keywords?: string[];
 }
 
 export interface AiRecommendResponse {
