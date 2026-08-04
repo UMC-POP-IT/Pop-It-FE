@@ -37,7 +37,13 @@ const ReservationRequestModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={() => {
+          if (isSubmitting) return;
+          onCancel();
+        }}
+      />
       <div className="relative z-10 flex w-[590px] flex-col gap-6 rounded-xl bg-white p-8">
         <h3 className="text-text-primary text-[22px] font-bold">예약 요청</h3>
 
