@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useOutsideClick } from "@/shared/hooks/useOutsideClick";
 
 export interface FilterDropdownOption<T extends string> {
@@ -48,20 +48,75 @@ const FilterDropdown = function <T extends string>({
   maxVisibleOptions,
 }: FilterDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
+  // 키보드로 옵션 사이를 이동할 때 현재 포커스가 가 있는 옵션의 인덱스.
+  const [activeIndex, setActiveIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useOutsideClick(containerRef, () => setIsOpen(false), isOpen);
 
   const selected = options.find((option) => option.value === value) ?? options[0];
 
+  // 열릴 때 현재 선택된 옵션으로 포커스를 옮긴다.
+  useEffect(() => {
+    if (isOpen) {
+      optionRefs.current[activeIndex]?.focus();
+    }
+    // isOpen이 true로 바뀌는 시점에만 포커스를 옮기면 되고, activeIndex는 그
+    // 직전에 openDropdown에서 함께 정해두므로 여기서는 isOpen만 감지한다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  const openDropdown = () => {
+    const selectedIndex = options.findIndex((option) => option.value === value);
+    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
+    setIsOpen(true);
+  };
+
+  const closeAndReturnFocus = () => {
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  const moveActiveIndex = (delta: 1 | -1) => {
+    setActiveIndex((prev) => {
+      const next = (prev + delta + options.length) % options.length;
+      optionRefs.current[next]?.focus();
+      return next;
+    });
+  };
+
+  const handleListKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        moveActiveIndex(1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        moveActiveIndex(-1);
+        break;
+      case "Escape":
+        e.preventDefault();
+        closeAndReturnFocus();
+        break;
+      // Enter/Space는 각 옵션이 실제 <button>이라 브라우저 기본 동작으로
+      // 이미 onClick이 호출된다 - 별도 처리가 필요 없다.
+      default:
+        break;
+    }
+  };
+
   return (
     <div className="relative" ref={containerRef}>
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-label={ariaLabel}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => (isOpen ? setIsOpen(false) : openDropdown())}
         className={`flex cursor-pointer items-center gap-2 rounded-lg bg-tag-bg px-4 py-3 text-lg text-text-primary transition-colors hover:bg-tag-bg/80 focus:ring-primary focus:outline-none focus:ring-2 ${
           isOpen ? "ring-primary ring-2" : ""
         }`}
@@ -74,6 +129,7 @@ const FilterDropdown = function <T extends string>({
         <ul
           role="menu"
           aria-label={ariaLabel}
+          onKeyDown={handleListKeyDown}
           className="border-divider absolute top-full left-0 z-20 mt-2 w-max min-w-full overflow-y-auto rounded-xl border-2 bg-white p-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#d8d8d8] [&::-webkit-scrollbar-track]:bg-transparent"
           style={
             maxVisibleOptions
@@ -81,17 +137,20 @@ const FilterDropdown = function <T extends string>({
               : undefined
           }
         >
-          {options.map((option) => {
+          {options.map((option, index) => {
             const isSelected = option.value === value;
             return (
               <li key={option.value || "all"} role="none">
                 <button
+                  ref={(el) => {
+                    optionRefs.current[index] = el;
+                  }}
                   type="button"
                   role="menuitemradio"
                   aria-checked={isSelected}
                   onClick={() => {
                     onChange(option.value);
-                    setIsOpen(false);
+                    closeAndReturnFocus();
                   }}
                   className={`w-full cursor-pointer rounded-lg px-4 py-3 text-left text-lg whitespace-nowrap transition-colors ${
                     isSelected
