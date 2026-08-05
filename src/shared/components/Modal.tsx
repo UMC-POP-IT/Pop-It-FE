@@ -1,3 +1,7 @@
+import { useId } from "react";
+import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
+import iconCheckCircle from "@/assets/icons/icon_check_circle.svg";
+
 interface ModalProps {
   isOpen: boolean;
   title: string;
@@ -26,6 +30,12 @@ const Modal = ({
   onConfirm,
   onCancel,
 }: ModalProps) => {
+  const titleId = useId();
+  const dialogRef = useDialogA11y<HTMLDivElement>({
+    isOpen,
+    onClose: onCancel,
+  });
+
   if (!isOpen) return null;
 
   return (
@@ -34,31 +44,29 @@ const Modal = ({
         className="absolute inset-0 bg-black/40"
         onClick={onCancel}
       />
-      <div className="relative z-10 flex w-[590px] flex-col items-center gap-10 rounded-xl bg-white py-8">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="relative z-10 flex w-[590px] flex-col items-center gap-10 rounded-xl bg-white py-8"
+      >
         <div className="flex flex-col items-center gap-5">
-          {/* 체크 아이콘 */}
+          {/* 체크 아이콘 (Figma 기준: icon_check_circle) */}
           {showCheckIcon && (
-            <div className="bg-primary-hover flex h-[72px] w-[72px] items-center justify-center rounded-full">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M5 12L10 17L19 8"
-                  stroke="white"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
+            <img
+              src={iconCheckCircle}
+              alt=""
+              className="h-[72px] w-[72px]"
+            />
           )}
 
           <div className="flex flex-col items-center gap-2 text-center">
-            <h3 className="text-text-primary text-[22px] font-bold whitespace-pre-line">
+            <h3
+              id={titleId}
+              className="text-text-primary text-[22px] font-bold whitespace-pre-line"
+            >
               {title}
             </h3>
 

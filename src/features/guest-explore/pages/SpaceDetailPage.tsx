@@ -128,6 +128,7 @@ export const SpaceDetailPage = () => {
         {/* 본인이 등록한 공간은 예약할 수 없으므로 게스트 화면에서만 노출 */}
         {!isMine && (
           <ExploreReservationCard
+            spaceId={space.id}
             dayCost={space.cost.day}
             onLoginRequired={!user ? () => openLoginModal() : undefined}
           />
