@@ -62,6 +62,7 @@ const PendingActionExecutor = () => {
             } else {
               navigate(pendingAction.navigateTo);
             }
+            clearPendingAction();
           })
           .catch((err: unknown) => {
             const status = (err as { status?: number }).status;
@@ -69,12 +70,12 @@ const PendingActionExecutor = () => {
               // 호스트 미등록 → 호스트 등록 안내 페이지로
               navigate("/host/host-register");
             }
+            clearPendingAction();
           });
         break;
     }
-    clearPendingAction();
     // navigate·toggleWish·setMode·clearPendingAction은 안정적 참조(stable ref)라 deps 제외
-  }, [user, pendingAction]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, pendingAction]);
 
   return null;
 };
@@ -213,12 +214,14 @@ const TossPaymentResultHandler = () => {
 
 const RouteModeSync = () => {
   const { pathname } = useLocation();
-  const setMode = useAuthStore((s) => s.setMode);
+  const { mode, setMode } = useAuthStore();
 
   useEffect(() => {
     // /host/* 직접 접근 시 헤더 모드를 URL에 맞게 동기화
-    setMode(pathname.startsWith("/host") ? "HOST" : "GUEST");
-  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+    // 현재 모드와 같으면 스킵하는 방어 추가
+    const nextMode = pathname.startsWith("/host") ? "HOST" : "GUEST";
+    if (nextMode !== mode) setMode(nextMode);
+  }, [pathname]);
 
   return null;
 };
