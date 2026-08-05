@@ -1,10 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import Button from "@/shared/components/Button";
 import type { ApiHostReservation } from "@/types";
 import Authentication from "@/features/guest-explore/components/contract/Authentication";
-import SignatureBoard from "@/features/guest-explore/components/contract/SignatureBoard";
+import SignatureBoard, { type SignatureBoardRef } from "@/features/guest-explore/components/contract/SignatureBoard";
 import { formatHostDate, getDurationDays } from "@/features/host-manage/utils/dateUtils";
-import { verifyIdentity, fetchIdentityVerificationStatus } from "@/features/host-manage/api/hostApi";
+import {
+  GetPresignedURL,
+  UploadFileToPresignedURL,
+  SubmitSignature,
+} from "@/features/guest-explore/api/my_reservation_api";
 
 interface SpaceBasicInfo {
   name: string;
@@ -28,19 +32,36 @@ const HostContractModal = ({
 }: HostContractModalProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSigned, setIsSigned] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
+  const signatureBoardRef = useRef<SignatureBoardRef>(null);
 
-  const [verifyStatusError, setVerifyStatusError] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    setVerifyStatusError(false);
-    fetchIdentityVerificationStatus()
-      .then(({ isVerified }) => { if (isVerified) setIsAuthenticated(true); })
-      .catch((err) => {
-        console.error("[HostContractModal] 본인인증 상태 조회 실패:", err);
-        setVerifyStatusError(true);
+  const handleComplete = async () => {
+    const signatureBlob = await signatureBoardRef.current?.getSignatureBlob();
+    if (!signatureBlob) return;
+    setIsSubmitting(true);
+    setSubmitError(false);
+    try {
+      console.log("[HostContractModal] 1. presigned URL 요청");
+      const { uploads } = await GetPresignedURL({
+        uploadType: "CONTRACT_SIGNATURE",
+        files: [{ contentType: "image/png" }],
       });
-  }, [isOpen]);
+      const { presignedUrl, fileUrl } = uploads[0];
+      console.log("[HostContractModal] 2. S3 업로드", fileUrl);
+      const signatureFile = new File([signatureBlob], `signature_${reservation.reservationId}.png`, { type: "image/png" });
+      await UploadFileToPresignedURL(presignedUrl, signatureFile);
+      console.log("[HostContractModal] 3. SubmitSignature 호출, reservationId:", reservation.reservationId);
+      await SubmitSignature(reservation.reservationId, { signatureUrl: fileUrl });
+      console.log("[HostContractModal] 4. 완료");
+      onComplete();
+    } catch (err) {
+      console.error("[HostContractModal] 서명 제출 실패:", err);
+      setSubmitError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -132,19 +153,14 @@ const HostContractModal = ({
             </div>
           </div>
 
-          {verifyStatusError && (
+          <Authentication onIsAuthenticated={setIsAuthenticated} />
+          <SignatureBoard ref={signatureBoardRef} onIsSigned={setIsSigned} />
+
+          {submitError && (
             <p className="text-sm font-medium text-[#f74b4b]">
-              인증 상태를 확인하지 못했습니다. 아래에서 본인인증을 다시 진행해주세요.
+              서명 제출에 실패했습니다. 다시 시도해주세요.
             </p>
           )}
-          <Authentication
-            onIsAuthenticated={setIsAuthenticated}
-            onVerified={async (id) => {
-              const result = await verifyIdentity(id);
-              if (!result.isVerified) throw new Error("Identity verification was not completed");
-            }}
-          />
-          <SignatureBoard onIsSigned={setIsSigned} />
 
           <div className="flex flex-row justify-center gap-5">
             <button
@@ -157,10 +173,10 @@ const HostContractModal = ({
               variant="primary"
               size="md"
               className="w-40"
-              disabled={!(isAuthenticated && isSigned)}
-              onClick={onComplete}
+              disabled={!(isAuthenticated && isSigned) || isSubmitting}
+              onClick={handleComplete}
             >
-              작성 완료
+              {isSubmitting ? "제출 중..." : "작성 완료"}
             </Button>
           </div>
         </div>

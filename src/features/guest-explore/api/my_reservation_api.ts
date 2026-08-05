@@ -179,7 +179,7 @@ export const UploadFileToPresignedURL = async (presignedUrl: string, file: File)
 
 // 업로드 - presigned url 발급 ~ DONE
 export const GetPresignedURL = (request: GetPresignedURLRequest) =>
-    apiFetch<GetPresignedURLResponse>("/uploads/presigned-url", {
+    apiFetch<GetPresignedURLResponse>("/api/v1/uploads/presigned-url", {
         method: "POST",
         body: JSON.stringify(request),
 });
