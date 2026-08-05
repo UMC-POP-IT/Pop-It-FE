@@ -27,6 +27,22 @@ export interface recommendSpace {
   thumbnailUrl: string;
 }
 
+export interface wishedSpace {
+  spaceId: number;
+  buildingName: string;
+  roadAddress: string;
+  basicInfo: string;
+  pricePerDay: number;
+  pricePerWeek: number;
+  pricePerMonth: number;
+  thumbnailUrl: string;
+  wishCount: number;
+  // 백엔드에 카테고리 뱃지 & 키워드 노출을 위해 필드 추가 요청해둔 상태.
+  // 배포 전까지는 응답에 없을 수 있어 optional로 둔다.
+  spaceCategory?: string;
+  keywords?: string[];
+}
+
 export interface AiRecommendResponse {
   spaces: RecommendedSpace[];
   hasNext: boolean; // 다음 페이지 있는지
@@ -38,6 +54,16 @@ export interface RealTimeRecommendResponse {
   spaces: recommendSpace[];
 }
 
+export interface wishToggleResponse {
+    spaceId: number;
+    isWishlisted: boolean;
+}
+
+export interface getWishListResponse {
+  wishlist: wishedSpace[];
+  hasNext: boolean;
+}
+
 // 게스트 - AI 맞춤형 공간 추천 조회
 export const getAiRecommend = (size = 10) =>
   apiFetch<AiRecommendResponse>(`/api/v1/spaces/ai-recommended?size=${size}`);
@@ -45,3 +71,11 @@ export const getAiRecommend = (size = 10) =>
 // 게스트 - 실시간 추천 공간 조회
 export const getRealTimeRecommend = () =>
   apiFetch<RealTimeRecommendResponse>("/api/v1/spaces/realtime-recommended");
+
+// 찜 - 찜 토글
+export const wishToggle = (spaceId: number) =>
+  apiFetch<wishToggleResponse>(`/api/v1/spaces/${spaceId}/wishlist`, { method: "POST" });
+
+// 찜 - 찜한 공간 조회
+export const getWishList = (page = 0, size = 12) =>
+  apiFetch<getWishListResponse>(`/api/v1/users/me/wishlist?page=${page}&size=${size}`);

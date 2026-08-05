@@ -5,7 +5,7 @@ import Footer from "./Footer";
 import Modal from "@/shared/components/Modal";
 import { LoginModal } from "@/shared/components/LoginModal";
 import { useAuthStore } from "@/store/authStore";
-import { useWishStore } from "@/store/wishStore";
+import { useWishGuard } from "@/shared/hooks/useWishGuard";
 import { handleOAuthCallback, switchMode, getCurrentUser } from "@/shared/utils/oauth";
 import { PaymentApproval } from "@/features/guest-explore/api/my_reservation_api";
 import { TOSS_PENDING_PAYMENT_KEY } from "@/features/guest-explore/components/contract/TossPayments";
@@ -45,7 +45,9 @@ const PendingActionExecutor = () => {
     if (!user || !pendingAction) return;
     switch (pendingAction.type) {
       case "wish":
-        toggleWish(pendingAction.spaceId);
+        handleWishToggle(pendingAction.spaceId).catch((err: unknown) => {
+          console.error("Pending wishToggle 실패: ", err);
+        });
         break;
       case "navigate":
         navigate(pendingAction.path);
