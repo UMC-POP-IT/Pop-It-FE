@@ -65,7 +65,7 @@ const Banner = () => {
           {slide.title}
         </h2>
         <p className="text-sm opacity-80 md:text-base">{slide.subtitle}</p>
-        <div aria-atomic="true" className="absolute right-10 bottom-6 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white md:right-16 aria-live">
+        <div aria-atomic="true" aria-live="polite" className="absolute right-10 bottom-6 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white md:right-16">
           {current + 1} / {total}
         </div>
       </div>
@@ -76,7 +76,11 @@ const Banner = () => {
         onClick={() => goTo(current - 1)}
         className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-black/20 p-1.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/30"
       >
-        <img src={iconChevronRight} alt="" className="h-4 w-4 rotate-180 invert"/>
+        <img
+          src={iconChevronRight}
+          alt=""
+          className="h-4 w-4 rotate-180 invert"
+        />
       </button>
       <button
         type="button"
