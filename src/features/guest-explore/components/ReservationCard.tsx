@@ -46,7 +46,7 @@ const getCardMeta = (r: Reservation): CardMeta => {
         // checkoutRejected 필드로만 판단 가능. Reservation 응답에 해당 필드가 추가되면 교체할 것.
         // USAGE_COMPLETED는 "아직 사진 미제출" 정상 케이스도 포함하므로, 그때까지는 오탐(정상 케이스에
         // 거절 문구 노출)을 막기 위해 항상 false로 둔다.
-        isPhotoRejected: true,
+        isPhotoRejected: false,
         isDone: true
       };
   }
