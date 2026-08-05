@@ -38,7 +38,7 @@ const PendingActionExecutor = () => {
   const clearPendingAction = useAuthStore((s) => s.clearPendingAction);
   const setMode = useAuthStore((s) => s.setMode);
   const refreshHostStatus = useAuthStore((s) => s.refreshHostStatus);
-  const toggleWish = useWishStore((s) => s.toggleWish);
+  const { handleWishToggle } = useWishGuard();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -76,7 +76,7 @@ const PendingActionExecutor = () => {
           });
         break;
     }
-    // navigate·toggleWish·setMode·clearPendingAction은 안정적 참조(stable ref)라 deps 제외
+    // navigate·handleWishToggle·setMode·clearPendingAction은 안정적 참조(stable ref)라 deps 제외
   }, [user, pendingAction]);
 
   return null;
