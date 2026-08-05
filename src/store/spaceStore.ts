@@ -16,7 +16,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
     set((state) => ({
       spaces: state.spaces.map((space) =>
         space.id === spaceId
-          ? { ...space, heartCount: Math.max(space.heartCount + delta) } // 혹시 모를 음수 방지.. 하한을 0으로 설정
+          ? { ...space, heartCount: Math.max(0, space.heartCount + delta) } // 혹시 모를 음수 방지.. 하한을 0으로 설정
           : space,
       ),
     })),
