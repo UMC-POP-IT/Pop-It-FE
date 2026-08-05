@@ -1,22 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import iconChevronRight from "@/assets/icons/icon_chevron_right.svg";
+import { useEffect, useState, useRef } from "react";
 import background1 from "@/assets/banner/background_1.jpg";
 import background2 from "@/assets/banner/background_2.jpg";
 import background3 from "@/assets/banner/background_3.jpg";
-import { useAuthStore } from "@/store/authStore";
-
-// TODO: 실제 노션 소개 페이지 URL로 교체
-const NOTION_INTRO_URL = "https://giant-situation-2ce.notion.site/3a57ff832aa380ffbd83d16c56788eea";
 
 interface BannerSlide {
   title: string;
   subtitle: string;
   image: string;
   textClassName: string;
-  cta?:
-    | { label: string; type: "external"; href: string }
-    | { label: string; type: "host" };
 }
 
 const slides: BannerSlide[] = [
@@ -25,7 +16,6 @@ const slides: BannerSlide[] = [
     subtitle: "비어 있던 공간을 브랜드의 빛나는 기회로 바꿔보세요",
     image: background1,
     textClassName: "text-white",
-    cta: { label: "서비스 소개 보기", type: "external", href: NOTION_INTRO_URL },
   },
   {
     title: "필요한 순간에,\n필요한 공간을",
@@ -38,29 +28,18 @@ const slides: BannerSlide[] = [
     subtitle: "공간을 필요한 기간만 공유하고 새로운 수익 기회를 만들어보세요",
     image: background3,
     textClassName: "text-white",
-    cta: { label: "호스트로 시작하기", type: "host" },
   },
 ];
 
-const AUTOPLAY_INTERVAL_MS = 5000;
+const AUTOPLAY_INTERVAL_MS = 40000;
 const SWIPE_THRESHOLD_PX = 50;
 
 const Banner = () => {
-  const navigate = useNavigate();
-  const setMode = useAuthStore((state) => state.setMode);
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const total = slides.length;
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (isPaused) return;
-    const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % total);
-    }, AUTOPLAY_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [isPaused, total]);
 
   const goTo = (index: number) => setCurrent((index + total) % total);
 
@@ -92,15 +71,15 @@ const Banner = () => {
     resetTouchState();
   };
 
-  // 헤더의 "호스트 전환" 버튼과 동일한 동작
-  const startHosting = () => {
-    setMode("HOST");
-    navigate("/host/spaces");
-  };
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % total);
+    }, AUTOPLAY_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [isPaused, total]);
 
   const slide = slides[current];
-  const ctaClassName =
-    "mt-2 flex w-fit items-center gap-1 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-text-primary transition-colors hover:bg-white/90";
 
   return (
     <div
@@ -119,49 +98,10 @@ const Banner = () => {
           {slide.title}
         </h2>
         <p className="text-sm opacity-80 md:text-base">{slide.subtitle}</p>
-        {slide.cta?.type === "external" && (
-          <a
-            href={slide.cta.href || undefined}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={ctaClassName}
-          >
-            {slide.cta.label}
-            <img src={iconChevronRight} alt="" className="h-4 w-4" />
-          </a>
-        )}
-        {slide.cta?.type === "host" && (
-          <button type="button" onClick={startHosting} className={`cursor-pointer ${ctaClassName}`}>
-            {slide.cta.label}
-            <img src={iconChevronRight} alt="" className="h-4 w-4" />
-          </button>
-        )}
-
-        <div aria-atomic="true" className="absolute right-10 bottom-6 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white md:right-16 aria-live">
+        <div aria-atomic="true" aria-live="polite" className="absolute right-10 bottom-6 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white md:right-16">
           {current + 1} / {total}
         </div>
       </div>
-
-      <button
-        type="button"
-        aria-label="이전 배너"
-        onClick={() => goTo(current - 1)}
-        className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-black/20 p-1.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/30"
-      >
-        <img
-          src={iconChevronRight}
-          alt=""
-          className="h-4 w-4 rotate-180 invert"
-        />
-      </button>
-      <button
-        type="button"
-        aria-label="다음 배너"
-        onClick={() => goTo(current + 1)}
-        className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-black/20 p-1.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/30"
-      >
-        <img src={iconChevronRight} alt="" className="h-4 w-4 invert" />
-      </button>
     </div>
   );
 };

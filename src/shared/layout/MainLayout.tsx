@@ -37,6 +37,7 @@ const PendingActionExecutor = () => {
   const pendingAction = useAuthStore((s) => s.pendingAction);
   const clearPendingAction = useAuthStore((s) => s.clearPendingAction);
   const setMode = useAuthStore((s) => s.setMode);
+  const refreshHostStatus = useAuthStore((s) => s.refreshHostStatus);
   const { handleWishToggle } = useWishGuard();
   const navigate = useNavigate();
 
@@ -53,23 +54,30 @@ const PendingActionExecutor = () => {
         break;
       case "modeToggle":
         switchMode(pendingAction.targetMode)
-          .then(() => {
+          .then(async () => {
             setMode(pendingAction.targetMode);
-            navigate(pendingAction.navigateTo);
+            // 로그인 전에 저장해둔 navigateTo는 그 시점엔 hostStatus를 알 수 없어 신뢰할 수 없다.
+            // HOST 전환이면 로그인 직후 실제 등록 여부를 다시 조회해 목적지를 정한다.
+            if (pendingAction.targetMode === "HOST") {
+              const status = await refreshHostStatus();
+              navigate(status === "registered" ? "/host/spaces" : "/host/host-register");
+            } else {
+              navigate(pendingAction.navigateTo);
+            }
+            clearPendingAction();
           })
           .catch((err: unknown) => {
             const status = (err as { status?: number }).status;
-            if (status === 400) {
+            if (status === 403) {
               // 호스트 미등록 → 호스트 등록 안내 페이지로
               navigate("/host/host-register");
             }
+            clearPendingAction();
           });
         break;
     }
-    clearPendingAction();
-    // navigate·setMode·clearPendingAction은 안정적 참조(stable ref)이고, handleWishToggle은
-    // pendingAction 처리 시점에 한 번만 실행하면 되므로 deps에서 제외
-  }, [user, pendingAction]); // eslint-disable-line react-hooks/exhaustive-deps
+    // navigate·handleWishToggle·setMode·clearPendingAction은 안정적 참조(stable ref)라 deps 제외
+  }, [user, pendingAction]);
 
   return null;
 };
@@ -208,18 +216,23 @@ const TossPaymentResultHandler = () => {
 
 const RouteModeSync = () => {
   const { pathname } = useLocation();
+  const mode = useAuthStore((s) => s.mode);
   const setMode = useAuthStore((s) => s.setMode);
 
   useEffect(() => {
     // /host/* 직접 접근 시 헤더 모드를 URL에 맞게 동기화
-    setMode(pathname.startsWith("/host") ? "HOST" : "GUEST");
-  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+    // 현재 모드와 같으면 스킵하는 방어 추가
+    const nextMode = pathname.startsWith("/host") ? "HOST" : "GUEST";
+    if (nextMode !== mode) setMode(nextMode);
+  }, [pathname]);
 
   return null;
 };
 
 export const MainLayout = () => (
-  <div className="bg-bg flex min-h-screen flex-col">
+  // overflow-x-clip: Banner의 -mx-[50vw] w-screen full-bleed가 스크롤바 너비만큼
+  // 뷰포트를 넘겨 가로 스크롤을 유발하므로, 뷰포트 폭인 이 루트에서 그 여분만 잘라낸다.
+  <div className="bg-bg flex min-h-screen flex-col overflow-x-clip">
     <Header />
     <main className="mx-auto w-full max-w-screen-xl flex-1 px-6 py-8">
       <Outlet />
