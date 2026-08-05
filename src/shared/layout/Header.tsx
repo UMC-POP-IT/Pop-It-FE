@@ -184,7 +184,7 @@ const Header = () => {
               onClick={handleModeToggle}
               className="bg-primary-light text-text-primary flex items-center rounded p-[4px] text-base transition-colors"
             >
-              <span className="px-[4px]">
+              <span className="hidden px-[4px] md:inline">
                 {mode === "GUEST" ? "호스트 전환" : "게스트 전환"}
               </span>
               <svg
@@ -261,7 +261,7 @@ const Header = () => {
               )}
             </div>
           ) : (
-            <div className="flex h-[74px] w-[164px] items-center justify-center">
+            <div className="flex h-[74px] w-auto items-center justify-center md:w-[164px]">
               <button
                 onClick={() => openLoginModal()}
                 className="flex h-[40px] w-full items-center justify-center rounded-[8px] border border-[#3783f7] bg-white px-[24px] py-[6px] text-base leading-[1.4] font-bold text-[#0564f5] whitespace-nowrap"
