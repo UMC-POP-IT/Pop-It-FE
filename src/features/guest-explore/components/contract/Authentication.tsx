@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as PortOne from "@portone/browser-sdk/v2";
 import kakaoIcon from "@/features/guest-explore/icons/Kakao.png";
 import naverIcon from "@/features/guest-explore/icons/Naver.png";
@@ -13,6 +13,14 @@ interface AuthenticationProps {
 
 const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) => {
   const [status, setStatus] = useState<"idle" | "checking" | "pending" | "done" | "error">("checking");
+  // polling 도중 컴포넌트가 언마운트되면 이후 상태/콜백 갱신을 막기 위한 플래그
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     let isStale = false;
@@ -46,6 +54,7 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
   const pollVerificationStatus = async (retries = 3, delayMs = 1500): Promise<boolean> => {
     for (let i = 0; i < retries; i++) {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
+      if (!isMountedRef.current) return false; // 언마운트된 경우 남은 재조회를 중단
       try {
         const { isVerified } = await GetVerificationStatus();
         if (isVerified) return true;
@@ -76,15 +85,26 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
 
     try {
       await RequestVerification({ identityVerificationId });
-      await onVerified?.(identityVerificationId);
-      setStatus("done");
-      onIsAuthenticated(true); // 인증 성공 처리
     } catch {
       // PortOne 인증 자체는 성공했지만, 서버에 인증 결과가 반영되기까지 약간의 지연이 있을 수 있어
       // 즉시 실패 처리하지 않고 상태를 재조회해 확인한 뒤 최종 실패 여부를 판단한다.
       const verified = await pollVerificationStatus();
-      setStatus(verified ? "done" : "error");
-      onIsAuthenticated(verified);
+      if (!isMountedRef.current) return; // 언마운트 이후 도착한 응답으로 상태를 갱신하지 않음
+      if (!verified) {
+        setStatus("error");
+        onIsAuthenticated(false);
+        return;
+      }
+    }
+
+    try {
+      await onVerified?.(identityVerificationId);
+      setStatus("done");
+      onIsAuthenticated(true); // 인증 성공 처리
+    } catch {
+      // 서버 인증 반영과 무관한 완료 콜백 자체의 실패이므로 재조회로 처리하지 않는다.
+      setStatus("error");
+      onIsAuthenticated(false);
     }
   };
 
