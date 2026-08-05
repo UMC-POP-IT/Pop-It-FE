@@ -34,7 +34,7 @@ const Modal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
         className="absolute inset-0 bg-black/40"
-        onClick={onCancel}
+        onClick={confirmDisabled ? undefined : onCancel}
       />
       <div className="relative z-10 flex w-[590px] flex-col items-center gap-10 rounded-xl bg-white py-8">
         <div className="flex flex-col items-center gap-5">
@@ -77,6 +77,7 @@ const Modal = ({
             {onCancel && (
               <button
                 onClick={onCancel}
+                disabled={confirmDisabled}
                 className="bg-surface-blue text-text-primary hover:bg-primary-light h-14 w-[184px] rounded-lg text-lg font-medium"
               >
                 {cancelLabel}
