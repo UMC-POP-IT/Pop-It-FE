@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 interface UseDialogA11yOptions {
   /** 대화상자가 열려 있는지 여부 */
@@ -27,9 +27,6 @@ export const useDialogA11y = <T extends HTMLElement>({
   initialFocusRef,
 }: UseDialogA11yOptions) => {
   const dialogRef = useRef<T | null>(null);
-  const triggerRef = useRef<HTMLElement | null>(null);
-import { useEffect, useLayoutEffect, useRef } from "react";
-
   const triggerRef = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
 
