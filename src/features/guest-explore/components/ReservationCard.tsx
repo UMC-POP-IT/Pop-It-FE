@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Badge from "@/shared/components/Badge";
 import Button from "@/shared/components/Button";
 import Modal from "@/shared/components/Modal";
 import { GetPaymentInfo, GetPaymentInfoResponse, GetPresignedURL, Reservation, Status, SubmitCheckOutPhoto, UploadFileToPresignedURL } from "../api/my_reservation_api";
@@ -47,7 +46,7 @@ const getCardMeta = (r: Reservation): CardMeta => {
         // checkoutRejected 필드로만 판단 가능. Reservation 응답에 해당 필드가 추가되면 교체할 것.
         // USAGE_COMPLETED는 "아직 사진 미제출" 정상 케이스도 포함하므로, 그때까지는 오탐(정상 케이스에
         // 거절 문구 노출)을 막기 위해 항상 false로 둔다.
-        isPhotoRejected: false,
+        isPhotoRejected: true,
         isDone: true
       };
   }
@@ -174,79 +173,83 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   }, [reservation.reservationId, reservation.status]);
 
   return (
-    <div className="border-border flex flex-col gap-4 border-b py-4 last:border-none sm:flex-row">
-      <img
-        src={reservation.space.thumbnailUrl}
-        alt={reservation.space.buildingName}
-        className="flex items-center justify-center bg-tag-bg h-40 w-full flex-none sm:h-45 sm:w-45"
-      />
+    <div className="border-divider flex items-start justify-between gap-7 border-b py-5 last:border-none">
+      <div className="flex items-start gap-7">
+        {/* 이미지 */}
+        <div className="bg-thumbnail-bg h-[190px] w-[190px] flex-shrink-0 overflow-hidden">
+          <img
+            src={reservation.space.thumbnailUrl}
+            alt={reservation.space.buildingName}
+            className="h-full w-full object-cover"
+          />
+        </div>
 
-      {/* Button */}
-      <div className="flex flex-1 flex-col gap-1.5">
-        <Badge variant="pending" label={label} />
-        <span className="ml-2 text-text-primary text-base font-bold">{reservation.space.buildingName}</span>
-        <span className="ml-2 text-text-secondary text-sm">
-          {formatDate(reservation.startDate)} ~ {formatDate(reservation.endDate)}
-        </span>
-
-        <div className="ml-2 mt-auto flex flex-col gap-1 pt-2">
-          {needsPhotoVerification && (
-            (isPhotoRejected ?
-              <span className="self-end text-red-400 text-sm mr-44 whitespace-pre-wrap">{"호스트가 퇴실 승인을\n거절했습니다 다시 인증해주세요"}</span> :
-              <span className="self-end text-primary text-sm mr-14">사진 인증이 필요합니다 (필수)</span>
-            )
-          )}
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-text-secondary text-sm">
-              총 금액:{" "}
-              <span className="text-text-primary text-base font-bold">
-                {reservation.totalPrice.toLocaleString()}원
-              </span>
-            </span>
-            <div className="flex gap-2">
-              {isDone &&
-                (needsPhotoVerification ? (
-                  <>
-                    <Button variant="primary" size="sm" onClick={() => setIsPhotoModalOpen(true)}>
-                      사진 인증
-                    </Button>
-                    {isPhotoRejected && (
-                      <Button variant="outline" size="sm">
-                        거절된 사진
-                      </Button>
-                    )}
-                  </>
-                ) : (
-                  <Button variant="outline" size="sm" disabled>
-                    인증 완료
-                  </Button>
-                ))}
-              <Button className="border-none! bg-gray-200! text-black!" variant="outline" size="sm" onClick={() => navigate(`/spaces/${reservation.space.spaceId}`)}>
-                공간 상세
-              </Button>
-              {showCancel && (
-                <Button variant="danger" size="sm" onClick={() => setIsCancelModalOpen(true)}>
-                  예약 취소
-                </Button>
-              )}
-              {showContract && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  disabled={!paymentInfo}
-                  onClick={() => setisPaymentModalOpen(true)}
-                >
-                  계약 하기
-                </Button>
-              )}
-              {showContract && isPaymentInfoError && (
-                <span className="self-center text-red-400 text-sm">결제 정보를 불러오지 못했습니다</span>
-              )}
+        {/* 텍스트 */}
+        <div className="flex h-[190px] flex-col items-start justify-between">
+          <div className="flex flex-col items-start gap-2">
+            <span className="text-primary text-base font-bold">{label}</span>
+            <div className="flex flex-col items-start gap-1">
+              <p className="text-xl font-bold text-black">{reservation.space.buildingName}</p>
+              <p className="text-text-primary text-base font-medium">
+                {formatDate(reservation.startDate)} ~ {formatDate(reservation.endDate)}
+              </p>
             </div>
           </div>
+          <p className="text-text-primary text-lg font-medium">
+            총 금액: <span className="font-bold">{reservation.totalPrice.toLocaleString()}</span>원
+          </p>
         </div>
       </div>
-      
+
+      {/* 버튼 */}
+      <div className="flex h-[190px] flex-shrink-0 flex-col items-end justify-end gap-2">
+        {needsPhotoVerification && (
+          isPhotoRejected ?
+            <span className="self-start text-left text-red-400 text-sm whitespace-pre-wrap">{"호스트가 퇴실 승인을\n거절했습니다 다시 인증해주세요"}</span> :
+            <span className="self-end text-primary text-sm">사진 인증이 필요합니다 (필수)</span>
+        )}
+        {showContract && isPaymentInfoError && (
+          <span className="self-end text-red-400 text-sm">결제 정보를 불러오지 못했습니다</span>
+        )}
+        <div className="flex items-center gap-1">
+          {isDone &&
+            (needsPhotoVerification ? (
+              <>
+                <Button variant="primary" size="sm" onClick={() => setIsPhotoModalOpen(true)}>
+                  사진 인증
+                </Button>
+                {isPhotoRejected && (
+                  <Button className="border-none! bg-[#F0F6FE]! text-black!" variant="outline" size="sm">
+                    거절된 사진
+                  </Button>
+                )}
+              </>
+            ) : (
+              <Button className="border-none! bg-[#F0F6FE]! text-primary!" size="sm" disabled>
+                인증 완료
+              </Button>
+            ))}
+          <Button className="border-none! bg-[#F0F6FE]! text-black!" variant="outline" size="sm" onClick={() => navigate(`/spaces/${reservation.space.spaceId}`)}>
+            공간 상세
+          </Button>
+          {showCancel && (
+            <Button variant="cancel" size="sm" onClick={() => setIsCancelModalOpen(true)}>
+              예약 취소
+            </Button>
+          )}
+          {showContract && (
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={!paymentInfo}
+              onClick={() => setisPaymentModalOpen(true)}
+            >
+              계약 하기
+            </Button>
+          )}
+        </div>
+      </div>
+
       {/* Reservation Cancel Modal */}
       <Modal
         isOpen={isCancelModalOpen}

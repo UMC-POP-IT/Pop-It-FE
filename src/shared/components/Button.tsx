@@ -1,7 +1,7 @@
 import { type ButtonHTMLAttributes } from "react";
 
 type ButtonVariant =
-  "primary" | "outline" | "danger" | "kakao" | "google" | "ghost" | "black" | "gray";
+  "primary" | "outline" | "danger" | "kakao" | "google" | "ghost" | "black" | "gray" | "cancel";
 type ButtonSize = "sm" | "md" | "lg" | "nav";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -18,6 +18,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   ghost: "bg-transparent text-text-secondary hover:bg-bg",
   black: "bg-text-primary text-white hover:bg-gray-800",
   gray: "bg-tag-bg text-text-tertiary hover:bg-gray-200",
+  cancel: "hover:bg-danger-light h-10 w-[108px] rounded-lg bg-[#fff3f3] text-base font-bold text-[#f74b4b]",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
