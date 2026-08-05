@@ -84,7 +84,7 @@ export const HostReservationCard = ({
               </span>
               <div className="flex flex-col items-start gap-1">
                 <p className="text-xl font-bold text-black">{space.buildingName}</p>
-                <p className="text-text-primary text-base">
+                <p className="text-text-primary text-base font-medium">
                   {formatDate(startDate)} ~ {formatDate(endDate)}
                 </p>
               </div>
@@ -104,19 +104,19 @@ export const HostReservationCard = ({
               <>
                 <button
                   onClick={onDetail}
-                  className="bg-surface-blue text-text-primary h-10 rounded-lg px-6 py-1.5 text-base font-bold"
+                  className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 rounded-lg px-6 py-1.5 text-base font-bold"
                 >
                   공간 상세
                 </button>
                 <button
                   onClick={onReject}
-                  className="text-danger h-10 w-[107px] text-base font-bold"
+                  className="hover:bg-danger-light h-10 w-[108px] rounded-lg bg-[#fff3f3] text-base font-bold text-[#f74b4b]"
                 >
                   예약 거절
                 </button>
                 <button
                   onClick={onApprove}
-                  className="bg-primary-hover h-10 w-[107px] rounded-lg text-base font-bold text-white"
+                  className="bg-primary-hover hover:bg-primary h-10 w-[108px] rounded-lg text-base font-bold text-white"
                 >
                   예약 승인
                 </button>
@@ -128,7 +128,7 @@ export const HostReservationCard = ({
               status === "IN_USE") && (
               <button
                 onClick={onDetail}
-                className="bg-surface-blue text-text-primary h-10 rounded-lg px-6 py-1.5 text-base font-bold"
+                className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 rounded-lg px-6 py-1.5 text-base font-bold"
               >
                 공간 상세
               </button>
@@ -138,25 +138,25 @@ export const HostReservationCard = ({
               <>
                 <button
                   onClick={onDetail}
-                  className="h-10 rounded-lg bg-[#f0f6fe] px-6 py-1.5 text-base font-bold text-[#121212]"
+                  className="hover:bg-primary-light h-10 rounded-lg bg-[#f0f6fe] px-6 py-1.5 text-base font-bold text-[#121212]"
                 >
                   공간 상세
                 </button>
                 <button
                   onClick={onPhotoView}
-                  className="h-10 rounded-lg bg-[#f0f6fe] px-6 py-1.5 text-base font-bold text-[#121212]"
+                  className="hover:bg-primary-light h-10 rounded-lg bg-[#f0f6fe] px-6 py-1.5 text-base font-bold text-[#121212]"
                 >
                   퇴실 사진 보기
                 </button>
                 <button
                   onClick={onCheckoutReject}
-                  className="h-10 w-[108px] rounded-lg bg-[#fff3f3] px-6 py-1.5 text-base font-bold text-[#f74b4b]"
+                  className="hover:bg-danger-light h-10 w-[108px] rounded-lg bg-[#fff3f3] px-6 py-1.5 text-base font-bold text-[#f74b4b]"
                 >
                   퇴실 거부
                 </button>
                 <button
                   onClick={onCheckoutApprove}
-                  className="h-10 w-[108px] rounded-lg bg-[#3783f7] px-6 py-1.5 text-base font-bold text-white"
+                  className="hover:bg-primary h-10 w-[108px] rounded-lg bg-[#3783f7] px-6 py-1.5 text-base font-bold text-white"
                 >
                   퇴실 승인
                 </button>
@@ -171,7 +171,7 @@ export const HostReservationCard = ({
                 <div className="flex items-center gap-1">
                   <button
                     onClick={onDetail}
-                    className="bg-surface-blue text-text-primary h-10 rounded-lg px-6 py-1.5 text-base font-bold"
+                    className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 rounded-lg px-6 py-1.5 text-base font-bold"
                   >
                     공간 상세
                   </button>

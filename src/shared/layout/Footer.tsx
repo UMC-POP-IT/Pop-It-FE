@@ -13,8 +13,8 @@ const Footer = () => (
   <footer className="bg-bg-footer mt-20 min-h-[302px] w-full">
     <div className="mx-auto flex max-w-screen-xl items-start justify-between gap-8 px-30 py-15">
       <div className="flex flex-col gap-5">
-        <p className="text-text-tag text-xs font-medium">주식회사 팝잇</p>
-        <div className="text-text-tag flex flex-col gap-1 text-[10px] tracking-[-0.1px] leading-[1.5]">
+        <p className="text-text-tag text-sm font-medium">주식회사 팝잇</p>
+        <div className="text-text-tag flex flex-col gap-1 text-xs tracking-[-0.1px] leading-[1.5]">
           <p>대표 : OOO | 사업자등록번호 : 000-00-00000 | 통신판매업 신고</p>
           <p>번호 : 2026-서울OO-0000 | 주소 : 서울특별시 OO구 OO로 00, 0층</p>
           <p>이메일 : contact@pop-it.kr | 고객센터 : 0000-0000</p>
@@ -29,14 +29,14 @@ const Footer = () => (
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-text-tag hover:text-primary text-[10px] font-bold tracking-[-0.1px] transition-colors"
+                  className="text-text-tag hover:text-primary text-xs font-bold tracking-[-0.1px] transition-colors"
                 >
                   {label}
                 </a>
               </Fragment>
             ))}
           </div>
-          <p className="text-text-tag text-[10px] tracking-[-0.1px]">
+          <p className="text-text-tag text-xs tracking-[-0.1px]">
             팝잇은 통신판매중개자로서 공간 제공자와 이용자 간 거래를 연결하는
             플랫폼입니다.
             <br />
@@ -44,7 +44,7 @@ const Footer = () => (
             이용정책에 따릅니다.
           </p>
         </div>
-        <p className="text-text-tag text-[8px] font-bold tracking-[-0.08px]">
+        <p className="text-text-tag text-[10px] font-bold tracking-[-0.08px]">
           © POP-IT Corp. All rights reserved.
         </p>
       </div>

@@ -5,24 +5,48 @@ import Footer from "./Footer";
 import Modal from "@/shared/components/Modal";
 import { LoginModal } from "@/shared/components/LoginModal";
 import { useAuthStore } from "@/store/authStore";
-import { useWishStore } from "@/store/wishStore";
-import { handleOAuthCallback, switchMode } from "@/shared/utils/oauth";
+import { useWishGuard } from "@/shared/hooks/useWishGuard";
+import { handleOAuthCallback, switchMode, getCurrentUser } from "@/shared/utils/oauth";
 import { PaymentApproval } from "@/features/guest-explore/api/my_reservation_api";
 import { TOSS_PENDING_PAYMENT_KEY } from "@/features/guest-explore/components/contract/TossPayments";
+
+// 새로고침 시 authStore의 user는 초기화되지만 localStorage의 토큰은 남아있으므로,
+// 앱 시작 시 토큰이 있으면 /users/me로 로그인 상태를 복원한다.
+const SessionBootstrap = () => {
+  const login = useAuthStore((s) => s.login);
+
+  useEffect(() => {
+    if (!localStorage.getItem("access_token")) return;
+    getCurrentUser()
+      .then((user) => {
+        const isHostPath = window.location.pathname.startsWith("/host");
+        login(isHostPath ? { ...user, currentMode: "HOST" } : user);
+      })
+      .catch(() => {
+        // accessToken/refreshToken 모두 만료 등 복원 실패 → 남은 토큰 정리
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+      });
+  }, [login]);
+
+  return null;
+};
 
 const PendingActionExecutor = () => {
   const user = useAuthStore((s) => s.user);
   const pendingAction = useAuthStore((s) => s.pendingAction);
   const clearPendingAction = useAuthStore((s) => s.clearPendingAction);
   const setMode = useAuthStore((s) => s.setMode);
-  const toggleWish = useWishStore((s) => s.toggleWish);
+  const { handleWishToggle } = useWishGuard();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!user || !pendingAction) return;
     switch (pendingAction.type) {
       case "wish":
-        toggleWish(pendingAction.spaceId);
+        handleWishToggle(pendingAction.spaceId).catch((err: unknown) => {
+          console.error("Pending wishToggle 실패: ", err);
+        });
         break;
       case "navigate":
         navigate(pendingAction.path);
@@ -43,7 +67,8 @@ const PendingActionExecutor = () => {
         break;
     }
     clearPendingAction();
-    // navigate·toggleWish·setMode·clearPendingAction은 안정적 참조(stable ref)라 deps 제외
+    // navigate·setMode·clearPendingAction은 안정적 참조(stable ref)이고, handleWishToggle은
+    // pendingAction 처리 시점에 한 번만 실행하면 되므로 deps에서 제외
   }, [user, pendingAction]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
@@ -188,7 +213,7 @@ const RouteModeSync = () => {
   useEffect(() => {
     // /host/* 직접 접근 시 헤더 모드를 URL에 맞게 동기화
     setMode(pathname.startsWith("/host") ? "HOST" : "GUEST");
-  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps (setMode는 stable ref)
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 };
@@ -201,6 +226,7 @@ export const MainLayout = () => (
     </main>
     <Footer />
     <LoginModal />
+    <SessionBootstrap />
     <PendingActionExecutor />
     <RouteModeSync />
     <OAuthCallbackHandler />

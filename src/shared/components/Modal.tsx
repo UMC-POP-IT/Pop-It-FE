@@ -75,7 +75,7 @@ const Modal = ({
             <button
               onClick={onConfirm}
               disabled={confirmDisabled}
-              className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="bg-primary-hover hover:bg-primary h-14 w-[184px] rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {confirmLabel}
             </button>
@@ -85,7 +85,7 @@ const Modal = ({
             {onCancel && (
               <button
                 onClick={onCancel}
-                className="bg-tag-bg text-text-tertiary h-14 w-[184px] rounded-lg text-lg font-medium"
+                className="bg-surface-blue text-text-primary hover:bg-primary-light h-14 w-[184px] rounded-lg text-lg font-medium"
               >
                 {cancelLabel}
               </button>
@@ -94,7 +94,7 @@ const Modal = ({
               <button
                 onClick={onConfirm}
                 disabled={confirmDisabled}
-                className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="bg-primary-hover hover:bg-primary h-14 w-[184px] rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {confirmLabel}
               </button>

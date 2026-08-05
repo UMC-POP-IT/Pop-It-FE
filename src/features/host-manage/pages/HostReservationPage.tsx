@@ -25,7 +25,7 @@ const TAB_STATUS: ReservationStatus[] = [
 
 const TAB_LABELS = ["승인 대기", "계약 대기", "계약 완료", "사용 중", "사용 완료"];
 const EMPTY_MESSAGES = [
-  "승인 대기 중인 예약이 없어요",
+  "아직 연락 온 게스트가 없어요",
   "계약 대기 중인 예약이 없어요",
   "계약 완료된 예약이 없어요",
   "현재 사용 중인 예약이 없어요",
@@ -36,6 +36,7 @@ export const HostReservationPage = () => {
   const navigate = useNavigate();
   const [reservations, setReservations] = useState<ApiHostReservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
   // 예약 거절
@@ -51,6 +52,7 @@ export const HostReservationPage = () => {
   const loadReservations = useCallback(async () => {
     try {
       setIsLoading(true);
+      setLoadError(false);
       const all: ApiHostReservation[] = [];
       let cursor: string | undefined = undefined;
       while (true) {
@@ -60,9 +62,9 @@ export const HostReservationPage = () => {
         cursor = result.nextCursor;
       }
       setReservations(all);
-    } catch (e) {
-      console.error("[HostReservationPage] 예약 로드 실패:", e);
-      setReservations([]);
+    } catch (err) {
+      console.error("[HostReservationPage] 예약 로드 실패:", err);
+      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -77,9 +79,12 @@ export const HostReservationPage = () => {
       ? r.status === "USAGE_COMPLETED"
       : r.status === status;
 
+  const getTabCount = (status: ReservationStatus) =>
+    reservations.filter((r) => matchesTab(r, status)).length;
+
   const tabs = TAB_LABELS.map((label, i) => ({
     label,
-    count: reservations.filter((r) => matchesTab(r, TAB_STATUS[i])).length,
+    count: getTabCount(TAB_STATUS[i]),
   }));
 
   const filtered = reservations.filter((r) => matchesTab(r, TAB_STATUS[activeTab]));
@@ -199,6 +204,16 @@ export const HostReservationPage = () => {
         {isLoading ? (
           <div className="bg-tag-bg flex h-[224px] w-full items-center justify-center rounded-xl">
             <p className="text-text-primary text-xl font-medium">불러오는 중...</p>
+          </div>
+        ) : loadError ? (
+          <div className="bg-tag-bg flex h-[224px] w-full flex-col items-center justify-center gap-3 rounded-xl">
+            <p className="text-text-primary text-xl font-medium">예약 목록을 불러오지 못했어요</p>
+            <button
+              onClick={loadReservations}
+              className="bg-primary text-white rounded-lg px-5 py-2 text-sm font-medium"
+            >
+              다시 시도
+            </button>
           </div>
         ) : filtered.length > 0 ? (
           <div className="flex flex-col">

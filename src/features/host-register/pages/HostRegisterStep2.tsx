@@ -1,3 +1,8 @@
+import { useState } from "react";
+import { uploadFiles } from "@/features/host-register/api/upload_api";
+import { toHostRequest } from "@/features/host-register/utils/to_host_request";
+import { registerHost } from "@/features/host-register/api/host_api";
+import { reissueToken } from "@/shared/utils/oauth";
 import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
@@ -16,27 +21,84 @@ export const HostRegisterStep2 = () => {
   const navigate = useNavigate();
   const form = useHostRegisterStore((s) => s.form);
   const setValues = useHostRegisterStore((s) => s.setValues);
-  const setHostRegistered = useAuthStore((s) => s.setHostRegistered);
+  const setHostStatus = useAuthStore((s) => s.setHostStatus);
+  const [isSubmitting, setIsSubmitting] = useState(false); // 제출 중 (중복 클릭 방지)
+  const [submitError, setSubmitError] = useState(""); // 실패 사유
+
   /**
-   * 최종 제출 (Mock: 콘솔 출력, 실제 POST /api/v1/hosts는 API 연동 이슈에서)
-   *
-   * ⚠️ 지금은 서버 호출 없이 곧바로 등록 완료로 처리한다.
-   * TODO(호스트 등록 API 연동): 아래 순서로 바꿀 것
-   *   1) POST /api/v1/hosts 호출
-   *   2) 성공(201) 응답을 받은 뒤에만 setHostRegistered(true) + navigate 실행
-   *   3) 실패 시 화면에 에러 표시 (400 형식 오류 / 409 이미 등록된 호스트)
-   *   지금처럼 응답 전에 상태를 바꾸면 서버가 거절해도 등록 완료로 보이게 된다.
+   * 토큰에 role이 박혀 있어(ROLE_GUEST) 새 토큰을 받아야 호스트 권한이 반영된다.
+   * 등록 자체는 이미 끝났으므로 재발급이 실패해도 흐름을 막지 않는다.
    */
-  const handleSubmit = () => {
-    if (import.meta.env.DEV) console.log("호스트 등록 제출 데이터", form);
-    setHostRegistered(true); //등록완료-> 이후 호스트 모드 진입 허용
-    navigate("/host/host-register/complete");
+  const refreshRole = async () => {
+    try {
+      await reissueToken();
+    } catch (error) {
+      console.error("토큰 재발급 실패 — 다시 로그인하면 반영됩니다:", error);
+    }
+  };
+
+  /**
+   * 최종 제출: 서류 업로드 → 서버 형식 변환 → 호스트 등록
+   * 서버 응답을 받은 뒤에만 상태를 바꾸고 완료 화면으로 넘어간다.
+   */
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+
+    // isValid가 막고 있지만, 서버에 null을 보낼 수 없어 여기서 한 번 더 확인한다
+    if (!form.businessLicenseImage || !form.bankbookImage) {
+      setSubmitError("사업자등록증과 통장 사본을 모두 첨부해주세요");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    try {
+      // ① 서류 두 장 업로드 — 넘긴 순서대로 URL이 돌아온다
+      const [businessLicenseUrl, bankbookCopyUrl] = await uploadFiles(
+        [form.businessLicenseImage, form.bankbookImage],
+        "HOST_DOCUMENT",
+      );
+
+      // ② 폼 → 서버 형식
+      const request = toHostRequest(form, businessLicenseUrl, bankbookCopyUrl);
+
+      // ③ 등록
+      await registerHost(request);
+
+      // ④ 새 토큰을 받아 role을 갱신한다
+      await refreshRole();
+
+      setHostStatus("registered");
+      navigate("/host/host-register/complete");
+    } catch (error) {
+      const status = (error as { status?: number }).status;
+
+      if (status === 409) {
+        // 이미 등록된 계정. 실패지만 결과적으로는 호스트가 맞으므로
+        // 성공과 같은 자리로 보내 같은 제출을 반복하지 않게 한다.
+        setHostStatus("registered");
+        await refreshRole(); // 이 브라우저 토큰의 role이 낡았을 수 있다
+        navigate("/host/host-register/complete");
+        return;
+      }
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다";
+      console.error("호스트 등록 실패:", message);
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isValid =
     form.bankName !== "" &&
     form.accountNumber !== "" &&
-    form.accountHolder.trim() !== "";
+    form.accountHolder.trim() !== "" &&
+    form.bankbookImage !== null;
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
@@ -68,6 +130,8 @@ export const HostRegisterStep2 = () => {
           label="통장 사본"
           placeholder="통장 사본 파일을 첨부해주세요"
           hint="* JPG, PNG, PDF 최대 10MB"
+          file={form.bankbookImage}
+          onFileChange={(file) => setValues({ bankbookImage: file })}
         />
 
         {/* 은행 (공통 select) */}
@@ -126,8 +190,16 @@ export const HostRegisterStep2 = () => {
         </div>
       </div>
 
-      {/* 이전 / 다음으로 버튼 (우측 정렬)
-          TODO(2차): 유효성 검사 통과 시 활성화 */}
+      {submitError && (
+        <span
+          role="alert"
+          className="text-danger self-end text-sm"
+        >
+          {submitError}
+        </span>
+      )}
+
+      {/* 이전 / 다음으로 버튼 (우측 정렬) */}
       <div className="flex justify-end gap-2">
         <Button
           variant="gray"
@@ -138,10 +210,10 @@ export const HostRegisterStep2 = () => {
         <Button
           variant="primary"
           size="md"
-          disabled={!isValid}
+          disabled={!isValid || isSubmitting}
           onClick={handleSubmit}
         >
-          다음으로
+          {isSubmitting ? "등록 중..." : "다음으로"}
         </Button>
       </div>
     </div>

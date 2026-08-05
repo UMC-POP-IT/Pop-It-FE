@@ -1,3 +1,9 @@
+import { uploadFiles } from "@/features/host-register/api/upload_api";
+import { toSpaceRequest } from "@/features/host-register/utils/to_space_request";
+import {
+  createSpace,
+  updateSpace,
+} from "@/features/host-register/api/space_api";
 import StepIndicator from "@/shared/components/StepIndicator";
 import Button from "@/shared/components/Button";
 import iconCamera from "@/assets/icons/icon_camera.svg";
@@ -5,31 +11,78 @@ import iconInfo from "@/assets/icons/icon_info.svg";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Modal from "@/shared/components/Modal";
-import { useRegisterStore } from "@/store/registerStore";
+import { useRegisterStore, type SpacePhoto } from "@/store/registerStore";
 import { STEPS, GUIDE_ITEMS } from "@/features/host-register/api/mock_register";
 import iconTrash from "@/assets/icons/icon_trash.svg";
+
+/** 공간 사진 최대 장수 (스웨거 SpaceCreateReq.imageUrls maxItems) */
+const MAX_PHOTOS = 10;
 
 export const RegisterStep5 = () => {
   const isEdit = useRegisterStore((s) => s.isEdit);
   const editSpaceId = useRegisterStore((s) => s.editSpaceId);
   const navigate = useNavigate();
   const [modal, setModal] = useState<"confirm" | "success" | null>(null);
-  const [photos, setPhotos] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false); // 제출 진행 중 (중복 클릭 방지)
+  const [submitError, setSubmitError] = useState(""); // 실패 사유 (빈 문자열이면 정상)
+  const [photoNotice, setPhotoNotice] = useState(""); // 개수 제한으로 빠진 사진 안내
   const form = useRegisterStore((s) => s.form);
+  const setValues = useRegisterStore((s) => s.setValues);
   const reset = useRegisterStore((s) => s.reset);
 
-  // 최종 제출 (지금은 Mock: 콘솔 출력. 실제 POST/PATCH /spaces는 2차 API 때)
-  const handleSubmit = () => {
-    if (import.meta.env.DEV) {
-      console.log(
-        isEdit
-          ? `공간 수정 제출 데이터 (id=${editSpaceId}):`
-          : "공간 등록 제출 데이터:",
-        form,
+  /**
+   * 최종 제출: 사진 업로드 → 서버 형식 변환 → 등록(또는 수정)
+   * 서버 응답을 받은 뒤에만 성공 모달을 띄운다.
+   */
+  const handleSubmit = async () => {
+    if (isSubmitting) return; // 중복 클릭 방지
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    try {
+      // ① 새로 고른 사진만 업로드한다 (수정 시 기존 사진은 이미 서버에 있음)
+      const newFiles = form.photoList.flatMap((photo) =>
+        photo.kind === "new" ? [photo.file] : [],
       );
+      const uploadedUrls = await uploadFiles(newFiles, "SPACE_IMAGE");
+
+      // 업로드 결과를 원래 순서대로 되돌린다 (첫 장 = 대표사진)
+      let uploadedIndex = 0;
+      const imageUrls = form.photoList.map((photo) =>
+        photo.kind === "existing" ? photo.url : uploadedUrls[uploadedIndex++],
+      );
+
+      // ② 폼 값을 서버 형식으로 변환
+      const request = toSpaceRequest(form, imageUrls);
+
+      // ③ 등록 또는 수정
+      if (isEdit) {
+        // 수정인데 대상 id가 없으면 조용히 새 공간을 만들지 않고 여기서 멈춘다
+        if (editSpaceId === null) {
+          throw new Error(
+            "수정할 공간 정보를 찾을 수 없습니다. 목록에서 다시 들어와주세요",
+          );
+        }
+        await updateSpace(editSpaceId, request);
+      } else {
+        await createSpace(request);
+      }
+
+      setModal("success"); // 여기까지 왔으면 서버가 받아들인 것
+    } catch (error) {
+      // 에러 객체 전체를 찍으면 요청 정보가 노출될 수 있어 메시지만 남긴다
+      const message =
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다";
+      console.error(isEdit ? "공간 수정 실패:" : "공간 등록 실패:", message);
+      setSubmitError(message);
+      setModal(null); // 확인 모달을 닫아 에러 문구가 보이게 한다
+    } finally {
+      setIsSubmitting(false);
     }
-    setModal("success");
   };
+
   // 성공 확인 → 보관함 비우고 '내 공간'으로 이동
   const handleDone = () => {
     reset();
@@ -75,37 +128,64 @@ export const RegisterStep5 = () => {
               alt=""
               className="h-10 w-10"
             />
-            {/* 업로드 매수 실시간 카운트 (챈 디자인 크기 + 내 photos 값) */}
-            <span className="text-xl font-medium">{photos.length}/10장</span>
+            {/* 업로드 매수 실시간 카운트 (챈 디자인 크기 + store의 photoList 길이) */}
+            <span className="text-xl font-medium">
+              {form.photoList.length}/{MAX_PHOTOS}장
+            </span>
             <input
               type="file"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png"
               multiple
-              onChange={(e) =>
-                setPhotos((prev) => [
-                  ...prev,
-                  ...Array.from(e.target.files ?? []).slice(
-                    0,
-                    Math.max(0, 10 - prev.length),
-                  ),
-                ])
-              }
+              onChange={(e) => {
+                const picked = Array.from(e.target.files ?? []);
+                const room = Math.max(0, MAX_PHOTOS - form.photoList.length);
+                const accepted = picked.slice(0, room);
+                const dropped = picked.length - accepted.length;
+
+                setValues({
+                  photoList: [
+                    ...form.photoList,
+                    ...accepted.map(
+                      (file): SpacePhoto => ({ kind: "new", file }),
+                    ),
+                  ],
+                });
+                // 넘친 만큼은 조용히 버리지 않고 몇 장이 빠졌는지 알린다
+                setPhotoNotice(
+                  dropped > 0
+                    ? `사진은 최대 ${MAX_PHOTOS}장까지 등록할 수 있어 ${dropped}장은 추가되지 않았습니다`
+                    : "",
+                );
+                e.target.value = ""; // 같은 파일을 다시 골라도 onChange가 뜨도록 비운다
+              }}
               className="sr-only"
             />
           </label>
 
           {/* 업로드된 사진 썸네일 (미리보기 URL 관리는 PhotoThumbnail 내부에서) */}
-          {photos.map((photo, i) => (
+          {form.photoList.map((photo, i) => (
             <PhotoThumbnail
               key={i}
               photo={photo}
               isFirst={i === 0}
               onRemove={() =>
-                setPhotos((prev) => prev.filter((_, idx) => idx !== i))
+                setValues({
+                  photoList: form.photoList.filter((_, idx) => idx !== i),
+                })
               }
             />
           ))}
         </div>
+
+        {/* 개수 제한으로 빠진 사진 안내 — 나타나는 순간 스크린 리더가 읽도록 role="alert" */}
+        {photoNotice && (
+          <span
+            role="alert"
+            className="text-danger text-sm"
+          >
+            {photoNotice}
+          </span>
+        )}
 
         {/* 사진 촬영 가이드 박스 */}
         <div className="bg-tag-bg flex flex-col gap-2 rounded-lg p-4">
@@ -125,8 +205,16 @@ export const RegisterStep5 = () => {
         </div>
       </div>
 
-      {/* 이전 / 완료 버튼 (우측 정렬)
-          TODO(2차): 사진 3장 이상일 때만 활성화(유효성) + 최종 제출(POST /spaces) */}
+      {submitError && (
+        <span
+          role="alert"
+          className="text-danger self-end text-sm"
+        >
+          {submitError}
+        </span>
+      )}
+
+      {/* 이전 / 완료 버튼 (우측 정렬) */}
       <div className="flex justify-end gap-2">
         <Modal
           isOpen={modal === "confirm"}
@@ -134,10 +222,20 @@ export const RegisterStep5 = () => {
             isEdit ? "공간을 수정하시겠습니까?" : "공간을 등록하시겠습니까?"
           }
           cancelLabel="돌아가기"
-          confirmLabel={isEdit ? "공간 수정하기" : "공간 등록하기"}
+          confirmLabel={
+            isSubmitting
+              ? isEdit
+                ? "수정 중..."
+                : "등록 중..."
+              : isEdit
+                ? "공간 수정하기"
+                : "공간 등록하기"
+          }
+          confirmDisabled={isSubmitting}
           onCancel={() => setModal(null)}
           onConfirm={handleSubmit}
         />
+
         <Modal
           isOpen={modal === "success"}
           title={
@@ -162,7 +260,7 @@ export const RegisterStep5 = () => {
         <Button
           variant="primary"
           size="nav"
-          disabled={photos.length < 3}
+          disabled={form.photoList.length < 3}
           onClick={() => setModal("confirm")}
         >
           완료
@@ -178,14 +276,20 @@ const PhotoThumbnail = ({
   isFirst,
   onRemove,
 }: {
-  photo: File;
+  photo: SpacePhoto;
   isFirst: boolean;
   onRemove: () => void;
 }) => {
-  const [url, setUrl] = useState("");
+  // 기존 사진은 이미 주소가 있어 첫 렌더부터 바로 보여준다 (깜빡임 방지)
+  const [url, setUrl] = useState(photo.kind === "existing" ? photo.url : "");
 
   useEffect(() => {
-    const objectUrl = URL.createObjectURL(photo);
+    // 서버 사진은 주소를 그대로 쓰며, 정리할 임시 URL이 없다
+    if (photo.kind === "existing") {
+      setUrl(photo.url);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(photo.file);
     setUrl(objectUrl);
     // 뒷정리: 언마운트 / photo 변경 시 URL 해제 (메모리 누수 방지)
     return () => URL.revokeObjectURL(objectUrl);
