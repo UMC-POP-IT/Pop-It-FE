@@ -99,7 +99,7 @@ const SpaceCard = ({
               key={`${keyword}-${i}`}
               className="bg-tag-bg text-text-tag rounded-full px-2 py-0.5 text-xs"
             >
-              #{keyword}
+              {keyword.includes("#") ? keyword : `#${keyword}`}
             </span>
           ))}
         </div>
