@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import iconChevronRight from "@/assets/icons/icon_chevron_right.svg";
 import background1 from "@/assets/banner/background_1.jpg";
@@ -43,6 +43,7 @@ const slides: BannerSlide[] = [
 ];
 
 const AUTOPLAY_INTERVAL_MS = 5000;
+const SWIPE_THRESHOLD_PX = 50;
 
 const Banner = () => {
   const navigate = useNavigate();
@@ -50,6 +51,8 @@ const Banner = () => {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const total = slides.length;
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
 
   useEffect(() => {
     if (isPaused) return;
@@ -60,6 +63,34 @@ const Banner = () => {
   }, [isPaused, total]);
 
   const goTo = (index: number) => setCurrent((index + total) % total);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    setIsPaused(true);
+  };
+
+  // 터치 종료/취소 시 스와이프 상태를 초기화하고 자동 재생을 재개한다
+  const resetTouchState = () => {
+    touchStartX.current = null;
+    touchStartY.current = null;
+    setIsPaused(false);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current !== null && touchStartY.current !== null) {
+      const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+      const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+      if (Math.abs(deltaY) < Math.abs(deltaX)) { // 수평 스와이프 감지
+        if (deltaX > SWIPE_THRESHOLD_PX) {
+          goTo(current - 1);
+        } else if (deltaX < -SWIPE_THRESHOLD_PX) {
+          goTo(current + 1);
+        }
+      }
+    }
+    resetTouchState();
+  };
 
   // 헤더의 "호스트 전환" 버튼과 동일한 동작
   const startHosting = () => {
@@ -77,6 +108,9 @@ const Banner = () => {
       style={{ backgroundImage: `url(${slide.image})` }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={resetTouchState}
     >
       <div
         className={`relative mx-auto flex h-full w-full max-w-screen-xl flex-col justify-center gap-4 px-10 md:px-16 ${slide.textClassName}`}

@@ -1,12 +1,16 @@
-import { useLayoutEffect, useRef, useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import SpaceCard from "@/shared/components/SpaceCard";
 import { ScrollButton } from "@/features/guest-explore/components/ScrollButton";
 import WishedSpaceEmptyState from "@/features/guest-explore/components/WishedSpaceEmptyState";
 import type { Space } from "@/types";
 import { useNavigate } from "react-router-dom";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
+import { useCardCarousel } from "@/features/guest-explore/hooks/useCardCarousel";
 import { useWishStore } from "@/store/wishStore";
 import { getWishList, wishedSpace } from "@/features/guest-explore/api/spaces_api";
+
+// SpaceCard 4개 단위로 스크롤
+const CARDS_PER_SCROLL = 4;
 
 const WISH_PAGE_SIZE = 12;
 
@@ -36,9 +40,6 @@ const toCard = (dto: wishedSpace): Space => ({
 });
 
 export const WishedSpace = () => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
   const [status, setStatus] = useState<FetchStatus>("loading");
   const [wishedSpaces, setWishedSpaces] = useState<wishedSpace[]>([]);
   const [page, setPage] = useState(0);
@@ -47,6 +48,9 @@ export const WishedSpace = () => {
   const [retryKey, setRetryKey] = useState(0);
   const { handleWishToggle } = useWishGuard();
   const navigate = useNavigate();
+
+  const { scrollRef, canScrollPrev, canScrollNext, imageCenter, scrollByCard } =
+    useCardCarousel(CARDS_PER_SCROLL, [wishedSpaces.length, status]);
 
   // 이번 전체 목록 조회(재시도 포함)에서 서버가 실제로 찜했다고 확인해준 spaceId 누적 집합.
   // GET /users/me/wishlist는 페이지네이션이라, 한 페이지만 보고 "없으면 해제"를 단정하면
@@ -135,14 +139,6 @@ export const WishedSpace = () => {
     }
   };
 
-  // updateScrollButtons는 마운트 시 한 번만 이벤트 리스너로 등록되므로, loadMore를 직접
-  // 클로저로 캡처하면 이후 렌더에서 바뀐 page/hasNext를 못 보고 항상 최초 상태로 호출된다.
-  // 매 렌더마다 최신 loadMore를 ref에 저장해두고 리스너는 ref를 통해서만 호출한다.
-  const loadMoreRef = useRef(loadMore);
-  useEffect(() => {
-    loadMoreRef.current = loadMore;
-  });
-
   // 이 목록의 카드는 전부 "이미 찜한 공간"이므로, 하트를 누르면 항상 찜 해제이다.
   // 낙관적으로 목록에서 먼저 제거하고, API 실패 시 원래 목록으로 되돌린다.
   // 두 카드를 연속으로 해제하면 각 호출이 서로 다른 시점의 목록을 스냅샷으로 들고
@@ -174,40 +170,26 @@ export const WishedSpace = () => {
     }
   };
 
-  // 좌/우 스크롤 버튼 활성화 여부 업데이트 + 끝에 닿으면 다음 페이지 조회
-  const updateScrollButtons = () => {
-    const container = scrollRef.current;
-    if (!container) return;
-    setCanScrollPrev(container.scrollLeft > 1);
-    const isNearEnd =
-      container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
-    setCanScrollNext(!isNearEnd);
-    if (isNearEnd) loadMoreRef.current();
-  };
+  // 좌/우 스크롤 버튼 상태는 useCardCarousel이 관리한다. 여기서는 스크롤이 끝에 닿았을 때
+  // 다음 페이지를 이어붙이는 것만 별도로 감시한다. 리스너를 마운트 시 한 번만 등록하므로
+  // loadMore를 직접 클로저로 캡처하면 이후 렌더에서 바뀐 page/hasNext를 못 보고 항상 최초
+  // 상태로 호출된다. 매 렌더마다 최신 loadMore를 ref에 저장해두고 리스너는 ref를 통해서만 호출한다.
+  const loadMoreRef = useRef(loadMore);
+  useEffect(() => {
+    loadMoreRef.current = loadMore;
+  });
 
-  // status가 "success"로 유지된 채 wishedSpaces만 바뀌는 경우(찜 해제/loadMore/재동기화)에도
-  // 콘텐츠 크기가 바뀌므로 스크롤 버튼 상태를 다시 계산해야 한다.
-  const successItemCount = status === "success" ? wishedSpaces.length : null;
-  useLayoutEffect(() => {
+  useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
-    updateScrollButtons();
-    container.addEventListener("scroll", updateScrollButtons);
-    window.addEventListener("resize", updateScrollButtons);
-    return () => {
-      container.removeEventListener("scroll", updateScrollButtons);
-      window.removeEventListener("resize", updateScrollButtons);
+    const checkNearEnd = () => {
+      const isNearEnd =
+        container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
+      if (isNearEnd) loadMoreRef.current();
     };
-  }, [status, successItemCount]);
-
-  // SpaceCard 단위로 스크롤
-  const scrollByCard = (direction: 1 | -1) => {
-    const container = scrollRef.current;
-    if (!container) return;
-    const card = container.firstElementChild as HTMLElement | null;
-    const step = (card?.clientWidth ?? container.clientWidth) + 16;
-    container.scrollBy({ left: direction * step, behavior: "smooth" });
-  };
+    container.addEventListener("scroll", checkNearEnd);
+    return () => container.removeEventListener("scroll", checkNearEnd);
+  }, [status, scrollRef]);
 
   return (
     <section className="flex flex-col gap-4 mt-20">
@@ -235,10 +217,11 @@ export const WishedSpace = () => {
 
         {status === "success" && (
           <div className="relative">
-              {canScrollPrev && <ScrollButton direction="prev" position={"1/4"} onClick={() => scrollByCard(-1)} />}
+              {canScrollPrev && imageCenter !== null && <ScrollButton direction="prev" topOffset={imageCenter} onClick={() => scrollByCard(-1)} />}
+              {/* overflow-x-hidden은 휠/트랙패드/드래그 스크롤을 의도적으로 차단하기 위함 (화살표 버튼의 scrollBy만 허용) */}
               <div
               ref={scrollRef}
-              className="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex gap-4 overflow-x-hidden scroll-smooth"
               >
               {(wishedSpaces.length > 0) ? wishedSpaces.map((space) => (
                   <div
@@ -254,7 +237,7 @@ export const WishedSpace = () => {
                   </div>
               )) : <WishedSpaceEmptyState />}
               </div>
-              {canScrollNext && <ScrollButton direction="next" position={"1/4"} onClick={() => scrollByCard(1)} />}
+              {canScrollNext && imageCenter !== null && <ScrollButton direction="next" topOffset={imageCenter} onClick={() => scrollByCard(1)} />}
           </div>
         )}
     </section>

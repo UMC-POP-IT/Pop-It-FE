@@ -14,6 +14,7 @@ const RealTimeBanner = ({
     <button
       type="button"
       onClick={onClick}
+      data-card-image
       className="bg-bg relative aspect-[4/5] group-hover:cursor-pointer"
     >
       {space.thumbnailUrl ? (
