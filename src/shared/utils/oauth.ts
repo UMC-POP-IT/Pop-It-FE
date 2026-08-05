@@ -52,7 +52,7 @@ export async function startLogin(provider: "kakao" | "google"): Promise<void> {
  * 토큰 저장 전략:
  *   - accessToken / refreshToken → 현재 localStorage 임시 저장
  *   - TODO: XSS 보안 강화를 위해 백엔드와 협의 후 HttpOnly 쿠키 방식으로 전환 필요
- *   - refreshToken 갱신: 추후 401 응답 인터셉터에서 POST /api/v1/auth/refresh 호출 예정
+ *   - refreshToken 갱신: 401 응답 인터셉터에서 POST /api/v1/auth/refresh 호출 (apiClient.ts)
  */
 async function exchangeTokens(
   code: string,
