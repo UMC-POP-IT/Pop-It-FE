@@ -1,31 +1,16 @@
 import { apiFetch } from "@/shared/utils/apiClient";
 import type { Space } from "@/types";
+import { SPACE_CATEGORY_OPTIONS } from "@/shared/utils/spaceCategory";
+import type { SpaceCategory } from "@/shared/utils/spaceCategory";
 
 // ============================================================
 // GET /api/v1/spaces - 공간 탐색 (검색/필터)
 // (#145) 게스트 메인 화면의 공간 탐색 목록 - 통합 검색 + 필터 + 페이지네이션
 // ============================================================
 
-export type SpaceCategory =
-  | "POPUP_STORE"
-  | "EXHIBITION_GALLERY"
-  | "COMPLEX_SPACE"
-  | "SHOWROOM"
-  | "CAFE_FNB";
-
+export type { SpaceCategory };
 /** 용도(카테고리) 필터 드롭다운 옵션 */
-export const SPACE_CATEGORY_OPTIONS: { value: SpaceCategory; label: string }[] =
-  [
-    { value: "POPUP_STORE", label: "팝업스토어" },
-    { value: "EXHIBITION_GALLERY", label: "전시/갤러리" },
-    { value: "COMPLEX_SPACE", label: "복합공간" },
-    { value: "SHOWROOM", label: "쇼룸" },
-    { value: "CAFE_FNB", label: "카페/식음료" },
-  ];
-
-export const SPACE_CATEGORY_LABEL: Record<string, string> = Object.fromEntries(
-  SPACE_CATEGORY_OPTIONS.map((option) => [option.value, option.label]),
-);
+export { SPACE_CATEGORY_OPTIONS };
 
 /** 서울 25개 자치구 - 지역 필터 드롭다운 옵션 */
 export const SEOUL_DISTRICTS = [
@@ -117,7 +102,9 @@ export const getSpaces = async (params: SpaceSearchParams = {}) => {
  */
 export interface SpaceSummary extends Space {
   spaceId: number;
-  category: string; // 카드 하단 카테고리 뱃지 (라벨 변환된 값)
+  // 카드 하단 카테고리 뱃지용 원본 enum 문자열(ex. "POPUP_STORE").
+  // SpaceCard가 categoryTag로 받아 내부에서 라벨로 변환하므로 여기서는 변환하지 않는다.
+  category: string;
   district: string;
   isWishlisted: boolean;
   latitude: number;
@@ -139,7 +126,7 @@ export const toSpaceSummary = (item: SpaceSearchItemRes): SpaceSummary => ({
   keywords: item.keywords.map((keyword) => keyword.replace(/^#/, "")),
   description: "",
   createdAt: "",
-  category: SPACE_CATEGORY_LABEL[item.spaceCategory] ?? item.spaceCategory,
+  category: item.spaceCategory,
   isWishlisted: item.isWishlisted,
   latitude: item.latitude,
   longitude: item.longitude,

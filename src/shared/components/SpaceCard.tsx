@@ -1,12 +1,12 @@
 import type { Space } from "@/types";
 import Badge from "@/shared/components/Badge";
-
+import { mapSpaceCategoryTag } from "@/shared/utils/spaceCategory";
 interface SpaceCardProps {
   space: Space;
   isWished?: boolean;
   onClick?: () => void;
   onWishToggle?: (e: React.MouseEvent) => void;
-  /** 이미지 위 카테고리 뱃지 (ex. 팝업스토어) */
+  /** 이미지 위 카테고리 뱃지. 원본 enum 문자열(ex. "POPUP_STORE")을 받는다 */
   categoryTag?: string;
   /** AI 추천 이유 뱃지 (ex. 최근 본 공간보다 15% 저렴해요) */
   matchReason?: string;
@@ -53,7 +53,7 @@ const SpaceCard = ({
       </button>
       {categoryTag && (
         <div className="absolute right-2 bottom-2">
-          <Badge variant="category" label={categoryTag} />
+          <Badge variant="category" label={mapSpaceCategoryTag(categoryTag)} />
         </div>
       )}
     </div>
