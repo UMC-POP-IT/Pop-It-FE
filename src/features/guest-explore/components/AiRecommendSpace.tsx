@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import SpaceCard from "@/shared/components/SpaceCard";
 import type { Space } from "@/types";
 import type { RecommendedSpace } from "../api/spaces_api";
@@ -6,8 +6,12 @@ import { ScrollButton } from "./ScrollButton";
 import { useNavigate } from "react-router-dom";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
 import { useAuthStore } from "@/store/authStore";
+import { useCardCarousel } from "@/features/guest-explore/hooks/useCardCarousel";
 
 import { getAiRecommend } from "../api/spaces_api";
+
+// SpaceCard 4개 단위로 스크롤
+const CARDS_PER_SCROLL = 4;
 
 interface AiRecommendCard {
   space: Space;
@@ -37,9 +41,6 @@ const toCard = (dto: RecommendedSpace): AiRecommendCard => ({
 });
 
 const AiRecommendSpace = () => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
   const [cards, setCards] = useState<AiRecommendCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
@@ -47,6 +48,9 @@ const AiRecommendSpace = () => {
   const { handleWishToggle } = useWishGuard();
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
+
+  const { scrollRef, canScrollPrev, canScrollNext, imageCenter, scrollByCard } =
+    useCardCarousel(CARDS_PER_SCROLL, [cards.length, isLoading]);
 
   // 찜 토글: 로그인 상태에서만 카드의 isWished를 낙관적으로 갱신하고,
   // 실패 시 롤백한다. 비로그인 흐름은 로그인 모달만 띄우고 카드 상태는 건드리지 않는다.
@@ -74,28 +78,6 @@ const AiRecommendSpace = () => {
     }
   };
 
-  // 좌/우 스크롤 버튼 활성화 여부 업데이트
-  const updateScrollButtons = () => {
-    const container = scrollRef.current;
-    if (!container) return;
-    setCanScrollPrev(container.scrollLeft > 1);
-    setCanScrollNext(
-      container.scrollLeft + container.clientWidth < container.scrollWidth - 1,
-    );
-  };
-
-  useLayoutEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-    updateScrollButtons();
-    container.addEventListener("scroll", updateScrollButtons);
-    window.addEventListener("resize", updateScrollButtons);
-    return () => {
-      container.removeEventListener("scroll", updateScrollButtons);
-      window.removeEventListener("resize", updateScrollButtons);
-    };
-  }, [cards.length, isLoading]);
-
   // AI 맞춤형 공간 정보 조회
   useEffect(() => {
     let isMounted = true;
@@ -121,25 +103,17 @@ const AiRecommendSpace = () => {
     };
   }, []);
 
-  // SpaceCard 단위로 스크롤
-  const scrollByCard = (direction: 1 | -1) => {
-    const container = scrollRef.current;
-    if (!container) return;
-    const card = container.firstElementChild as HTMLElement | null;
-    const step = (card?.clientWidth ?? container.clientWidth) + 16;
-    container.scrollBy({ left: direction * step, behavior: "smooth" });
-  };
-
   return (
     <section className="flex flex-col gap-4 mt-20">
       <h2 className="text-text-primary text-2xl font-bold">AI 맞춤형 공간</h2>
 
       <div className="relative">
-        {canScrollPrev && <ScrollButton direction="prev" position={"1/4"} onClick={() => scrollByCard(-1)} />}
+        {canScrollPrev && imageCenter !== null && <ScrollButton direction="prev" topOffset={imageCenter} onClick={() => scrollByCard(-1)} />}
 
+        {/* overflow-x-hidden은 휠/트랙패드/드래그 스크롤을 의도적으로 차단하기 위함 (화살표 버튼의 scrollBy만 허용) */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex gap-4 overflow-x-hidden scroll-smooth"
         >
           {isLoading ? (
             <p role="status" aria-live="polite" className="text-text-secondary text-sm">
@@ -168,7 +142,7 @@ const AiRecommendSpace = () => {
           )}
         </div>
 
-        {canScrollNext && <ScrollButton direction="next" position={"1/4"} onClick={() => scrollByCard(1)} />}
+        {canScrollNext && imageCenter !== null && <ScrollButton direction="next" topOffset={imageCenter} onClick={() => scrollByCard(1)} />}
       </div>
     </section>
   );

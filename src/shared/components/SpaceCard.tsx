@@ -28,7 +28,7 @@ const SpaceCard = ({
     onKeyDown={(event) => {if (event.key === "Enter") onClick?.()}}
   >
     {/* 이미지 */}
-    <div className="bg-bg relative aspect-[4/3]">
+    <div data-card-image className="bg-bg relative aspect-[4/3]">
       {space.imageUrls[0] ? (
         <img
           src={space.imageUrls[0]}

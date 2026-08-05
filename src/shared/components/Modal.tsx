@@ -1,3 +1,5 @@
+import { useId } from "react";
+import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 import iconCheckBigSized from "@/assets/icons/icon_check_big_sized.svg";
 
 interface ModalProps {
@@ -10,7 +12,7 @@ interface ModalProps {
   singleButton?: boolean;
   /** true면 상단에 파란 체크 아이콘 표시 */
   showCheckIcon?: boolean;
-  /** true면 확인 버튼을 비활성화 (예: 비동기 처리 중 중복 클릭 방지) */
+  /** true면 처리 중으로 보고 확인·취소 버튼과 백드롭·Escape 닫기를 모두 막는다 */
   confirmDisabled?: boolean;
   onConfirm?: () => void;
   onCancel?: () => void;
@@ -28,6 +30,13 @@ const Modal = ({
   onConfirm,
   onCancel,
 }: ModalProps) => {
+  const titleId = useId();
+  const dialogRef = useDialogA11y<HTMLDivElement>({
+    isOpen,
+    // 처리 중에는 Escape로도 닫히지 않도록 닫기 핸들러를 떼어 둔다
+    onClose: confirmDisabled ? undefined : onCancel,
+  });
+
   if (!isOpen) return null;
 
   return (
@@ -36,21 +45,29 @@ const Modal = ({
         className="absolute inset-0 bg-black/40"
         onClick={confirmDisabled ? undefined : onCancel}
       />
-      <div className="relative z-10 flex w-[590px] flex-col items-center gap-10 rounded-xl bg-white py-8">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="relative z-10 flex w-[590px] flex-col items-center gap-10 rounded-xl bg-white py-8"
+      >
         <div className="flex flex-col items-center gap-5">
-          {/* 체크 아이콘 */}
+          {/* 체크 아이콘 (Figma 기준: icon_check_big_sized) */}
           {showCheckIcon && (
-            <div className="flex h-[72px] w-[72px] items-center justify-center">
-              <img
-                src={iconCheckBigSized}
-                alt=""
-                className="h-[72px] w-[72px]"
-              />
-            </div>
+            <img
+              src={iconCheckBigSized}
+              alt=""
+              className="h-[72px] w-[72px]"
+            />
           )}
 
           <div className="flex flex-col items-center gap-2 text-center">
-            <h3 className="text-text-primary text-[22px] font-bold whitespace-pre-line">
+            <h3
+              id={titleId}
+              className="text-text-primary text-[22px] font-bold whitespace-pre-line"
+            >
               {title}
             </h3>
 
@@ -79,7 +96,6 @@ const Modal = ({
                 onClick={onCancel}
                 disabled={confirmDisabled}
                 className="bg-surface-blue text-text-primary hover:bg-primary-light h-14 w-[184px] rounded-lg text-lg font-medium disabled:cursor-not-allowed disabled:opacity-50"
-
               >
                 {cancelLabel}
               </button>

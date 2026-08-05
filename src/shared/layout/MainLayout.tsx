@@ -5,7 +5,7 @@ import Footer from "./Footer";
 import Modal from "@/shared/components/Modal";
 import { LoginModal } from "@/shared/components/LoginModal";
 import { useAuthStore } from "@/store/authStore";
-import { useWishStore } from "@/store/wishStore";
+import { useWishGuard } from "@/shared/hooks/useWishGuard";
 import { handleOAuthCallback, switchMode, getCurrentUser } from "@/shared/utils/oauth";
 import { PaymentApproval } from "@/features/guest-explore/api/my_reservation_api";
 import { TOSS_PENDING_PAYMENT_KEY } from "@/features/guest-explore/components/contract/TossPayments";
@@ -37,14 +37,16 @@ const PendingActionExecutor = () => {
   const pendingAction = useAuthStore((s) => s.pendingAction);
   const clearPendingAction = useAuthStore((s) => s.clearPendingAction);
   const setMode = useAuthStore((s) => s.setMode);
-  const toggleWish = useWishStore((s) => s.toggleWish);
+  const { handleWishToggle } = useWishGuard();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!user || !pendingAction) return;
     switch (pendingAction.type) {
       case "wish":
-        toggleWish(pendingAction.spaceId);
+        handleWishToggle(pendingAction.spaceId).catch((err: unknown) => {
+          console.error("Pending wishToggle 실패: ", err);
+        });
         break;
       case "navigate":
         navigate(pendingAction.path);
@@ -65,7 +67,8 @@ const PendingActionExecutor = () => {
         break;
     }
     clearPendingAction();
-    // navigate·toggleWish·setMode·clearPendingAction은 안정적 참조(stable ref)라 deps 제외
+    // navigate·setMode·clearPendingAction은 안정적 참조(stable ref)이고, handleWishToggle은
+    // pendingAction 처리 시점에 한 번만 실행하면 되므로 deps에서 제외
   }, [user, pendingAction]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
