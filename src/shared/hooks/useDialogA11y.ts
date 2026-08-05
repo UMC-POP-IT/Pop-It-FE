@@ -28,8 +28,14 @@ export const useDialogA11y = <T extends HTMLElement>({
 }: UseDialogA11yOptions) => {
   const dialogRef = useRef<T | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
+import { useEffect, useLayoutEffect, useRef } from "react";
+
+  const triggerRef = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
