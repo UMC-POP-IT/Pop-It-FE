@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import iconChevronRight from "@/assets/icons/icon_chevron_right.svg";
 import background1 from "@/assets/banner/background_1.jpg";
 import background2 from "@/assets/banner/background_2.jpg";
 import background3 from "@/assets/banner/background_3.jpg";
@@ -32,7 +31,7 @@ const slides: BannerSlide[] = [
   },
 ];
 
-const AUTOPLAY_INTERVAL_MS = 5000;
+const AUTOPLAY_INTERVAL_MS = 40000;
 
 const Banner = () => {
   const [current, setCurrent] = useState(0);
@@ -46,8 +45,6 @@ const Banner = () => {
     }, AUTOPLAY_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [isPaused, total]);
-
-  const goTo = (index: number) => setCurrent((index + total) % total);
 
   const slide = slides[current];
 
@@ -69,27 +66,6 @@ const Banner = () => {
           {current + 1} / {total}
         </div>
       </div>
-
-      <button
-        type="button"
-        aria-label="이전 배너"
-        onClick={() => goTo(current - 1)}
-        className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-black/20 p-1.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/30"
-      >
-        <img
-          src={iconChevronRight}
-          alt=""
-          className="h-4 w-4 rotate-180 invert"
-        />
-      </button>
-      <button
-        type="button"
-        aria-label="다음 배너"
-        onClick={() => goTo(current + 1)}
-        className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-black/20 p-1.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/30"
-      >
-        <img src={iconChevronRight} alt="" className="h-4 w-4 invert" />
-      </button>
     </div>
   );
 };
