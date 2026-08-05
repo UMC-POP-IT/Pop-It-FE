@@ -42,6 +42,20 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
     };
   }, [onIsAuthenticated]);
 
+  // PortOne 인증 완료 직후 서버 확정 반영이 약간 지연될 수 있어, 실패 시 잠시 뒤 상태를 재조회해 확인한다.
+  const pollVerificationStatus = async (retries = 3, delayMs = 1500): Promise<boolean> => {
+    for (let i = 0; i < retries; i++) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      try {
+        const { isVerified } = await GetVerificationStatus();
+        if (isVerified) return true;
+      } catch {
+        // 재조회 실패는 무시하고 다음 시도로 넘어간다.
+      }
+    }
+    return false;
+  };
+
   const handleVerify = async () => {
     if (status === "pending" || status === "done") return;
     setStatus("pending");
@@ -66,7 +80,11 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
       setStatus("done");
       onIsAuthenticated(true); // 인증 성공 처리
     } catch {
-      setStatus("error");
+      // PortOne 인증 자체는 성공했지만, 서버에 인증 결과가 반영되기까지 약간의 지연이 있을 수 있어
+      // 즉시 실패 처리하지 않고 상태를 재조회해 확인한 뒤 최종 실패 여부를 판단한다.
+      const verified = await pollVerificationStatus();
+      setStatus(verified ? "done" : "error");
+      onIsAuthenticated(verified);
     }
   };
 
