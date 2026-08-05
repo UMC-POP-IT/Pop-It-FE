@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Button from "@/shared/components/Button";
 import iconCheckCircle from "@/assets/icons/icon_check_circle.svg";
 import { useNavigate } from "react-router-dom";
@@ -8,8 +9,12 @@ import { switchMode } from "@/shared/utils/oauth";
 export const HostRegisterComplete = () => {
   const navigate = useNavigate();
   const reset = useHostRegisterStore((s) => s.reset);
+  const [isLeaving, setIsLeaving] = useState(false); // 이동 처리 중 (중복 클릭 방지)
 
   const handleDone = async () => {
+    // disabled는 다음 렌더에야 반영되므로 아주 빠른 더블클릭은 여기서 막는다
+    if (isLeaving) return;
+    setIsLeaving(true);
     reset();
     // 헤더의 모드 전환은 '이미 등록된 호스트'일 때만 서버에 알린다(Header.tsx:93).
     // 방금 등록을 마친 사용자는 그 조건에 걸리지 않아 서버 currentMode가 GUEST로 남는다.
@@ -20,6 +25,7 @@ export const HostRegisterComplete = () => {
     } catch (err) {
       console.error("[HostRegisterComplete] 호스트 모드 전환 실패:", err);
     }
+    // 성공·실패 모두 이동하므로 이 컴포넌트는 언마운트된다. isLeaving은 되돌리지 않는다.
     navigate("/host/spaces");
   };
 
@@ -43,9 +49,10 @@ export const HostRegisterComplete = () => {
       <Button
         variant="primary"
         size="md"
+        disabled={isLeaving}
         onClick={handleDone}
       >
-        호스트 홈으로
+        {isLeaving ? "이동 중..." : "호스트 홈으로"}
       </Button>
     </div>
   );
