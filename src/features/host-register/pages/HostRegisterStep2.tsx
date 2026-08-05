@@ -2,7 +2,7 @@ import { useState } from "react";
 import { uploadFiles } from "@/features/host-register/api/upload_api";
 import { toHostRequest } from "@/features/host-register/utils/to_host_request";
 import { registerHost } from "@/features/host-register/api/host_api";
-import { reissueToken } from "@/shared/utils/oauth";
+import { reissueToken, getMyHost } from "@/shared/utils/oauth";
 import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
@@ -73,20 +73,45 @@ export const HostRegisterStep2 = () => {
       navigate("/host/host-register/complete");
     } catch (error) {
       const status = (error as { status?: number }).status;
-
-      if (status === 409) {
-        // 이미 등록된 계정. 실패지만 결과적으로는 호스트가 맞으므로
-        // 성공과 같은 자리로 보내 같은 제출을 반복하지 않게 한다.
-        setHostStatus("registered");
-        await refreshRole(); // 이 브라우저 토큰의 role이 낡았을 수 있다
-        navigate("/host/host-register/complete");
-        return;
-      }
-
       const message =
         error instanceof Error
           ? error.message
           : "알 수 없는 오류가 발생했습니다";
+
+      if (status === 409) {
+        // 409는 두 가지를 뜻할 수 있다.
+        // - 이 계정이 이미 호스트 → 완료 화면으로 보내 같은 제출을 반복하지 않게 한다
+        // - HOST409_2: 사업자등록번호가 다른 계정에 쓰임 → 등록 실패, 사유를 띄운다
+        // 코드 문자열에 기대지 않도록 서버에 실제 호스트 여부를 직접 묻는다.
+        // getMyHost()는 404(미등록)만 null로 주고 그 외 오류는 던지므로,
+        // 조회 실패를 null로 뭉뚱그리지 않고 별도 값으로 구분한다.
+        const host = await getMyHost().catch((lookupError: unknown) => {
+          console.error("호스트 등록 실패(409) 후 호스트 조회 실패:", lookupError);
+          return "LOOKUP_FAILED" as const;
+        });
+
+        if (host === "LOOKUP_FAILED") {
+          // 등록됐는지 미등록인지 알 수 없다. 완료 화면으로 보내면 이후 호스트 요청이
+          // 전부 403이 나면서 원인을 알 수 없게 되므로 여기서 멈춘다.
+          setSubmitError("등록 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요");
+          return;
+        }
+
+        if (host) {
+          setHostStatus("registered");
+          await refreshRole(); // 이 브라우저 토큰의 role이 낡았을 수 있다
+          navigate("/host/host-register/complete");
+          return;
+        }
+
+        // 미등록인데 409 → 사업자등록번호가 다른 계정에 이미 쓰였다
+        console.error("호스트 등록 실패(사업자등록번호 중복):", message);
+        setSubmitError(
+          "이미 등록된 사업자등록번호입니다. 1단계로 돌아가 사업자등록번호를 다시 확인해주세요",
+        );
+        return;
+      }
+
       console.error("호스트 등록 실패:", message);
       setSubmitError(message);
     } finally {
