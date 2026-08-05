@@ -42,18 +42,14 @@ const HostContractModal = ({
     setIsSubmitting(true);
     setSubmitError(false);
     try {
-      console.log("[HostContractModal] 1. presigned URL 요청");
       const { uploads } = await GetPresignedURL({
         uploadType: "CONTRACT_SIGNATURE",
         files: [{ contentType: "image/png" }],
       });
       const { presignedUrl, fileUrl } = uploads[0];
-      console.log("[HostContractModal] 2. S3 업로드", fileUrl);
       const signatureFile = new File([signatureBlob], `signature_${reservation.reservationId}.png`, { type: "image/png" });
       await UploadFileToPresignedURL(presignedUrl, signatureFile);
-      console.log("[HostContractModal] 3. SubmitSignature 호출, reservationId:", reservation.reservationId);
       await SubmitSignature(reservation.reservationId, { signatureUrl: fileUrl });
-      console.log("[HostContractModal] 4. 완료");
       onComplete();
     } catch (err) {
       console.error("[HostContractModal] 서명 제출 실패:", err);
@@ -70,7 +66,7 @@ const HostContractModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden={true} />
+      <div className="absolute inset-0 bg-black/40" onClick={isSubmitting ? undefined : onClose} aria-hidden={true} />
       <div
         className="relative z-10 flex max-h-[85vh] w-full max-w-[590px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
         role="dialog"
@@ -157,15 +153,16 @@ const HostContractModal = ({
           <SignatureBoard ref={signatureBoardRef} onIsSigned={setIsSigned} />
 
           {submitError && (
-            <p className="text-sm font-medium text-[#f74b4b]">
+            <p role="alert" className="text-sm font-medium text-[#f74b4b]">
               서명 제출에 실패했습니다. 다시 시도해주세요.
             </p>
           )}
 
           <div className="flex flex-row justify-center gap-5">
             <button
-              className="bg-contract-guide-bg w-40 rounded-lg py-3 text-text-secondary"
+              className="bg-contract-guide-bg w-40 rounded-lg py-3 text-text-secondary disabled:opacity-50"
               onClick={onClose}
+              disabled={isSubmitting}
             >
               취소
             </button>

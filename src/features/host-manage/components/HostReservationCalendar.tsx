@@ -65,7 +65,7 @@ const HostReservationCalendar = ({
   }, [viewDate]);
 
   return (
-    <div className="flex w-[488px] shrink-0 flex-col gap-[24px] rounded-[12px] bg-[#f6faff] p-[20px] drop-shadow-[0px_2px_3px_rgba(0,0,0,0.06)]">
+    <div className="flex w-full max-w-[488px] shrink-0 flex-col gap-[24px] rounded-[12px] bg-[#f6faff] p-[20px] drop-shadow-[0px_2px_3px_rgba(0,0,0,0.06)]">
       <div className="flex flex-col gap-[28px] rounded-[8px] bg-white px-[14px] py-[20px]">
         {/* 월 네비게이션 */}
         <div className="flex w-full items-center justify-center gap-[12px]">
@@ -140,8 +140,7 @@ const HostReservationCalendar = ({
                   key={date.toISOString()}
                   className="flex items-center justify-center p-[12px]"
                 >
-                  <span
-                    className={`text-[16px] font-bold select-none ${
+                  <span aria-hidden="true" className={`text-[16px] font-bold select-none ${
                       unavailable
                         ? "text-[#121212] opacity-25"
                         : isToday
@@ -150,6 +149,9 @@ const HostReservationCalendar = ({
                     }`}
                   >
                     {date.getDate()}
+                  </span>
+                  <span className="sr-only">
+                    {date.getDate()}일 {unavailable ? "예약 불가" : "예약 가능"}
                   </span>
                 </div>
               );
