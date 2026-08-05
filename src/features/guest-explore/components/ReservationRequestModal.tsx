@@ -6,7 +6,9 @@ interface ReservationRequestModalProps {
   guestName: string;
   /** 시작일/종료일이 아직 선택되지 않은 경우 undefined일 수 있다 */
   periodLabel?: string;
-  totalPrice: number;
+  /** 클라이언트에서 계산한 대여료 예상치. 보험료·보증금이 포함된 실제 총 결제 금액이 아니므로
+   * "총 금액"이 아닌 "대여료(예상)"으로만 안내한다. 실제 총액은 요청 성공 응답으로 완료 모달에서 보여준다. */
+  estimatedRentalFee: number;
   isSubmitting: boolean;
   submitError?: string | null;
   onCancel: () => void;
@@ -17,7 +19,7 @@ const ReservationRequestModal = ({
   isOpen,
   guestName,
   periodLabel,
-  totalPrice,
+  estimatedRentalFee,
   isSubmitting,
   submitError,
   onCancel,
@@ -83,10 +85,13 @@ const ReservationRequestModal = ({
             <span className="font-medium">{periodLabel ?? "-"}</span>
           </div>
           <div className="flex gap-4">
-            <span className="text-text-tertiary w-20 shrink-0">총 금액:</span>
-            <span className="font-medium">{totalPrice.toLocaleString()} 원</span>
+            <span className="text-text-tertiary w-20 shrink-0">대여료:</span>
+            <span className="font-medium">{estimatedRentalFee.toLocaleString()} 원</span>
           </div>
         </div>
+        <p className="text-text-tertiary -mt-4 text-xs">
+          보험료·보증금은 제외된 금액이에요. 실제 결제 예정 금액은 요청 완료 후 안내돼요.
+        </p>
 
         <div className="flex flex-col gap-2">
           <label htmlFor={textareaId} className="text-text-primary text-base font-bold">

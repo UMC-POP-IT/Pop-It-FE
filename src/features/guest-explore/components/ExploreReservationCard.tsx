@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
-import { createReservation } from "@/features/guest-explore/api/my_reservation_api";
+import {
+  createReservation,
+  type CreateReservationResponse,
+} from "@/features/guest-explore/api/my_reservation_api";
 import ReservationRequestModal from "@/features/guest-explore/components/ReservationRequestModal";
 import Modal from "@/shared/components/Modal";
 
@@ -55,6 +58,9 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [reservationResult, setReservationResult] = useState<CreateReservationResponse | null>(
+    null,
+  );
 
   const calendarDays = useMemo(() => {
     const year = viewDate.getFullYear();
@@ -110,12 +116,13 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      await createReservation({
+      const result = await createReservation({
         spaceId,
         startDate: toApiDateString(startDate),
         endDate: toApiDateString(endDate),
         usagePurpose,
       });
+      setReservationResult(result);
       setIsRequestModalOpen(false);
       setIsCompleteModalOpen(true);
     } catch (error) {
@@ -132,6 +139,11 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     setIsCompleteModalOpen(false);
     navigate("/reservations");
   };
+
+  // 완료 모달에는 클라이언트 예상치가 아닌 서버가 계산한 실제 금액(대여료/보험료/보증금/총액)을 보여준다.
+  const completeDescription = reservationResult
+    ? `나의 예약 > 예약 예정\n\n대여료 ${reservationResult.rentalFee.toLocaleString()}원 · 보험료 ${reservationResult.insuranceFee.toLocaleString()}원 · 보증금 ${reservationResult.deposit.toLocaleString()}원\n총 결제 예정 금액 ${reservationResult.totalPrice.toLocaleString()}원`
+    : "나의 예약 > 예약 예정";
 
   const getDayClassName = (date: Date) => {
     const isCurrentMonth = date.getMonth() === viewDate.getMonth();
@@ -273,23 +285,25 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
         </div>
       </div>
 
-      <ReservationRequestModal
-        isOpen={isRequestModalOpen}
-        guestName={guestName}
-        periodLabel={periodLabel}
-        totalPrice={totalPrice}
-        isSubmitting={isSubmitting}
-        submitError={submitError}
-        onCancel={() => setIsRequestModalOpen(false)}
-        onSubmit={handleSubmitRequest}
-      />
+      {isRequestModalOpen && (
+        <ReservationRequestModal
+          isOpen={isRequestModalOpen}
+          guestName={guestName}
+          periodLabel={periodLabel}
+          estimatedRentalFee={totalPrice}
+          isSubmitting={isSubmitting}
+          submitError={submitError}
+          onCancel={() => setIsRequestModalOpen(false)}
+          onSubmit={handleSubmitRequest}
+        />
+      )}
 
       <Modal
         isOpen={isCompleteModalOpen}
         showCheckIcon
         singleButton
         title="예약 요청이 완료 되었습니다"
-        description="나의 예약 > 예약 예정"
+        description={completeDescription}
         confirmLabel="확인"
         onConfirm={handleCompleteConfirm}
       />

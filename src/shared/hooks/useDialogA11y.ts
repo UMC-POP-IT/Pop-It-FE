@@ -50,6 +50,9 @@ export const useDialogA11y = <T extends HTMLElement>({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        // capture 단계에서 전파를 끊어, 현재 이 훅을 쓰는 대화상자가 Escape를 온전히 소유하도록 한다.
+        // 지금은 중첩 모달이나 모달 내부의 자체 Escape 처리 위젯(드롭다운/데이트피커 등)이 없어 문제되지 않지만,
+        // 그런 요소가 추가되면 가장 안쪽(마지막에 열린) 대화상자만 반응하도록 트랩 우선순위를 다시 검토해야 한다.
         event.stopPropagation();
         onCloseRef.current?.();
         return;
