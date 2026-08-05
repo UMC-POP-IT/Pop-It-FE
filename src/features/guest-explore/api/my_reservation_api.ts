@@ -12,6 +12,7 @@ export interface Reservation {
     usagePurpose: string;
 	totalPrice: number;
 	isPhotoVerified: boolean;
+    checkoutRejected: boolean;
 	space: {
 		spaceId: number;
 		buildingName: string;
