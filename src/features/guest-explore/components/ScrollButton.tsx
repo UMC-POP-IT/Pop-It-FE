@@ -19,12 +19,12 @@ export const ScrollButton = ({
       style={{ top: topOffset }}
       className={`border-border absolute ${
         direction === "prev" ? "-left-4" : "-right-4"
-      } z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md border bg-white shadow-md`}
+      } z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[12px] border bg-white shadow-md`}
     >
       <img
         src={direction === "prev" ? arrowLeft : arrowRight}
         alt=""
-        className="h-4 w-auto"
+        className="h-8 w-8"
       />
     </button>
   );
