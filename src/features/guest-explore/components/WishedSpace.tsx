@@ -229,7 +229,6 @@ export const WishedSpace = () => {
                   className="w-[calc(50%-0.5rem)] flex-none sm:w-[calc((100%-2*1rem)/3)] lg:w-[calc((100%-3*1rem)/4)]"
                   >
                   <SpaceCard
-                      key={space.spaceId} 
                       space={toCard(space)}
                       isWished={true}
                       categoryTag={space.spaceCategory}
