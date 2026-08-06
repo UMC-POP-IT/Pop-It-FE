@@ -75,6 +75,16 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     });
   }, [viewDate]);
 
+  // 오늘이 속한 달보다 과거로는 이동할 수 없도록 이전 달 버튼을 막는다.
+  const isPrevMonthDisabled =
+    viewDate.getFullYear() === todayStart.getFullYear() &&
+    viewDate.getMonth() === todayStart.getMonth();
+
+  const handlePrevMonth = () => {
+    if (isPrevMonthDisabled) return;
+    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
+  };
+
   const handleSelectDate = (date: Date) => {
     if (!user) {
       onLoginRequired?.();
@@ -193,12 +203,9 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
               <button
                 type="button"
                 aria-label="이전 달"
-                onClick={() =>
-                  setViewDate(
-                    new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1),
-                  )
-                }
-                className="text-text-primary flex h-8 w-8 items-center justify-center text-xl"
+                onClick={handlePrevMonth}
+                disabled={isPrevMonthDisabled}
+                className="text-text-primary flex h-8 w-8 items-center justify-center text-xl disabled:cursor-not-allowed disabled:opacity-30"
               >
                 ‹
               </button>
