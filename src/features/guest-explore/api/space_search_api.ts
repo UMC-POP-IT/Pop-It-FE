@@ -122,7 +122,7 @@ export const toSpaceSummary = (item: SpaceSearchItemRes): SpaceSummary => ({
   address: item.roadAddress,
   district: item.district,
   cost: { day: item.displayPrice },
-  keywords: normalizeKeywords(item.keywords),
+  keywords: normalizeKeywords(item.keywords ?? []),
   description: "",
   createdAt: "",
   category: item.spaceCategory,

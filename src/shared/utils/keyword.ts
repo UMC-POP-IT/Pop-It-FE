@@ -4,4 +4,4 @@
  * "#"는 SpaceCard가 렌더링 시점에 붙인다.
  */
 export const normalizeKeywords = (keywords: string[]): string[] =>
-  keywords.map((keyword) => keyword.replace(/^#/, ""));
+  keywords.map((keyword) => keyword.trim().replace(/^#/, ""));

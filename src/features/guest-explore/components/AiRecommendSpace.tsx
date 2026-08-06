@@ -32,7 +32,7 @@ const toCard = (dto: RecommendedSpace): AiRecommendCard => ({
     name: dto.buildingName,
     address: dto.roadAddress,
     cost: { day: dto.pricePerDay },
-    keywords: normalizeKeywords(dto.keywords),
+    keywords: normalizeKeywords(dto.keywords ?? []),
     description: "",
     createdAt: "",
   },

@@ -6,6 +6,9 @@ import passIcon from "@/features/guest-explore/icons/PASS.png";
 import tossIcon from "@/features/guest-explore/icons/Toss.png";
 import { GetVerificationStatus, RequestVerification } from "@/features/guest-explore/api/my_reservation_api";
 
+const RETRY_INTERVAL_MS = 1500;
+const MAX_RETRIES = 3;
+
 interface AuthenticationProps {
   onVerified?: (identityVerificationId: string) => Promise<void>;
   onIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
@@ -52,7 +55,7 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
   }, [onIsAuthenticated]);
 
   // PortOne 인증 완료 직후 서버 확정 반영이 약간 지연될 수 있어, 실패 시 잠시 뒤 상태를 재조회해 확인한다.
-  const pollVerificationStatus = async (retries = 3, delayMs = 1500): Promise<boolean> => {
+  const pollVerificationStatus = async (retries = MAX_RETRIES, delayMs = RETRY_INTERVAL_MS): Promise<boolean> => {
     for (let i = 0; i < retries; i++) {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       if (!isMountedRef.current) return false; // 언마운트된 경우 남은 재조회를 중단

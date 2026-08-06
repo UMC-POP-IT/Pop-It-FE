@@ -35,7 +35,7 @@ const toCard = (dto: wishedSpace): Space => ({
   name: dto.buildingName,
   address: dto.roadAddress,
   cost: { day: dto.pricePerDay },
-  keywords: normalizeKeywords(dto.keywords),
+  keywords: normalizeKeywords(dto.keywords ?? []),
   description: dto.basicInfo,
   createdAt: "",
 });
