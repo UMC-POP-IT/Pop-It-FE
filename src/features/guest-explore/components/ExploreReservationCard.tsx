@@ -162,21 +162,15 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
       return "text-text-disabled cursor-not-allowed";
     }
     if (startDate && !endDate && isSameDay(date, startDate)) {
-      return "bg-primary-100 rounded-full text-text-primary";
+      return "bg-primary rounded-full text-white";
     }
     if (startDate && endDate) {
-      // 시작일과 종료일을 같은 날로 두 번 선택한 경우 (하루만 선택) - 동그라미로 표시
-      if (isSameDay(startDate, endDate) && isSameDay(date, startDate)) {
-        return "bg-primary-100 rounded-full text-text-primary";
-      }
-      if (isSameDay(date, startDate)) {
-        return "bg-primary-100 rounded-l-full text-text-primary";
-      }
-      if (isSameDay(date, endDate)) {
-        return "bg-primary-100 rounded-r-full text-text-primary";
+      // 시작일/종료일(하루만 선택한 경우 둘이 같은 날)은 항상 꽉 찬 동그라미로 표시
+      if (isSameDay(date, startDate) || isSameDay(date, endDate)) {
+        return "bg-primary rounded-full text-white";
       }
       if (date > startDate && date < endDate) {
-        return "bg-primary-light text-text-primary";
+        return "bg-primary-100 text-text-primary";
       }
     }
     return isCurrentMonth ? "text-text-primary" : "text-text-disabled";
