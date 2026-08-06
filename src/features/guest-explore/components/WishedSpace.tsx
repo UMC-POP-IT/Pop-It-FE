@@ -8,6 +8,7 @@ import { useWishGuard } from "@/shared/hooks/useWishGuard";
 import { useCardCarousel } from "@/features/guest-explore/hooks/useCardCarousel";
 import { useWishStore } from "@/store/wishStore";
 import { getWishList, wishedSpace } from "@/features/guest-explore/api/spaces_api";
+import { normalizeKeywords } from "@/shared/utils/keyword";
 
 // SpaceCard 4개 단위로 스크롤
 const CARDS_PER_SCROLL = 4;
@@ -34,7 +35,7 @@ const toCard = (dto: wishedSpace): Space => ({
   name: dto.buildingName,
   address: dto.roadAddress,
   cost: { day: dto.pricePerDay },
-  keywords: dto.keywords,
+  keywords: normalizeKeywords(dto.keywords),
   description: dto.basicInfo,
   createdAt: "",
 });

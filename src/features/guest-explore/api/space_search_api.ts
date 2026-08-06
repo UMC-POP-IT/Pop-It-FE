@@ -2,6 +2,7 @@ import { apiFetch } from "@/shared/utils/apiClient";
 import type { Space } from "@/types";
 import { SPACE_CATEGORY_OPTIONS } from "@/shared/utils/spaceCategory";
 import type { SpaceCategory } from "@/shared/utils/spaceCategory";
+import { normalizeKeywords } from "@/shared/utils/keyword";
 
 // ============================================================
 // GET /api/v1/spaces - 공간 탐색 (검색/필터)
@@ -121,9 +122,7 @@ export const toSpaceSummary = (item: SpaceSearchItemRes): SpaceSummary => ({
   address: item.roadAddress,
   district: item.district,
   cost: { day: item.displayPrice },
-  // 응답 keywords는 "#지역동" 형태(# 포함)로 내려오는데, SpaceCard가 렌더링 시
-  // 다시 "#"을 붙이므로 중복되지 않게 선행 "#"은 제거해서 보관한다.
-  keywords: item.keywords.map((keyword) => keyword.replace(/^#/, "")),
+  keywords: normalizeKeywords(item.keywords),
   description: "",
   createdAt: "",
   category: item.spaceCategory,
