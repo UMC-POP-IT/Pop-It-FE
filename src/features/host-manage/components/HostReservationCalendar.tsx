@@ -143,10 +143,10 @@ const HostReservationCalendar = ({
                   className="flex items-center justify-center p-[12px]"
                 >
                   <span aria-hidden="true" className={`text-[16px] font-bold select-none ${
-                      unavailable
-                        ? "text-[#121212] opacity-25 line-through"
-                        : isToday
-                          ? "text-[#0564f5]"
+                      isToday
+                        ? "text-[#0564f5]"
+                        : unavailable
+                          ? "text-[#121212] opacity-25 line-through"
                           : "text-[#121212]"
                     }`}
                   >
