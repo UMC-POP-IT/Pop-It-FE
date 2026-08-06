@@ -137,24 +137,26 @@ const HostReservationCalendar = ({
               const unavailable = isUnavailable(date, unavailablePeriods, today);
               const isToday = isSameDay(date, today);
 
+              // 오늘 날짜: 원형 테두리
+              if (isToday) {
+                return (
+                  <div key={date.toISOString()} className="flex items-center justify-center">
+                    <div className={`flex items-center justify-center rounded-full p-[8px] select-none border ${unavailable ? "border-[#c5c5c5]" : "border-[#b2cffc]"}`}>
+                      <span aria-hidden="true" className={`text-[16px] font-bold w-[22px] text-center ${unavailable ? "text-[#c5c5c5] line-through" : "text-[#121212]"}`}>
+                        {date.getDate()}
+                      </span>
+                    </div>
+                    <span className="sr-only">{date.getDate()}일 오늘 {unavailable ? "예약 불가" : "예약 가능"}</span>
+                  </div>
+                );
+              }
+
               return (
-                <div
-                  key={date.toISOString()}
-                  className="flex items-center justify-center p-[12px]"
-                >
-                  <span aria-hidden="true" className={`text-[16px] font-bold select-none ${
-                      isToday
-                        ? "text-[#0564f5]"
-                        : unavailable
-                          ? "text-[#121212] opacity-25 line-through"
-                          : "text-[#121212]"
-                    }`}
-                  >
+                <div key={date.toISOString()} className="flex items-center justify-center p-[12px]">
+                  <span aria-hidden="true" className={`text-[16px] font-bold select-none w-[22px] text-center ${unavailable ? "text-[#c5c5c5] line-through" : "text-[#121212]"}`}>
                     {date.getDate()}
                   </span>
-                  <span className="sr-only">
-                    {date.getDate()}일 {unavailable ? "예약 불가" : "예약 가능"}
-                  </span>
+                  <span className="sr-only">{date.getDate()}일 {unavailable ? "예약 불가" : "예약 가능"}</span>
                 </div>
               );
             })}
