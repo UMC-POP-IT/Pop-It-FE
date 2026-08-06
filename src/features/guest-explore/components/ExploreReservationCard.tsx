@@ -245,7 +245,7 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
   };
 
   // 날짜 칸 안의 숫자를 어떤 모양으로 그릴지 결정한다.
-  // 우선순위: 선택됨(꽉 찬 원) > 오늘(테두리 원, 선택 불가 시 회색 점선) > 선택 불가(취소선) > 기본
+  // 우선순위: 선택됨(꽉 찬 원) > 오늘(테두리 원, 선택 불가 시 회색 테두리+취소선) > 선택 불가(회색 취소선 텍스트만) > 기본
   const renderDayNumber = (date: Date) => {
     const day = date.getDate();
 
@@ -277,12 +277,8 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
       );
     }
     if (disabled) {
-      // 오늘이 아닌 나머지 선택 불가 날짜: 회색 점선 원형
-      return (
-        <span className="relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[#c5c5c5] text-[#c5c5c5]">
-          {day}
-        </span>
-      );
+      // 오늘이 아닌 나머지 선택 불가 날짜: 원 없이 회색 취소선 텍스트만
+      return <span className="text-[#c5c5c5] line-through">{day}</span>;
     }
     return day;
   };
