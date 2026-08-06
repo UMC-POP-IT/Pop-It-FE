@@ -66,7 +66,9 @@ const HostReservationCalendar = ({
 
   return (
     <div className="flex w-full max-w-[488px] shrink-0 flex-col gap-[24px] rounded-[12px] bg-[#f6faff] p-[20px] drop-shadow-[0px_2px_3px_rgba(0,0,0,0.06)]">
-      <div className="flex flex-col gap-[28px] rounded-[8px] bg-white px-[14px] py-[20px]">
+      <div className="relative flex flex-col gap-[28px] rounded-[8px] bg-white px-[14px] py-[20px]">
+        {/* 클릭 불가 오버레이 */}
+        <div className="absolute inset-0 rounded-[8px] bg-[#f0f0f0]/30 pointer-events-none z-10" />
         {/* 월 네비게이션 */}
         <div className="flex w-full items-center justify-center gap-[12px]">
           {/* 이전 달: 현재 달이면 숨김 */}
@@ -142,7 +144,7 @@ const HostReservationCalendar = ({
                 >
                   <span aria-hidden="true" className={`text-[16px] font-bold select-none ${
                       unavailable
-                        ? "text-[#121212] opacity-25"
+                        ? "text-[#121212] opacity-25 line-through"
                         : isToday
                           ? "text-[#0564f5]"
                           : "text-[#121212]"
