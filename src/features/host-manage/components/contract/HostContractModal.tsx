@@ -47,7 +47,7 @@ const HostContractModal = ({
         files: [{ contentType: "image/png" }],
       });
       const { presignedUrl, fileUrl } = uploads[0];
-      const signatureFile = new File([signatureBlob], `signature_${reservation.reservationId}.png`, { type: "image/png" });
+      const signatureFile = new File([signatureBlob], `signature_${reservation.reservationId}_host.png`, { type: "image/png" });
       await UploadFileToPresignedURL(presignedUrl, signatureFile);
       await SubmitSignature(reservation.reservationId, { signatureUrl: fileUrl });
       onComplete();
