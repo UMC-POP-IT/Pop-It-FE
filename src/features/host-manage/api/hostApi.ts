@@ -1,4 +1,4 @@
-﻿import { apiFetch } from "@/shared/utils/apiClient";
+import { apiFetch } from "@/shared/utils/apiClient";
 import type { ApiHostReservation, ApiMySpace, ReservationStatus } from "@/types";
 
 interface HostReservationsResult {
@@ -70,7 +70,7 @@ export async function rejectReservation(
 export async function approveCheckout(
   reservationId: number,
 ): Promise<ReservationActionResult> {
-  return apiFetch(`/api/v1/reservations/${reservationId}/checkout/approve`, {
+  return apiFetch(`/api/v1/reservations/${reservationId}/checkout-approve`, {
     method: "POST",
   });
 }
@@ -78,7 +78,7 @@ export async function approveCheckout(
 export async function rejectCheckout(
   reservationId: number,
 ): Promise<ReservationActionResult> {
-  return apiFetch(`/api/v1/reservations/${reservationId}/checkout/reject`, {
+  return apiFetch(`/api/v1/reservations/${reservationId}/checkout-reject`, {
     method: "POST",
   });
 }
@@ -87,7 +87,7 @@ export async function fetchCheckoutPhotos(
   reservationId: number,
 ): Promise<string[]> {
   const result = await apiFetch<CheckoutPhotosResult>(
-    `/api/v1/reservations/${reservationId}/checkout-images`,
+    `/api/v1/reservations/${reservationId}/checkout-images/me`,
   );
   return result.photoUrls ?? [];
 }
@@ -120,4 +120,3 @@ export async function fetchIdentityVerificationStatus(): Promise<IdentityVerific
 export async function deleteSpace(spaceId: number): Promise<void> {
   await apiFetch(`/api/v1/spaces/${spaceId}`, { method: "DELETE" });
 }
-

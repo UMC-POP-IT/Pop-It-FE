@@ -101,7 +101,7 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-40 w-full bg-white drop-shadow-[0px_4px_5px_rgba(0,0,0,0.12)]">
       {/* 피그마: 전체 px-[40px], 좌측 gap-[32px](로고↔nav), 우측 gap-[20px] */}
-      <div className="mx-auto flex h-[74px] w-full max-w-screen-xl items-center px-4 md:px-10 xl:px-[76px]">
+      <div className="flex h-[74px] w-full items-center px-[10px] md:px-[40px]">
         {/* 좌측: 로고 + nav (gap-[32px]) */}
         <div className="flex items-center gap-8">
           <NavLink
@@ -184,7 +184,7 @@ const Header = () => {
               onClick={handleModeToggle}
               className="bg-primary-light text-text-primary flex items-center rounded p-[4px] text-base transition-colors"
             >
-              <span className="px-[4px]">
+              <span className="hidden px-[4px] md:inline">
                 {mode === "GUEST" ? "호스트 전환" : "게스트 전환"}
               </span>
               <svg
@@ -217,7 +217,7 @@ const Header = () => {
                 aria-haspopup="menu"
                 aria-expanded={isProfileMenuOpen}
                 aria-controls="profile-menu"
-                className="text-text-primary flex h-[74px] w-auto items-center justify-center gap-2 py-[14px] text-base xl:w-[164px] xl:gap-[12px]"
+                className="text-text-primary flex h-[74px] w-auto items-center justify-center gap-3 py-[14px] text-base xl:w-[164px]"
               >
                 <div className="bg-primary-light flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full p-[8px]">
                   <svg
@@ -261,12 +261,14 @@ const Header = () => {
               )}
             </div>
           ) : (
-            <button
-              onClick={() => openLoginModal()}
-              className="text-primary flex h-[74px] w-[164px] items-center justify-center text-base font-medium"
-            >
-              로그인
-            </button>
+            <div className="flex h-[74px] w-auto items-center justify-center md:w-[164px]">
+              <button
+                onClick={() => openLoginModal()}
+                className="flex h-[40px] w-full items-center justify-center rounded-[8px] border border-[#3783f7] bg-white px-[24px] py-[6px] text-base leading-[1.4] font-bold text-[#0564f5] whitespace-nowrap"
+              >
+                로그인/회원가입
+              </button>
+            </div>
           )}
         </div>
       </div>

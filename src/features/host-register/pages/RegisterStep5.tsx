@@ -145,9 +145,10 @@ export const RegisterStep5 = () => {
                 setValues({
                   photoList: [
                     ...form.photoList,
-                    ...accepted.map(
-                      (file): SpacePhoto => ({ kind: "new", file }),
-                    ),
+                    ...accepted.map((file): SpacePhoto => ({
+                      kind: "new",
+                      file,
+                    })),
                   ],
                 });
                 // 넘친 만큼은 조용히 버리지 않고 몇 장이 빠졌는지 알린다
@@ -188,7 +189,7 @@ export const RegisterStep5 = () => {
         )}
 
         {/* 사진 촬영 가이드 박스 */}
-        <div className="bg-tag-bg flex flex-col gap-2 rounded-lg p-4">
+        <div className="bg-info-bg flex flex-col gap-2 rounded-lg p-4">
           <span className="text-primary-hover flex items-center gap-1 text-xl font-bold">
             <img
               src={iconInfo}
@@ -219,7 +220,14 @@ export const RegisterStep5 = () => {
         <Modal
           isOpen={modal === "confirm"}
           title={
-            isEdit ? "공간을 수정하시겠습니까?" : "공간을 등록하시겠습니까?"
+            isEdit
+              ? "변경 사항으로 수정하시겠습니까?"
+              : "공간을 등록하시겠습니까?"
+          }
+          description={
+            isEdit
+              ? "저장 후에는 즉시 서비스에 반영됩니다.\n수정된 정보가 정확한지 다시 한번 확인해주세요."
+              : undefined
           }
           cancelLabel="돌아가기"
           confirmLabel={
@@ -251,7 +259,7 @@ export const RegisterStep5 = () => {
         />
 
         <Button
-          variant="gray"
+          variant="secondary"
           size="nav"
           onClick={() => navigate("/host/register/step4")}
         >
@@ -296,29 +304,31 @@ const PhotoThumbnail = ({
   }, [photo]);
 
   return (
-    <div className="group bg-tag-bg border-divider relative size-[144px] shrink-0 overflow-hidden rounded-lg border-2">
-      <img
-        src={url}
-        alt=""
-        className="h-full w-full object-cover"
-      />
-
-      {/* 삭제 오버레이 — hover 기기는 hover 시, 터치 기기는 항상 노출(투명 클릭 함정 방지) */}
-      <button
-        type="button"
-        aria-label="사진 삭제"
-        onClick={onRemove}
-        className="absolute inset-0 flex items-center justify-center bg-black/70 transition-opacity focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
-      >
+    <div className="group relative size-[144px] shrink-0">
+      <div className="bg-tag-bg border-divider relative h-full w-full overflow-hidden rounded-lg border-2">
         <img
-          src={iconTrash}
+          src={url}
           alt=""
-          className="h-8 w-8"
+          className="h-full w-full object-cover"
         />
-      </button>
+
+        {/* 삭제 오버레이 — hover 기기는 hover 시, 터치 기기는 항상 노출(투명 클릭 함정 방지) */}
+        <button
+          type="button"
+          aria-label="사진 삭제"
+          onClick={onRemove}
+          className="absolute inset-0 flex items-center justify-center bg-black/70 transition-opacity focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
+        >
+          <img
+            src={iconTrash}
+            alt=""
+            className="h-10 w-10"
+          />
+        </button>
+      </div>
 
       {isFirst && (
-        <span className="bg-primary-light text-primary absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1.5 text-xl font-medium whitespace-nowrap">
+        <span className="bg-primary-light text-primary absolute top-0 left-[79%] -translate-x-1/2 -translate-y-1/4 rounded-full px-3 py-1.5 text-xl font-medium whitespace-nowrap">
           대표사진
         </span>
       )}

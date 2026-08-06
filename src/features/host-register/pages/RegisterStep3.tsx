@@ -231,7 +231,7 @@ export const RegisterStep3 = () => {
       {/* 이전 / 다음으로 (다음으로는 초기 비활성) */}
       <div className="flex justify-end gap-2">
         <Button
-          variant="gray"
+          variant="secondary"
           size="nav"
           onClick={() => navigate("/host/register/step2")}
         >
