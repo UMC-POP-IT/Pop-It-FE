@@ -136,6 +136,7 @@ export const HostRegisterStep2 = () => {
       <StepIndicator
         steps={HOST_STEPS}
         currentStep={1}
+        spacing="compact"
       />
 
       {/* 섹션: 정산 계좌 정보 */}
