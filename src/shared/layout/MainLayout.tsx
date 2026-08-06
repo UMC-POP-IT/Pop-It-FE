@@ -6,7 +6,12 @@ import Modal from "@/shared/components/Modal";
 import { LoginModal } from "@/shared/components/LoginModal";
 import { useAuthStore } from "@/store/authStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
-import { handleOAuthCallback, switchMode, getCurrentUser } from "@/shared/utils/oauth";
+import { useHostModeSwitch } from "@/shared/hooks/useHostModeSwitch";
+import {
+  handleOAuthCallback,
+  switchMode,
+  getCurrentUser,
+} from "@/shared/utils/oauth";
 import { PaymentApproval } from "@/features/guest-explore/api/my_reservation_api";
 import { TOSS_PENDING_PAYMENT_KEY } from "@/features/guest-explore/components/contract/TossPayments";
 
@@ -37,9 +42,9 @@ const PendingActionExecutor = () => {
   const pendingAction = useAuthStore((s) => s.pendingAction);
   const clearPendingAction = useAuthStore((s) => s.clearPendingAction);
   const setMode = useAuthStore((s) => s.setMode);
-  const refreshHostStatus = useAuthStore((s) => s.refreshHostStatus);
   const { handleWishToggle } = useWishGuard();
   const navigate = useNavigate();
+  const switchToHost = useHostModeSwitch();
 
   useEffect(() => {
     if (!user || !pendingAction) return;
@@ -53,30 +58,35 @@ const PendingActionExecutor = () => {
         navigate(pendingAction.path);
         break;
       case "modeToggle":
-        switchMode(pendingAction.targetMode)
-          .then(async () => {
-            setMode(pendingAction.targetMode);
-            // 로그인 전에 저장해둔 navigateTo는 그 시점엔 hostStatus를 알 수 없어 신뢰할 수 없다.
-            // HOST 전환이면 로그인 직후 실제 등록 여부를 다시 조회해 목적지를 정한다.
-            if (pendingAction.targetMode === "HOST") {
-              const status = await refreshHostStatus();
-              navigate(status === "registered" ? "/host/spaces" : "/host/host-register");
-            } else {
-              navigate(pendingAction.navigateTo);
-            }
-            clearPendingAction();
-          })
-          .catch((err: unknown) => {
-            const status = (err as { status?: number }).status;
-            if (status === 403) {
-              // 호스트 미등록 → 호스트 등록 안내 페이지로
-              navigate("/host/host-register");
-            }
-            clearPendingAction();
+        // 로그인 전에 저장해둔 navigateTo는 그 시점엔 hostStatus를 알 수 없어 신뢰할 수 없다.
+        // HOST 전환이면 훅이 로그인 직후 등록 여부를 다시 조회해 목적지를 정한다.
+        if (pendingAction.targetMode === "HOST") {
+          switchToHost()
+            .then((status) => {
+              // 조회 실패 시 훅은 이동하지 않는다. 미등록으로 단정해 등록 화면으로
+              // 보내면 이미 등록한 호스트가 엉뚱한 곳에 떨어진다. 헤더에서 다시 시도할 수 있다.
+              if (status === "unknown") {
+                console.error(
+                  "[PendingActionExecutor] 호스트 등록 여부를 확인하지 못해 모드 전환을 중단했습니다",
+                );
+              }
+            })
+            .finally(clearPendingAction);
+        } else {
+          setMode(pendingAction.targetMode);
+          navigate(pendingAction.navigateTo);
+          // 서버 currentMode 동기화 (실패해도 화면 전환은 이미 끝났으니 막지 않는다)
+          switchMode(pendingAction.targetMode).catch((err: unknown) => {
+            console.error(
+              "[PendingActionExecutor] 게스트 모드 서버 동기화 실패:",
+              err,
+            );
           });
+          clearPendingAction();
+        }
         break;
     }
-    // navigate·handleWishToggle·setMode·clearPendingAction은 안정적 참조(stable ref)라 deps 제외
+    // navigate·handleWishToggle·setMode·clearPendingAction·switchToHost는 안정적 참조(stable ref)라 deps 제외
   }, [user, pendingAction]);
 
   return null;
@@ -174,7 +184,11 @@ const TossPaymentResultHandler = () => {
 
     // 성공 리다이렉트: paymentKey/orderId/amount + 결제 요청 시 저장해둔 paymentId가 모두 있어야 승인 가능
     if (paymentKey && orderId && amount && paymentId !== undefined) {
-      PaymentApproval(paymentId, { paymentKey, orderId, amount: Number(amount) })
+      PaymentApproval(paymentId, {
+        paymentKey,
+        orderId,
+        amount: Number(amount),
+      })
         .then(() => {
           setResult({
             success: true,
