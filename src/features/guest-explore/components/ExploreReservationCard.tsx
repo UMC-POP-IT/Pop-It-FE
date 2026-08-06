@@ -140,9 +140,9 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     navigate("/reservations");
   };
 
-  // 완료 모달에는 클라이언트 예상치가 아닌 서버가 계산한 실제 금액(대여료/보험료/보증금/총액)을 보여준다.
+  // 완료 모달에는 클라이언트 예상치가 아닌 서버가 계산한 실제 금액(임대료/보험료/보증금/총액)을 보여준다.
   const completeDescription = reservationResult
-    ? `나의 예약 > 예약 예정\n\n대여료 ${reservationResult.rentalFee.toLocaleString()}원 · 보험료 ${reservationResult.insuranceFee.toLocaleString()}원 · 보증금 ${reservationResult.deposit.toLocaleString()}원\n총 결제 예정 금액 ${reservationResult.totalPrice.toLocaleString()}원`
+    ? `나의 예약 > 예약 예정\n\n임대료 ${reservationResult.rentalFee.toLocaleString()}원 · 보험료 ${reservationResult.insuranceFee.toLocaleString()}원 · 보증금 ${reservationResult.deposit.toLocaleString()}원\n총 결제 예정 금액 ${reservationResult.totalPrice.toLocaleString()}원`
     : "나의 예약 > 예약 예정";
 
   const getDayClassName = (date: Date) => {
