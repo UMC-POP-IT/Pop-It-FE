@@ -164,11 +164,13 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
       return "text-text-disabled cursor-not-allowed";
     }
     if (startDate && endDate && !isSameDay(startDate, endDate)) {
+      // 시작일/종료일 칸은 원의 세로 지름(칸 정중앙)까지만 배경을 채운다.
+      // 그 바깥쪽(반대쪽 절반)은 배경 없이 비워둬 원 뒤로 삐져나오지 않게 한다.
       if (isSameDay(date, startDate)) {
-        return "bg-primary-100 rounded-l-full text-text-primary";
+        return "text-text-primary bg-[linear-gradient(to_right,transparent_50%,var(--color-primary-100)_50%)]";
       }
       if (isSameDay(date, endDate)) {
-        return "bg-primary-100 rounded-r-full text-text-primary";
+        return "text-text-primary bg-[linear-gradient(to_right,var(--color-primary-100)_50%,transparent_50%)]";
       }
       if (date > startDate && date < endDate) {
         return "bg-primary-100 text-text-primary";
@@ -252,10 +254,10 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
                     key={date.toISOString()}
                     onClick={() => handleSelectDate(date)}
                     disabled={date < todayStart}
-                    className={`flex w-full items-center justify-center p-3 text-base font-bold disabled:cursor-not-allowed ${getDayClassName(date)}`}
+                    className={`relative box-border flex h-10 w-full items-center justify-center border-0 p-0 text-base font-bold disabled:cursor-not-allowed ${getDayClassName(date)}`}
                   >
                     {isSelectedEndpoint(date) ? (
-                      <span className="bg-primary flex h-9 w-9 items-center justify-center rounded-full text-white">
+                      <span className="bg-primary relative z-10 flex aspect-square h-full shrink-0 items-center justify-center rounded-full text-white">
                         {date.getDate()}
                       </span>
                     ) : (
