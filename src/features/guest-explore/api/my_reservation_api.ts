@@ -98,6 +98,15 @@ export interface SubmitSignatureResponse {
     bothSigned: boolean;
 }
 
+export interface UnavailablePeriod {
+    startDate: string; // "YYYY-MM-DD"
+    endDate: string;   // "YYYY-MM-DD"
+}
+
+interface GetUnavailableDatesResult {
+    unavailableDates: UnavailablePeriod[];
+}
+
 export interface CreateReservationRequest {
     spaceId: number;
     startDate: string;
@@ -183,6 +192,12 @@ export const GetPresignedURL = (request: GetPresignedURLRequest) =>
         method: "POST",
         body: JSON.stringify(request),
 });
+
+// 게스트 - 공간별 예약 불가 날짜 조회 (이미 선점(승인대기~진행 중)된 기간 목록. 지난 날짜는 응답에서 제외됨) ~ DONE
+export const GetUnavailableDates = async (spaceId: number): Promise<UnavailablePeriod[]> => {
+    const result = await apiFetch<GetUnavailableDatesResult>(`/api/v1/reservations/${spaceId}/unavailable-dates`);
+    return result.unavailableDates ?? [];
+};
 
 // 게스트 - 예약 요청 (spaceId/기간/사업 설명을 전달하면 대여료·보험료(대여료의 5%)·보증금을 서버가 계산해 총 결제 금액과 함께 PENDING_APPROVAL 상태의 예약을 생성) ~ DONE
 export const createReservation = (request: CreateReservationRequest) =>

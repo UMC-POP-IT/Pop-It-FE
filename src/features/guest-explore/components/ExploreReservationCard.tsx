@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import {
   createReservation,
+  GetUnavailableDates,
   type CreateReservationResponse,
+  type UnavailablePeriod,
 } from "@/features/guest-explore/api/my_reservation_api";
 import ReservationRequestModal from "@/features/guest-explore/components/ReservationRequestModal";
 import Modal from "@/shared/components/Modal";
@@ -39,6 +41,14 @@ const isSameDay = (a: Date, b: Date) =>
 const diffDays = (a: Date, b: Date) =>
   Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
+const parseDateString = (str: string) => {
+  const [y, m, d] = str.split("-").map(Number);
+  return new Date(y, m - 1, d);
+};
+
+// 예약 가능 기간: 오늘부터 90일 이내
+const BOOKING_WINDOW_DAYS = 90;
+
 const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreReservationCardProps) => {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
@@ -53,6 +63,22 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
   });
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [unavailablePeriods, setUnavailablePeriods] = useState<UnavailablePeriod[]>([]);
+
+  // 이 공간에 이미 선점(승인대기~진행 중)된 예약 기간을 받아와 달력에서 선택하지 못하게 막는다.
+  useEffect(() => {
+    let cancelled = false;
+    GetUnavailableDates(spaceId)
+      .then((periods) => {
+        if (!cancelled) setUnavailablePeriods(periods);
+      })
+      .catch(() => {
+        // 조회에 실패해도 예약 자체는 계속 진행할 수 있어야 하므로 조용히 무시한다.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [spaceId]);
 
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,18 +111,50 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
   };
 
+  // 오늘 + 90일보다 이후 날짜는 선택 불가
+  const maxSelectableDate = new Date(todayStart);
+  maxSelectableDate.setDate(maxSelectableDate.getDate() + BOOKING_WINDOW_DAYS);
+
+  const isDateBooked = (date: Date) =>
+    unavailablePeriods.some(({ startDate: s, endDate: e }) => {
+      const start = parseDateString(s);
+      const end = parseDateString(e);
+      return date >= start && date <= end;
+    });
+
+  // 과거 날짜 / 오늘+90일 이후 / 이미 예약된(선점된) 날짜는 선택할 수 없다.
+  const isDateDisabled = (date: Date) =>
+    date < todayStart || date > maxSelectableDate || isDateBooked(date);
+
+  // start~end 사이(양 끝 포함)에 이미 예약된 날짜가 하루라도 있는지 확인
+  const hasBookedDateBetween = (start: Date, end: Date) => {
+    const cursor = new Date(start);
+    while (cursor <= end) {
+      if (isDateBooked(cursor)) return true;
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return false;
+  };
+
   const handleSelectDate = (date: Date) => {
     if (!user) {
       onLoginRequired?.();
       return;
     }
-    if (date < todayStart) return;
+    if (isDateDisabled(date)) return;
     if (!startDate || endDate) {
       setStartDate(date);
       setEndDate(null);
       return;
     }
     if (date < startDate) {
+      setStartDate(date);
+      setEndDate(null);
+      return;
+    }
+    // 기간(시작일~클릭한 날짜) 사이에 이미 예약된 날짜가 있으면 기간을 만들지 않고,
+    // 클릭한 날짜를 새 시작일로 다시 잡는다 (기존 시작일 선택은 해제됨).
+    if (hasBookedDateBetween(startDate, date)) {
       setStartDate(date);
       setEndDate(null);
       return;
@@ -160,8 +218,8 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
   const getDayClassName = (date: Date) => {
     const isCurrentMonth = date.getMonth() === viewDate.getMonth();
 
-    if (date < todayStart) {
-      return "text-text-disabled cursor-not-allowed";
+    if (isDateDisabled(date)) {
+      return "cursor-not-allowed";
     }
     if (startDate && endDate && !isSameDay(startDate, endDate)) {
       // 시작일/종료일 칸은 원의 세로 지름(칸 정중앙)까지만 배경을 채운다.
@@ -184,6 +242,49 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     if (startDate && !endDate) return isSameDay(date, startDate);
     if (startDate && endDate) return isSameDay(date, startDate) || isSameDay(date, endDate);
     return false;
+  };
+
+  // 날짜 칸 안의 숫자를 어떤 모양으로 그릴지 결정한다.
+  // 우선순위: 선택됨(꽉 찬 원) > 오늘(테두리 원, 선택 불가 시 회색 점선) > 선택 불가(취소선) > 기본
+  const renderDayNumber = (date: Date) => {
+    const day = date.getDate();
+
+    if (isSelectedEndpoint(date)) {
+      return (
+        <span className="bg-primary relative z-10 flex aspect-square h-full shrink-0 items-center justify-center rounded-full text-white">
+          {day}
+        </span>
+      );
+    }
+
+    const isToday = isSameDay(date, todayStart);
+    const disabled = isDateDisabled(date);
+
+    if (isToday && !disabled) {
+      // 오늘 날짜 표시 (선택 가능): 옅은 파란 테두리 원
+      return (
+        <span className="border-primary-100 relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border text-text-primary">
+          {day}
+        </span>
+      );
+    }
+    if (isToday && disabled) {
+      // 오늘 날짜 표시 (선택 불가): 회색 테두리 원 + 취소선 (피그마 디자인 기준)
+      return (
+        <span className="relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-[#c5c5c5] text-[#c5c5c5] line-through">
+          {day}
+        </span>
+      );
+    }
+    if (disabled) {
+      // 오늘이 아닌 나머지 선택 불가 날짜: 회색 점선 원형
+      return (
+        <span className="relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[#c5c5c5] text-[#c5c5c5]">
+          {day}
+        </span>
+      );
+    }
+    return day;
   };
 
   return (
@@ -253,16 +354,10 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
                     type="button"
                     key={date.toISOString()}
                     onClick={() => handleSelectDate(date)}
-                    disabled={date < todayStart}
+                    disabled={isDateDisabled(date)}
                     className={`relative box-border flex h-10 w-full items-center justify-center border-0 p-0 text-base font-bold disabled:cursor-not-allowed ${getDayClassName(date)}`}
                   >
-                    {isSelectedEndpoint(date) ? (
-                      <span className="bg-primary relative z-10 flex aspect-square h-full shrink-0 items-center justify-center rounded-full text-white">
-                        {date.getDate()}
-                      </span>
-                    ) : (
-                      date.getDate()
-                    )}
+                    {renderDayNumber(date)}
                   </button>
                 ))}
               </div>
