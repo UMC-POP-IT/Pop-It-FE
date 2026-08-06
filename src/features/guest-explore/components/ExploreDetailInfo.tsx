@@ -194,11 +194,11 @@ const ExploreDetailInfo = ({
         {/* 시설정보 */}
         <div className="flex flex-col items-start gap-5">
           <SectionTitle>시설정보</SectionTitle>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {space.facilities.map((item, index) => (
               <span
                 key={index}
-                className="bg-bg-footer text-text-primary flex items-center gap-2 rounded-full px-2 py-1 text-base font-medium"
+                className="bg-bg-footer text-text-primary flex items-center gap-2 rounded-full px-2 py-1 text-base font-medium whitespace-nowrap"
               >
                 <span className="bg-primary-100 h-5 w-5 rounded-full" />
                 {item}
