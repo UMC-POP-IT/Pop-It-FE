@@ -56,8 +56,8 @@ export const SEOUL_DISTRICTS = [
   "강동구",
 ] as const;
 
-/** 그리드 4x7 = 한 페이지당 28개 (백엔드 기본값과 동일) */
-export const DEFAULT_PAGE_SIZE = 28;
+/** 그리드 4x4 = 한 페이지당 16개 */
+export const DEFAULT_PAGE_SIZE = 16;
 
 export interface SpaceSearchParams {
   keyword?: string;
@@ -96,7 +96,7 @@ export interface SpaceSearchRes {
 /**
  * 공간 탐색(검색/필터) 목록을 조회한다.
  * 비로그인 상태에서도 호출 가능 (이 경우 isWishlisted는 항상 false).
- * page는 0부터 시작(백엔드 기준), size는 1~50 (기본 28 = 4x7 그리드).
+ * page는 0부터 시작(백엔드 기준), size는 1~50 (기본 16 = 4x4 그리드).
  * 빈 문자열 필터는 "전체"를 의미하므로 요청에서 아예 생략한다.
  */
 export const getSpaces = async (params: SpaceSearchParams = {}) => {
