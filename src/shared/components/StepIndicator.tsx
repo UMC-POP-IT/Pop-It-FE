@@ -1,56 +1,81 @@
 interface StepIndicatorProps {
   steps: string[];
   currentStep: number; // 0부터 시작
+  /** fill: 가로 폭 전체에 균등 분배 (기본, 공간 등록 5단계) · compact: 가운데로 모아 단계 간 폭 고정 (호스트 등록 2단계) */
+  spacing?: "fill" | "compact";
 }
 
-const StepIndicator = ({ steps, currentStep }: StepIndicatorProps) => (
-  <div className="flex w-full items-start px-4 py-3">
-    {steps.map((step, i) => (
-      <div
-        key={i}
-        className="flex flex-1 items-start last:flex-none"
-      >
-        <div className="flex flex-shrink-0 flex-col items-center gap-5">
-          <div
-            className={`flex size-[56px] items-center justify-center rounded-full text-[32px] font-bold transition-colors ${
-              i < currentStep
-                ? "border-4 border-primary text-primary"
-                : i === currentStep
-                  ? "bg-primary text-white"
-                  : "bg-border text-text-secondary"
-            } `}
-          >
-            {i < currentStep ? (
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <path
-                  d="M5 12L10 17L19 8"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            ) : (
-              i + 1
-            )}
+const StepIndicator = ({
+  steps,
+  currentStep,
+  spacing = "fill",
+}: StepIndicatorProps) => {
+  const isCompact = spacing === "compact";
+
+  return (
+    <div
+      className={`flex w-full items-start py-3 ${isCompact ? "justify-center" : "px-10"}`}
+    >
+      {steps.map((step, i) => (
+        <div
+          key={i}
+          className={`flex items-start ${isCompact ? "" : "flex-1 last:flex-none"}`}
+        >
+          <div className="flex flex-shrink-0 flex-col items-center gap-5">
+            <div
+              className={`flex size-[56px] items-center justify-center rounded-full text-[32px] font-bold transition-colors ${
+                i < currentStep
+                  ? "border-primary text-primary border-4"
+                  : i === currentStep
+                    ? "bg-primary text-white"
+                    : "bg-divider text-white"
+              } `}
+            >
+              {i < currentStep ? (
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <path
+                    d="M5 12L10 17L19 8"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              ) : (
+                i + 1
+              )}
+            </div>
+            <span
+              className={`text-center text-base font-bold whitespace-nowrap ${
+                i < currentStep || i === currentStep
+                  ? "text-text-primary"
+                  : "text-text-tertiary"
+              }`}
+            >
+              {step}
+            </span>
           </div>
-          <span className="text-text-primary text-center text-base font-bold whitespace-nowrap">
-            {step}
-          </span>
+          {i < steps.length - 1 && (
+            <div
+              className={`mt-6 flex items-center justify-center gap-2 ${isCompact ? "w-16" : "flex-1"}`}
+            >
+              {[0, 1].map((dot) => (
+                <div
+                  key={dot}
+                  className={`size-2 rounded-full ${i < currentStep ? "bg-primary" : "bg-divider"}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
-        {i < steps.length - 1 && (
-          <div
-            className={`mx-1 mt-7 h-0.5 flex-1 ${i < currentStep ? "bg-primary" : "bg-border"} `}
-          />
-        )}
-      </div>
-    ))}
-  </div>
-);
+      ))}
+    </div>
+  );
+};
 
 export default StepIndicator;

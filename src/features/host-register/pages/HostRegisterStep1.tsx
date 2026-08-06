@@ -42,6 +42,7 @@ export const HostRegisterStep1 = () => {
       <StepIndicator
         steps={HOST_STEPS}
         currentStep={0}
+        spacing="compact"
       />
 
       {/* 섹션: 사업자 정보 */}

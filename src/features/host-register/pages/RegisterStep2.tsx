@@ -133,7 +133,7 @@ export const RegisterStep2 = () => {
           TODO(2차): 유효성 검사 통과 시 활성화 */}
       <div className="flex justify-end gap-2">
         <Button
-          variant="gray"
+          variant="secondary"
           size="nav"
           onClick={() => navigate("/host/register")}
         >
