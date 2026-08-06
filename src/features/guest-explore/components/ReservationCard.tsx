@@ -38,11 +38,15 @@ export const isUsing = (start: string, end: string): boolean => {
 
 const getCardMeta = (r: Reservation): CardMeta => {
   if (r.status === "USAGE_COMPLETED" || r.status === "CHECKOUT_COMPLETED") {
+      // isPhotoVerified(퇴실 사진 인증 완료 여부)가 true이고 checkoutRejected(호스트의 퇴실 거절 여부)가
+      // false인 경우에만 "퇴실 완료"로 간주. 둘 중 하나라도 아니면(미인증 또는 거절) "이용 완료" +
+      // 사진 인증 UI를 함께 노출한다.
+      const isCheckoutApproved = r.isPhotoVerified && !r.checkoutRejected;
       return {
-        label: !r.checkoutRejected || r.isPhotoVerified ? "퇴실 완료" : "이용 완료", // 퇴실 사진 인증이 완료되었거나, 호스트가 퇴실 승인을 거절하지 않은 경우 "퇴실 완료", 그렇지 않은 경우 "이용 완료"로 표시
+        label: isCheckoutApproved ? "퇴실 완료" : "이용 완료",
         showCancel: false,
         showContract: false,
-        needsPhotoVerification: !r.isPhotoVerified,
+        needsPhotoVerification: !isCheckoutApproved,
         isPhotoRejected: r.checkoutRejected,
         isDone: true
       };
