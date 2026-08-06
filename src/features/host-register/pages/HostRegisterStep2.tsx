@@ -86,14 +86,19 @@ export const HostRegisterStep2 = () => {
         // getMyHost()는 404(미등록)만 null로 주고 그 외 오류는 던지므로,
         // 조회 실패를 null로 뭉뚱그리지 않고 별도 값으로 구분한다.
         const host = await getMyHost().catch((lookupError: unknown) => {
-          console.error("호스트 등록 실패(409) 후 호스트 조회 실패:", lookupError);
+          console.error(
+            "호스트 등록 실패(409) 후 호스트 조회 실패:",
+            lookupError,
+          );
           return "LOOKUP_FAILED" as const;
         });
 
         if (host === "LOOKUP_FAILED") {
           // 등록됐는지 미등록인지 알 수 없다. 완료 화면으로 보내면 이후 호스트 요청이
           // 전부 403이 나면서 원인을 알 수 없게 되므로 여기서 멈춘다.
-          setSubmitError("등록 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요");
+          setSubmitError(
+            "등록 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요",
+          );
           return;
         }
 
@@ -196,7 +201,7 @@ export const HostRegisterStep2 = () => {
           />
         </div>
 
-        {/* 예금주 */}
+        {/* 예금주 — 서버 HostRegisterReq.accountHolder가 20자 제한 */}
         <div className="flex flex-col gap-2">
           <label
             htmlFor="account-holder"
@@ -209,6 +214,7 @@ export const HostRegisterStep2 = () => {
             placeholder="예금주 이름을 입력해주세요"
             value={form.accountHolder}
             onChange={(e) => setValues({ accountHolder: e.target.value })}
+            maxLength={20}
           />
           <span className="text-text-disabled text-xs">
             * 사업자 등록증(대표자명)과 일치해야 합니다.

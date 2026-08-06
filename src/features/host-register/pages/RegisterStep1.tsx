@@ -116,11 +116,12 @@ export const RegisterStep1 = () => {
             </span>
           )}
 
-          {/* 상세 주소 */}
+          {/* 상세 주소 — 서버 SpaceCreateReq.addressDetail이 30자 제한 */}
           <Input
             placeholder="상세 주소를 입력해주세요"
             value={form.detailAddress}
             onChange={(e) => setValues({ detailAddress: e.target.value })}
+            maxLength={30}
           />
         </div>
       </div>
