@@ -74,21 +74,36 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [unavailablePeriods, setUnavailablePeriods] = useState<UnavailablePeriod[]>([]);
+  // 예약 불가 날짜 조회 상태. unavailablePeriods와 분리해서 관리한다 —
+  // 조회가 끝나기 전에는 unavailablePeriods가 빈 배열이라 "예약 가능"과 구분이 안 되므로,
+  // 로딩/실패 중에는 이 상태를 기준으로 날짜 선택 자체를 전부 막는다.
+  const [availabilityStatus, setAvailabilityStatus] = useState<"loading" | "success" | "error">(
+    "loading",
+  );
+  const [availabilityRetryToken, setAvailabilityRetryToken] = useState(0);
 
   // 이 공간에 이미 선점(승인대기~진행 중)된 예약 기간을 받아와 달력에서 선택하지 못하게 막는다.
+  // 조회가 끝나기 전(loading)이나 실패(error)했을 때는 어떤 날짜가 예약 불가인지 알 수 없으므로,
+  // isDateDisabled에서 이 상태를 확인해 모든 날짜 선택을 막는다.
   useEffect(() => {
     let cancelled = false;
+    setAvailabilityStatus("loading");
     GetUnavailableDates(spaceId)
       .then((periods) => {
-        if (!cancelled) setUnavailablePeriods(periods);
+        if (cancelled) return;
+        setUnavailablePeriods(periods);
+        setAvailabilityStatus("success");
       })
       .catch(() => {
-        // 조회에 실패해도 예약 자체는 계속 진행할 수 있어야 하므로 조용히 무시한다.
+        if (cancelled) return;
+        setAvailabilityStatus("error");
       });
     return () => {
       cancelled = true;
     };
-  }, [spaceId]);
+  }, [spaceId, availabilityRetryToken]);
+
+  const handleRetryAvailability = () => setAvailabilityRetryToken((n) => n + 1);
 
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -150,7 +165,10 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
 
   // 선택 가능 범위: 오늘(포함) ~ 오늘+90일(포함). 그 밖(과거, 91일째 이후)이거나
   // 이미 예약된(선점된) 날짜는 선택할 수 없다.
+  // 예약 불가 날짜 조회가 아직 끝나지 않았거나(loading) 실패했으면(error), 어떤 날짜가
+  // 실제로 예약 가능한지 알 수 없으므로 안전하게 모든 날짜를 선택 불가로 취급한다.
   const isDateDisabled = (date: Date) => {
+    if (availabilityStatus !== "success") return true;
     const target = toDateOnly(date);
     return target < todayStart || target > maxSelectableDate || isDateBooked(target);
   };
@@ -204,12 +222,16 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
 
   const handleOpenRequestModal = () => {
     if (!(startDate && endDate)) return;
+    // 예약 불가 날짜 조회가 아직 안 끝났거나 실패한 상태면, 방금 선택한 기간이
+    // 실제로 예약 가능한지 확인할 수 없으므로 요청 모달을 열지 않는다.
+    if (availabilityStatus !== "success") return;
     setSubmitError(null);
     setIsRequestModalOpen(true);
   };
 
   const handleSubmitRequest = async (usagePurpose: string) => {
     if (!(startDate && endDate)) return;
+    if (availabilityStatus !== "success") return;
     setIsSubmitting(true);
     setSubmitError(null);
     try {
@@ -340,6 +362,21 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
           <h3 className="text-text-primary text-xl font-bold">예약하기</h3>
         </div>
 
+        {availabilityStatus === "error" && (
+          <div className="bg-tag-bg flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3">
+            <span className="text-text-secondary text-sm">
+              예약 가능 여부를 불러오지 못했어요. 날짜 선택이 제한됩니다.
+            </span>
+            <button
+              type="button"
+              onClick={handleRetryAvailability}
+              className="text-primary-hover shrink-0 text-sm font-bold underline"
+            >
+              다시 시도
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col gap-4">
           {/* 시작일 / 종료일 */}
           <div className="flex items-center justify-center gap-10 rounded-lg bg-white px-8 py-2">
@@ -445,7 +482,7 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
             <button
               type="button"
               onClick={handleOpenRequestModal}
-              disabled={!(startDate && endDate)}
+              disabled={!(startDate && endDate) || availabilityStatus !== "success"}
               className="bg-primary-hover flex h-[52px] flex-1 items-center justify-center rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
               예약 요청하기
