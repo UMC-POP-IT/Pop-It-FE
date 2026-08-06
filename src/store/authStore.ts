@@ -36,7 +36,6 @@ interface AuthState {
   /** 서버에 물어 hostStatus를 갱신하고, 갱신된 값을 돌려준다 */
   refreshHostStatus: () => Promise<HostStatus>;
 
-  setUser: (user: User | null) => void;
   login: (user: User) => void;
   setMode: (mode: Mode) => void;
   openLoginModal: (pendingAction?: PendingAction) => void;
@@ -72,7 +71,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  setUser: (user) => set({ user }),
   login: (user) => {
     // 이전 사용자의 찜 동기화 상태가 다음 로그인 사용자에게 그대로 남지 않도록 초기화
     useWishStore.getState().reset();

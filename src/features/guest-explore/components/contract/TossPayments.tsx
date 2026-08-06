@@ -169,7 +169,11 @@ const TossPayments = ({
         },
       });
     } catch (error) {
+      // 리다이렉트(결제 승인) 전 단계에서 실패했으므로, 다음 시도가 이전 상태를 이어받지 않도록
+      // 서명/멱등키 캐시와 결제 대기 마커를 모두 초기화한다.
       sessionStorage.removeItem(TOSS_PENDING_PAYMENT_KEY);
+      sessionStorage.removeItem(`toss_contract_id_${reservationId}`);
+      sessionStorage.removeItem(`toss_idempotency_key_${reservationId}`);
       console.error(error);
       alert("서명 저장 또는 결제 요청에 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {

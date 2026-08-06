@@ -12,14 +12,10 @@ export async function reissueToken(): Promise<string> {
   });
   if (!res.ok) throw new Error(`Reissue failed: ${res.status}`);
   const data: unknown = await res.json();
-  const raw = data as Record<string, unknown>;
-  const token =
-    typeof raw?.accessToken === "string" && raw.accessToken.trim()
-      ? raw.accessToken
-      : typeof (raw?.result as Record<string, unknown>)?.accessToken === "string" &&
-          ((raw?.result as Record<string, unknown>).accessToken as string).trim()
-        ? ((raw?.result as Record<string, unknown>).accessToken as string)
-        : null;
+  const json = data as Record<string, unknown>;
+  // apiClient.ts의 parseResponse와 동일하게 result로 감싸진 응답을 우선 사용한다.
+  const result = (json.result ?? json) as Record<string, unknown>;
+  const token = typeof result.accessToken === "string" ? result.accessToken.trim() : "";
   if (!token) throw new Error("Invalid reissue response: accessToken missing");
   localStorage.setItem("access_token", token);
   return token;
