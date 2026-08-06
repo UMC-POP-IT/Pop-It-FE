@@ -313,31 +313,37 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
 
           {/* 달력 */}
           <div className="flex flex-col gap-7 rounded-lg bg-white px-3.5 py-5">
+            {/* 화살표 유무와 상관없이 "YYYY.MM" 라벨 위치가 항상 고정되도록,
+                화살표 자리는 비활성 방향일 때도 같은 크기(w-8)로 비워둔다. */}
             <div className="flex w-full items-center justify-center gap-1">
-              {!isPrevMonthDisabled && (
-                <button
-                  type="button"
-                  aria-label="이전 달"
-                  onClick={handlePrevMonth}
-                  className="text-text-primary flex h-8 w-8 items-center justify-center text-xl"
-                >
-                  ‹
-                </button>
-              )}
+              <div className="flex h-8 w-8 items-center justify-center">
+                {!isPrevMonthDisabled && (
+                  <button
+                    type="button"
+                    aria-label="이전 달"
+                    onClick={handlePrevMonth}
+                    className="text-text-primary flex h-8 w-8 items-center justify-center text-xl"
+                  >
+                    ‹
+                  </button>
+                )}
+              </div>
               <span className="text-text-primary text-xl font-bold">
                 {viewDate.getFullYear()}.
                 {String(viewDate.getMonth() + 1).padStart(2, "0")}
               </span>
-              {!isNextMonthDisabled && (
-                <button
-                  type="button"
-                  aria-label="다음 달"
-                  onClick={handleNextMonth}
-                  className="text-text-primary flex h-8 w-8 items-center justify-center text-xl"
-                >
-                  ›
-                </button>
-              )}
+              <div className="flex h-8 w-8 items-center justify-center">
+                {!isNextMonthDisabled && (
+                  <button
+                    type="button"
+                    aria-label="다음 달"
+                    onClick={handleNextMonth}
+                    className="text-text-primary flex h-8 w-8 items-center justify-center text-xl"
+                  >
+                    ›
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex flex-col gap-3">
