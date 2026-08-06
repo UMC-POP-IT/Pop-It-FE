@@ -155,25 +155,33 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     ? `나의 예약 > 예약 예정\n\n임대료 ${reservationResult.rentalFee.toLocaleString()}원 · 보험료 ${reservationResult.insuranceFee.toLocaleString()}원 · 보증금 ${reservationResult.deposit.toLocaleString()}원\n총 결제 예정 금액 ${reservationResult.totalPrice.toLocaleString()}원`
     : "나의 예약 > 예약 예정";
 
+  // 여러 날짜(기간)를 선택한 경우에만 시작일~종료일 사이를 이어주는 캡슐 배경을 그린다.
+  // 시작일=종료일(하루만 선택)인 경우는 캡슐 없이 숫자에 꽉 찬 원만 표시한다 (피그마 디자인 기준).
   const getDayClassName = (date: Date) => {
     const isCurrentMonth = date.getMonth() === viewDate.getMonth();
 
     if (date < todayStart) {
       return "text-text-disabled cursor-not-allowed";
     }
-    if (startDate && !endDate && isSameDay(date, startDate)) {
-      return "bg-primary rounded-full text-white";
-    }
-    if (startDate && endDate) {
-      // 시작일/종료일(하루만 선택한 경우 둘이 같은 날)은 항상 꽉 찬 동그라미로 표시
-      if (isSameDay(date, startDate) || isSameDay(date, endDate)) {
-        return "bg-primary rounded-full text-white";
+    if (startDate && endDate && !isSameDay(startDate, endDate)) {
+      if (isSameDay(date, startDate)) {
+        return "bg-primary-100 rounded-l-full text-text-primary";
+      }
+      if (isSameDay(date, endDate)) {
+        return "bg-primary-100 rounded-r-full text-text-primary";
       }
       if (date > startDate && date < endDate) {
         return "bg-primary-100 text-text-primary";
       }
     }
     return isCurrentMonth ? "text-text-primary" : "text-text-disabled";
+  };
+
+  // 시작일 또는 종료일(하루만 선택한 경우 포함)인 날짜의 숫자에 꽉 찬 원 강조를 준다.
+  const isSelectedEndpoint = (date: Date) => {
+    if (startDate && !endDate) return isSameDay(date, startDate);
+    if (startDate && endDate) return isSameDay(date, startDate) || isSameDay(date, endDate);
+    return false;
   };
 
   return (
@@ -246,7 +254,13 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
                     disabled={date < todayStart}
                     className={`flex w-full items-center justify-center p-3 text-base font-bold disabled:cursor-not-allowed ${getDayClassName(date)}`}
                   >
-                    {date.getDate()}
+                    {isSelectedEndpoint(date) ? (
+                      <span className="bg-primary flex h-9 w-9 items-center justify-center rounded-full text-white">
+                        {date.getDate()}
+                      </span>
+                    ) : (
+                      date.getDate()
+                    )}
                   </button>
                 ))}
               </div>
