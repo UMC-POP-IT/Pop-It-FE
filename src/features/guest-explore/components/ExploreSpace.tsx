@@ -4,7 +4,7 @@ import SpaceCard from "@/shared/components/SpaceCard";
 import ExploreSearchFilterBar from "./ExploreSearchFilterBar";
 import ExplorePagination from "./ExplorePagination";
 import ExploreSpaceMap from "./ExploreSpaceMap";
-import ExploreSpaceEmptyState from "./ExploreSpaceEmptyState";
+import ExploreSpaceEmptyState from "`@/features/guest-explore/components/ExploreSpaceEmptyState`";
 import {
   getSpaces,
   toSpaceSummary,
