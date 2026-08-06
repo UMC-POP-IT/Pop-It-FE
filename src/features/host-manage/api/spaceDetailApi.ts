@@ -1,4 +1,5 @@
 import { apiFetch } from "@/shared/utils/apiClient";
+import { formatFloorLabel } from "@/shared/utils/floorLabel";
 
 // ============================================================
 // GET /api/v1/spaces/{spaceId} — 호스트 공간 상세 조회
@@ -67,10 +68,6 @@ const SPACE_CATEGORY_LABEL: Record<string, string> = {
   POPUP_STORE: "팝업스토어",
 };
 
-const FLOOR_TYPE_LABEL: Record<string, string> = {
-  GENERAL_FLOOR: "일반층",
-};
-
 const labelOf = (map: Record<string, string>, value: string) =>
   map[value] ?? value;
 
@@ -84,7 +81,7 @@ export const toHostSpaceDetail = (detail: SpaceDetailRes): HostSpaceDetail => {
 
   const spaceInfo = [
     labelOf(BUILDING_TYPE_LABEL, detail.buildingType),
-    `${detail.floorNumber}층 (${labelOf(FLOOR_TYPE_LABEL, detail.floorType)})`,
+    formatFloorLabel(detail.floorType, detail.floorNumber),
     detail.parkingAvailable ? "주차 가능" : "주차 불가",
   ];
 

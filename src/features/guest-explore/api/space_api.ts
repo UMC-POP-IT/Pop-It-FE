@@ -1,4 +1,5 @@
 import { apiFetch } from "@/shared/utils/apiClient";
+import { formatFloorLabel } from "@/shared/utils/floorLabel";
 import type { ExploreSpaceDetail } from "./mock_spaces";
 
 // ============================================================
@@ -73,10 +74,6 @@ const SPACE_TYPE_LABEL: Record<string, string> = {
   OPEN_HALL: "오픈홀",
 };
 
-const FLOOR_TYPE_LABEL: Record<string, string> = {
-  GENERAL_FLOOR: "일반층",
-};
-
 const labelOf = (map: Record<string, string>, value: string) =>
   map[value] ?? value;
 
@@ -96,7 +93,7 @@ export const toExploreSpaceDetail = (
   // 건물/층/주차 관련 필드를 조합해 태그로 구성한다.
   const spaceInfo = [
     labelOf(BUILDING_TYPE_LABEL, detail.buildingType),
-    `${detail.floorNumber}층 (${labelOf(FLOOR_TYPE_LABEL, detail.floorType)})`,
+    formatFloorLabel(detail.floorType, detail.floorNumber),
     detail.parkingAvailable ? "주차 가능" : "주차 불가",
   ];
 
