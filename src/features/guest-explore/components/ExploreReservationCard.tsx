@@ -165,6 +165,10 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
       return "bg-primary-100 rounded-full text-text-primary";
     }
     if (startDate && endDate) {
+      // 시작일과 종료일을 같은 날로 두 번 선택한 경우 (하루만 선택) - 동그라미로 표시
+      if (isSameDay(startDate, endDate) && isSameDay(date, startDate)) {
+        return "bg-primary-100 rounded-full text-text-primary";
+      }
       if (isSameDay(date, startDate)) {
         return "bg-primary-100 rounded-l-full text-text-primary";
       }
