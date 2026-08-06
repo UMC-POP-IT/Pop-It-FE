@@ -98,9 +98,13 @@ export interface SubmitSignatureResponse {
     bothSigned: boolean;
 }
 
+// startDate/endDate는 시간대 정보가 없는 순수 날짜 문자열("YYYY-MM-DD")이다.
+// new Date(str)로 바로 파싱하면 UTC 자정으로 해석되어 로컬 타임존에 따라 하루가
+// 밀릴 수 있으므로, 사용하는 쪽(예: ExploreReservationCard의 parseDateString)에서
+// 반드시 연/월/일을 직접 분해해 로컬 Date로 만들어 비교해야 한다.
 export interface UnavailablePeriod {
-    startDate: string; // "YYYY-MM-DD"
-    endDate: string;   // "YYYY-MM-DD"
+    startDate: string; // "YYYY-MM-DD" (타임존 없는 날짜, 양 끝 포함하는 예약 불가 기간의 시작일)
+    endDate: string;   // "YYYY-MM-DD" (타임존 없는 날짜, 양 끝 포함하는 예약 불가 기간의 종료일)
 }
 
 interface GetUnavailableDatesResult {

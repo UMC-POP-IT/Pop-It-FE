@@ -41,6 +41,17 @@ const isSameDay = (a: Date, b: Date) =>
 const diffDays = (a: Date, b: Date) =>
   Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
+// 시/분/초를 버리고 "그 날짜"만 남긴 로컬 자정 Date로 정규화한다.
+// 달력 그리드(calendarDays)도 전부 로컬 Y/M/D 기준으로 만들어지므로,
+// 날짜 비교는 항상 이 함수를 거친 값끼리만 수행해야 시각(time-of-day) 차이로 인한
+// 하루 어긋남을 막을 수 있다.
+const toDateOnly = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+// 서버가 내려주는 "YYYY-MM-DD" 문자열은 시간대 정보가 없는 순수 날짜다.
+// new Date(str)로 직접 파싱하면 ISO 8601로 인식되어 UTC 자정으로 해석되고,
+// UTC보다 뒤(음수 오프셋)인 로컬 타임존에서는 하루 전 날짜로 밀려 보이는 문제가 생긴다.
+// 그래서 반드시 연/월/일을 직접 분해해 로컬 Date로 만들어야 하며,
+// 이렇게 만든 값은 toDateOnly로 정규화한 로컬 날짜와 항상 안전하게 비교할 수 있다.
 const parseDateString = (str: string) => {
   const [y, m, d] = str.split("-").map(Number);
   return new Date(y, m - 1, d);
@@ -54,8 +65,7 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
   const user = useAuthStore((s) => s.user);
   const guestName = user?.nickname ?? "";
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+  const todayStart = toDateOnly(new Date());
 
   const [viewDate, setViewDate] = useState(() => {
     const now = new Date();
@@ -101,7 +111,7 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     });
   }, [viewDate]);
 
-  // 오늘 + 90일보다 이후 날짜는 선택 불가
+  // 예약 가능한 마지막 날짜 = 오늘 + 90일 (이 날짜까지는 포함, 그 다음 날부터 선택 불가)
   const maxSelectableDate = new Date(todayStart);
   maxSelectableDate.setDate(maxSelectableDate.getDate() + BOOKING_WINDOW_DAYS);
 
@@ -126,16 +136,24 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
   };
 
-  const isDateBooked = (date: Date) =>
-    unavailablePeriods.some(({ startDate: s, endDate: e }) => {
+  // date가 예약 불가 기간(startDate~endDate, 양 끝 포함)에 속하는지 확인한다.
+  // date는 항상 calendarDays에서 온 로컬 자정 값이지만, 혹시 모를 시각 정보 차이까지
+  // 방어하기 위해 비교 전에 toDateOnly로 한 번 더 정규화한다.
+  const isDateBooked = (date: Date) => {
+    const target = toDateOnly(date);
+    return unavailablePeriods.some(({ startDate: s, endDate: e }) => {
       const start = parseDateString(s);
       const end = parseDateString(e);
-      return date >= start && date <= end;
+      return target >= start && target <= end;
     });
+  };
 
-  // 과거 날짜 / 오늘+90일 이후 / 이미 예약된(선점된) 날짜는 선택할 수 없다.
-  const isDateDisabled = (date: Date) =>
-    date < todayStart || date > maxSelectableDate || isDateBooked(date);
+  // 선택 가능 범위: 오늘(포함) ~ 오늘+90일(포함). 그 밖(과거, 91일째 이후)이거나
+  // 이미 예약된(선점된) 날짜는 선택할 수 없다.
+  const isDateDisabled = (date: Date) => {
+    const target = toDateOnly(date);
+    return target < todayStart || target > maxSelectableDate || isDateBooked(target);
+  };
 
   // start~end 사이(양 끝 포함)에 이미 예약된 날짜가 하루라도 있는지 확인
   const hasBookedDateBetween = (start: Date, end: Date) => {
