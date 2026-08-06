@@ -107,9 +107,11 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
 
   // 오늘이 속한 달보다 과거로, 오늘+90일이 속한 달보다 미래로는 이동할 수 없다.
   // (이동할 수 없는 방향의 화살표 버튼은 아예 렌더링하지 않는다.)
-  const isPrevMonthDisabled =
-    viewDate.getFullYear() === todayStart.getFullYear() &&
-    viewDate.getMonth() === todayStart.getMonth();
+  // 두 날짜를 각자의 "월 1일"로 정규화한 뒤 비교해, 자정을 넘겨 페이지가 계속 열려있는
+  // 등의 이유로 viewDate가 오늘이 속한 달보다 과거가 되어버린 경우까지 안전하게 막는다.
+  const currentMonthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+  const viewedMonthStart = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+  const isPrevMonthDisabled = viewedMonthStart <= currentMonthStart;
   const isNextMonthDisabled =
     viewDate.getFullYear() === maxSelectableDate.getFullYear() &&
     viewDate.getMonth() === maxSelectableDate.getMonth();
@@ -253,6 +255,27 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     return false;
   };
 
+  // 시작일/종료일뿐 아니라 그 사이(선택된 기간 전체) 날짜도 포함해 "선택됨" 여부를 판단한다.
+  // 접근성용 aria-pressed에 사용 — 화면에 보이는 강조 스타일(isSelectedEndpoint)과는 별개다.
+  const isDateSelected = (date: Date) => {
+    if (startDate && !endDate) return isSameDay(date, startDate);
+    if (startDate && endDate) return date >= startDate && date <= endDate;
+    return false;
+  };
+
+  // 스크린 리더용 날짜 라벨: 연·월·일 전체와, 시작일/종료일이면 그 역할까지 함께 알려준다.
+  const getDayAriaLabel = (date: Date) => {
+    const base = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+    if (startDate && isSameDay(date, startDate)) {
+      if (endDate && !isSameDay(startDate, endDate)) return `${base}, 시작일`;
+      return `${base}, 선택된 날짜`;
+    }
+    if (endDate && isSameDay(date, endDate)) {
+      return `${base}, 종료일`;
+    }
+    return base;
+  };
+
   // 날짜 칸 안의 숫자를 어떤 모양으로 그릴지 결정한다.
   // 우선순위: 선택됨(꽉 찬 원) > 오늘(테두리 원, 선택 불가 시 회색 테두리+취소선) > 선택 불가(회색 취소선 텍스트만) > 기본
   const renderDayNumber = (date: Date) => {
@@ -365,6 +388,8 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
                     key={date.toISOString()}
                     onClick={() => handleSelectDate(date)}
                     disabled={isDateDisabled(date)}
+                    aria-label={getDayAriaLabel(date)}
+                    aria-pressed={isDateSelected(date)}
                     className={`relative box-border flex h-10 w-full items-center justify-center border-0 p-0 text-base font-bold disabled:cursor-not-allowed ${getDayClassName(date)}`}
                   >
                     {renderDayNumber(date)}
