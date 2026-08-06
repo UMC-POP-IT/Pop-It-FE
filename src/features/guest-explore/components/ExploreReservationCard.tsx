@@ -101,19 +101,28 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     });
   }, [viewDate]);
 
-  // 오늘이 속한 달보다 과거로는 이동할 수 없도록 이전 달 버튼을 막는다.
+  // 오늘 + 90일보다 이후 날짜는 선택 불가
+  const maxSelectableDate = new Date(todayStart);
+  maxSelectableDate.setDate(maxSelectableDate.getDate() + BOOKING_WINDOW_DAYS);
+
+  // 오늘이 속한 달보다 과거로, 오늘+90일이 속한 달보다 미래로는 이동할 수 없다.
+  // (이동할 수 없는 방향의 화살표 버튼은 아예 렌더링하지 않는다.)
   const isPrevMonthDisabled =
     viewDate.getFullYear() === todayStart.getFullYear() &&
     viewDate.getMonth() === todayStart.getMonth();
+  const isNextMonthDisabled =
+    viewDate.getFullYear() === maxSelectableDate.getFullYear() &&
+    viewDate.getMonth() === maxSelectableDate.getMonth();
 
   const handlePrevMonth = () => {
     if (isPrevMonthDisabled) return;
     setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
   };
 
-  // 오늘 + 90일보다 이후 날짜는 선택 불가
-  const maxSelectableDate = new Date(todayStart);
-  maxSelectableDate.setDate(maxSelectableDate.getDate() + BOOKING_WINDOW_DAYS);
+  const handleNextMonth = () => {
+    if (isNextMonthDisabled) return;
+    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
+  };
 
   const isDateBooked = (date: Date) =>
     unavailablePeriods.some(({ startDate: s, endDate: e }) => {
@@ -305,31 +314,30 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
           {/* 달력 */}
           <div className="flex flex-col gap-7 rounded-lg bg-white px-3.5 py-5">
             <div className="flex w-full items-center justify-center gap-1">
-              <button
-                type="button"
-                aria-label="이전 달"
-                onClick={handlePrevMonth}
-                disabled={isPrevMonthDisabled}
-                className="text-text-primary flex h-8 w-8 items-center justify-center text-xl disabled:cursor-not-allowed disabled:opacity-30"
-              >
-                ‹
-              </button>
+              {!isPrevMonthDisabled && (
+                <button
+                  type="button"
+                  aria-label="이전 달"
+                  onClick={handlePrevMonth}
+                  className="text-text-primary flex h-8 w-8 items-center justify-center text-xl"
+                >
+                  ‹
+                </button>
+              )}
               <span className="text-text-primary text-xl font-bold">
                 {viewDate.getFullYear()}.
                 {String(viewDate.getMonth() + 1).padStart(2, "0")}
               </span>
-              <button
-                type="button"
-                aria-label="다음 달"
-                onClick={() =>
-                  setViewDate(
-                    new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1),
-                  )
-                }
-                className="text-text-primary flex h-8 w-8 items-center justify-center text-xl"
-              >
-                ›
-              </button>
+              {!isNextMonthDisabled && (
+                <button
+                  type="button"
+                  aria-label="다음 달"
+                  onClick={handleNextMonth}
+                  className="text-text-primary flex h-8 w-8 items-center justify-center text-xl"
+                >
+                  ›
+                </button>
+              )}
             </div>
 
             <div className="flex flex-col gap-3">
