@@ -90,9 +90,8 @@ const ExploreDetailInfo = ({
                 />
               </svg>
             </button>
-            {/* 3D 큐레이션: 게스트 탐색 목업 데이터에 연결되어 있어 호스트 화면에서는 비노출 */}
-            {!isHost && (
-              <button
+            {/* 3D 큐레이션 */}
+            <button
                 type="button"
                 aria-label="3D로 둘러보기"
                 onClick={() => setIsCurationOpen(true)}
@@ -119,7 +118,6 @@ const ExploreDetailInfo = ({
                   />
                 </svg>
               </button>
-            )}
           </div>
         </div>
 
