@@ -10,12 +10,6 @@ interface SpaceCardProps {
   categoryTag?: string;
   /** AI 추천 이유 뱃지 (ex. 최근 본 공간보다 15% 저렴해요) */
   matchReason?: string;
-  /**
-   * 카드 hover 효과. 기본값 "lift"는 기존 카드 살짝 떠오름+그림자(입체감) 효과이고,
-   * "dim"은 실시간 추천 공간 카드와 동일하게 이미지만 어둡게 흐려지는 효과다.
-   * 공간 탐색 섹션 카드만 "dim"을 쓰고, 나머지(AI 맞춤형/찜한 공간)는 기존 "lift"를 유지한다.
-   */
-  hoverEffect?: "lift" | "dim";
 }
 
 const SpaceCard = ({
@@ -25,13 +19,10 @@ const SpaceCard = ({
   onWishToggle,
   categoryTag,
   matchReason,
-  hoverEffect = "lift",
 }: SpaceCardProps) => (
   <div
     onClick={onClick}
-    className={`border-border group cursor-pointer overflow-hidden border border-transparent bg-white transition-all duration-300 ease-out ${
-      hoverEffect === "dim" ? "" : "hover:-translate-y-1 hover:shadow-xl"
-    }`}
+    className="border-border cursor-pointer overflow-hidden border border-transparent bg-white transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl"
     role="button"
     tabIndex={0}
     onKeyDown={(event) => {if (event.key === "Enter") onClick?.()}}
@@ -42,11 +33,7 @@ const SpaceCard = ({
         <img
           src={space.imageUrls[0]}
           alt={space.name}
-          className={`h-full w-full object-cover ${
-            hoverEffect === "dim"
-              ? "transition-[filter] duration-500 group-hover:brightness-75"
-              : ""
-          }`}
+          className="h-full w-full object-cover"
         />
       ) : (
         <div className="bg-bg h-full w-full" />

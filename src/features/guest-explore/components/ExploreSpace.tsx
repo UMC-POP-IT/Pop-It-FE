@@ -4,7 +4,6 @@ import SpaceCard from "@/shared/components/SpaceCard";
 import ExploreSearchFilterBar from "./ExploreSearchFilterBar";
 import ExplorePagination from "./ExplorePagination";
 import ExploreSpaceMap from "./ExploreSpaceMap";
-import ExploreSpaceEmptyState from "./ExploreSpaceEmptyState";
 import {
   getSpaces,
   toSpaceSummary,
@@ -103,17 +102,6 @@ const ExploreSpace = () => {
     setCurrentPage(1);
   };
 
-  // 검색 결과가 없을 때 empty state의 [조건 초기화] CTA: 검색어·카테고리·지역 필터를
-  // 모두 해제하고 1페이지로 되돌린다. keywordInput까지 같이 비워야 디바운스 타이머가
-  // 지연 없이 즉시 keyword=""로 반영되고, 검색 입력창 UI도 함께 초기화된다.
-  const handleResetFilters = () => {
-    setKeywordInput("");
-    setKeyword("");
-    setCategory("");
-    setDistrict("");
-    setCurrentPage(1);
-  };
-
   useEffect(() => {
     let ignore = false;
 
@@ -195,7 +183,7 @@ const ExploreSpace = () => {
   };
 
   return (
-    <section className="mt-14 w-full">
+    <section className="mx-auto mt-14 w-[1240px]">
       <h2 className="text-text-primary mb-6 text-2xl font-bold">공간 탐색</h2>
 
       <ExploreSearchFilterBar
@@ -233,7 +221,9 @@ const ExploreSpace = () => {
       )}
 
       {status === "success" && isMapView && spaces.length === 0 && (
-        <ExploreSpaceEmptyState onResetFilters={handleResetFilters} />
+        <div className="mt-6 flex h-[300px] w-full items-center justify-center">
+          <p className="text-text-secondary text-sm">검색 결과가 없어요.</p>
+        </div>
       )}
 
       {status === "success" && isMapView && spaces.length > 0 && (
@@ -246,7 +236,9 @@ const ExploreSpace = () => {
       )}
 
       {status === "success" && !isMapView && spaces.length === 0 && (
-        <ExploreSpaceEmptyState onResetFilters={handleResetFilters} />
+        <div className="mt-6 flex h-[300px] w-full items-center justify-center">
+          <p className="text-text-secondary text-sm">검색 결과가 없어요.</p>
+        </div>
       )}
 
       {status === "success" && !isMapView && spaces.length > 0 && (
@@ -264,7 +256,6 @@ const ExploreSpace = () => {
                 onClick={() => navigate(`/spaces/${space.spaceId}`)}
                 isWished={wishedIds.includes(space.spaceId)}
                 onWishToggle={() => onWishToggle(space)}
-                hoverEffect="dim"
               />
             ))}
           </div>
