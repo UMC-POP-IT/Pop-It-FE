@@ -141,7 +141,7 @@ const HostReservationCalendar = ({
               if (isToday) {
                 return (
                   <div key={date.toISOString()} className="flex items-center justify-center">
-                    <div className={`flex items-center justify-center rounded-full p-[8px] select-none border ${unavailable ? "border-[#c5c5c5]" : "border-[#b2cffc]"}`}>
+                    <div className="flex items-center justify-center rounded-full size-[38px] shrink-0 select-none border border-[#c5c5c5]">
                       <span aria-hidden="true" className={`text-[16px] font-bold w-[22px] text-center ${unavailable ? "text-[#c5c5c5] line-through" : "text-[#121212]"}`}>
                         {date.getDate()}
                       </span>
@@ -153,7 +153,7 @@ const HostReservationCalendar = ({
 
               return (
                 <div key={date.toISOString()} className="flex items-center justify-center p-[12px]">
-                  <span aria-hidden="true" className={`text-[16px] font-bold select-none w-[22px] text-center ${unavailable ? "text-[#c5c5c5] line-through" : "text-[#121212]"}`}>
+                  <span aria-hidden="true" className={`text-[16px] font-bold select-none w-[32px] text-center ${unavailable ? "text-[#c5c5c5] line-through" : "text-[#121212]"}`}>
                     {date.getDate()}
                   </span>
                   <span className="sr-only">{date.getDate()}일 {unavailable ? "예약 불가" : "예약 가능"}</span>
