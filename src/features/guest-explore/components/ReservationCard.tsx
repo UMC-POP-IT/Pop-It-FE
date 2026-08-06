@@ -219,17 +219,17 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
                   사진 인증
                 </Button>
                 {isPhotoRejected && (
-                  <Button className="border-none! bg-[#F0F6FE]! text-black!" variant="outline" size="sm">
+                  <Button variant="secondary" size="sm">
                     거절된 사진
                   </Button>
                 )}
               </>
             ) : (
-              <Button className="border-none! bg-[#F0F6FE]! text-primary!" size="sm" disabled>
+              <Button variant="secondary" size="sm" disabled>
                 인증 완료
               </Button>
             ))}
-          <Button className="border-none! bg-[#F0F6FE]! text-black!" variant="outline" size="sm" onClick={() => navigate(`/spaces/${reservation.space.spaceId}`)}>
+          <Button variant="secondary" size="sm" onClick={() => navigate(`/spaces/${reservation.space.spaceId}`)}>
             공간 상세
           </Button>
           {showCancel && (
