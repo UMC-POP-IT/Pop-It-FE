@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useCardCarousel } from "@/features/guest-explore/hooks/useCardCarousel";
 
 import { getAiRecommend } from "../api/spaces_api";
+import { normalizeKeywords } from "@/shared/utils/keyword";
 
 // SpaceCard 4개 단위로 스크롤
 const CARDS_PER_SCROLL = 4;
@@ -31,7 +32,7 @@ const toCard = (dto: RecommendedSpace): AiRecommendCard => ({
     name: dto.buildingName,
     address: dto.roadAddress,
     cost: { day: dto.pricePerDay },
-    keywords: dto.keywords,
+    keywords: normalizeKeywords(dto.keywords ?? []),
     description: "",
     createdAt: "",
   },
