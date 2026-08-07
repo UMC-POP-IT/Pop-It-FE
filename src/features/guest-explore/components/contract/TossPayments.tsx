@@ -141,7 +141,7 @@ const TossPayments = ({
         if (uploads.length === 0) throw new Error("서명 업로드용 URL을 발급받지 못했습니다.");
         const [{ presignedUrl, fileUrl }] = uploads;
 
-        const signatureFile = new File([signatureBlob], `signature_${reservationId}.png`, { type: "image/png" });
+        const signatureFile = new File([signatureBlob], `signature_${reservationId}_guest.png`, { type: "image/png" });
         await UploadFileToPresignedURL(presignedUrl, signatureFile);
         ({ contractId } = await SubmitSignature(reservationId, { signatureUrl: fileUrl }));
         setCachedContractId(reservationId, contractId);
