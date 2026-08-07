@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore, type HostStatus } from "@/store/authStore";
 import { switchMode } from "@/shared/utils/oauth";
@@ -20,25 +20,46 @@ import { switchMode } from "@/shared/utils/oauth";
  */
 export const useHostModeSwitch = () => {
   const navigate = useNavigate();
+  /**
+   * 진행 중인 전환의 Promise. 헤더 버튼 연타나 pendingAction 중복 트리거로
+   * 조회·이동이 두 번 나가지 않도록 같은 Promise를 돌려준다.
+   * boolean 플래그로 막으면 두 번째 호출에 돌려줄 값이 없어(unknown을 주면
+   * 호출한 쪽에 엉뚱한 실패 문구가 뜬다) Promise 자체를 재사용한다.
+   */
+  const inFlightRef = useRef<Promise<HostStatus> | null>(null);
 
-  return useCallback(async (): Promise<HostStatus> => {
-    // 구독하지 않고 호출 시점의 최신 값을 읽는다.
-    // useEffect 안에서 호출될 때 오래된 hostStatus를 잡는 것을 막기 위함.
-    const { hostStatus, refreshHostStatus, setMode } = useAuthStore.getState();
+  return useCallback((): Promise<HostStatus> => {
+    if (inFlightRef.current) return inFlightRef.current;
 
-    const status =
-      hostStatus === "unknown" ? await refreshHostStatus() : hostStatus;
+    const run = (async (): Promise<HostStatus> => {
+      // 구독하지 않고 호출 시점의 최신 값을 읽는다.
+      // useEffect 안에서 호출될 때 오래된 hostStatus를 잡는 것을 막기 위함.
+      const { hostStatus, refreshHostStatus, setMode } =
+        useAuthStore.getState();
 
-    if (status === "unknown") return status;
+      const status =
+        hostStatus === "unknown" ? await refreshHostStatus() : hostStatus;
 
-    setMode("HOST");
-    navigate(status === "registered" ? "/host/spaces" : "/host/host-register");
+      if (status === "unknown") return status;
 
-    switchMode("HOST").catch((err: unknown) => {
-      console.error("[useHostModeSwitch] 호스트 모드 서버 동기화 실패:", err);
+      setMode("HOST");
+      navigate(
+        status === "registered" ? "/host/spaces" : "/host/host-register",
+      );
+
+      switchMode("HOST").catch((err: unknown) => {
+        console.error("[useHostModeSwitch] 호스트 모드 서버 동기화 실패:", err);
+      });
+
+      return status;
+    })();
+
+    inFlightRef.current = run;
+    // 성공·실패 모두 잠금을 풀어야 실패 후 재시도가 가능하다
+    run.finally(() => {
+      inFlightRef.current = null;
     });
-
-    return status;
+    return run;
   }, [navigate]);
 };
 
