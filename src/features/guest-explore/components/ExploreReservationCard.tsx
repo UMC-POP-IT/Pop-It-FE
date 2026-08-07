@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import {
   createReservation,
-  GetUnavailableDates,
+  getUnavailableDates,
   type CreateReservationResponse,
   type UnavailablePeriod,
 } from "@/features/guest-explore/api/my_reservation_api";
@@ -88,7 +88,7 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
   useEffect(() => {
     let cancelled = false;
     setAvailabilityStatus("loading");
-    GetUnavailableDates(spaceId)
+    getUnavailableDates(spaceId)
       .then((periods) => {
         if (cancelled) return;
         setUnavailablePeriods(periods);
@@ -174,14 +174,14 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
   };
 
   // start~end 사이(양 끝 포함)에 이미 예약된 날짜가 하루라도 있는지 확인
-  const hasBookedDateBetween = (start: Date, end: Date) => {
-    const cursor = new Date(start);
-    while (cursor <= end) {
-      if (isDateBooked(cursor)) return true;
-      cursor.setDate(cursor.getDate() + 1);
-    }
-    return false;
-  };
+  // start~end 구간이 예약 불가 기간 중 하나와 겹치는지 구간 비교로 한 번에 확인한다.
+  // (날짜를 하루씩 순회하는 대신 겹침 조건 pStart <= end && pEnd >= start만 확인)
+  const hasBookedDateBetween = (start: Date, end: Date) =>
+    unavailablePeriods.some(({ startDate: s, endDate: e }) => {
+      const pStart = parseDateString(s);
+      const pEnd = parseDateString(e);
+      return pStart <= end && pEnd >= start;
+    });
 
   const handleSelectDate = (date: Date) => {
     if (!user) {
