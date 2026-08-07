@@ -82,6 +82,14 @@ const AiRecommendSpace = () => {
 
   // AI 맞춤형 공간 정보 조회
   useEffect(() => {
+    if (!user) { // 비로그인 상태에서는 AI 맞춤형 공간 섹션을 숨긴다.
+      setIsTracking(true);
+      setCards([]);
+      setIsLoading(false);
+      setIsError(false);
+      return;
+    }
+
     let isMounted = true;
     setIsLoading(true);
     setIsError(false);
@@ -104,7 +112,7 @@ const AiRecommendSpace = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [user]); // user가 바뀌면 AI 맞춤형 공간도 다시 조회
 
   // AI 맞춤형 공간 트래킹이 완료되지 않은 유저는 AI 맞춤형 공간 섹션을 숨긴다.
   if (isTracking) return null; 
