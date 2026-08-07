@@ -45,8 +45,7 @@ const AiRecommendSpace = () => {
   const [cards, setCards] = useState<AiRecommendCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
-  // AI 맞춤형 공간 트래킹 여부 - true: 아직 트래킹 안함, false: 이미 트래킹 완료, null: 미확정 
-  const [hasActivityHistory, setHasActivityHistory] = useState<boolean | null>(null);
+  const [isTracking, setIsTracking] = useState(true); // AI 맞춤형 공간 트래킹 여부 - true: 아직 트래킹 안함, false: 이미 트래킹 완료
 
   const { handleWishToggle } = useWishGuard();
   const user = useAuthStore((s) => s.user);
@@ -90,7 +89,7 @@ const AiRecommendSpace = () => {
     getAiRecommend()
       .then((data) => {
         if (!isMounted) return;
-        setHasActivityHistory(data.hasActivityHistory);
+        setIsTracking(!data.hasActivityHistory);
         setCards((data?.spaces ?? []).map(toCard));
       })
       .catch((error) => {
@@ -108,7 +107,7 @@ const AiRecommendSpace = () => {
   }, []);
 
   // AI 맞춤형 공간 트래킹이 완료되지 않은 유저는 AI 맞춤형 공간 섹션을 숨긴다.
-  if (hasActivityHistory === false || isLoading && hasActivityHistory === null) return null; 
+  if (isTracking) return null; 
 
   // 이미 트래킹 완료된 유저는 AI 맞춤형 공간 섹션을 보여준다.
   return (
