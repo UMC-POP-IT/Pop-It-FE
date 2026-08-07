@@ -34,7 +34,7 @@ export interface SpaceDetailRes {
   spaceType: string;
   exclusiveArea: number;
   floorType: string;
-  floorNumber: number;
+  floorNumber: number | null;
   parkingAvailable: boolean;
   facilities: SpaceDetailFacility[];
   description: string;
@@ -114,6 +114,8 @@ export const toExploreSpaceDetail = (
     spaceInfo,
     latitude: detail.latitude,
     longitude: detail.longitude,
+    availableStartDate: detail.availableStartDate,
+    availableEndDate: detail.availableEndDate,
   };
 };
 

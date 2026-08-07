@@ -30,7 +30,7 @@ interface SpaceDetailRes {
   spaceType: string;
   exclusiveArea: number;
   floorType: string;
-  floorNumber: number;
+  floorNumber: number | null;
   parkingAvailable: boolean;
   facilities: SpaceDetailFacility[];
   description: string;
@@ -58,6 +58,8 @@ export interface HostSpaceDetail {
   spaceInfo: string[];
   latitude: number;
   longitude: number;
+  availableStartDate: string;
+  availableEndDate: string;
 }
 
 const BUILDING_TYPE_LABEL: Record<string, string> = {
@@ -102,5 +104,7 @@ export const toHostSpaceDetail = (detail: SpaceDetailRes): HostSpaceDetail => {
     spaceInfo,
     latitude: detail.latitude,
     longitude: detail.longitude,
+    availableStartDate: detail.availableStartDate,
+    availableEndDate: detail.availableEndDate,
   };
 };

@@ -15,6 +15,9 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 interface ExploreReservationCardProps {
   spaceId: number;
   dayCost: number;
+  // 호스트가 설정한 계약 가능 기간 (이 범위 밖의 날짜는 예약 불가) - "YYYY-MM-DD"
+  availableStartDate: string;
+  availableEndDate: string;
   onLoginRequired?: () => void;
 }
 
@@ -57,15 +60,28 @@ const parseDateString = (str: string) => {
   return new Date(y, m - 1, d);
 };
 
-// 예약 가능 기간: 오늘부터 90일 이내
-const BOOKING_WINDOW_DAYS = 90;
+// 예약 가능 기간: 시작일 기준 최대 3개월 (host-register/DateRangePicker의 계약 한도와 동일한 기준을 사용)
+const MAX_RESERVATION_MONTHS = 3;
 
-const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreReservationCardProps) => {
+// 어떤 날짜에 개월 수를 더한 로컬 자정 Date (호스트 계약 한도 계산과 동일한 방식)
+const addMonths = (date: Date, months: number) =>
+  new Date(date.getFullYear(), date.getMonth() + months, date.getDate());
+
+const ExploreReservationCard = ({
+  spaceId,
+  dayCost,
+  availableStartDate,
+  availableEndDate,
+  onLoginRequired,
+}: ExploreReservationCardProps) => {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const guestName = user?.nickname ?? "";
 
   const todayStart = toDateOnly(new Date());
+  // 호스트가 설정한 계약 가능 기간 (이 범위 밖의 날짜는 선택 불가)
+  const hostMinDate = parseDateString(availableStartDate);
+  const hostMaxDate = parseDateString(availableEndDate);
 
   const [viewDate, setViewDate] = useState(() => {
     const now = new Date();
@@ -133,17 +149,21 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     });
   }, [viewDate]);
 
-  // 예약 가능한 마지막 날짜 = 오늘 + 90일 (이 날짜까지는 포함, 그 다음 날부터 선택 불가)
-  const maxSelectableDate = new Date(todayStart);
-  maxSelectableDate.setDate(maxSelectableDate.getDate() + BOOKING_WINDOW_DAYS);
+  // 달력 이동(다음 달 화살표)이 넘어갈 수 있는 마지막 달의 기준 날짜.
+  // 호스트가 설정한 계약 가능 기간(availableEndDate) 밖으로는 달력을 넘길 필요가 없다.
+  const maxSelectableDate = hostMaxDate;
 
-  // 오늘이 속한 달보다 과거로, 오늘+90일이 속한 달보다 미래로는 이동할 수 없다.
+  // 오늘이 속한 달과 호스트 계약 가능 시작일이 속한 달 중 더 늦은 쪽보다 과거로,
+  // 호스트 계약 가능 종료일이 속한 달보다 미래로는 이동할 수 없다.
   // (이동할 수 없는 방향의 화살표 버튼은 아예 렌더링하지 않는다.)
   // 두 날짜를 각자의 "월 1일"로 정규화한 뒤 비교해, 자정을 넘겨 페이지가 계속 열려있는
   // 등의 이유로 viewDate가 오늘이 속한 달보다 과거가 되어버린 경우까지 안전하게 막는다.
   const currentMonthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+  const hostMinMonthStart = new Date(hostMinDate.getFullYear(), hostMinDate.getMonth(), 1);
+  const navMinMonthStart =
+    hostMinMonthStart > currentMonthStart ? hostMinMonthStart : currentMonthStart;
   const viewedMonthStart = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-  const isPrevMonthDisabled = viewedMonthStart <= currentMonthStart;
+  const isPrevMonthDisabled = viewedMonthStart <= navMinMonthStart;
   const isNextMonthDisabled =
     viewDate.getFullYear() === maxSelectableDate.getFullYear() &&
     viewDate.getMonth() === maxSelectableDate.getMonth();
@@ -170,14 +190,19 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     });
   };
 
-  // 선택 가능 범위: 오늘(포함) ~ 오늘+90일(포함). 그 밖(과거, 91일째 이후)이거나
-  // 이미 예약된(선점된) 날짜는 선택할 수 없다.
+  // 선택 가능 범위: 오늘(포함) ~ 호스트 계약 가능 기간(availableStartDate~availableEndDate, 포함) 이내.
+  // 그 밖이거나 이미 예약된(선점된) 날짜는 선택할 수 없다.
+  // 종료일을 고르는 중(시작일은 있고 종료일은 아직 없음)에는, 시작일 기준 최대 3개월을
+  // 넘는 날짜도 선택할 수 없다 (host-register/DateRangePicker의 계약 한도와 동일한 기준 —
+  // 예전에는 "오늘 기준 고정 90일"이었는데, 명세는 시작일 기준 3개월이라 이에 맞춘다).
   // 예약 불가 날짜 조회가 아직 끝나지 않았거나(loading) 실패했으면(error), 어떤 날짜가
   // 실제로 예약 가능한지 알 수 없으므로 안전하게 모든 날짜를 선택 불가로 취급한다.
   const isDateDisabled = (date: Date) => {
     if (availabilityStatus !== "success") return true;
     const target = toDateOnly(date);
-    return target < todayStart || target > maxSelectableDate || isDateBooked(target);
+    if (target < todayStart || target < hostMinDate || target > hostMaxDate) return true;
+    if (startDate && !endDate && target > addMonths(startDate, MAX_RESERVATION_MONTHS)) return true;
+    return isDateBooked(target);
   };
 
   // start~end 사이(양 끝 포함)에 이미 예약된 날짜가 하루라도 있는지 확인
@@ -193,6 +218,11 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
   const handleSelectDate = (date: Date) => {
     if (!user) {
       onLoginRequired?.();
+      return;
+    }
+    // 달력에 함께 보이는 다른 달의 회색 날짜는 현재 보고 있는 달이 아니므로
+    // (이전/다음 달로 넘겨야 정상적으로 선택 가능) 클릭해도 선택되지 않게 막는다.
+    if (date.getMonth() !== viewDate.getMonth() || date.getFullYear() !== viewDate.getFullYear()) {
       return;
     }
     if (isDateDisabled(date)) return;
@@ -350,14 +380,14 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
     if (isToday && disabled) {
       // 오늘 날짜 표시 (선택 불가): 회색 테두리 원 + 취소선 (피그마 디자인 기준)
       return (
-        <span className="relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-[#c5c5c5] text-[#c5c5c5] line-through">
+        <span className="border-text-disabled text-text-disabled relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border line-through">
           {day}
         </span>
       );
     }
     if (disabled) {
       // 오늘이 아닌 나머지 선택 불가 날짜: 원 없이 회색 취소선 텍스트만
-      return <span className="text-[#c5c5c5] line-through">{day}</span>;
+      return <span className="text-text-disabled line-through">{day}</span>;
     }
     return day;
   };
