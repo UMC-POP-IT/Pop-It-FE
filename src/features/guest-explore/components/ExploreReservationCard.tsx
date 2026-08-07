@@ -86,6 +86,13 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
   // 조회가 끝나기 전(loading)이나 실패(error)했을 때는 어떤 날짜가 예약 불가인지 알 수 없으므로,
   // isDateDisabled에서 이 상태를 확인해 모든 날짜 선택을 막는다.
   useEffect(() => {
+    setStartDate(null);
+    setEndDate(null);
+    setIsRequestModalOpen(false);
+    setSubmitError(null);
+  }, [spaceId]);
+
+  useEffect(() => {
     let cancelled = false;
     setAvailabilityStatus("loading");
     getUnavailableDates(spaceId)
