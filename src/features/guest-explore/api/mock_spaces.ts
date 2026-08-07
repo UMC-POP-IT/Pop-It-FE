@@ -55,6 +55,8 @@ export const recommendSpaces: ExploreSpaceDetail[] = [
     spaceInfo: ['단독공간', '주차 가능'],
     latitude: 37.5227,
     longitude: 127.0286,
+    availableStartDate: '2026-01-01',
+    availableEndDate: '2026-12-31',
   },
   {
     id: 1002,
@@ -76,6 +78,8 @@ export const recommendSpaces: ExploreSpaceDetail[] = [
     spaceInfo: ['주차 가능', '최대 30인'],
     latitude: 37.5219,
     longitude: 127.0233,
+    availableStartDate: '2026-01-01',
+    availableEndDate: '2026-12-31',
   },
   {
     id: 1003,
@@ -97,6 +101,8 @@ export const recommendSpaces: ExploreSpaceDetail[] = [
     spaceInfo: ['야외 공간', '주차 가능'],
     latitude: 37.5175,
     longitude: 127.0246,
+    availableStartDate: '2026-01-01',
+    availableEndDate: '2026-12-31',
   },
   {
     id: 1004,
@@ -118,6 +124,8 @@ export const recommendSpaces: ExploreSpaceDetail[] = [
     spaceInfo: ['역세권', '최대 8인'],
     latitude: 37.5165,
     longitude: 127.0224,
+    availableStartDate: '2026-01-01',
+    availableEndDate: '2026-12-31',
   },
   {
     id: 1005,
@@ -139,6 +147,8 @@ export const recommendSpaces: ExploreSpaceDetail[] = [
     spaceInfo: ['전시 특화', '넓은 공간'],
     latitude: 37.5446,
     longitude: 127.0559,
+    availableStartDate: '2026-01-01',
+    availableEndDate: '2026-12-31',
   },
   {
     id: 1006,
@@ -160,6 +170,8 @@ export const recommendSpaces: ExploreSpaceDetail[] = [
     spaceInfo: ['프라이빗', '최대 20인'],
     latitude: 37.5347,
     longitude: 127.0011,
+    availableStartDate: '2026-01-01',
+    availableEndDate: '2026-12-31',
   },
 ];
 
@@ -181,6 +193,9 @@ export interface ExploreSpaceDetail extends Space {
   // 공간 탐색/상세 응답에는 항상 포함되는 값이라 여기서는 필수로 좁혀서 사용
   latitude: number;
   longitude: number;
+  // 호스트가 설정한 계약 가능 기간 (이 범위 밖의 날짜는 예약 불가) - "YYYY-MM-DD"
+  availableStartDate: string;
+  availableEndDate: string;
 }
 
 /**
@@ -225,6 +240,8 @@ export const exploreSpaces: ExploreSpaceDetail[] = Array.from(
     facilities: ["에어컨", "에어컨", "에어컨"], // TODO: 실제 시설 데이터 연동 전까지 Figma 목업 값 그대로 사용
     spaceInfo: ["에어컨", "에어컨", "에어컨"],
     createdAt: "2026-07-01T00:00:00.000Z",
+    availableStartDate: "2026-01-01",
+    availableEndDate: "2026-12-31",
     ...scatterCoordinate(index),
   }),
 );
