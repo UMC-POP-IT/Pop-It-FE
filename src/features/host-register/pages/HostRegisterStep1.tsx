@@ -152,8 +152,10 @@ export const HostRegisterStep1 = () => {
             사업장 주소
           </label>
           {/* 피그마: 입력창 590 + gap 20 + 버튼 184 = 본문 794 */}
-          <div className="flex gap-5">
-            <div className="flex-1">
+          <div className="flex items-start gap-5">
+            {/* 안내문을 Input과 같은 칸에 둔다 — 에러 문구(Input 내부)와 위치를 맞추기 위함.
+                행 바깥에 두면 버튼 폭까지 포함한 오른쪽 끝으로 밀려 서로 어긋난다 */}
+            <div className="flex flex-1 flex-col gap-1">
               <Input
                 id="business-address"
                 placeholder="주소 찾기로 주소를 입력해주세요"
@@ -161,6 +163,12 @@ export const HostRegisterStep1 = () => {
                 readOnly
                 error={addrError}
               />
+              {/* 안내문 (에러 없을 때만) */}
+              {!addrError && (
+                <span className="text-text-secondary text-right text-base font-medium">
+                  현재 서울 지역만 등록 가능합니다
+                </span>
+              )}
             </div>
             <Button
               variant="black"
@@ -173,12 +181,6 @@ export const HostRegisterStep1 = () => {
               주소 찾기
             </Button>
           </div>
-          {/* 안내문 (에러 없을 때만) */}
-          {!addrError && (
-            <span className="text-text-secondary text-right text-base font-medium">
-              현재 서울 지역만 등록 가능합니다
-            </span>
-          )}
           <Input
             placeholder="상세 주소를 입력해주세요"
             aria-label="상세 주소"

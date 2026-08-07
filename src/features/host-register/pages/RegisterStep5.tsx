@@ -182,7 +182,7 @@ export const RegisterStep5 = () => {
         {photoNotice && (
           <span
             role="alert"
-            className="text-danger text-sm"
+            className="text-danger text-right text-base font-bold"
           >
             {photoNotice}
           </span>
@@ -209,7 +209,7 @@ export const RegisterStep5 = () => {
       {submitError && (
         <span
           role="alert"
-          className="text-danger self-end text-sm"
+          className="text-danger self-end text-base font-bold"
         >
           {submitError}
         </span>

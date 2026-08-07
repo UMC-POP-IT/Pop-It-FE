@@ -86,7 +86,9 @@ export const RegisterStep1 = () => {
           {/* 주소 찾기(다음 우편번호) — 시/구는 검색 결과로 자동 채움
               피그마: 입력창 590 + gap 20 + 버튼 184 = 본문 794 */}
           <div className="flex items-start gap-5">
-            <div className="flex-1">
+            {/* 안내문을 Input과 같은 칸에 둔다 — 에러 문구(Input 내부)와 위치를 맞추기 위함.
+                행 바깥에 두면 버튼 폭까지 포함한 오른쪽 끝으로 밀려 서로 어긋난다 */}
+            <div className="flex flex-1 flex-col gap-1">
               <Input
                 aria-label="주소"
                 placeholder="주소 찾기로 주소를 입력해주세요"
@@ -94,6 +96,15 @@ export const RegisterStep1 = () => {
                 readOnly
                 error={addrError}
               />
+              {/* 안내문 (에러 없을 때만)주소만 있고 좌표가 없으면 재검색 유도 */}
+              {!addrError && (
+                <span className="text-text-secondary text-right text-base font-medium">
+                  {form.address !== "" &&
+                  (form.latitude === null || form.longitude === null)
+                    ? "주소를 다시 검색해주세요"
+                    : "현재 서울 지역만 등록 가능합니다"}
+                </span>
+              )}
             </div>
             <Button
               variant="black"
@@ -106,15 +117,6 @@ export const RegisterStep1 = () => {
               주소 찾기
             </Button>
           </div>
-          {/* 안내문 (에러 없을 때만)주소만 있고 좌표가 없으면 재검색 유도 */}
-          {!addrError && (
-            <span className="text-text-secondary text-right text-base font-medium">
-              {form.address !== "" &&
-              (form.latitude === null || form.longitude === null)
-                ? "주소를 다시 검색해주세요"
-                : "현재 서울 지역만 등록 가능합니다"}
-            </span>
-          )}
 
           {/* 상세 주소 — 서버 SpaceCreateReq.addressDetail이 30자 제한 */}
           <Input

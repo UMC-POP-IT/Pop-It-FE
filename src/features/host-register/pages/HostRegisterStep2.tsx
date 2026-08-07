@@ -225,7 +225,7 @@ export const HostRegisterStep2 = () => {
       {submitError && (
         <span
           role="alert"
-          className="text-danger self-end text-sm"
+          className="text-danger self-end text-base font-bold"
         >
           {submitError}
         </span>

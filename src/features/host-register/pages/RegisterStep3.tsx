@@ -211,7 +211,7 @@ export const RegisterStep3 = () => {
         ) : facilityError ? (
           <span
             role="alert"
-            className="text-text-placeholder text-base font-bold"
+            className="text-danger text-right text-base font-bold"
           >
             시설 목록을 불러오지 못했어요. 새로고침 후 다시 시도해주세요
           </span>
