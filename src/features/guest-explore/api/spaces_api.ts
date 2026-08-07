@@ -37,10 +37,8 @@ export interface wishedSpace {
   pricePerMonth: number;
   thumbnailUrl: string;
   wishCount: number;
-  // 백엔드에 카테고리 뱃지 & 키워드 노출을 위해 필드 추가 요청해둔 상태.
-  // 배포 전까지는 응답에 없을 수 있어 optional로 둔다.
-  spaceCategory?: string;
-  keywords?: string[];
+  spaceCategory: string;
+  keywords: string[];
 }
 
 export interface AiRecommendResponse {
@@ -74,8 +72,8 @@ export const getRealTimeRecommend = () =>
 
 // 찜 - 찜 토글
 export const wishToggle = (spaceId: number) =>
-  apiFetch<wishToggleResponse>(`/api/v1/spaces/${spaceId}/wishlist`, { method: "POST" });
+  apiFetch<wishToggleResponse>(`/api/v1/spaces/${spaceId}/wishlists`, { method: "POST" });
 
 // 찜 - 찜한 공간 조회
 export const getWishList = (page = 0, size = 12) =>
-  apiFetch<getWishListResponse>(`/api/v1/users/me/wishlist?page=${page}&size=${size}`);
+  apiFetch<getWishListResponse>(`/api/v1/users/me/wishlists?page=${page}&size=${size}`);

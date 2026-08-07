@@ -30,6 +30,15 @@ const setCachedContractId = (reservationId: number, contractId: number): void =>
   sessionStorage.setItem(`toss_contract_id_${reservationId}`, String(contractId));
 };
 
+// 결제가 성공/최종 실패/취소로 확정된 뒤(TossPaymentResultHandler) 또는 재시도 없이 플로우를
+// 완전히 벗어날 때만 호출한다. 리다이렉트 전 재시도 가능한 오류(handlePayment의 catch)에서는
+// 서버가 이미 처리했을 수 있는 contractId·멱등키를 지우면 다음 시도가 SubmitSignature/PaymentRequest를
+// 다시 실행해 중복 계약·중복 결제를 만들 수 있으므로 호출하지 않는다.
+export const clearTossPaymentCache = (reservationId: number): void => {
+  sessionStorage.removeItem(`toss_contract_id_${reservationId}`);
+  sessionStorage.removeItem(`toss_idempotency_key_${reservationId}`);
+};
+
 interface TossPaymentRequestOptions {
   method: "CARD";
   amount: { currency: "KRW"; value: number };
@@ -147,7 +156,7 @@ const TossPayments = ({
       // Toss v2 CARD 결제는 페이지 전체를 successUrl/failUrl로 리다이렉트시키므로,
       // 이 시점 이후 코드는 결제가 승인 창으로 넘어가기 전 취소/에러가 난 경우에만 실행된다.
       // 실제 결제 승인은 리다이렉트 후 진입하는 결과 페이지에서 처리한다.
-      sessionStorage.setItem(TOSS_PENDING_PAYMENT_KEY, JSON.stringify({ paymentId }));
+      sessionStorage.setItem(TOSS_PENDING_PAYMENT_KEY, JSON.stringify({ paymentId, reservationId }));
 
       await paymentRef.current.requestPayment({
         method: "CARD",
@@ -169,6 +178,11 @@ const TossPayments = ({
         },
       });
     } catch (error) {
+      // 리다이렉트(결제 승인)로 넘어가지 못했으므로 대기 마커는 더 이상 유효하지 않아 지운다.
+      // 다만 contractId·멱등키는 지우지 않는다: 예) PaymentRequest가 서버에서는 처리됐는데
+      // 응답만 유실된 경우 여기로 떨어질 수 있고, 이때 캐시를 지우면 다음 시도에서
+      // SubmitSignature/PaymentRequest를 다시 실행해 중복 계약·중복 결제를 만들 수 있다.
+      // 재시도 시 같은 contractId·멱등키를 재사용해 서버가 기존 처리 결과를 반환/재사용하도록 한다.
       sessionStorage.removeItem(TOSS_PENDING_PAYMENT_KEY);
       console.error(error);
       alert("서명 저장 또는 결제 요청에 실패했습니다. 잠시 후 다시 시도해주세요.");
