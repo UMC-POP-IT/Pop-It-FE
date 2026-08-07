@@ -371,7 +371,7 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
 
         {availabilityStatus === "error" && (
           <div className="bg-tag-bg flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3">
-            <span className="text-text-secondary text-sm">
+            <span role="alert" className="text-text-secondary text-sm">
               예약 가능 여부를 불러오지 못했어요. 날짜 선택이 제한됩니다.
             </span>
             <button
@@ -383,7 +383,6 @@ const ExploreReservationCard = ({ spaceId, dayCost, onLoginRequired }: ExploreRe
             </button>
           </div>
         )}
-
         <div className="flex flex-col gap-4">
           {/* 시작일 / 종료일 */}
           <div className="flex items-center justify-center gap-10 rounded-lg bg-white px-8 py-2">
