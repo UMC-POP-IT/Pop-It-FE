@@ -45,6 +45,7 @@ const AiRecommendSpace = () => {
   const [cards, setCards] = useState<AiRecommendCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [isTracking, setIsTracking] = useState(true); // AI 맞춤형 공간 트래킹 여부 - true: 아직 트래킹 안함, false: 이미 트래킹 완료
 
   const { handleWishToggle } = useWishGuard();
   const user = useAuthStore((s) => s.user);
@@ -88,6 +89,7 @@ const AiRecommendSpace = () => {
     getAiRecommend()
       .then((data) => {
         if (!isMounted) return;
+        setIsTracking(!data.hasActivityHistory);
         setCards((data?.spaces ?? []).map(toCard));
       })
       .catch((error) => {
@@ -104,6 +106,10 @@ const AiRecommendSpace = () => {
     };
   }, []);
 
+  // AI 맞춤형 공간 트래킹이 완료되지 않은 유저는 AI 맞춤형 공간 섹션을 숨긴다.
+  if (isTracking) return null; 
+
+  // 이미 트래킹 완료된 유저는 AI 맞춤형 공간 섹션을 보여준다.
   return (
     <section className="flex flex-col gap-4 mt-20">
       <h2 className="text-text-primary text-2xl font-bold">AI 맞춤형 공간</h2>
