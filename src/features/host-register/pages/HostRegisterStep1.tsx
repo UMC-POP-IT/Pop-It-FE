@@ -32,9 +32,9 @@ export const HostRegisterStep1 = () => {
     form.businessLicenseImage !== null;
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
+    <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
-      <h1 className="text-text-primary text-center text-2xl font-bold">
+      <h1 className="text-text-primary text-center text-[32px] font-bold">
         호스트 등록
       </h1>
 
@@ -49,15 +49,17 @@ export const HostRegisterStep1 = () => {
       <div className="flex flex-col gap-6">
         {/* 섹션 제목 + 안내문 */}
         <div className="border-border flex flex-col gap-1 border-b pb-6">
-          <h2 className="text-text-primary text-lg font-bold">사업자 정보</h2>
-          <p className="text-text-secondary text-sm">
+          <h2 className="text-text-primary text-[28px] font-bold">
+            사업자 정보
+          </h2>
+          <p className="text-text-tertiary text-base font-medium">
             안전한 거래를 위해 사업자 정보가 필요합니다.
           </p>
         </div>
 
         {/* 과세자 등록 (택1) — store 연결됨 */}
         <div className="flex flex-col gap-2">
-          <span className="text-text-primary text-sm font-bold">
+          <span className="text-text-primary text-[22px] font-bold">
             과세자 등록
           </span>
           <div
@@ -79,7 +81,7 @@ export const HostRegisterStep1 = () => {
                   }`}
                 >
                   <span
-                    className={`text-sm font-medium ${isSelected ? "text-primary" : "text-text-primary"}`}
+                    className={`text-xl font-bold ${isSelected ? "text-primary" : "text-text-primary"}`}
                   >
                     {opt.title}
                   </span>
@@ -96,7 +98,7 @@ export const HostRegisterStep1 = () => {
         <div className="flex flex-col gap-2">
           <label
             htmlFor="business-number"
-            className="text-text-primary text-sm font-bold"
+            className="text-text-primary text-[22px] font-bold"
           >
             사업자 등록 번호
           </label>
@@ -129,7 +131,7 @@ export const HostRegisterStep1 = () => {
         <div className="flex flex-col gap-2">
           <label
             htmlFor="business-name"
-            className="text-text-primary text-sm font-bold"
+            className="text-text-primary text-[22px] font-bold"
           >
             상호명
           </label>
@@ -145,11 +147,12 @@ export const HostRegisterStep1 = () => {
         <div className="flex flex-col gap-2">
           <label
             htmlFor="business-address"
-            className="text-text-primary text-sm font-bold"
+            className="text-text-primary text-[22px] font-bold"
           >
             사업장 주소
           </label>
-          <div className="flex gap-2">
+          {/* 피그마: 입력창 590 + gap 20 + 버튼 184 = 본문 794 */}
+          <div className="flex gap-5">
             <div className="flex-1">
               <Input
                 id="business-address"
@@ -161,7 +164,7 @@ export const HostRegisterStep1 = () => {
             </div>
             <Button
               variant="black"
-              size="md"
+              size="field"
               onClick={() => {
                 setAddrError("");
                 setIsAddrOpen(true);
@@ -172,7 +175,7 @@ export const HostRegisterStep1 = () => {
           </div>
           {/* 안내문 (에러 없을 때만) */}
           {!addrError && (
-            <span className="text-text-disabled text-xs">
+            <span className="text-text-secondary text-right text-base font-medium">
               현재 서울 지역만 등록 가능합니다
             </span>
           )}
@@ -191,7 +194,7 @@ export const HostRegisterStep1 = () => {
       <div className="flex justify-end">
         <Button
           variant="primary"
-          size="md"
+          size="nav"
           disabled={!isValid}
           onClick={() => navigate("/host/host-register/step2")}
         >

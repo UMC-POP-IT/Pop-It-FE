@@ -31,7 +31,7 @@ export const RegisterStep1 = () => {
     form.detailAddress.trim() !== "";
 
   return (
-    <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
+    <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
       <h1 className="text-text-primary text-center text-[32px] font-bold">
         {isEdit ? "공간 수정" : "공간 등록"}
@@ -83,8 +83,9 @@ export const RegisterStep1 = () => {
         <div className="flex flex-col gap-3">
           <span className="text-text-primary text-[22px] font-bold">주소</span>
 
-          {/* 주소 찾기(다음 우편번호) — 시/구는 검색 결과로 자동 채움 */}
-          <div className="flex items-start gap-2">
+          {/* 주소 찾기(다음 우편번호) — 시/구는 검색 결과로 자동 채움
+              피그마: 입력창 590 + gap 20 + 버튼 184 = 본문 794 */}
+          <div className="flex items-start gap-5">
             <div className="flex-1">
               <Input
                 aria-label="주소"
@@ -96,8 +97,7 @@ export const RegisterStep1 = () => {
             </div>
             <Button
               variant="black"
-              size="nav"
-              className="text-xl! font-bold!"
+              size="field"
               onClick={() => {
                 setAddrError("");
                 setIsAddrOpen(true);
@@ -108,7 +108,7 @@ export const RegisterStep1 = () => {
           </div>
           {/* 안내문 (에러 없을 때만)주소만 있고 좌표가 없으면 재검색 유도 */}
           {!addrError && (
-            <span className="text-text-placeholder text-base font-bold">
+            <span className="text-text-secondary text-right text-base font-medium">
               {form.address !== "" &&
               (form.latitude === null || form.longitude === null)
                 ? "주소를 다시 검색해주세요"

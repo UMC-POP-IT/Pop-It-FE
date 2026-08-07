@@ -90,7 +90,7 @@ export const RegisterStep5 = () => {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
+    <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
       <h1 className="text-text-primary text-center text-[32px] font-bold">
         {isEdit ? "공간 수정" : "공간 등록"}

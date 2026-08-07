@@ -39,19 +39,21 @@ const FileUploadRow = ({
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-text-primary text-sm font-bold">{label}</span>
-      <div className="flex gap-2">
-        {/* 선택된 파일명 표시 영역*/}
+      <span className="text-text-primary text-[22px] font-bold">{label}</span>
+      {/* 피그마: 표시 영역 590 + gap 20 + 버튼 184 = 본문 794 (주소 찾기 행과 동일) */}
+      <div className="flex gap-5">
+        {/* 선택된 파일명 표시 영역 — 높이·여백·글자는 공통 Input과 맞춘다 */}
         <div
-          className={`border-border bg-tag-bg flex flex-1 items-center rounded-lg border px-4 py-2.5 text-sm ${file ? "text-text-primary" : "text-text-disabled"}`}
+          className={`border-divider bg-tag-bg flex h-14 flex-1 items-center rounded-lg border px-5 text-lg font-medium ${file ? "text-text-primary" : "text-text-disabled"}`}
         >
           {file ? file.name : placeholder}
         </div>
 
-        {/* 파일 찾기 버튼: 공통 Button에 검정 variant가 없어 label+hidden input으로 임시 구현 → 챈(4번)과 협의 예정*/}
+        {/* 파일 찾기 버튼: hidden input을 감싸야 해서 공통 Button 대신 label로 구현한다.
+            대신 Button의 variant="black" + size="field"와 같은 값을 직접 맞춰 둔다 */}
         <label
           aria-label={`${label} 파일 찾기`}
-          className="bg-text-primary flex shrink-0 cursor-pointer items-center rounded-lg px-5 text-sm font-medium whitespace-nowrap text-white"
+          className="bg-text-primary flex h-14 w-[184px] shrink-0 cursor-pointer items-center justify-center rounded-lg text-xl font-bold whitespace-nowrap text-white transition-colors hover:bg-gray-800"
         >
           파일 찾기
           <input
@@ -71,7 +73,9 @@ const FileUploadRow = ({
           {error}
         </span>
       ) : (
-        <span className="text-text-disabled text-xs">{hint}</span>
+        <span className="text-text-secondary text-right text-base font-medium">
+          {hint}
+        </span>
       )}
     </div>
   );

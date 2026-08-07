@@ -172,9 +172,10 @@ export const DateRangePicker = ({
 
   // 한 달치 달력 JSX
   const renderMonth = (base: Date) => (
-    <div className="flex flex-col gap-2">
-      {/* 월 표시 (예: 2026.06) */}
-      <div className="text-text-primary mb-1 text-center text-base font-bold">
+    // flex-1: 두 달이 팝업 안에서 폭을 반씩 나눠 갖는다 (칸 크기를 직접 정하지 않는다)
+    <div className="flex min-w-0 flex-1 flex-col gap-2">
+      {/* 월 표시 (예: 2026.06) — 피그마 20px/700 #121212 */}
+      <div className="text-text-primary mb-1 text-center text-xl font-bold">
         {base.getFullYear()}.{String(base.getMonth() + 1).padStart(2, "0")}
       </div>
       {/* 요일 줄 */}
@@ -182,7 +183,7 @@ export const DateRangePicker = ({
         {WEEKDAYS.map((day) => (
           <span
             key={day}
-            className="text-text-secondary flex h-8 w-12 items-center justify-center text-xs"
+            className="text-text-secondary flex h-9 w-full items-center justify-center text-sm font-medium"
           >
             {day}
           </span>
@@ -208,7 +209,7 @@ export const DateRangePicker = ({
               aria-label={`${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`}
               aria-pressed={isSelected}
               onClick={() => handleSelectDate(date)}
-              className={`flex h-9 w-12 items-center justify-center text-sm ${getDayClassName(date, base)} ${disabled ? "cursor-not-allowed opacity-30" : ""}`}
+              className={`flex h-10 w-full items-center justify-center text-base font-medium ${getDayClassName(date, base)} ${disabled ? "cursor-not-allowed opacity-30" : ""}`}
             >
               {date.getDate()}
             </button>
@@ -228,7 +229,8 @@ export const DateRangePicker = ({
       ref={containerRef}
     >
       {/* 시작일 / 종료일 필드 (클릭하면 달력 팝업 열림) */}
-      <div className="grid grid-cols-2 gap-6">
+      {/* 피그마: 필드 387 + gap 20 + 필드 387 = 본문 794 */}
+      <div className="grid grid-cols-2 gap-5">
         {[
           { date: startDate, label: "시작일" },
           { date: endDate, label: "종료일" },
@@ -239,17 +241,18 @@ export const DateRangePicker = ({
             aria-haspopup="dialog"
             aria-expanded={isOpen}
             onClick={() => setIsOpen((v) => !v)}
-            className="border-border flex h-12 items-center gap-2 rounded-lg border bg-white px-4 text-sm"
+            className="border-divider flex h-14 items-center gap-2 rounded-lg border bg-white px-5 text-lg font-bold"
           >
             <img
               src={calendarIcon}
               alt=""
-              className="h-5 w-5"
+              className="h-8 w-8"
             />
 
+            {/* 피그마: 미선택 #808080, 선택 후 #121212 (둘 다 18px/700) */}
             <span
               className={
-                field.date ? "text-text-primary" : "text-text-placeholder"
+                field.date ? "text-text-primary" : "text-text-secondary"
               }
             >
               {fieldText(field.date, field.label)}
@@ -258,15 +261,18 @@ export const DateRangePicker = ({
         ))}
       </div>
 
-      {/* 달력 팝업 (isOpen일 때만, 필드 아래에 떠 있음) */}
+      {/* 달력 팝업 (isOpen일 때만, 필드 아래에 떠 있음)
+          inset-x-0: 팝업 폭을 위 필드 두 개(= 본문 폭)와 같게 맞춘다.
+          폭을 고정하면 본문(794px)을 넘겨 오른쪽으로 삐져나온다 */}
       {isOpen && (
-        <div className="border-border absolute left-0 z-10 mt-2 rounded-xl border bg-white p-5 shadow-lg">
-          <div className="flex items-start gap-4">
+        <div className="border-border absolute inset-x-0 z-10 mt-2 overflow-hidden rounded-lg border bg-white shadow-lg">
+          {/* 달력 영역 — 화살표 · 이번 달 · 다음 달 · 화살표 */}
+          <div className="flex items-start gap-4 px-3.5 py-5">
             <button
               type="button"
               onClick={goPrev}
               aria-label="이전 달"
-              className="text-text-primary px-1 text-xl"
+              className="text-text-primary mt-1 flex h-9 w-6 shrink-0 items-center justify-center text-2xl"
             >
               ‹
             </button>
@@ -276,22 +282,23 @@ export const DateRangePicker = ({
               type="button"
               onClick={goNext}
               aria-label="다음 달"
-              className="text-text-primary px-1 text-xl"
+              className="text-text-primary mt-1 flex h-9 w-6 shrink-0 items-center justify-center text-2xl"
             >
               ›
             </button>
           </div>
 
-          {/* 선택 범위 + 확인 */}
-          <div className="mt-4 flex items-center justify-between">
-            <span className="text-text-secondary text-sm">
+          {/* 선택 범위 + 확인 — 피그마: padding 20, 우측 정렬, 버튼 94×52 */}
+          <div className="flex items-center justify-between p-5">
+            {/* 피그마: 20px/700 #121212 */}
+            <span className="text-text-primary text-xl font-bold">
               {fieldText(startDate, "시작일")} ~ {fieldText(endDate, "종료일")}
             </span>
             <button
               type="button"
               disabled={!(startDate && endDate)}
               onClick={handleConfirm}
-              className="bg-primary rounded-lg px-6 py-2 text-sm font-bold text-white disabled:opacity-40"
+              className="bg-primary-hover flex h-[52px] w-[94px] shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white disabled:opacity-40"
             >
               확인
             </button>
