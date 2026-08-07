@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
 import { handleOAuthCallback, switchMode, getCurrentUser } from "@/shared/utils/oauth";
 import { PaymentApproval } from "@/features/guest-explore/api/my_reservation_api";
-import { TOSS_PENDING_PAYMENT_KEY } from "@/features/guest-explore/components/contract/TossPayments";
+import { TOSS_PENDING_PAYMENT_KEY, clearTossPaymentCache } from "@/features/guest-explore/components/contract/TossPayments";
 
 // 새로고침 시 authStore의 user는 초기화되지만 localStorage의 토큰은 남아있으므로,
 // 앱 시작 시 토큰이 있으면 /users/me로 로그인 상태를 복원한다.
@@ -161,16 +161,24 @@ const TossPaymentResultHandler = () => {
     const amount = params.get("amount");
 
     let paymentId: number | undefined;
+    let reservationId: number | undefined;
     if (pendingRaw) {
       try {
         const parsed = JSON.parse(pendingRaw);
         if (typeof parsed?.paymentId === "number") {
           paymentId = parsed.paymentId;
         }
+        if (typeof parsed?.reservationId === "number") {
+          reservationId = parsed.reservationId;
+        }
       } catch (error) {
         console.error("Failed to parse pending payment info:", error);
       }
     }
+
+    // 성공/최종 실패/취소 중 무엇으로 끝나든 이 결제 시도는 여기서 종결된다.
+    // 다음 계약 작성 시 이전 시도의 contractId·멱등키를 이어받지 않도록 지금 정리한다.
+    if (reservationId !== undefined) clearTossPaymentCache(reservationId);
 
     // 성공 리다이렉트: paymentKey/orderId/amount + 결제 요청 시 저장해둔 paymentId가 모두 있어야 승인 가능
     if (paymentKey && orderId && amount && paymentId !== undefined) {

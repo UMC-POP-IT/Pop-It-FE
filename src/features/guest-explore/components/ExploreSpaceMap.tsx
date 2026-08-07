@@ -6,6 +6,7 @@ import { useKakaoLoader } from "@/shared/hooks/useKakaoLoader";
 import { useWishStore } from "@/store/wishStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
 import type { SpaceSummary } from "@/features/guest-explore/api/space_search_api";
+import { mapSpaceCategoryTag } from "@/shared/utils/spaceCategory";
 
 interface ExploreSpaceMapProps {
   /** 지도 위에 가격 마커로 노출할 공간 목록 */
@@ -98,7 +99,7 @@ const ExploreSpaceMap = ({
                       </div>
                       <div className="flex flex-col items-start gap-0.5 text-left">
                         <span className="text-primary text-xs font-bold">
-                          {selectedSpace.category}
+                          {mapSpaceCategoryTag(selectedSpace.category)}
                         </span>
                         <span className="text-text-primary text-sm font-bold">
                           {selectedSpace.name}
