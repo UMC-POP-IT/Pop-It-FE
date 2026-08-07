@@ -90,9 +90,8 @@ const ExploreDetailInfo = ({
                 />
               </svg>
             </button>
-            {/* 3D 큐레이션: 게스트 탐색 목업 데이터에 연결되어 있어 호스트 화면에서는 비노출 */}
-            {!isHost && (
-              <button
+            {/* 3D 큐레이션 */}
+            <button
                 type="button"
                 aria-label="3D로 둘러보기"
                 onClick={() => setIsCurationOpen(true)}
@@ -119,7 +118,6 @@ const ExploreDetailInfo = ({
                   />
                 </svg>
               </button>
-            )}
           </div>
         </div>
 
@@ -194,11 +192,11 @@ const ExploreDetailInfo = ({
         {/* 시설정보 */}
         <div className="flex flex-col items-start gap-5">
           <SectionTitle>시설정보</SectionTitle>
-          <div className="flex items-center gap-3">
+          <div className="flex w-full flex-wrap items-center gap-3">
             {space.facilities.map((item, index) => (
               <span
                 key={index}
-                className="bg-bg-footer text-text-primary flex items-center gap-2 rounded-full px-2 py-1 text-base font-medium"
+                className="bg-bg-footer text-text-primary flex items-center gap-2 rounded-full px-2 py-1 text-base font-medium whitespace-nowrap"
               >
                 <span className="bg-primary-100 h-5 w-5 rounded-full" />
                 {item}

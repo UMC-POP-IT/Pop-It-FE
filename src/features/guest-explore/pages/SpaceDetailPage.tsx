@@ -130,6 +130,8 @@ export const SpaceDetailPage = () => {
           <ExploreReservationCard
             spaceId={space.id}
             dayCost={space.cost.day}
+            availableStartDate={space.availableStartDate}
+            availableEndDate={space.availableEndDate}
             onLoginRequired={!user ? () => openLoginModal() : undefined}
           />
         )}

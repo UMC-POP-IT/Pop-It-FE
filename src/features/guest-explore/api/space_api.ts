@@ -1,4 +1,6 @@
 import { apiFetch } from "@/shared/utils/apiClient";
+import { formatFloorLabel } from "@/shared/utils/floorLabel";
+import { mapSpaceCategoryTag } from "@/shared/utils/spaceCategory";
 import type { ExploreSpaceDetail } from "./mock_spaces";
 
 // ============================================================
@@ -33,7 +35,7 @@ export interface SpaceDetailRes {
   spaceType: string;
   exclusiveArea: number;
   floorType: string;
-  floorNumber: number;
+  floorNumber: number | null;
   parkingAvailable: boolean;
   facilities: SpaceDetailFacility[];
   description: string;
@@ -59,22 +61,15 @@ export const getSpaceDetail = (spaceId: number) =>
 // enum → 화면 표기 라벨
 // TODO: 백엔드 enum 사전이 확정되면 누락된 값 채우기. 목록에 없는 값은
 // 원본 문자열을 그대로 노출해 최소한 화면이 깨지지는 않게 한다.
+// spaceCategory는 SpaceCard 등과 같은 공용 매핑(@/shared/utils/spaceCategory)을 사용한다.
 // ------------------------------------------------------------
 
 const BUILDING_TYPE_LABEL: Record<string, string> = {
   LARGE_OFFICE: "대형 오피스",
 };
 
-const SPACE_CATEGORY_LABEL: Record<string, string> = {
-  POPUP_STORE: "팝업스토어",
-};
-
 const SPACE_TYPE_LABEL: Record<string, string> = {
   OPEN_HALL: "오픈홀",
-};
-
-const FLOOR_TYPE_LABEL: Record<string, string> = {
-  GENERAL_FLOOR: "일반층",
 };
 
 const labelOf = (map: Record<string, string>, value: string) =>
@@ -96,7 +91,7 @@ export const toExploreSpaceDetail = (
   // 건물/층/주차 관련 필드를 조합해 태그로 구성한다.
   const spaceInfo = [
     labelOf(BUILDING_TYPE_LABEL, detail.buildingType),
-    `${detail.floorNumber}층 (${labelOf(FLOOR_TYPE_LABEL, detail.floorType)})`,
+    formatFloorLabel(detail.floorType, detail.floorNumber),
     detail.parkingAvailable ? "주차 가능" : "주차 불가",
   ];
 
@@ -111,12 +106,14 @@ export const toExploreSpaceDetail = (
     keywords: detail.facilities.map((facility) => facility.name),
     description: detail.description,
     createdAt: "", // 상세 조회 응답에는 등록일이 내려오지 않음
-    category: labelOf(SPACE_CATEGORY_LABEL, detail.spaceCategory),
+    category: mapSpaceCategoryTag(detail.spaceCategory),
     area: detail.exclusiveArea,
     facilities: detail.facilities.map((facility) => facility.name),
     spaceInfo,
     latitude: detail.latitude,
     longitude: detail.longitude,
+    availableStartDate: detail.availableStartDate,
+    availableEndDate: detail.availableEndDate,
   };
 };
 

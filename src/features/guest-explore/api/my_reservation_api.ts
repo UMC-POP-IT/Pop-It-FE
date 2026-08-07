@@ -12,6 +12,7 @@ export interface Reservation {
     usagePurpose: string;
 	totalPrice: number;
 	isPhotoVerified: boolean;
+    checkoutRejected: boolean;
 	space: {
 		spaceId: number;
 		buildingName: string;
@@ -98,6 +99,19 @@ export interface SubmitSignatureResponse {
     bothSigned: boolean;
 }
 
+// startDate/endDate는 시간대 정보가 없는 순수 날짜 문자열("YYYY-MM-DD")이다.
+// new Date(str)로 바로 파싱하면 UTC 자정으로 해석되어 로컬 타임존에 따라 하루가
+// 밀릴 수 있으므로, 사용하는 쪽(예: ExploreReservationCard의 parseDateString)에서
+// 반드시 연/월/일을 직접 분해해 로컬 Date로 만들어 비교해야 한다.
+export interface UnavailablePeriod {
+    startDate: string; // "YYYY-MM-DD" (타임존 없는 날짜, 양 끝 포함하는 예약 불가 기간의 시작일)
+    endDate: string;   // "YYYY-MM-DD" (타임존 없는 날짜, 양 끝 포함하는 예약 불가 기간의 종료일)
+}
+
+interface GetUnavailableDatesResult {
+    unavailableDates: UnavailablePeriod[];
+}
+
 export interface CreateReservationRequest {
     spaceId: number;
     startDate: string;
@@ -179,10 +193,16 @@ export const UploadFileToPresignedURL = async (presignedUrl: string, file: File)
 
 // 업로드 - presigned url 발급 ~ DONE
 export const GetPresignedURL = (request: GetPresignedURLRequest) =>
-    apiFetch<GetPresignedURLResponse>("/uploads/presigned-url", {
+    apiFetch<GetPresignedURLResponse>("/api/v1/uploads/presigned-url", {
         method: "POST",
         body: JSON.stringify(request),
 });
+
+// 게스트 - 공간별 예약 불가 날짜 조회 (이미 선점(승인대기~진행 중)된 기간 목록. 지난 날짜는 응답에서 제외됨) ~ DONE
+export const getUnavailableDates = async (spaceId: number): Promise<UnavailablePeriod[]> => {
+    const result = await apiFetch<GetUnavailableDatesResult>(`/api/v1/reservations/${spaceId}/unavailable-dates`);
+    return result.unavailableDates ?? [];
+};
 
 // 게스트 - 예약 요청 (spaceId/기간/사업 설명을 전달하면 대여료·보험료(대여료의 5%)·보증금을 서버가 계산해 총 결제 금액과 함께 PENDING_APPROVAL 상태의 예약을 생성) ~ DONE
 export const createReservation = (request: CreateReservationRequest) =>
