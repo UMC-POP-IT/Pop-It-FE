@@ -43,8 +43,11 @@ const FileUploadRow = ({
       {/* 피그마: 표시 영역 590 + gap 20 + 버튼 184 = 본문 794 (주소 찾기 행과 동일) */}
       <div className="flex gap-5">
         {/* 선택된 파일명 표시 영역 — 높이·여백·글자는 공통 Input과 맞춘다 */}
+        {/* min-w-0 + truncate: 파일명은 길이 제한이 없다. 이게 없으면 flex 항목이
+            내용 크기 아래로 줄지 않아 옆의 파일 찾기 버튼을 밀어내거나 행을 넘친다 */}
         <div
-          className={`border-divider bg-tag-bg flex h-14 flex-1 items-center rounded-lg border px-5 text-lg font-medium ${file ? "text-text-primary" : "text-text-disabled"}`}
+          title={file ? file.name : undefined}
+          className={`border-divider bg-tag-bg flex h-14 min-w-0 flex-1 items-center truncate rounded-lg border px-5 text-lg font-medium ${file ? "text-text-primary" : "text-text-disabled"}`}
         >
           {file ? file.name : placeholder}
         </div>

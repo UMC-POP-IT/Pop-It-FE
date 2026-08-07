@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId } from "react";
 import calendarIcon from "@/assets/icons/icon_calendar.svg";
 
 // 요일 헤더 (일~토)
@@ -57,6 +57,8 @@ export const DateRangePicker = ({
   onConfirm,
 }: DateRangePickerProps) => {
   const [isOpen, setIsOpen] = useState(false); // 달력 팝업 열림/닫힘
+  // 시작일·종료일 버튼이 같은 팝업을 가리키도록 id를 하나만 만들어 공유한다
+  const popupId = useId();
   // 저장된 시작일이 있으면 그 달을 먼저 보여줌 (없으면 이번 달)
   const [viewDate, setViewDate] = useState(
     initialStart ? parseYmd(initialStart) : new Date(),
@@ -240,6 +242,7 @@ export const DateRangePicker = ({
             type="button"
             aria-haspopup="dialog"
             aria-expanded={isOpen}
+            aria-controls={popupId}
             onClick={() => setIsOpen((v) => !v)}
             className="border-divider flex h-14 items-center gap-2 rounded-lg border bg-white px-5 text-lg font-bold"
           >
@@ -265,7 +268,12 @@ export const DateRangePicker = ({
           inset-x-0: 팝업 폭을 위 필드 두 개(= 본문 폭)와 같게 맞춘다.
           폭을 고정하면 본문(794px)을 넘겨 오른쪽으로 삐져나온다 */}
       {isOpen && (
-        <div className="border-border absolute inset-x-0 z-10 mt-2 overflow-hidden rounded-lg border bg-white shadow-lg">
+        <div
+          id={popupId}
+          role="dialog"
+          aria-label="계약 가능 기간 선택"
+          className="border-border absolute inset-x-0 z-10 mt-2 overflow-hidden rounded-lg border bg-white shadow-lg"
+        >
           {/* 달력 영역 — 화살표 · 이번 달 · 다음 달 · 화살표 */}
           <div className="flex items-start gap-4 px-3.5 py-5">
             <button
