@@ -22,6 +22,7 @@ export const MySpacePage = () => {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [editTargetId, setEditTargetId] = useState<number | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const loadSpaces = useCallback(async () => {
@@ -72,11 +73,16 @@ export const MySpacePage = () => {
     try {
       await deleteSpace(deleteTargetId);
       setSpaces((prev) => prev.filter((s) => s.spaceId !== deleteTargetId));
-    } catch {
-      // 실패 시 목록 다시 로드
-      await loadSpaces();
+      setDeleteTargetId(null);
+    } catch (e) {
+      const status = (e as { status?: number }).status;
+      setDeleteTargetId(null);
+      if (status === 400) {
+        setDeleteErrorMessage("진행 중인 예약이 있어 삭제할 수 없어요");
+      } else {
+        await loadSpaces();
+      }
     }
-    setDeleteTargetId(null);
   };
 
   const handleEdit = () => {
@@ -243,6 +249,15 @@ export const MySpacePage = () => {
         cancelLabel="돌아가기"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTargetId(null)}
+      />
+
+      {/* 삭제 실패 모달 */}
+      <Modal
+        isOpen={deleteErrorMessage !== null}
+        title={deleteErrorMessage ?? ""}
+        singleButton
+        confirmLabel="확인"
+        onConfirm={() => setDeleteErrorMessage(null)}
       />
     </div>
   );
