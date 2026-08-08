@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
-import { getPropertyBySpaceId } from "@/features/guest-explore/api/mock_3dcuration";
+import { getPropertyByCategory } from "@/features/guest-explore/api/mock_3dcuration";
 import SpaceLocationMapModal from "@/features/guest-explore/components/SpaceLocationMapModal";
 import CurationModal from "@/features/guest-explore/components/curation/CurationModal";
 
@@ -25,7 +25,7 @@ const ExploreDetailInfo = ({
   const isHost = variant === "host";
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isCurationOpen, setIsCurationOpen] = useState(false);
-  const property = getPropertyBySpaceId(space.id);
+  const property = getPropertyByCategory(space.category);
 
   return (
     <div

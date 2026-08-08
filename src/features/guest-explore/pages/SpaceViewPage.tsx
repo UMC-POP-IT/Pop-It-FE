@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getPropertyBySpaceId } from "@/features/guest-explore/api/mock_3dcuration";
+import { getSpaceDetail, toExploreSpaceDetail } from "@/features/guest-explore/api/space_api";
+import { getPropertyByCategory, type Property } from "@/features/guest-explore/api/mock_3dcuration";
 import { CurationViewer } from "@/features/guest-explore/components/curation/CurationViewer";
 import Button from "@/shared/components/Button";
 
@@ -8,7 +10,25 @@ export const SpaceViewPage = () => {
   const id = Number(spaceId);
   const navigate = useNavigate();
 
-  const property = getPropertyBySpaceId(id);
+  const [property, setProperty] = useState<Property | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    if (!Number.isFinite(id)) return;
+
+    getSpaceDetail(id)
+      .then((detail) => {
+        if (ignore) return;
+        setProperty(getPropertyByCategory(toExploreSpaceDetail(detail).category) ?? null);
+      })
+      .catch(() => {
+        if (!ignore) setProperty(null);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">

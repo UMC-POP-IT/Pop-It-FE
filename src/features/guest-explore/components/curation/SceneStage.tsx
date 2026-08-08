@@ -35,8 +35,10 @@ export const SceneStage = ({ scene, selectedHotspotId, onSelectHotspot, onIntera
         makeDefault
       />
 
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[5, 8, 5]} intensity={1.2} castShadow />
+      <ambientLight intensity={1.1} />
+      <hemisphereLight args={["#ffffff", "#d9d4c9", 0.6]} />
+      <directionalLight position={[5, 8, 5]} intensity={1.6} castShadow />
+      <directionalLight position={[-4, 5, -3]} intensity={0.5} />
 
       <Suspense fallback={null}>
         <ModelErrorBoundary resetKey={modelUrl} fallback={<PlaceholderRoom />}>
