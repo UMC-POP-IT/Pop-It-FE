@@ -219,7 +219,7 @@ export const SubmitCheckOutPhoto = (reservationId: number, request: SubmitCheckO
 export const GetEachResStateCounts = (reservationId: number) =>
     apiFetch<GetEachResStateCountsResponse>(`/api/v1/reservations/${reservationId}/status-counts`);
 
-// 게스트 - 퇴실 증빙 사진 조회 ~ 아직 UI 디자인이 완성되지 않아 추후 연동 예정
+// 게스트 - 퇴실 증빙 사진 조회 ~ DONE
 export const GetSubmitCheckoutPhotos = (reservationId: number) =>
     apiFetch<GetSubmitCheckoutPhotosResponse>(`/api/v1/reservations/${reservationId}/checkout-photos`);
 

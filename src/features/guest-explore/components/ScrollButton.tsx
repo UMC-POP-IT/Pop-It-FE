@@ -19,7 +19,7 @@ export const ScrollButton = ({
       style={{ top: topOffset }}
       className={`border-border absolute ${
         direction === "prev" ? "-left-4" : "-right-4"
-      } z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[12px] border bg-white shadow-md`}
+      } z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[12px] border bg-white shadow-md cursor-pointer`}
     >
       <img
         src={direction === "prev" ? arrowLeft : arrowRight}
