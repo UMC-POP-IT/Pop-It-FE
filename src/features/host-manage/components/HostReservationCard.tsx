@@ -9,6 +9,7 @@ interface HostReservationCardProps {
   onPhotoView?: () => void;
   onCheckoutApprove?: () => void;
   onCheckoutReject?: () => void;
+  onOpenContract?: () => void;
 }
 
 const STATUS_LABEL: Record<ReservationStatus, string> = {
@@ -36,6 +37,7 @@ export const HostReservationCard = ({
   onPhotoView,
   onCheckoutApprove,
   onCheckoutReject,
+  onOpenContract,
 }: HostReservationCardProps) => {
   const { status, startDate, endDate, totalPrice, usagePurpose, guest, space, isPhotoVerified } = reservation;
 
@@ -123,9 +125,24 @@ export const HostReservationCard = ({
               </>
             )}
 
-            {(status === "APPROVED" ||
-              status === "CONTRACT_COMPLETED" ||
-              status === "IN_USE") && (
+            {status === "APPROVED" && (
+              <>
+                <button
+                  onClick={onDetail}
+                  className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 rounded-lg px-6 py-1.5 text-base font-bold"
+                >
+                  공간 상세
+                </button>
+                <button
+                  onClick={onOpenContract}
+                  className="bg-primary-hover hover:bg-primary h-10 w-[108px] rounded-lg text-base font-bold text-white"
+                >
+                  계약서 서명
+                </button>
+              </>
+            )}
+
+            {(status === "CONTRACT_COMPLETED" || status === "IN_USE") && (
               <button
                 onClick={onDetail}
                 className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 rounded-lg px-6 py-1.5 text-base font-bold"

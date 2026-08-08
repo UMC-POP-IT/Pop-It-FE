@@ -112,30 +112,32 @@ export const HostReservationPage = () => {
     setIsPaymentModalOpen(true);
   };
 
+  const handleOpenContract = (id: number) => {
+    setApproveTargetId(id);
+    setIsContractModalOpen(true);
+  };
+
   const handleSignContract = async () => {
     if (approveTargetId === null) return;
     setIsApproving(true);
     setApproveError(false);
     try {
-      const result = await approveReservation(approveTargetId);
-      setReservations((prev) =>
-        prev.map((r) =>
-          r.reservationId === approveTargetId ? { ...r, status: result.status } : r,
-        ),
-      );
+      await approveReservation(approveTargetId);
       setIsPaymentModalOpen(false);
       setIsContractModalOpen(true);
     } catch (err) {
       console.error("[HostReservationPage] 예약 승인 실패:", err);
       setApproveError(true);
+      await loadReservations();
     } finally {
       setIsApproving(false);
     }
   };
 
-  const handleContractComplete = () => {
+  const closeContractModal = () => {
     setIsContractModalOpen(false);
     setApproveTargetId(null);
+    loadReservations();
   };
 
   const handleReject = async () => {
@@ -237,6 +239,7 @@ export const HostReservationPage = () => {
                 onDetail={() => navigate(`/host/spaces/${reservation.space.spaceId}`)}
                 onApprove={() => handleApproveClick(reservation.reservationId)}
                 onReject={() => setRejectTargetId(reservation.reservationId)}
+                onOpenContract={() => handleOpenContract(reservation.reservationId)}
                 onPhotoView={() => openPhotoView(reservation)}
                 onCheckoutApprove={() => setCheckoutApproveTargetId(reservation.reservationId)}
                 onCheckoutReject={() => setCheckoutRejectTargetId(reservation.reservationId)}
@@ -372,11 +375,8 @@ export const HostReservationPage = () => {
               name: approveTarget.space.buildingName,
               address: approveTarget.space.address,
             }}
-            onClose={() => {
-              setIsContractModalOpen(false);
-              setApproveTargetId(null);
-            }}
-            onComplete={handleContractComplete}
+            onClose={closeContractModal}
+            onComplete={closeContractModal}
           />
         </>
       )}
