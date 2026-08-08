@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 import iconCheckBigSized from "@/assets/icons/icon_check_big_sized.svg";
+import iconWarningBigSized from "@/assets/icons/icon_warn_big_sized.svg";
 
 interface ModalProps {
   isOpen: boolean;
@@ -12,6 +13,8 @@ interface ModalProps {
   singleButton?: boolean;
   /** true면 상단에 파란 체크 아이콘 표시 */
   showCheckIcon?: boolean;
+  /** true면 상단에 느낌표 회색 아이콘 표시 */
+  showWarningIcon?: boolean;
   /** true면 처리 중으로 보고 확인·취소 버튼과 백드롭·Escape 닫기를 모두 막는다 */
   confirmDisabled?: boolean;
   onConfirm?: () => void;
@@ -26,6 +29,7 @@ const Modal = ({
   cancelLabel = "취소",
   singleButton = false,
   showCheckIcon = false,
+  showWarningIcon = false,
   confirmDisabled = false,
   onConfirm,
   onCancel,
@@ -58,6 +62,13 @@ const Modal = ({
           {showCheckIcon && (
             <img
               src={iconCheckBigSized}
+              alt=""
+              className="h-[72px] w-[72px]"
+            />
+          )}
+          {showWarningIcon && (
+            <img
+              src={iconWarningBigSized}
               alt=""
               className="h-[72px] w-[72px]"
             />

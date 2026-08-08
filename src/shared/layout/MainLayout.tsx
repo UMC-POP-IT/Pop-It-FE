@@ -200,7 +200,7 @@ const TossPaymentResultHandler = () => {
         .then(() => {
           setResult({
             success: true,
-            title: "계약 작성 및 결제가 완료되었습니다",
+            title: "계약 작성 및 입금이 완료되었습니다",
             description: "계약일부터 바로 이용을 시작하실 수 있습니다",
           });
         })
@@ -208,8 +208,8 @@ const TossPaymentResultHandler = () => {
           console.error("Toss payment approval failed:", error);
           setResult({
             success: false,
-            title: "결제 처리에 실패했습니다",
-            description: "결제 승인에 실패했습니다. 잠시 후 다시 시도해주세요.",
+            title: "결제에 실패했습니다",
+            description: "결제 정보를 확인 한 후 다시 시도해주시기 바랍니다",
           });
         });
       return;
@@ -229,6 +229,7 @@ const TossPaymentResultHandler = () => {
       title={result?.title ?? ""}
       description={result?.description}
       showCheckIcon={result?.success}
+      showWarningIcon={!result?.success}
       singleButton
       confirmLabel="확인"
       onConfirm={() => setResult(null)}
