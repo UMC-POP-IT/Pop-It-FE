@@ -84,47 +84,56 @@ export const RegisterStep1 = () => {
           <span className="text-text-primary text-[22px] font-bold">주소</span>
 
           {/* 주소 찾기(다음 우편번호) — 시/구는 검색 결과로 자동 채움
-              피그마: 입력창 590 + gap 20 + 버튼 184 = 본문 794 */}
-          <div className="flex items-start gap-5">
-            {/* 안내문을 Input과 같은 칸에 둔다 — 에러 문구(Input 내부)와 위치를 맞추기 위함.
-                행 바깥에 두면 버튼 폭까지 포함한 오른쪽 끝으로 밀려 서로 어긋난다 */}
-            <div className="flex flex-1 flex-col gap-1">
-              <Input
-                aria-label="주소"
-                placeholder="주소 찾기로 주소를 입력해주세요"
-                value={form.address}
-                readOnly
-                error={addrError}
-              />
-              {/* 안내문 (에러 없을 때만)주소만 있고 좌표가 없으면 재검색 유도 */}
-              {!addrError && (
-                <span className="text-text-secondary text-right text-base font-medium">
-                  {form.address !== "" &&
-                  (form.latitude === null || form.longitude === null)
-                    ? "주소를 다시 검색해주세요"
-                    : "현재 서울 지역만 등록 가능합니다"}
-                </span>
-              )}
+    피그마: 입력창 590 + gap 20 + 버튼 184 = 본문 794 */}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-start gap-5">
+              <div className="flex-1">
+                <Input
+                  aria-label="주소"
+                  placeholder="주소 찾기로 주소를 입력해주세요"
+                  value={form.address}
+                  readOnly
+                  error={addrError}
+                />
+              </div>
+              <Button
+                variant="black"
+                size="field"
+                onClick={() => {
+                  setAddrError("");
+                  setIsAddrOpen(true);
+                }}
+              >
+                주소 찾기
+              </Button>
             </div>
-            <Button
-              variant="black"
-              size="field"
-              onClick={() => {
-                setAddrError("");
-                setIsAddrOpen(true);
-              }}
-            >
-              주소 찾기
-            </Button>
+
+            {/* 안내문은 행 바깥에 둬서 전체 폭(794) 오른쪽 끝에 맞춘다 — 아래 상세 주소 카운터와 같은 선.
+      에러(Input 내부, 590 칸)와는 끝이 어긋나지만 둘은 동시에 뜨지 않는다.
+      주소만 있고 좌표가 없으면 재검색을 유도한다 */}
+            {!addrError && (
+              <span className="text-text-secondary text-right text-base font-medium">
+                {form.address !== "" &&
+                (form.latitude === null || form.longitude === null)
+                  ? "주소를 다시 검색해주세요"
+                  : "현재 서울 지역만 등록 가능합니다"}
+              </span>
+            )}
           </div>
 
-          {/* 상세 주소 — 서버 SpaceCreateReq.addressDetail이 30자 제한 */}
-          <Input
-            placeholder="상세 주소를 입력해주세요"
-            value={form.detailAddress}
-            onChange={(e) => setValues({ detailAddress: e.target.value })}
-            maxLength={30}
-          />
+          {/* 상세 주소 — 서버 SpaceCreateReq.addressDetail이 30자 제한.
+    안내를 Input과 한 칸에 묶어 gap-1로 붙인다 (위 주소 안내문과 같은 간격) */}
+          <div className="flex flex-col gap-1">
+            <Input
+              placeholder="상세 주소를 입력해주세요"
+              value={form.detailAddress}
+              onChange={(e) => setValues({ detailAddress: e.target.value })}
+              maxLength={30}
+            />
+            <span className="text-text-secondary text-right text-base font-medium">
+              {form.detailAddress.length}/30
+            </span>
+          </div>
         </div>
       </div>
 

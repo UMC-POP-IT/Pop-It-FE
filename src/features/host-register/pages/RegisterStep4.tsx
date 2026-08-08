@@ -10,9 +10,24 @@ export const RegisterStep4 = () => {
   const navigate = useNavigate();
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
-  const isValid =
-    form.buildingName.trim().length >= 4 &&
-    form.description.trim().length >= 10;
+  // 공백을 전부 제거한 글자 수 (명세서 I103: 공간명 4자 이상은 공백 제외 기준)
+  const nameLength = form.buildingName.replace(/\s/g, "").length;
+
+  // 빈 칸일 때는 에러를 띄우지 않는다 — 입력 전부터 빨간 문구가 있으면 잘못한 것처럼 보인다
+  const nameError =
+    form.buildingName !== "" && nameLength < 4
+      ? "공백 제외 4자 이상 입력해 주세요"
+      : "";
+
+  // 공간 설명은 명세서 I103 기준이 공백 제외가 아니라 단순 10자 이상이라 trim()을 유지한다
+  const descriptionLength = form.description.trim().length;
+
+  const descriptionError =
+    form.description !== "" && descriptionLength < 10
+      ? "10자 이상 입력해 주세요"
+      : "";
+
+  const isValid = nameLength >= 4 && descriptionLength >= 10;
 
   return (
     <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
@@ -48,8 +63,16 @@ export const RegisterStep4 = () => {
             value={form.buildingName}
             onChange={(e) => setValues({ buildingName: e.target.value })}
             maxLength={20}
+            error={nameError}
           />
+          {/* 에러가 뜰 땐 숨긴다 — 같은 자리에 두 줄이 겹치지 않게 (RegisterStep2 보증금과 동일한 방식) */}
+          {!nameError && (
+            <span className="text-text-secondary text-right text-base font-medium">
+              공백 제외 4자 이상 ({nameLength}/20)
+            </span>
+          )}
         </div>
+
         {/* 공간 설명
             ⚠️ 공통 Textarea 없어 임시 구현 → 챈(4번)과 협의 예정
             mt-6: 피그마상 공간명↔공간 설명만 48px. 상위 컨테이너 gap-6(24px)에
@@ -67,14 +90,26 @@ export const RegisterStep4 = () => {
               placeholder={
                 "예: 성수역 도보 3분 거리입니다. 인테리어가 깔끔하여 전시회에 적합합니다.\n주변 상권이 좋아 유동인구가 많습니다"
               }
-              className="text-text-primary border-border focus:border-primary w-full resize-none rounded-lg border bg-white px-4 py-3 text-lg font-medium transition-colors focus:outline-none"
+              className={`text-text-primary w-full resize-none rounded-lg border bg-white px-4 py-3 text-lg font-medium transition-colors focus:outline-none ${
+                descriptionError
+                  ? "border-danger focus:border-danger"
+                  : "border-border focus:border-primary"
+              }`}
             />
             {/* 글자수 카운트 (실제 반영) */}
             <span className="text-text-disabled pointer-events-none absolute right-4 bottom-3 text-lg font-medium">
               {form.description.length}/1000
             </span>
           </div>
+          {/* Input과 달리 textarea는 error prop이 없어 문구를 직접 그린다 (클래스는 Input.tsx와 동일).
+      회색 안내는 두지 않는다 — 칸 안에 이미 글자수 카운터가 있어 안내가 두 줄로 겹친다 */}
+          {descriptionError && (
+            <span className="text-danger text-right text-base font-bold">
+              {descriptionError}
+            </span>
+          )}
         </div>
+
         {/* TIP 박스 */}
         <div className="bg-info-bg flex flex-col gap-2 rounded-lg p-4">
           <span className="text-primary-hover text-xl font-bold">
