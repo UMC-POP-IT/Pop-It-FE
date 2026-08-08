@@ -51,9 +51,20 @@ const getCardMeta = (r: Reservation): CardMeta => {
       };
   }
 
-  if (r.status === "CONTRACT_COMPLETED" || r.status === "IN_USE")
+  if (r.status === "PAYMENT_COMPLETED" || r.status === "IN_USE")
     return {
       label: isUsing(r.startDate, r.endDate) ? "사용 중" : "계약 완료",
+      showCancel: false,
+      showContract: false,
+      needsPhotoVerification: false,
+      isPhotoRejected: false,
+      isDone: false
+    };
+
+  // 계약(서명)은 끝났지만 결제가 아직 안 됐거나 실패한 상태
+  if (r.status === "CONTRACT_COMPLETED")
+    return {
+      label: "결제 대기",
       showCancel: false,
       showContract: false,
       needsPhotoVerification: false,

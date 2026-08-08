@@ -15,7 +15,8 @@ interface HostReservationCardProps {
 const STATUS_LABEL: Record<ReservationStatus, string> = {
   PENDING_APPROVAL: "승인 대기",
   APPROVED: "계약 대기",
-  CONTRACT_COMPLETED: "계약 완료",
+  CONTRACT_COMPLETED: "결제 대기",
+  PAYMENT_COMPLETED: "계약 완료",
   IN_USE: "사용 중",
   USAGE_COMPLETED: "사용 완료",
   CHECKOUT_COMPLETED: "사용 완료",
@@ -142,7 +143,7 @@ export const HostReservationCard = ({
               </>
             )}
 
-            {(status === "CONTRACT_COMPLETED" || status === "IN_USE") && (
+            {(status === "CONTRACT_COMPLETED" || status === "PAYMENT_COMPLETED" || status === "IN_USE") && (
               <button
                 onClick={onDetail}
                 className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 rounded-lg px-6 py-1.5 text-base font-bold"
