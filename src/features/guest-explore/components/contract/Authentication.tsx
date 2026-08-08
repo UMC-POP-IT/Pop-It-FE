@@ -103,7 +103,9 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
       if (!isMountedRef.current) return; // 언마운트 이후 도착한 응답으로 상태를 갱신하지 않음
       if (!verified) {
         setStatus("error");
-        setErrorMessage(message ?? "본인인증 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+        // 서버 message는 "API error: 500" / "Failed to fetch" 같은 기술적 문자열이 섞여 올 수 있어
+        // 화면에는 고정 문구만 노출하고, 진단은 위 console.error에 남긴 값으로 한다.
+        setErrorMessage("본인인증 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
         onIsAuthenticated(false);
         return;
       }
