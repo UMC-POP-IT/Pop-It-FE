@@ -32,6 +32,19 @@ const toDisplay = (date: Date) => {
   return `${y}.${m}.${d}`;
 };
 
+// 계약 가능 기간 상한 (개월). 화면 문구 "최대 3개월 신청 가능"과 같은 값
+const MAX_CONTRACT_MONTHS = 3;
+
+// date에서 months개월 뒤. 대상 월에 같은 '일'이 없으면 그 달의 마지막 날로 자른다.
+// (new Date(y, m+3, 30)처럼 없는 날짜를 넣으면 JS가 조용히 다음 달로 넘긴다.
+//  11/30 시작이 "2/30" → 3/2 가 되면서 이틀이 더 허용되던 버그)
+const addMonthsClamped = (date: Date, months: number) => {
+  const year = date.getFullYear();
+  const month = date.getMonth() + months;
+  const lastDay = new Date(year, month + 1, 0).getDate(); // 다음 달 0일 = 대상 월 마지막 날
+  return new Date(year, month, Math.min(date.getDate(), lastDay));
+};
+
 // 어떤 '달(base)'의 달력 칸 배열. 그 달에 필요한 주 수만 만든다 (5주 또는 6주).
 // 앞뒤로 남는 자리는 null — 피그마처럼 다른 달 날짜를 채우지 않고 빈 칸으로 둔다.
 const getCalendarDays = (base: Date): (Date | null)[] => {
@@ -116,13 +129,7 @@ export const DateRangePicker = ({
 
   // 시작일 기준 '최대 3개월'을 넘는 날짜인지 (계약 한도)
   const isOverLimit = (date: Date) =>
-    !!startDate &&
-    date >
-      new Date(
-        startDate.getFullYear(),
-        startDate.getMonth() + 3,
-        startDate.getDate(),
-      );
+    !!startDate && date > addMonthsClamped(startDate, MAX_CONTRACT_MONTHS);
 
   const handleSelectDate = (date: Date) => {
     // 오늘·과거는 계약 시작일이 될 수 없다.
