@@ -130,27 +130,21 @@ const AiRecommendSpace = () => {
           ref={scrollRef}
           className="flex gap-4 overflow-x-hidden scroll-smooth"
         >
-          {isLoading ? (
-            <p role="status" aria-live="polite" className="text-text-secondary text-sm">
-              추천 공간 로딩 UI 추가 예정
-            </p>
-          ) : (
-            cards.map(({ space, categoryTag, matchReason, isWished }) => (
-              <div
-                key={space.id}
-                className="w-[calc(50%-0.5rem)] flex-none sm:w-[calc((100%-2*1rem)/3)] lg:w-[calc((100%-3*1rem)/4)]"
-              >
-                <SpaceCard
-                  space={space}
-                  categoryTag={categoryTag}
-                  matchReason={matchReason}
-                  isWished={isWished}
-                  onWishToggle={() => handleCardWishToggle(space.id)}
-                  onClick={() => navigate(`/spaces/${space.id}`)}
-                />
-              </div>
-            ))
-          )}
+          {cards.map(({ space, categoryTag, matchReason, isWished }) => (
+            <div
+              key={space.id}
+              className="w-[calc(50%-0.5rem)] flex-none sm:w-[calc((100%-2*1rem)/3)] lg:w-[calc((100%-3*1rem)/4)]"
+            >
+              <SpaceCard
+                space={space}
+                categoryTag={categoryTag}
+                matchReason={matchReason}
+                isWished={isWished}
+                onWishToggle={() => handleCardWishToggle(space.id)}
+                onClick={() => navigate(`/spaces/${space.id}`)}
+              />
+            </div>
+          ))}
         </div>
 
         {canScrollNext && imageCenter !== null && <ScrollButton direction="next" topOffset={imageCenter} onClick={() => scrollByCard(1)} />}
