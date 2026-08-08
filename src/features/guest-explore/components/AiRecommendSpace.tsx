@@ -114,8 +114,8 @@ const AiRecommendSpace = () => {
     };
   }, [user]); // user가 바뀌면 AI 맞춤형 공간도 다시 조회
 
-  // AI 맞춤형 공간 트래킹이 완료되지 않은 유저는 AI 맞춤형 공간 섹션을 숨긴다.
-  if (isTracking) return null; 
+  // AI 맞춤형 공간 트래킹이 완료되지 않았거나 조회에 실패한 경우 섹션 자체를 숨긴다(default-safe).
+  if (isTracking || isError) return null;
 
   // 이미 트래킹 완료된 유저는 AI 맞춤형 공간 섹션을 보여준다.
   return (
@@ -133,10 +133,6 @@ const AiRecommendSpace = () => {
           {isLoading ? (
             <p role="status" aria-live="polite" className="text-text-secondary text-sm">
               추천 공간 로딩 UI 추가 예정
-            </p>
-          ) : isError ? (
-            <p role="alert" aria-live="assertive" className="text-text-secondary text-sm">
-              추천 공간 조회 실패 UI 추가 예정
             </p>
           ) : (
             cards.map(({ space, categoryTag, matchReason, isWished }) => (
