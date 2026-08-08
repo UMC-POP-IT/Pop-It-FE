@@ -15,7 +15,7 @@ export const RegisterStep4 = () => {
     form.description.trim().length >= 10;
 
   return (
-    <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
+    <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
       <h1 className="text-text-primary text-center text-[32px] font-bold">
         {isEdit ? "공간 수정" : "공간 등록"}
@@ -51,8 +51,10 @@ export const RegisterStep4 = () => {
           />
         </div>
         {/* 공간 설명
-            ⚠️ 공통 Textarea 없어 임시 구현 → 챈(4번)과 협의 예정 */}
-        <div className="flex flex-col gap-2">
+            ⚠️ 공통 Textarea 없어 임시 구현 → 챈(4번)과 협의 예정
+            mt-6: 피그마상 공간명↔공간 설명만 48px. 상위 컨테이너 gap-6(24px)에
+            24px을 더해 이 한 쌍에만 적용한다 (다른 항목 간격은 그대로 24px) */}
+        <div className="mt-6 flex flex-col gap-2">
           <span className="text-text-primary text-[22px] font-bold">
             공간 설명
           </span>

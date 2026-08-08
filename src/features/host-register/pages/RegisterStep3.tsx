@@ -72,7 +72,7 @@ export const RegisterStep3 = () => {
     form.hasParking !== null;
 
   return (
-    <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
+    <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
       <h1 className="text-text-primary text-center text-[32px] font-bold">
         {isEdit ? "공간 수정" : "공간 등록"}
@@ -142,7 +142,7 @@ export const RegisterStep3 = () => {
               </span>
             </div>
           </div>
-          <span className="text-text-placeholder text-base font-bold">
+          <span className="text-text-secondary text-right text-base font-medium">
             ㎡ 입력 시 평이 자동 계산돼요
           </span>
         </div>
@@ -211,7 +211,7 @@ export const RegisterStep3 = () => {
         ) : facilityError ? (
           <span
             role="alert"
-            className="text-text-placeholder text-base font-bold"
+            className="text-danger text-right text-base font-bold"
           >
             시설 목록을 불러오지 못했어요. 새로고침 후 다시 시도해주세요
           </span>
