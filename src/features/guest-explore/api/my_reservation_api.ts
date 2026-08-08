@@ -1,7 +1,7 @@
 import { apiFetch } from "@/shared/utils/apiClient";
 
-// 차례대로 승인 대기, 승인 완료, 계약 완료(이용 전), 사용 중, 사용 완료, 퇴실 완료, 취소
-export type Status = "PENDING_APPROVAL" | "APPROVED" | "CONTRACT_COMPLETED" | "IN_USE" | "USAGE_COMPLETED" | "CHECKOUT_COMPLETED" | "CANCELLED";
+// 차례대로 승인 대기, 승인 완료, 계약 완료(결제 전/실패), 결제 완료(이용 전), 사용 중, 사용 완료, 퇴실 완료, 취소
+export type Status = "PENDING_APPROVAL" | "APPROVED" | "CONTRACT_COMPLETED" | "PAYMENT_COMPLETED" | "IN_USE" | "USAGE_COMPLETED" | "CHECKOUT_COMPLETED" | "CANCELLED";
 export type ContractStatus = "HOST_PENDING_SIGNATURE" | "GUEST_PENDING_SIGNATURE" | "COMPLETED"
 export interface Reservation {
 	reservationId: number;
@@ -51,6 +51,7 @@ export interface GetEachResStateCountsResponse {
       PENDING_APPROVAL: number;
       APPROVED: number;
       CONTRACT_COMPLETED: number;
+      PAYMENT_COMPLETED: number;
       IN_USE: number;
       USAGE_COMPLETED: number;
       CHECKOUT_COMPLETED: number;
