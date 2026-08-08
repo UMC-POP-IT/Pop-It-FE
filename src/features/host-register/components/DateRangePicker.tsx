@@ -71,14 +71,20 @@ export const DateRangePicker = ({
     initialEnd ? parseYmd(initialEnd) : null,
   );
   const containerRef = useRef<HTMLDivElement>(null); // 달력 전체를 가리키는 리모컨
+  // 팝업을 연 필드 버튼 — 닫을 때 여기로 포커스를 되돌린다
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   // 달력이 열려있을 때만: 바깥 클릭 / Esc 키로 닫기
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
+      if (e.key === "Escape") {
+        setIsOpen(false);
+        triggerRef.current?.focus(); // 팝업이 사라지기 전에 포커스를 트리거로 되돌림
+      }
     };
     const handleClickOutside = (e: MouseEvent) => {
       // 클릭이 달력(container) 밖이면 닫기
+      // (사용자가 다른 곳으로 이동한 것이므로 포커스는 되돌리지 않는다)
       if (
         containerRef.current &&
         e.target instanceof Node &&
@@ -159,6 +165,7 @@ export const DateRangePicker = ({
     if (startDate && endDate) {
       onConfirm(toYmd(startDate), toYmd(endDate));
       setIsOpen(false);
+      triggerRef.current?.focus();
     }
   };
 
@@ -243,7 +250,10 @@ export const DateRangePicker = ({
             aria-haspopup="dialog"
             aria-expanded={isOpen}
             aria-controls={popupId}
-            onClick={() => setIsOpen((v) => !v)}
+            onClick={(e) => {
+              triggerRef.current = e.currentTarget; // 방금 누른 버튼을 기억
+              setIsOpen((v) => !v);
+            }}
             className="border-divider flex h-14 items-center gap-2 rounded-lg border bg-white px-5 text-lg font-bold"
           >
             <img
