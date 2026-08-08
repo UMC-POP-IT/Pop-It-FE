@@ -38,7 +38,7 @@ const RejectedPhotoModal = ({ isOpen, reservationId, onClose }: RejectedPhotoMod
       })
       .catch((error) => {
         if (ignore) return;
-        console.error(error);
+        console.error("[RejectedPhotoModal] 퇴실 사진 조회 실패:", error);
         setIsError(true);
       })
       .finally(() => {
