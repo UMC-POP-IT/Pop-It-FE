@@ -94,8 +94,8 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
     } catch (error) {
       // 원인 진단용: 409가 "이미 인증됨"인지 "identityVerificationId 중복"인지 등은
       // 서버가 내려주는 status/code/message로만 구분할 수 있다.
-      const { status, code, message } = error as { status?: number; code?: string; message?: string };
-      console.error("[Authentication] RequestVerification 실패:", { status, code, message, identityVerificationId });
+      const { status: httpStatus, code, message } = error as { status?: number; code?: string; message?: string };
+      console.error("[Authentication] RequestVerification 실패:", { httpStatus, code, message, identityVerificationId });
 
       // PortOne 인증 자체는 성공했지만, 서버에 인증 결과가 반영되기까지 약간의 지연이 있을 수 있어
       // 즉시 실패 처리하지 않고 상태를 재조회해 확인한 뒤 최종 실패 여부를 판단한다.
@@ -149,7 +149,7 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
       </button>
 
       {status === "error" && errorMessage && (
-        <span className="text-sm text-red-500">{errorMessage}</span>
+        <span role="alert" className="text-sm text-red-500">{errorMessage}</span>
       )}
     </div>
   );
