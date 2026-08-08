@@ -17,6 +17,7 @@ const RejectedPhotoModal = ({ isOpen, reservationId, onClose }: RejectedPhotoMod
   const [photoIndex, setPhotoIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
+  const [isRejected, setIsRejected] = useState(false);
   const dialogRef = useDialogA11y<HTMLDivElement>({ isOpen, onClose });
 
   useEffect(() => {
@@ -27,11 +28,13 @@ const RejectedPhotoModal = ({ isOpen, reservationId, onClose }: RejectedPhotoMod
     setPhotoUrls([]);
     setIsLoading(true);
     setIsError(false);
+    setIsRejected(false);
 
     GetSubmitCheckoutPhotos(reservationId)
-      .then(({ photoUrls }) => {
+      .then(({ photoUrls, checkoutRejected }) => {
         if (ignore) return;
         setPhotoUrls(photoUrls);
+        setIsRejected(checkoutRejected);
       })
       .catch((error) => {
         if (ignore) return;
@@ -56,13 +59,14 @@ const RejectedPhotoModal = ({ isOpen, reservationId, onClose }: RejectedPhotoMod
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
+        aria-label="거절된 퇴실 사진"
         tabIndex={-1}
         className="relative z-10 flex w-full max-w-[900px] flex-col bg-white shadow-xl"
       >
         <button
           onClick={onClose}
           aria-label="닫기"
-          className="absolute top-6 right-6 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-[#FFFFFF] text-text-primary shadow cursor-pointer"
+          className="absolute top-6 right-6 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-white text-text-primary shadow cursor-pointer"
         >
           <svg color="#3783F7" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -86,13 +90,15 @@ const RejectedPhotoModal = ({ isOpen, reservationId, onClose }: RejectedPhotoMod
                   className="h-full w-full object-cover"
                 />
 
-                <div className="bg-[#FFF3F3] absolute top-5 left-1/2 flex h-[65px] w-[310px] -translate-x-1/2 flex-col items-center justify-center rounded-xl px-5 py-3 text-center">
-                  <div className="flex items-center gap-1">
-                    <img src={dangerIcon} alt="경고" className="h-4 w-4" />
-                    <span className="text-[#F74B4B] text-[18px] font-semibold">퇴실 사진이 승인되지 않았습니다.</span>
+                {isRejected && (
+                  <div className="bg-[#FFF3F3] absolute top-5 left-1/2 flex h-[65px] w-[310px] -translate-x-1/2 flex-col items-center justify-center rounded-xl px-5 py-3 text-center">
+                    <div className="flex items-center gap-1">
+                      <img src={dangerIcon} alt="경고" className="h-4 w-4" />
+                      <span className="text-[#F74B4B] text-[18px] font-semibold">퇴실 사진이 승인되지 않았습니다.</span>
+                    </div>
+                    <span className="text-text-secondary text-[14px]">사진을 다시 촬영해 업로드해 주세요.</span>
                   </div>
-                  <span className="text-text-secondary text-[14px]">사진을 다시 촬영해 업로드해 주세요.</span>
-                </div>
+                )}
                 <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-[#12121233] px-3 py-1 text-sm text-white">
                   {photoIndex + 1} / {photoUrls.length}
                 </span>
@@ -108,6 +114,7 @@ const RejectedPhotoModal = ({ isOpen, reservationId, onClose }: RejectedPhotoMod
                 <ScrollButton
                   direction="prev"
                   topOffset={IMAGE_HEIGHT / 2}
+                  label="이전 사진 보기"
                   onClick={() => setPhotoIndex((i) => (i - 1 + photoUrls.length) % photoUrls.length)}
                 />
               </div>
@@ -115,6 +122,7 @@ const RejectedPhotoModal = ({ isOpen, reservationId, onClose }: RejectedPhotoMod
                 <ScrollButton
                   direction="next"
                   topOffset={IMAGE_HEIGHT / 2}
+                  label="다음 사진 보기"
                   onClick={() => setPhotoIndex((i) => (i + 1) % photoUrls.length)}
                 />
               </div>

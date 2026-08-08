@@ -5,16 +5,19 @@ export const ScrollButton = ({
   direction,
   topOffset,
   onClick,
+  label,
 }: {
   direction: "prev" | "next";
   /** 카드 이미지 영역 세로 중앙까지의 픽셀 거리 */
   topOffset: number;
   onClick: () => void;
+  /** 스크린리더용 문구. 생략하면 공간 캐러셀 기본값 */
+  label?: string;
 }) => {
   return (
     <button
       type="button"
-      aria-label={direction === "prev" ? "이전 공간 보기" : "다음 공간 보기"}
+      aria-label={label ?? (direction === "prev" ? "이전 공간 보기" : "다음 공간 보기")}
       onClick={onClick}
       style={{ top: topOffset }}
       className={`border-border absolute ${
