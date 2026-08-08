@@ -48,10 +48,10 @@ export const LoginModal = () => {
         role="dialog"
         aria-modal="true"
         aria-label="로그인"
-        className="relative z-10 flex w-full max-w-[840px] items-stretch gap-[67px] rounded-xl bg-white px-[84px] py-[67px]"
+        className="relative z-10 flex w-full max-w-[840px] items-stretch gap-[67px] rounded-xl bg-white px-6 py-10 lg:px-[84px] lg:py-[67px]"
       >
         {/* 이미지 영역 */}
-        <div className="hidden h-[310px] w-[264px] shrink-0 items-end justify-center md:flex">
+        <div className="hidden h-[310px] w-[264px] shrink-0 items-end justify-center lg:flex">
           <img src={loginIllustration} alt="" className="h-full w-full object-contain object-bottom" />
         </div>
 

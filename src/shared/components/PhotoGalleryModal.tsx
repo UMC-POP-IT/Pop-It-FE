@@ -41,6 +41,7 @@ const PhotoGalleryModal = ({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
+        aria-label="사진 갤러리"
         tabIndex={-1}
         className="relative h-[520px] w-full max-w-[900px] overflow-hidden bg-white"
         onClick={(e) => e.stopPropagation()}
