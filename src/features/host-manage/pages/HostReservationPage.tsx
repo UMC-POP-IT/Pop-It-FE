@@ -47,6 +47,8 @@ export const HostReservationPage = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [agreedToGuide, setAgreedToGuide] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [approveError, setApproveError] = useState(false);
 
 
   const loadReservations = useCallback(async () => {
@@ -106,23 +108,36 @@ export const HostReservationPage = () => {
   const handleApproveClick = (id: number) => {
     setApproveTargetId(id);
     setAgreedToGuide(false);
+    setApproveError(false);
     setIsPaymentModalOpen(true);
   };
 
-  const handleContractComplete = async () => {
+  const handleOpenContract = (id: number) => {
+    setApproveTargetId(id);
+    setIsContractModalOpen(true);
+  };
+
+  const handleSignContract = async () => {
     if (approveTargetId === null) return;
+    setIsApproving(true);
+    setApproveError(false);
     try {
-      const result = await approveReservation(approveTargetId);
-      setReservations((prev) =>
-        prev.map((r) =>
-          r.reservationId === approveTargetId ? { ...r, status: result.status } : r,
-        ),
-      );
-    } catch {
+      await approveReservation(approveTargetId);
+      setIsPaymentModalOpen(false);
+      setIsContractModalOpen(true);
+    } catch (err) {
+      console.error("[HostReservationPage] 예약 승인 실패:", err);
+      setApproveError(true);
       await loadReservations();
+    } finally {
+      setIsApproving(false);
     }
+  };
+
+  const closeContractModal = () => {
     setIsContractModalOpen(false);
     setApproveTargetId(null);
+    loadReservations();
   };
 
   const handleReject = async () => {
@@ -224,6 +239,7 @@ export const HostReservationPage = () => {
                 onDetail={() => navigate(`/host/spaces/${reservation.space.spaceId}`)}
                 onApprove={() => handleApproveClick(reservation.reservationId)}
                 onReject={() => setRejectTargetId(reservation.reservationId)}
+                onOpenContract={() => handleOpenContract(reservation.reservationId)}
                 onPhotoView={() => openPhotoView(reservation)}
                 onCheckoutApprove={() => setCheckoutApproveTargetId(reservation.reservationId)}
                 onCheckoutReject={() => setCheckoutRejectTargetId(reservation.reservationId)}
@@ -343,14 +359,14 @@ export const HostReservationPage = () => {
             }}
             agreedToGuide={agreedToGuide}
             onAgreedToGuideChange={setAgreedToGuide}
+            isSubmitting={isApproving}
+            submitError={approveError}
             onClose={() => {
               setIsPaymentModalOpen(false);
               setApproveTargetId(null);
+              setApproveError(false);
             }}
-            onSignContract={() => {
-              setIsPaymentModalOpen(false);
-              setIsContractModalOpen(true);
-            }}
+            onSignContract={handleSignContract}
           />
           <HostContractModal
             isOpen={isContractModalOpen}
@@ -359,11 +375,8 @@ export const HostReservationPage = () => {
               name: approveTarget.space.buildingName,
               address: approveTarget.space.address,
             }}
-            onClose={() => {
-              setIsContractModalOpen(false);
-              setApproveTargetId(null);
-            }}
-            onComplete={handleContractComplete}
+            onClose={closeContractModal}
+            onComplete={closeContractModal}
           />
         </>
       )}
