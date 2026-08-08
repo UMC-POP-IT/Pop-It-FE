@@ -3,7 +3,7 @@ import { useAuthStore } from "@/store/authStore";
 import Logo from "@/shared/components/Logo";
 import Button from "@/shared/components/Button";
 import { startLogin } from "@/shared/utils/oauth";
-import loginIllustration from "@/assets/images/login_illustration.svg";
+import loginIllustration from "@/assets/images/login_illustration.png";
 
 const savePendingAndLogin = (provider: "kakao" | "google", pendingAction: unknown) => {
   if (pendingAction) {
