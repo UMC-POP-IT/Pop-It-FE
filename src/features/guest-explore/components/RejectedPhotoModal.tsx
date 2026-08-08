@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 import { ScrollButton } from "@/features/guest-explore/components/ScrollButton";
 import dangerIcon from "@/features/guest-explore/icons/danger.svg";
-import { GetSubmitCheckoutPhotos } from "../api/my_reservation_api";
+import { GetSubmitCheckoutPhotos } from "@/features/guest-explore/api/my_reservation_api";
 
 const IMAGE_HEIGHT = 520;
 
@@ -24,6 +24,7 @@ const RejectedPhotoModal = ({ isOpen, reservationId, onClose }: RejectedPhotoMod
 
     let ignore = false;
     setPhotoIndex(0);
+    setPhotoUrls([]);
     setIsLoading(true);
     setIsError(false);
 
@@ -101,7 +102,7 @@ const RejectedPhotoModal = ({ isOpen, reservationId, onClose }: RejectedPhotoMod
             )}
           </div>
 
-          {photoUrls.length > 1 && (
+          {!isLoading && !isError && photoUrls.length > 1 && (
             <>
               <div className="absolute top-0 left-8">
                 <ScrollButton
