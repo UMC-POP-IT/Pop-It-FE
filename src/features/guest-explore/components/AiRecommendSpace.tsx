@@ -45,6 +45,7 @@ const AiRecommendSpace = () => {
   const [cards, setCards] = useState<AiRecommendCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [hasActivityHistory, setHasActivityHistory] = useState(false); // AI 맞춤형 공간 트래킹 여부 
 
   const { handleWishToggle } = useWishGuard();
   const user = useAuthStore((s) => s.user);
@@ -81,6 +82,14 @@ const AiRecommendSpace = () => {
 
   // AI 맞춤형 공간 정보 조회
   useEffect(() => {
+    if (!user) { // 비로그인 상태에서는 AI 맞춤형 공간 섹션을 숨긴다.
+      setHasActivityHistory(false);
+      setCards([]);
+      setIsLoading(false);
+      setIsError(false);
+      return;
+    }
+
     let isMounted = true;
     setIsLoading(true);
     setIsError(false);
@@ -88,6 +97,7 @@ const AiRecommendSpace = () => {
     getAiRecommend()
       .then((data) => {
         if (!isMounted) return;
+        setHasActivityHistory(data.hasActivityHistory);
         setCards((data?.spaces ?? []).map(toCard));
       })
       .catch((error) => {
@@ -102,8 +112,12 @@ const AiRecommendSpace = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [user]); // user가 바뀌면 AI 맞춤형 공간도 다시 조회
 
+  // AI 맞춤형 공간 트래킹이 완료되지 않았거나 조회에 실패한 경우, 혹은 추천 결과가 0개인 경우 섹션 자체를 숨긴다(default-safe).
+  if (!hasActivityHistory || isError || (!isLoading && cards.length === 0)) return null;
+
+  // 이미 트래킹 완료된 유저는 AI 맞춤형 공간 섹션을 보여준다.
   return (
     <section className="flex flex-col gap-4 mt-20">
       <h2 className="text-text-primary text-2xl font-bold">AI 맞춤형 공간</h2>
@@ -116,31 +130,21 @@ const AiRecommendSpace = () => {
           ref={scrollRef}
           className="flex gap-4 overflow-x-hidden scroll-smooth"
         >
-          {isLoading ? (
-            <p role="status" aria-live="polite" className="text-text-secondary text-sm">
-              추천 공간 로딩 UI 추가 예정
-            </p>
-          ) : isError ? (
-            <p role="alert" aria-live="assertive" className="text-text-secondary text-sm">
-              추천 공간 조회 실패 UI 추가 예정
-            </p>
-          ) : (
-            cards.map(({ space, categoryTag, matchReason, isWished }) => (
-              <div
-                key={space.id}
-                className="w-[calc(50%-0.5rem)] flex-none sm:w-[calc((100%-2*1rem)/3)] lg:w-[calc((100%-3*1rem)/4)]"
-              >
-                <SpaceCard
-                  space={space}
-                  categoryTag={categoryTag}
-                  matchReason={matchReason}
-                  isWished={isWished}
-                  onWishToggle={() => handleCardWishToggle(space.id)}
-                  onClick={() => navigate(`/spaces/${space.id}`)}
-                />
-              </div>
-            ))
-          )}
+          {cards.map(({ space, categoryTag, matchReason, isWished }) => (
+            <div
+              key={space.id}
+              className="w-[calc(50%-0.5rem)] flex-none sm:w-[calc((100%-2*1rem)/3)] lg:w-[calc((100%-3*1rem)/4)]"
+            >
+              <SpaceCard
+                space={space}
+                categoryTag={categoryTag}
+                matchReason={matchReason}
+                isWished={isWished}
+                onWishToggle={() => handleCardWishToggle(space.id)}
+                onClick={() => navigate(`/spaces/${space.id}`)}
+              />
+            </div>
+          ))}
         </div>
 
         {canScrollNext && imageCenter !== null && <ScrollButton direction="next" topOffset={imageCenter} onClick={() => scrollByCard(1)} />}

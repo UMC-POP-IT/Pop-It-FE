@@ -1,32 +1,29 @@
 import { useState } from "react";
 import Button from "@/shared/components/Button";
 import iconCheckCircle from "@/assets/icons/icon_check_circle.svg";
-import { useNavigate } from "react-router-dom";
 import { useHostRegisterStore } from "@/store/registerStore";
-import { switchMode } from "@/shared/utils/oauth";
+import { useHostModeSwitch } from "@/shared/hooks/useHostModeSwitch";
 
 // 호스트 등록 완료 화면
 export const HostRegisterComplete = () => {
-  const navigate = useNavigate();
   const reset = useHostRegisterStore((s) => s.reset);
+  const switchToHost = useHostModeSwitch();
   const [isLeaving, setIsLeaving] = useState(false); // 이동 처리 중 (중복 클릭 방지)
+  const [error, setError] = useState("");
 
   const handleDone = async () => {
     // disabled는 다음 렌더에야 반영되므로 아주 빠른 더블클릭은 여기서 막는다
     if (isLeaving) return;
     setIsLeaving(true);
+    setError("");
     reset();
-    // 헤더의 모드 전환은 '이미 등록된 호스트'일 때만 서버에 알린다(Header.tsx:93).
-    // 방금 등록을 마친 사용자는 그 조건에 걸리지 않아 서버 currentMode가 GUEST로 남는다.
-    // 이 값은 새로고침 시 앱 모드를 결정하므로(authStore.ts:79) 여기서 맞춰둔다.
-    // 실패해도 화면 이동은 막지 않는다 — 등록 자체는 이미 끝났다.
-    try {
-      await switchMode("HOST");
-    } catch (err) {
-      console.error("[HostRegisterComplete] 호스트 모드 전환 실패:", err);
+
+    // 모드 전환·서버 동기화·이동을 훅이 처리한다.
+    // 등록 여부 조회에 실패하면 이동하지 않으므로 버튼을 다시 열어준다.
+    if ((await switchToHost()) === "unknown") {
+      setError("호스트 정보를 확인하지 못했습니다. 잠시 후 다시 시도해주세요");
+      setIsLeaving(false);
     }
-    // 성공·실패 모두 이동하므로 이 컴포넌트는 언마운트된다. isLeaving은 되돌리지 않는다.
-    navigate("/host/spaces");
   };
 
   return (
@@ -54,6 +51,15 @@ export const HostRegisterComplete = () => {
       >
         {isLeaving ? "이동 중..." : "호스트 홈으로"}
       </Button>
+
+      {error && (
+        <span
+          role="alert"
+          className="text-danger text-sm"
+        >
+          {error}
+        </span>
+      )}
     </div>
   );
 };

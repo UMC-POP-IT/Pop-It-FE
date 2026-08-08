@@ -85,7 +85,7 @@ const ReservationRequestModal = ({
             <span className="font-medium">{periodLabel ?? "-"}</span>
           </div>
           <div className="flex gap-4">
-            <span className="text-text-tertiary w-20 shrink-0">대여료:</span>
+            <span className="text-text-tertiary w-20 shrink-0">임대료:</span>
             <span className="font-medium">{estimatedRentalFee.toLocaleString()} 원</span>
           </div>
         </div>

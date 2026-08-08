@@ -5,12 +5,22 @@ import Button from "@/shared/components/Button";
 
 interface CurationModalProps {
   property: Property;
+  /** 공간 상세페이지의 실제 건물명 (목데이터가 아닌 space.name) */
+  buildingName: string;
+  /** 공간 상세페이지의 실제 면적 (목데이터가 아닌 space.area) */
+  area: number;
   isOpen: boolean;
   onClose: () => void;
 }
 
 /** 공간 상세 페이지 - 3D 큐레이션 버튼 클릭 시 노출되는 3D 뷰어 모달 */
-export const CurationModal = ({ property, isOpen, onClose }: CurationModalProps) => {
+export const CurationModal = ({
+  property,
+  buildingName,
+  area,
+  isOpen,
+  onClose,
+}: CurationModalProps) => {
   useEffect(() => {
     if (!isOpen) return;
 
@@ -28,7 +38,7 @@ export const CurationModal = ({ property, isOpen, onClose }: CurationModalProps)
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`${property.name} 3D 큐레이션`}
+      aria-label={`${buildingName} 3D 큐레이션`}
       className="fixed inset-0 z-50 flex items-center justify-center"
     >
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
@@ -39,7 +49,7 @@ export const CurationModal = ({ property, isOpen, onClose }: CurationModalProps)
           key={property.id}
         >
           <span>
-            {property.name} | {property.area}
+            {buildingName} | {area}m²
           </span>
         </div>
 
