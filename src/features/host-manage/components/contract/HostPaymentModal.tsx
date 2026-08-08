@@ -95,7 +95,7 @@ const HostPaymentModal = ({
         </label>
 
         {submitError && (
-          <p role="alert" className="text-sm font-medium text-[#f74b4b]">
+          <p role="alert" className="text-sm font-medium text-text-danger">
             예약 승인에 실패했습니다. 잠시 후 다시 시도해주세요.
           </p>
         )}
