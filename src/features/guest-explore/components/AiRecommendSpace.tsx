@@ -114,8 +114,8 @@ const AiRecommendSpace = () => {
     };
   }, [user]); // user가 바뀌면 AI 맞춤형 공간도 다시 조회
 
-  // AI 맞춤형 공간 트래킹이 완료되지 않았거나 조회에 실패한 경우 섹션 자체를 숨긴다(default-safe).
-  if (!hasActivityHistory || isError) return null;
+  // AI 맞춤형 공간 트래킹이 완료되지 않았거나 조회에 실패한 경우, 혹은 추천 결과가 0개인 경우 섹션 자체를 숨긴다(default-safe).
+  if (!hasActivityHistory || isError || (!isLoading && cards.length === 0)) return null;
 
   // 이미 트래킹 완료된 유저는 AI 맞춤형 공간 섹션을 보여준다.
   return (
