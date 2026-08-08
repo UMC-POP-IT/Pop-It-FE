@@ -63,7 +63,7 @@ const PaymentModal = ({
 
         <div className="border-border flex items-center justify-between border-t pt-4 font-bold">
           <span className="text-text-primary text-base">총 결제 금액</span>
-          <span className="text-lg">{paymentInfo.totalPrice}원</span>
+          <span className="text-lg">{paymentInfo.totalPrice.toLocaleString()}원</span>
         </div>
 
         <div className="bg-secure-payment-bg flex gap-2 rounded-lg p-3">

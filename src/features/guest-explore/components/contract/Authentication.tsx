@@ -16,6 +16,7 @@ interface AuthenticationProps {
 
 const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) => {
   const [status, setStatus] = useState<"idle" | "checking" | "pending" | "done" | "error">("checking");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // polling 도중 컴포넌트가 언마운트되면 이후 상태/콜백 갱신을 막기 위한 플래그
   const isMountedRef = useRef(true);
 
@@ -72,6 +73,7 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
   const handleVerify = async () => {
     if (status === "pending" || status === "done") return;
     setStatus("pending");
+    setErrorMessage(null);
 
     const identityVerificationId = `identity-verification-${crypto.randomUUID()}`;
 
@@ -89,13 +91,21 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
 
     try {
       await RequestVerification({ identityVerificationId });
-    } catch {
+    } catch (error) {
+      // 원인 진단용: 409가 "이미 인증됨"인지 "identityVerificationId 중복"인지 등은
+      // 서버가 내려주는 status/code/message로만 구분할 수 있다.
+      const { status: httpStatus, code, message } = error as { status?: number; code?: string; message?: string };
+      console.error("[Authentication] RequestVerification 실패:", { httpStatus, code, message, identityVerificationId });
+
       // PortOne 인증 자체는 성공했지만, 서버에 인증 결과가 반영되기까지 약간의 지연이 있을 수 있어
       // 즉시 실패 처리하지 않고 상태를 재조회해 확인한 뒤 최종 실패 여부를 판단한다.
       const verified = await pollVerificationStatus();
       if (!isMountedRef.current) return; // 언마운트 이후 도착한 응답으로 상태를 갱신하지 않음
       if (!verified) {
         setStatus("error");
+        // 서버 message는 "API error: 500" / "Failed to fetch" 같은 기술적 문자열이 섞여 올 수 있어
+        // 화면에는 고정 문구만 노출하고, 진단은 위 console.error에 남긴 값으로 한다.
+        setErrorMessage("본인인증 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
         onIsAuthenticated(false);
         return;
       }
@@ -137,6 +147,10 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
           {status === "idle" && "간편인증 하기"}
         </span>
       </button>
+
+      {status === "error" && errorMessage && (
+        <span role="alert" className="text-sm text-red-500">{errorMessage}</span>
+      )}
     </div>
   );
 };
