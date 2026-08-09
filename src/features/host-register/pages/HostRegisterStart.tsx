@@ -5,6 +5,7 @@ import iconClose from "@/assets/icons/icon_close.svg";
 import { useNavigate } from "react-router-dom";
 import { HOST_STEPS } from "@/features/host-register/api/mock_register";
 import { useAuthStore } from "@/store/authStore";
+import hostRegisterIllustration from "@/assets/images/host_register_illustration.png";
 
 // 호스트 등록 시작 모달 (인트로)
 //  - [등록 시작하기] → step1(사업자 정보) 화면으로 이동
@@ -38,10 +39,14 @@ export const HostRegisterStart = () => {
           />
         </button>
 
-        {/* 왼쪽: 대표 이미지 (정적 목업 — 회색 박스)
-            TODO: 실제 이미지 에셋으로 교체 */}
-        <div className="bg-tag-bg aspect-square w-1/2 shrink-0 rounded-lg" />
-
+        {/* 왼쪽: 대표 이미지 */}
+        <div className="aspect-square w-1/2 shrink-0 overflow-hidden rounded-lg">
+          <img
+            src={hostRegisterIllustration}
+            alt=""
+            className="h-full w-full object-contain"
+          />
+        </div>
         {/* 오른쪽: 안내 + 진행바 + 시작 버튼 */}
         <div className="flex flex-1 flex-col gap-4">
           <Logo variant="footer" />
