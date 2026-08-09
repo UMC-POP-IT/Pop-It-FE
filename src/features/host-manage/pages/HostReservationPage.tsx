@@ -25,7 +25,7 @@ const TAB_STATUS: ReservationStatus[] = [
 
 const TAB_LABELS = ["승인 대기", "계약 대기", "계약 완료", "사용 중", "사용 완료"];
 const EMPTY_MESSAGES = [
-  "아직 연락 온 게스트가 없어요",
+  "승인 대기 중인 예약이 없어요",
   "계약 대기 중인 예약이 없어요",
   "계약 완료된 예약이 없어요",
   "현재 사용 중인 예약이 없어요",
