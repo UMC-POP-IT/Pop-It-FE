@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, type ReactNode } from "react";
 import background1 from "@/assets/banner/background_1.jpg";
 import background2 from "@/assets/banner/background_2.jpg";
 import background3 from "@/assets/banner/background_3.jpg";
+import { HEADER_HEIGHT_PX } from "@/shared/layout/Header";
 
 interface BannerSlide {
   title: string;
@@ -33,8 +34,43 @@ const slides: BannerSlide[] = [
 
 const AUTOPLAY_INTERVAL_MS = 40000;
 const SWIPE_THRESHOLD_PX = 50;
+/**
+ * !showImage(검색 결과 화면)일 때 배너 상단에 주는 여백(예전엔 pt-8 클래스로만
+ * 줬었다). ExplorePage.tsx가 스크롤 감지용 sentinel을 검색바의 실제 시작
+ * 위치에 맞추려고 이 값을 그대로 가져다 쓴다 - 값이 두 파일에 각각 하드코딩돼
+ * 있으면 여기가 바뀔 때 sentinel 위치가 조용히 어긋날 수 있어서, 한 곳에서만
+ * 정의하고 export한다.
+ */
+export const RESULTS_MODE_TOP_OFFSET_PX = 32;
 
-const Banner = () => {
+interface BannerProps {
+  /** 배너 하단에 얹을 콘텐츠 (예: 게스트 메인의 히어로 검색바). */
+  children?: ReactNode;
+  /**
+   * false면 배경 이미지/캐러셀 텍스트/카운터를 감춘 얇은 흰 바만 남기고 children만
+   * 보여준다(검색 실행 후 결과 화면). 이 소속 형제 엘리먼트 배열 구조 자체는
+   * showImage 값과 무관하게 항상 동일하게 유지해야 한다 - 조건부로 엘리먼트를
+   * 아예 안 그리면(트리에서 제거) children(검색바) 자리의 인덱스가 밀려서 React가
+   * 다른 타입으로 오인해 리마운트시키고, 그 안의 HeroSearchBar 입력 상태가
+   * 날아간다. 그래서 안 보일 땐 렌더링을 생략하는 대신 hidden 클래스로만 감춘다.
+   */
+  showImage?: boolean;
+  /**
+   * children(검색바)을 화면 어디에 어떻게 배치할지.
+   * "inline"(기본) - 평소처럼 배너 안 제자리에 표시.
+   * "pinned-hidden" - 계속 마운트는 하되 화면에서 안 보이게 한다(검색 결과
+   * 화면에서 스크롤을 내려 헤더의 축소된 pill만 보일 때 - fixed로 미리 옮겨두고
+   * opacity만 0으로 둬서, pill을 눌렀을 때 부드럽게 나타날 수 있게 한다).
+   * "pinned-open" - 헤더(74px) 바로 아래 화면 상단에 고정해서 오버레이로
+   * 띄운다(축소된 pill을 클릭해 다시 펼쳤을 때).
+   * 세 경우 모두 children을 다른 곳으로 옮기지 않고 같은 DOM 자리에서
+   * className만 바꿔서 처리한다 - 그래야 HeroSearchBar가 리마운트되지 않고
+   * 내부 입력 상태가 보존된다(showImage와 같은 원리).
+   */
+  searchBarPosition?: "inline" | "pinned-hidden" | "pinned-open";
+}
+
+const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: BannerProps) => {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const total = slides.length;
@@ -81,10 +117,49 @@ const Banner = () => {
 
   const slide = slides[current];
 
+  const hasHero = Boolean(children); // 히어로 검색바가 있는 화면(게스트 메인)인지
+
+  // 오버레이가 헤더 바로 아래에 딱 붙게 하려면 Header.tsx가 export하는
+  // HEADER_HEIGHT_PX를 그대로 써야 한다(Tailwind 클래스로는 JS 상수를 못
+  // 넣으니 top만 별도로 인라인 스타일로 준다 - 아래 style 참고).
+  // pinned 상태에서는 항상 children을 두 겹(바깥 - 화면 전체 폭의 흰 배경,
+  // 안쪽 - max-w-[1200px]로 가운데 정렬된 실제 내용)으로 감싼다. inline일 때도
+  // 같은 2단 구조를 유지하고 바깥쪽만 아무 효과 없는 래퍼로 둔다 - children의
+  // DOM 위치(중첩 깊이)가 상태에 따라 바뀌면 리마운트가 발생하기 때문이다.
+  // 바깥을 화면 폭 전체 흰 배경으로 채우는 이유: 헤더 바로 아래에 "헤더의 흰
+  // 배경이 그대로 이어지는" 느낌을 줘야 한다(둥근 모서리나 카드처럼 붕 떠
+  // 보이면 안 됨) - 그래서 rounded 없이 꽉 채우고, 그림자도 아래쪽에만 옅게.
+  // opacity 전환에 duration을 주지 않는다(예전엔 여기 transition-all duration-300을
+  // 줬었다) - 이제 HeroSearchBar 쪽 실제 검색바 박스(view-transition-name이 붙는
+  // 대상)가 큰 검색바 ↔ 헤더 pill 사이를 모핑하는 애니메이션은 View Transitions
+  // API가 담당한다(viewTransition.ts 참고). 이 바깥 래퍼에 별도 CSS transition을
+  // 남겨두면 View Transition이 "이후" 화면을 캡처하는 순간 아직 opacity가 다
+  // 안 바뀐 중간 상태를 찍어버려 애니메이션이 어긋난다.
+  const outerWrapperClassName =
+    searchBarPosition === "inline"
+      ? ""
+      : `fixed left-0 z-30 w-full bg-white shadow-[0px_4px_12px_0px_rgba(0,0,0,0.08)] ${
+          searchBarPosition === "pinned-open"
+            ? "opacity-100"
+            : "pointer-events-none opacity-0"
+        }`;
+  const outerWrapperStyle =
+    searchBarPosition === "inline" ? undefined : { top: HEADER_HEIGHT_PX };
+  const innerWrapperClassName =
+    searchBarPosition === "inline"
+      ? `w-full max-w-[1200px] ${showImage ? "mt-10 xl:mt-20" : ""}`
+      : "mx-auto w-full max-w-[1200px] px-4 py-4 md:px-10 xl:px-[76px]";
+
   return (
     <div
-      className="group relative left-1/2 right-1/2 -mx-[50vw] -mt-8 h-[300px] w-screen bg-cover bg-center transition-[background-image] duration-500"
-      style={{ backgroundImage: `url(${slide.image})` }}
+      className={`group relative left-1/2 right-1/2 -mx-[50vw] w-screen bg-cover bg-center transition-[background-image] duration-500 ${
+        showImage ? `-mt-8 ${hasHero ? "h-[483px]" : "h-[300px]"}` : ""
+      }`}
+      style={
+        showImage
+          ? { backgroundImage: `url(${slide.image})` }
+          : { paddingTop: RESULTS_MODE_TOP_OFFSET_PX }
+      }
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
@@ -92,13 +167,26 @@ const Banner = () => {
       onTouchCancel={resetTouchState}
     >
       <div
-        className={`relative mx-auto flex h-full w-full max-w-screen-xl flex-col justify-center gap-4 px-10 md:px-16 ${slide.textClassName}`}
+        className={`relative mx-auto flex w-full max-w-screen-xl flex-col justify-center px-4 md:px-10 xl:px-[76px] ${showImage ? `h-full ${slide.textClassName}` : ""}`}
       >
-        <h2 className="text-2xl leading-snug font-bold whitespace-pre-line md:text-3xl">
-          {slide.title}
-        </h2>
-        <p className="text-sm opacity-80 md:text-base">{slide.subtitle}</p>
-        <div aria-atomic="true" aria-live="polite" className="absolute right-10 bottom-6 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white md:right-16">
+        <div className={`flex flex-col gap-4 ${showImage ? "" : "hidden"}`}>
+          <h2 className={`leading-snug font-bold whitespace-pre-line ${hasHero ? "text-3xl md:text-4xl xl:text-[40px] xl:font-extrabold" : "text-2xl md:text-3xl"}`}>
+            {slide.title}
+          </h2>
+          <p className={`opacity-80 ${hasHero ? "text-sm md:text-base xl:text-[20px]" : "text-sm md:text-base"}`}>
+            {slide.subtitle}
+          </p>
+        </div>
+        {children && (
+          <div className={outerWrapperClassName} style={outerWrapperStyle}>
+            <div className={innerWrapperClassName}>{children}</div>
+          </div>
+        )}
+        <div
+          aria-atomic="true"
+          aria-live="polite"
+          className={`absolute right-10 bottom-6 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white md:right-16 ${showImage ? "" : "hidden"}`}
+        >
           {current + 1} / {total}
         </div>
       </div>

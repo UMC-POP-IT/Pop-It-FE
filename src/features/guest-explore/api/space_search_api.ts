@@ -42,8 +42,17 @@ export const SEOUL_DISTRICTS = [
   "강동구",
 ] as const;
 
-/** 그리드 4x7 = 한 페이지당 28개 (백엔드 기본값과 동일) */
-export const DEFAULT_PAGE_SIZE = 28;
+/** 그리드 4x4 = 한 페이지당 16개 */
+export const DEFAULT_PAGE_SIZE = 16;
+
+/**
+ * 검색어 최대 길이. XSS/인젝션 방어 목적은 아니고(React가 알아서 이스케이프
+ * 하고 요청도 쿼리스트링으로 안전하게 인코딩된다), 비정상적으로 긴 문자열이
+ * 화면 레이아웃을 깨뜨리거나 불필요하게 큰 요청을 만드는 걸 막기 위함이다.
+ * HeroSearchBar(직접 입력)와 ExplorePage(URL 복원) 양쪽 다 이 값을 써서
+ * 어느 경로로 들어오든 같은 상한이 적용되게 한다.
+ */
+export const MAX_KEYWORD_LENGTH = 100;
 
 export interface SpaceSearchParams {
   keyword?: string;
@@ -51,8 +60,21 @@ export interface SpaceSearchParams {
   district?: string;
   /** 0부터 시작 */
   page?: number;
-  /** 1~50, 기본 28 */
+  /** 1~50, 기본 16(DEFAULT_PAGE_SIZE) */
   size?: number;
+}
+
+/**
+ * 히어로 검색바(HeroSearchBar)에서 사용자가 확정(검색 실행)한 검색 조건.
+ * 날짜(dateRange)는 현재 /api/v1/spaces가 지원하지 않아 화면 표시 용도로만
+ * 들고 있고, getSpaces 요청에는 실어 보내지 않는다. 백엔드에 날짜 파라미터가
+ * 추가되면 이 타입에 필드를 더하고 getSpaces 호출부만 연결하면 된다.
+ */
+export interface ExploreSearchFilters {
+  keyword: string;
+  spaceCategory: SpaceCategory | "";
+  district: string;
+  dateRange: { start: Date | null; end: Date | null };
 }
 
 /** 서버 응답(result.spaces[i]) 원본 스펙 */
@@ -82,7 +104,7 @@ export interface SpaceSearchRes {
 /**
  * 공간 탐색(검색/필터) 목록을 조회한다.
  * 비로그인 상태에서도 호출 가능 (이 경우 isWishlisted는 항상 false).
- * page는 0부터 시작(백엔드 기준), size는 1~50 (기본 28 = 4x7 그리드).
+ * page는 0부터 시작(백엔드 기준), size는 1~50 (기본 16 = 4x4 그리드).
  * 빈 문자열 필터는 "전체"를 의미하므로 요청에서 아예 생략한다.
  */
 export const getSpaces = async (params: SpaceSearchParams = {}) => {

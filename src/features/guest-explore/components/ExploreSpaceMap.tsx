@@ -12,7 +12,6 @@ interface ExploreSpaceMapProps {
   /** 지도 위에 가격 마커로 노출할 공간 목록 */
   spaces: SpaceSummary[];
   onSelectSpace: (spaceId: number) => void;
-  onClose: () => void;
   /**
    * 찜 토글 핸들러. 넘기지 않으면 컴포넌트 내부에서 로그인 가드만 거쳐 바로
    * 토글한다 - 그 경우 wishStore의 wishedIds는 갱신되지만, 목록 뷰(ExploreSpace)가
@@ -29,7 +28,6 @@ const FALLBACK_CENTER = { lat: 37.4979, lng: 127.0276 };
 const ExploreSpaceMap = ({
   spaces,
   onSelectSpace,
-  onClose,
   onWishToggle,
 }: ExploreSpaceMapProps) => {
   const { isLoaded, error } = useKakaoLoader();
@@ -148,15 +146,6 @@ const ExploreSpaceMap = ({
           </div>
         </>
       )}
-
-      <button
-        type="button"
-        aria-label="닫기"
-        onClick={onClose}
-        className="bg-primary absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full text-white shadow-md"
-      >
-        ✕
-      </button>
     </div>
   );
 };

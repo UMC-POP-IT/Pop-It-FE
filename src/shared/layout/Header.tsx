@@ -4,12 +4,53 @@ import Logo from "@/shared/components/Logo";
 import { useAuthStore } from "@/store/authStore";
 import { logoutApi, switchMode } from "@/shared/utils/oauth";
 import { useHostModeSwitch } from "@/shared/hooks/useHostModeSwitch";
+import { useScrollSearchBarStore } from "@/store/scrollSearchBarStore";
+import {
+  SEARCH_BAR_VIEW_TRANSITION_NAME,
+  type MorphTransitionStyle,
+} from "@/shared/utils/viewTransition";
+
+/**
+ * sticky 헤더의 실제 높이(아래 h-[74px]과 반드시 같아야 한다). Banner.tsx의
+ * 고정 오버레이 top 위치, ExplorePage.tsx의 스크롤 감지 rootMargin/오버레이
+ * top이 전부 이 값을 그대로 가져다 쓴다 - 값이 파일마다 따로 하드코딩돼
+ * 있으면 여기(Header.tsx)의 실제 높이가 바뀔 때 조용히 어긋날 수 있어서, 한
+ * 곳에서만 정의하고 export한다(Banner.tsx의 RESULTS_MODE_TOP_OFFSET_PX와
+ * 같은 이유).
+ */
+export const HEADER_HEIGHT_PX = 74;
 
 const Header = () => {
   const { user, mode, setMode, openLoginModal, logout } = useAuthStore();
   const switchToHost = useHostModeSwitch();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+
+  // 검색 결과 화면(ExplorePage)에서 스크롤을 내려 원래 검색바가 헤더 뒤로
+  // 넘어갔을 때 그 자리에 대신 뜨는 축소된 pill. summary가 있으면(=그 화면에
+  // 있었던 적이 있으면) wrapper는 계속 마운트해두고 opacity만 토글해서 보이거나
+  // 숨긴다(마운트/언마운트로 하면 아래 view-transition-name 매칭이 끊긴다).
+  // 실제로 "부드럽게 나타나고 사라지는" 느낌은 이제 CSS transition이 아니라
+  // View Transitions API가 만든다 - 아래 pillMorphStyle 참고.
+  const isScrollBarVisible = useScrollSearchBarStore((s) => s.isVisible);
+  const scrollBarSummary = useScrollSearchBarStore((s) => s.summary);
+  const expandScrollBar = useScrollSearchBarStore((s) => s.onExpand);
+  const setFocusTrigger = useScrollSearchBarStore((s) => s.setFocusTrigger);
+  const pillButtonRef = useRef<HTMLButtonElement>(null);
+
+  // ExplorePage가 오버레이를 닫을 때(Escape 등) 포커스를 이 버튼으로 되돌릴 수
+  // 있도록 등록해둔다 - 스토어를 통해서만 접근 가능하다(ExplorePage는 이 버튼의
+  // DOM을 직접 알 수 없다).
+  useEffect(() => {
+    setFocusTrigger(() => pillButtonRef.current?.focus());
+    return () => setFocusTrigger(null);
+  }, [setFocusTrigger]);
+  // 이 pill이 지금 화면에 실제로 보일 때만 큰 검색바와 같은 view-transition-name을
+  // 부여한다 - 그래야 스크롤로 접히거나 pill을 눌러 펼칠 때 브라우저가 둘을 같은
+  // 대상으로 보고 모핑 애니메이션을 만들어준다(둘 다 동시에 이 이름을 가지면 안 됨).
+  const pillMorphStyle: MorphTransitionStyle | undefined = isScrollBarVisible
+    ? { viewTransitionName: SEARCH_BAR_VIEW_TRANSITION_NAME }
+    : undefined;
   const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
   const [modeError, setModeError] = useState(""); // 모드 전환 실패 사유
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -90,7 +131,7 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-40 w-full bg-white drop-shadow-[0px_4px_5px_rgba(0,0,0,0.12)]">
       {/* 피그마: 전체 px-[40px], 좌측 gap-[32px](로고↔nav), 우측 gap-[20px] */}
-      <div className="flex h-[74px] w-full items-center px-[10px] md:px-[40px]">
+      <div className="relative flex h-[74px] w-full items-center px-[10px] md:px-[40px]">
         {/* 좌측: 로고 + nav (gap-[32px]) */}
         <div className="flex items-center gap-8">
           <NavLink
@@ -177,6 +218,58 @@ const Header = () => {
             )}
           </nav>
         </div>
+
+        {/* 검색 결과 화면 전용: 스크롤을 내리면 헤더 정중앙에 축소된 검색바 pill이
+            나타난다. 클릭하면 헤더 바로 아래에 원래 검색바가 오버레이로 펼쳐진다
+            (Banner의 searchBarPosition="pinned-open"). 좁은 화면에서는 넣을
+            공간이 부족해 숨긴다.
+            좌/우 그룹(로고+nav, 모드전환+프로필)의 너비가 서로 달라서 그 사이의
+            남는 공간만 flex-1로 채우면 헤더 전체 기준으로는 중앙에서 벗어난다.
+            그래서 이 wrapper는 일반 flex 흐름에서 빼고 부모(relative)를 기준으로
+            absolute + inset-x-0 + justify-center로 항상 헤더 정중앙에 오게 한다.
+            wrapper는 pointer-events-none으로 두고, 실제 버튼만 pointer-events-auto로
+            켜서 숨겨진 상태에서도 다른 영역(nav, 프로필 등) 클릭을 막지 않는다. */}
+        {scrollBarSummary && (
+          <div
+            className={`absolute inset-x-0 top-1/2 hidden -translate-y-1/2 justify-center md:flex ${
+              isScrollBarVisible ? "" : "pointer-events-none opacity-0"
+            }`}
+          >
+            <button
+              ref={pillButtonRef}
+              type="button"
+              onClick={() => expandScrollBar?.()}
+              aria-label="검색 조건 펼치기"
+              disabled={!isScrollBarVisible}
+              style={pillMorphStyle}
+              className={`border-divider pointer-events-auto flex items-center gap-3 rounded-full border bg-white py-2 pr-2 pl-5 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] ${
+                isScrollBarVisible ? "cursor-pointer" : "cursor-default"
+              }`}
+            >
+              <span className="text-text-primary text-sm font-bold whitespace-nowrap">
+                {scrollBarSummary.categoryLabel}
+              </span>
+              <span aria-hidden="true" className="bg-divider h-4 w-px shrink-0" />
+              <span className="text-text-primary text-sm font-bold whitespace-nowrap">
+                {scrollBarSummary.dateLabel}
+              </span>
+              <span aria-hidden="true" className="bg-divider h-4 w-px shrink-0" />
+              <span className="text-text-primary text-sm font-bold whitespace-nowrap">
+                {scrollBarSummary.districtLabel}
+              </span>
+              <span aria-hidden="true" className="bg-divider h-4 w-px shrink-0" />
+              <span className="text-text-secondary max-w-[120px] truncate text-sm">
+                {scrollBarSummary.keywordLabel}
+              </span>
+              <span className="bg-primary-hover flex size-8 shrink-0 items-center justify-center rounded-full text-white">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+                  <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* 우측: 모드전환 + 프로필 (gap-[20px]) */}
         <div className="ml-auto flex items-center gap-5">
