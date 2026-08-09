@@ -231,8 +231,8 @@ const Header = () => {
             켜서 숨겨진 상태에서도 다른 영역(nav, 프로필 등) 클릭을 막지 않는다. */}
         {scrollBarSummary && (
           <div
-            className={`absolute inset-x-0 top-1/2 hidden -translate-y-1/2 justify-center md:flex ${
-              isScrollBarVisible ? "" : "pointer-events-none opacity-0"
+            className={`pointer-events-none absolute inset-x-0 top-1/2 hidden -translate-y-1/2 justify-center md:flex ${
+              isScrollBarVisible ? "" : "opacity-0"
             }`}
           >
             <button
