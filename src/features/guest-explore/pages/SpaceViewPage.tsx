@@ -11,24 +11,31 @@ export const SpaceViewPage = () => {
   const navigate = useNavigate();
 
   const [property, setProperty] = useState<Property | null>(null);
+  const [hasError, setHasError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     let ignore = false;
-    if (!Number.isFinite(id)) return;
 
+    if (!Number.isFinite(id)) {
+      setHasError(true);
+      return;
+    }
+
+    setHasError(false);
     getSpaceDetail(id)
       .then((detail) => {
         if (ignore) return;
         setProperty(getPropertyByCategory(toExploreSpaceDetail(detail).category) ?? null);
       })
       .catch(() => {
-        if (!ignore) setProperty(null);
+        if (!ignore) setHasError(true);
       });
 
     return () => {
       ignore = true;
     };
-  }, [id]);
+  }, [id, retryKey]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -58,7 +65,16 @@ export const SpaceViewPage = () => {
           </svg>
         </Button>
 
-        {property ? (
+        {hasError ? (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-4">
+            <span className="text-text-primary text-lg font-semibold">
+              3D 큐레이션을 불러오지 못했어요
+            </span>
+            <Button variant="outline" size="sm" onClick={() => setRetryKey((k) => k + 1)}>
+              다시 시도
+            </Button>
+          </div>
+        ) : property ? (
           <CurationViewer property={property} />
         ) : (
           <div className="flex h-full w-full items-center justify-center">

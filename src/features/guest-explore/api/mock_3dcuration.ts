@@ -786,6 +786,37 @@ export const mockProperties: Property[] = [
 ];
 
 /**
+ * hotspot.targetSceneId / property.defaultSceneId는 문자열로만 scene.id를 참조하기 때문에,
+ * 오타가 나도 타입 에러 없이 통과하고 getSceneById가 조용히 defaultScene으로 폴백해버려
+ * 런타임에서 티가 안 난다. 모듈 로드 시점에 한 번 전수 검증해서, 참조가 깨져 있으면
+ * 화면이 이상하게 뜨기 전에 즉시 에러로 드러나게 한다.
+ */
+function assertSceneReferencesResolve(properties: Property[]): void {
+  for (const property of properties) {
+    const sceneIds = new Set(property.scenes.map((scene) => scene.id));
+
+    if (!sceneIds.has(property.defaultSceneId)) {
+      throw new Error(
+        `[mock_3dcuration] "${property.id}"의 defaultSceneId "${property.defaultSceneId}"가 scenes 목록에 없습니다.`,
+      );
+    }
+
+    for (const scene of property.scenes) {
+      for (const hotspot of scene.hotspots) {
+        if (hotspot.type === 'link' && !sceneIds.has(hotspot.targetSceneId ?? '')) {
+          throw new Error(
+            `[mock_3dcuration] "${property.id}" > "${scene.id}" > hotspot "${hotspot.id}"의 targetSceneId ` +
+              `"${hotspot.targetSceneId}"가 scenes 목록에 없습니다.`,
+          );
+        }
+      }
+    }
+  }
+}
+
+assertSceneReferencesResolve(mockProperties);
+
+/**
  * 공간 카테고리 라벨(ex. space.category === '팝업스토어')로 해당 카테고리의 3D 큐레이션 Property를 찾는다.
  * 매칭되는 매물이 없으면(ex. exploreSpaces의 목업 카드들) 팝업스토어 모델로 통일해서 보여준다.
  */
