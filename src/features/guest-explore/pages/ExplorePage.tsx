@@ -11,6 +11,7 @@ import { withSearchBarTransition } from "@/shared/utils/viewTransition";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import {
   SPACE_CATEGORY_OPTIONS,
+  SEOUL_DISTRICTS,
   type ExploreSearchFilters,
   type SpaceCategory,
 } from "@/features/guest-explore/api/space_search_api";
@@ -33,6 +34,14 @@ const HEADER_HEIGHT_PX = 74;
 const VALID_SPACE_CATEGORIES = new Set<string>(
   SPACE_CATEGORY_OPTIONS.map((option) => option.value),
 );
+const VALID_DISTRICTS = new Set<string>(SEOUL_DISTRICTS);
+
+// 검색어는 그냥 화면에 표시되고 백엔드로 그대로 전달될 뿐이라 XSS/인젝션
+// 위험은 없지만(React가 알아서 이스케이프하고, 요청도 쿼리스트링으로 안전하게
+// 인코딩된다), URL을 직접 조작해서 비정상적으로 긴 문자열을 넣으면 화면
+// 레이아웃이 깨지거나 불필요하게 큰 요청이 나갈 수 있다. 앞뒤 공백을 지우고
+// 길이를 제한해서 방어한다.
+const MAX_KEYWORD_LENGTH = 100;
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 /** Date → "YYYY-MM-DD"(로컬 날짜, 타임존 변환 없이 그대로). */
@@ -62,17 +71,22 @@ const parseDateParam = (value: string | null): Date | null => {
 
 const filtersFromSearchParams = (params: URLSearchParams): ExploreSearchFilters => {
   // URL은 사용자가 직접 편집하거나 오래된 링크를 통해 들어올 수 있어, 실제
-  // 존재하는 카테고리 값인지 검증한다. 검증 없이 그냥 캐스팅만 하면 잘못된
+  // 존재하는 카테고리/지역 값인지 검증한다. 검증 없이 그냥 캐스팅만 하면 잘못된
   // 값이 그대로 FilterDropdown(라벨을 못 찾아 빈 칸)과 getSpaces 요청(백엔드가
-  // 모르는 카테고리)까지 흘러들어간다.
+  // 모르는 값)까지 흘러들어간다.
   const rawCategory = params.get("spaceCategory");
   const spaceCategory: SpaceCategory | "" =
     rawCategory && VALID_SPACE_CATEGORIES.has(rawCategory) ? (rawCategory as SpaceCategory) : "";
 
+  const rawDistrict = params.get("district");
+  const district = rawDistrict && VALID_DISTRICTS.has(rawDistrict) ? rawDistrict : "";
+
+  const rawKeyword = params.get("keyword")?.trim() ?? "";
+
   return {
-    keyword: params.get("keyword") ?? "",
+    keyword: rawKeyword.slice(0, MAX_KEYWORD_LENGTH),
     spaceCategory,
-    district: params.get("district") ?? "",
+    district,
     dateRange: {
       start: parseDateParam(params.get(DATE_START_PARAM)),
       end: parseDateParam(params.get(DATE_END_PARAM)),
