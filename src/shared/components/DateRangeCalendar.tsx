@@ -231,7 +231,17 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
   };
 
   return (
-    <div className="border-divider flex flex-col items-start rounded-xl border-2 bg-white shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]">
+    <div
+      role="dialog"
+      aria-label="날짜 범위 선택"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          e.stopPropagation();
+          onConfirm();
+        }
+      }}
+      className="border-divider flex flex-col items-start rounded-xl border-2 bg-white shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]"
+    >
       <div className="flex items-center rounded-xl">
         {renderMonth(viewDate, "left")}
         {renderMonth(secondViewDate, "right")}
