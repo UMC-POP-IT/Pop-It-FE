@@ -200,7 +200,7 @@ export const GetPresignedURL = (request: GetPresignedURLRequest) =>
 
 // 게스트 - 공간별 예약 불가 날짜 조회 (이미 선점(승인대기~진행 중)된 기간 목록. 지난 날짜는 응답에서 제외됨) ~ DONE
 export const getUnavailableDates = async (spaceId: number): Promise<UnavailablePeriod[]> => {
-    const result = await apiFetch<GetUnavailableDatesResult>(`/api/v1/reservations/${spaceId}/unavailable-dates`);
+    const result = await apiFetch<GetUnavailableDatesResult>(`/api/v1/reservations/unavailable-dates?spaceId=${spaceId}`);
     return result.unavailableDates ?? [];
 };
 
