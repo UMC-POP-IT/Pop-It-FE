@@ -5,6 +5,7 @@ import { useAuthStore } from "@/store/authStore";
 import { MainLayout } from "@/shared/layout/MainLayout";
 import { AuthLayout } from "@/shared/layout/AuthLayout";
 import { ErrorPage } from "@/shared/pages/ErrorPage";
+import { useAuthStore } from "@/store/authStore";
 
 // 인증
 import { LoginPage } from "@/features/auth/pages/LoginPage";
@@ -35,6 +36,19 @@ import { HostRegisterComplete } from "@/features/host-register/pages/HostRegiste
 import { MySpacePage } from "@/features/host-manage/pages/MySpacePage";
 import { HostSpaceDetailPage } from "@/features/host-manage/pages/HostSpaceDetailPage";
 import { HostReservationPage } from "@/features/host-manage/pages/HostReservationPage";
+import { SpaceEditEntry } from "@/features/host-register/pages/SpaceEditEntry";
+
+// 세션 복원이 완료될 때까지 리다이렉트를 보류해 새로고침 시 호스트 경로를 잃지 않도록 한다
+const HostGuard = () => {
+  const user = useAuthStore((s) => s.user);
+  const isSessionReady = useAuthStore((s) => s.isSessionReady);
+  if (!isSessionReady) return (
+    <div className="bg-tag-bg flex h-[224px] w-full items-center justify-center rounded-xl">
+      <p className="text-text-primary text-xl font-medium">불러오는 중...</p>
+    </div>
+  );
+  return user ? <Outlet /> : <Navigate to="/" replace />;
+};
 
 // 세션 복원이 완료될 때까지 리다이렉트를 보류해 새로고침 시 호스트 경로를 잃지 않도록 한다
 const HostGuard = () => {

@@ -6,6 +6,7 @@ import iconCloseWhite from "@/assets/icons/icon_close_white.svg";
 interface PhotoGalleryModalProps {
   isOpen: boolean;
   photos: string[];
+  initialIndex?: number;
   isLoading?: boolean;
   emptyMessage?: string;
   onClose: () => void;
@@ -19,6 +20,7 @@ interface PhotoGalleryModalProps {
 const PhotoGalleryModal = ({
   isOpen,
   photos,
+  initialIndex = 0,
   isLoading = false,
   emptyMessage = "사진을 불러올 수 없습니다",
   onClose,
@@ -27,8 +29,8 @@ const PhotoGalleryModal = ({
   const dialogRef = useDialogA11y<HTMLDivElement>({ isOpen, onClose });
 
   useEffect(() => {
-    if (isOpen) setPhotoIndex(0);
-  }, [isOpen]);
+    if (isOpen) setPhotoIndex(initialIndex);
+  }, [isOpen, initialIndex]);
 
   if (!isOpen) return null;
 
@@ -43,7 +45,7 @@ const PhotoGalleryModal = ({
         aria-modal="true"
         aria-label="사진 갤러리"
         tabIndex={-1}
-        className="relative h-[520px] w-full max-w-[900px] overflow-hidden bg-white"
+        className="relative h-[520px] w-full max-w-[900px] overflow-hidden bg-[#fafafa]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 닫기 버튼 */}
@@ -64,7 +66,7 @@ const PhotoGalleryModal = ({
             <img
               src={photos[photoIndex]}
               alt={`사진 ${photoIndex + 1}`}
-              className="h-full w-full object-contain"
+              className="h-full w-full object-cover"
             />
             <span className="absolute bottom-10 left-1/2 -translate-x-1/2 rounded-full bg-[rgba(18,18,18,0.2)] px-[18px] py-1 text-lg font-bold text-white">
               {photoIndex + 1} / {photos.length}
