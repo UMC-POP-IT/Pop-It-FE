@@ -217,7 +217,8 @@ export const HostRegisterStep2 = () => {
             maxLength={20}
           />
           <span className="text-text-secondary text-right text-base font-medium">
-            * 사업자 등록증(대표자명)과 일치해야 합니다.
+            * 사업자 등록증(대표자명)과 일치해야 합니다. (
+            {form.accountHolder.length}/20)
           </span>
         </div>
       </div>

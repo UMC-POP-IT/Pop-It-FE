@@ -542,7 +542,7 @@ const ExploreReservationCard = ({
 
       <Modal
         isOpen={isCompleteModalOpen}
-        showCheckIcon
+        iconVariant="check"
         singleButton
         title="예약 요청이 완료 되었습니다"
         description={completeDescription}

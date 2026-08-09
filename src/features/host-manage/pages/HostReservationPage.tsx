@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Tab from "@/shared/components/Tab";
 import Modal from "@/shared/components/Modal";
+import PhotoGalleryModal from "@/shared/components/PhotoGalleryModal";
 import { HostReservationCard } from "@/features/host-manage/components/HostReservationCard";
 import HostPaymentModal from "@/features/host-manage/components/contract/HostPaymentModal";
 import HostContractModal from "@/features/host-manage/components/contract/HostContractModal";
@@ -25,7 +26,7 @@ const TAB_STATUS: ReservationStatus[] = [
 
 const TAB_LABELS = ["승인 대기", "계약 대기", "계약 완료", "사용 중", "사용 완료"];
 const EMPTY_MESSAGES = [
-  "아직 연락 온 게스트가 없어요",
+  "승인 대기 중인 예약이 없어요",
   "계약 대기 중인 예약이 없어요",
   "계약 완료된 예약이 없어요",
   "현재 사용 중인 예약이 없어요",
@@ -98,7 +99,6 @@ export const HostReservationPage = () => {
   const [photoViewTarget, setPhotoViewTarget] = useState<ApiHostReservation | null>(null);
   const [checkoutPhotos, setCheckoutPhotos] = useState<string[]>([]);
   const [isPhotosLoading, setIsPhotosLoading] = useState(false);
-  const [photoIndex, setPhotoIndex] = useState(0);
 
   // 퇴실 승인/거부
   const [checkoutApproveTargetId, setCheckoutApproveTargetId] = useState<number | null>(null);
@@ -192,7 +192,6 @@ export const HostReservationPage = () => {
 
   const openPhotoView = async (reservation: ApiHostReservation) => {
     setPhotoViewTarget(reservation);
-    setPhotoIndex(0);
     setCheckoutPhotos([]);
     setIsPhotosLoading(true);
     try {
@@ -292,63 +291,12 @@ export const HostReservationPage = () => {
       />
 
       {/* 퇴실 사진 갤러리 모달 */}
-      {photoViewTarget && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
-          onClick={() => setPhotoViewTarget(null)}
-        >
-          <div
-            className="relative flex w-full max-w-[800px] flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="absolute -top-10 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black"
-              onClick={() => setPhotoViewTarget(null)}
-              aria-label="닫기"
-            >
-              ✕
-            </button>
-            {isPhotosLoading ? (
-              <div className="flex h-[400px] w-full items-center justify-center rounded-xl bg-black/50">
-                <span className="text-white">사진 불러오는 중...</span>
-              </div>
-            ) : checkoutPhotos.length > 0 ? (
-              <>
-                <img
-                  src={checkoutPhotos[photoIndex]}
-                  alt={`퇴실 사진 ${photoIndex + 1}`}
-                  className="max-h-[600px] w-full rounded-xl object-contain"
-                />
-                <span className="mt-3 rounded-full bg-black/50 px-3 py-1 text-sm text-white">
-                  {photoIndex + 1} / {checkoutPhotos.length}
-                </span>
-                {checkoutPhotos.length > 1 && (
-                  <>
-                    <button
-                      className="absolute top-1/2 left-4 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow"
-                      onClick={() => setPhotoIndex((i) => (i - 1 + checkoutPhotos.length) % checkoutPhotos.length)}
-                      aria-label="이전 사진"
-                    >
-                      ‹
-                    </button>
-                    <button
-                      className="absolute top-1/2 right-4 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow"
-                      onClick={() => setPhotoIndex((i) => (i + 1) % checkoutPhotos.length)}
-                      aria-label="다음 사진"
-                    >
-                      ›
-                    </button>
-                  </>
-                )}
-              </>
-            ) : (
-              <div className="flex h-[400px] w-full items-center justify-center rounded-xl bg-black/50">
-                <span className="text-white">사진을 불러올 수 없습니다</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <PhotoGalleryModal
+        isOpen={photoViewTarget !== null}
+        photos={checkoutPhotos}
+        isLoading={isPhotosLoading}
+        onClose={() => setPhotoViewTarget(null)}
+      />
 
       {/* 입금 예정 / 계약서 모달 */}
       {approveTarget && (
