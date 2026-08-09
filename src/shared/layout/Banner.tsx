@@ -119,13 +119,19 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
   // 바깥을 화면 폭 전체 흰 배경으로 채우는 이유: 헤더 바로 아래에 "헤더의 흰
   // 배경이 그대로 이어지는" 느낌을 줘야 한다(둥근 모서리나 카드처럼 붕 떠
   // 보이면 안 됨) - 그래서 rounded 없이 꽉 채우고, 그림자도 아래쪽에만 옅게.
+  // opacity 전환에 duration을 주지 않는다(예전엔 여기 transition-all duration-300을
+  // 줬었다) - 이제 HeroSearchBar 쪽 실제 검색바 박스(view-transition-name이 붙는
+  // 대상)가 큰 검색바 ↔ 헤더 pill 사이를 모핑하는 애니메이션은 View Transitions
+  // API가 담당한다(viewTransition.ts 참고). 이 바깥 래퍼에 별도 CSS transition을
+  // 남겨두면 View Transition이 "이후" 화면을 캡처하는 순간 아직 opacity가 다
+  // 안 바뀐 중간 상태를 찍어버려 애니메이션이 어긋난다.
   const outerWrapperClassName =
     searchBarPosition === "inline"
       ? ""
-      : `fixed top-[74px] left-0 z-30 w-full bg-white shadow-[0px_4px_12px_0px_rgba(0,0,0,0.08)] transition-all duration-300 ease-out ${
+      : `fixed top-[74px] left-0 z-30 w-full bg-white shadow-[0px_4px_12px_0px_rgba(0,0,0,0.08)] ${
           searchBarPosition === "pinned-open"
-            ? "translate-y-0 opacity-100"
-            : "pointer-events-none -translate-y-2 opacity-0"
+            ? "opacity-100"
+            : "pointer-events-none opacity-0"
         }`;
   const innerWrapperClassName =
     searchBarPosition === "inline"

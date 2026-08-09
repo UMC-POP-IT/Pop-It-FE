@@ -65,9 +65,21 @@ interface ExploreSpaceProps {
    * true면 "공간 탐색" 제목을 숨기고, 페이지네이션 대신 무한스크롤로 동작한다.
    */
   resultsMode?: boolean;
+  /**
+   * 실제로 보여줄 공간이 있는지(status === "success" && spaces.length > 0)가
+   * 바뀔 때마다 호출된다. ExplorePage가 이걸로 "검색 결과가 실제로 있을 때만"
+   * 스크롤-축소(헤더 pill 모핑) 기능을 켠다 - 빈 결과 화면은 카드가 없어서
+   * 스크롤할 내용 자체가 없으니 굳이 필요 없다.
+   */
+  onHasResultsChange?: (hasResults: boolean) => void;
 }
 
-const ExploreSpace = ({ filters, onResetFilters, resultsMode = false }: ExploreSpaceProps) => {
+const ExploreSpace = ({
+  filters,
+  onResetFilters,
+  resultsMode = false,
+  onHasResultsChange,
+}: ExploreSpaceProps) => {
   const navigate = useNavigate();
   const [isMapView, setIsMapView] = useState(false);
   const [currentPage, setCurrentPage] = useState(1); // 페이지네이션 모드에서만 사용(화면 표기는 1부터)
@@ -207,6 +219,15 @@ const ExploreSpace = ({ filters, onResetFilters, resultsMode = false }: ExploreS
     observer.observe(node);
     return () => observer.disconnect();
   }, [resultsMode, hasNextPage, isLoadingMore, isRefetching, status]);
+
+  const hasResults = status === "success" && spaces.length > 0;
+
+  useEffect(() => {
+    onHasResultsChange?.(hasResults);
+    // onHasResultsChange는 상위에서 매 렌더 새로 만들어질 수 있어 deps에 넣지
+    // 않는다(onSummaryChange와 같은 이유 - HeroSearchBar.tsx 참고).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasResults]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / DEFAULT_PAGE_SIZE));
 

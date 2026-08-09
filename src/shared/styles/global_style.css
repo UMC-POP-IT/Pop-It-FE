@@ -93,3 +93,19 @@
     color: var(--color-text-primary);
   }
 }
+
+/* 검색바 ↔ 헤더 축소 pill 모핑 애니메이션 (View Transitions API).
+   HeroSearchBar.tsx와 Header.tsx가 현재 화면에 실제로 보이는 쪽에만 같은
+   view-transition-name(search-bar)을 부여하면, 브라우저가 두 박스의 위치/크기를
+   자동으로 보간해서 하나가 다른 하나로 모핑되는 것처럼 보여준다
+   (src/shared/utils/viewTransition.ts 참고). 기본 250ms보다 살짝 느리고
+   부드럽게 커스터마이즈한다. */
+::view-transition-group(search-bar) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(search-bar),
+::view-transition-new(search-bar) {
+  animation-duration: 320ms;
+}

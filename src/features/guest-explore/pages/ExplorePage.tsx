@@ -7,6 +7,7 @@ import Banner from "@/shared/layout/Banner";
 import HeroSearchBar from "@/features/guest-explore/components/HeroSearchBar";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";
 import { useScrollSearchBarStore, type ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
+import { withSearchBarTransition } from "@/shared/utils/viewTransition";
 import {
   SPACE_CATEGORY_OPTIONS,
   type ExploreSearchFilters,
@@ -83,6 +84,10 @@ export const ExplorePage = () => {
   // 이 로직 전체가 관여하지 않는다.
   const [isScrolledPastBar, setIsScrolledPastBar] = useState(false);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  // 검색 결과가 실제로 있을 때만(카드가 있어야 스크롤할 내용도 있다) 축소 pill
+  // 모핑 기능을 켠다 - "조건에 맞는 공간이 없어요" 빈 결과 화면에서는 이 기능
+  // 자체가 필요 없다(ExploreSpace가 결과 유무를 알려준다).
+  const [hasResults, setHasResults] = useState(false);
   const [summary, setSummary] = useState<ScrollSearchBarSummary | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const setScrollSearchBarState = useScrollSearchBarStore((s) => s.setState);
@@ -100,7 +105,8 @@ export const ExplorePage = () => {
     // 검색 전 화면에 돌아갈 수 있게 하고, 이미 결과 화면이면(조건만 바꿔 재검색)
     // 히스토리를 계속 쌓지 않도록 현재 항목을 교체한다.
     setSearchParams(next, { replace: hasActiveSearch });
-    setIsOverlayOpen(false); // 재검색하면 펼쳐져 있던 오버레이는 접어서 결과에 집중시킨다
+    // 재검색하면 펼쳐져 있던 오버레이는 접어서 결과에 집중시킨다(모핑 애니메이션 포함).
+    withSearchBarTransition(() => setIsOverlayOpen(false));
   };
 
   const handleResetFilters = () => {
@@ -113,19 +119,24 @@ export const ExplorePage = () => {
   // "스크롤됨"으로 표시한다. rootMargin으로 헤더 높이만큼 보정해서, 실제로
   // 헤더 뒤에 가려지는 시점과 최대한 맞춘다.
   useEffect(() => {
-    if (!hasActiveSearch) {
+    if (!hasActiveSearch || !hasResults) {
       setIsScrolledPastBar(false);
       return;
     }
     const node = sentinelRef.current;
     if (!node) return;
     const observer = new IntersectionObserver(
-      ([entry]) => setIsScrolledPastBar(!entry.isIntersecting),
+      ([entry]) => {
+        const next = !entry.isIntersecting;
+        // 스크롤로 큰 검색바 ↔ 헤더 pill이 서로 자리를 넘겨받는 순간이라
+        // View Transition으로 감싼다 - 모핑 애니메이션이 재생된다.
+        withSearchBarTransition(() => setIsScrolledPastBar(next));
+      },
       { rootMargin: `-${HEADER_HEIGHT_PX}px 0px 0px 0px` },
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [hasActiveSearch]);
+  }, [hasActiveSearch, hasResults]);
 
   // 스크롤을 다시 올려 원래 검색바가 보이게 되면, 열려있던 오버레이도 접는다.
   useEffect(() => {
@@ -142,7 +153,8 @@ export const ExplorePage = () => {
     setScrollSearchBarState({
       isVisible: !isOverlayOpen,
       summary,
-      onExpand: () => setIsOverlayOpen(true),
+      // pill을 눌러 펼치는 순간도 모핑 애니메이션이 재생되도록 감싼다.
+      onExpand: () => withSearchBarTransition(() => setIsOverlayOpen(true)),
     });
   }, [hasActiveSearch, isScrolledPastBar, isOverlayOpen, summary, setScrollSearchBarState, resetScrollSearchBar]);
 
@@ -150,7 +162,11 @@ export const ExplorePage = () => {
   useEffect(() => resetScrollSearchBar, [resetScrollSearchBar]);
 
   const searchBarPosition =
-    hasActiveSearch && isScrolledPastBar ? (isOverlayOpen ? "pinned-open" : "pinned-hidden") : "inline";
+    hasActiveSearch && hasResults && isScrolledPastBar
+      ? isOverlayOpen
+        ? "pinned-open"
+        : "pinned-hidden"
+      : "inline";
 
   // 검색 직후 최상단(아직 스크롤 안 함)에서는 결과화면 전용 스타일(굵은 파란
   // 테두리, 피그마 node 5019:73539)을 쓰고, 스크롤해서 헤더 pill로 축소됐다가
@@ -179,6 +195,7 @@ export const ExplorePage = () => {
           initialDistrict={district}
           initialDateRange={dateRange}
           onSummaryChange={hasActiveSearch ? setSummary : undefined}
+          isMorphTarget={searchBarPosition !== "pinned-hidden"}
         />
       </Banner>
 
@@ -186,7 +203,7 @@ export const ExplorePage = () => {
       {searchBarPosition === "pinned-open" && (
         <div
           aria-hidden="true"
-          onClick={() => setIsOverlayOpen(false)}
+          onClick={() => withSearchBarTransition(() => setIsOverlayOpen(false))}
           className="fixed inset-0 z-20 bg-black/10"
           style={{ top: HEADER_HEIGHT_PX }}
         />
@@ -200,6 +217,7 @@ export const ExplorePage = () => {
         filters={searchFilters}
         onResetFilters={handleResetFilters}
         resultsMode={hasActiveSearch}
+        onHasResultsChange={(next) => withSearchBarTransition(() => setHasResults(next))}
       />
     </div>
   );

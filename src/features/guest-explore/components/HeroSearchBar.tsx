@@ -5,6 +5,10 @@ import { useOutsideClick } from "@/shared/hooks/useOutsideClick";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";
 import type { ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
 import {
+  SEARCH_BAR_VIEW_TRANSITION_NAME,
+  type MorphTransitionStyle,
+} from "@/shared/utils/viewTransition";
+import {
   SPACE_CATEGORY_OPTIONS,
   SEOUL_DISTRICTS,
   type SpaceCategory,
@@ -108,6 +112,15 @@ interface HeroSearchBarProps {
    * 두기 위함이다.
    */
   onSummaryChange?: (summary: ScrollSearchBarSummary) => void;
+  /**
+   * 지금 화면에 실제로 보이는 "큰 검색바"가 이 인스턴스일 때만 true로 넘긴다.
+   * true일 때만 View Transition 공유 이름(search-bar)을 부여해서, 스크롤로
+   * 헤더의 축소 pill로 접히거나 pill을 눌러 다시 펼칠 때 한 엘리먼트가 다른
+   * 엘리먼트로 모핑되는 것처럼 보이게 한다(ExplorePage가 searchBarPosition으로
+   * 계산해서 내려준다. 자세한 설명은 src/shared/utils/viewTransition.ts 참고).
+   * 헤더의 축소 pill도 같은 이름을 쓰므로, 항상 둘 중 하나만 true여야 한다.
+   */
+  isMorphTarget?: boolean;
 }
 
 /**
@@ -125,6 +138,7 @@ const HeroSearchBar = ({
   initialDistrict = "",
   initialDateRange = { start: null, end: null },
   onSummaryChange,
+  isMorphTarget = false,
 }: HeroSearchBarProps) => {
   const [keywordInput, setKeywordInput] = useState(initialKeyword);
   const [category, setCategory] = useState<SpaceCategory | "">(initialCategory);
@@ -163,6 +177,9 @@ const HeroSearchBar = ({
   const outerBorderClassName = isCompact
     ? "border-[3px] border-primary-hover"
     : "border border-text-secondary";
+  const morphStyle: MorphTransitionStyle | undefined = isMorphTarget
+    ? { viewTransitionName: SEARCH_BAR_VIEW_TRANSITION_NAME }
+    : undefined;
 
   const handleSubmit = () => {
     setIsDateOpen(false);
@@ -184,7 +201,17 @@ const HeroSearchBar = ({
     // 고정폭 세그먼트가 넘칠 수 있는 문제는 이 방식으로는 해결하지 않는다(별도
     // 모바일 레이아웃 설계가 필요) - 지금은 기존처럼 데스크톱 고정폭을 그대로
     // 쓰고, overflow-hidden도 주지 않는다(같은 이유로 패널이 잘려 보인다).
-    <div className={`flex items-stretch rounded-full bg-white ${outerBorderClassName}`}>
+    // relative + z-10: view-transition-name을 가진 엘리먼트는 그 자체로 새
+    // 스태킹 컨텍스트가 된다(View Transitions API의 명세된 부작용). 이 div가
+    // isMorphTarget일 때 스태킹 컨텍스트가 되면, 안에 있는 지역/공간유형
+    // 드롭다운 패널(z-20)의 z-index가 이 컨텍스트 밖으로 못 나가서, 아래
+    // ExploreSpace 카드 그리드(z-index 없음, 문서 순서상 나중 엘리먼트)가 오히려
+    // 드롭다운 위로 그려지는 버그가 생겼다. 명시적으로 z-index를 줘서 이 박스
+    // 전체(드롭다운 포함)가 항상 카드 그리드보다 위에 그려지도록 고정한다.
+    <div
+      style={morphStyle}
+      className={`relative z-10 flex items-stretch rounded-full bg-white ${outerBorderClassName}`}
+    >
       <div className="flex shrink-0 items-stretch" style={{ width: CATEGORY_SEGMENT_WIDTH_PX }}>
         <FilterDropdown
           ariaLabel="공간 용도 필터"

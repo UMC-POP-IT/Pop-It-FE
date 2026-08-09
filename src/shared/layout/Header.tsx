@@ -5,6 +5,10 @@ import { useAuthStore } from "@/store/authStore";
 import { logoutApi, switchMode } from "@/shared/utils/oauth";
 import { useHostModeSwitch } from "@/shared/hooks/useHostModeSwitch";
 import { useScrollSearchBarStore } from "@/store/scrollSearchBarStore";
+import {
+  SEARCH_BAR_VIEW_TRANSITION_NAME,
+  type MorphTransitionStyle,
+} from "@/shared/utils/viewTransition";
 
 const Header = () => {
   const { user, mode, setMode, openLoginModal, logout } = useAuthStore();
@@ -14,12 +18,19 @@ const Header = () => {
 
   // 검색 결과 화면(ExplorePage)에서 스크롤을 내려 원래 검색바가 헤더 뒤로
   // 넘어갔을 때 그 자리에 대신 뜨는 축소된 pill. summary가 있으면(=그 화면에
-  // 있었던 적이 있으면) wrapper는 계속 마운트해두고 opacity/scale만 토글해서
-  // 스크롤에 따라 부드럽게 나타나고 사라지게 한다(마운트/언마운트로 하면
-  // transition이 애니메이션되지 않는다).
+  // 있었던 적이 있으면) wrapper는 계속 마운트해두고 opacity만 토글해서 보이거나
+  // 숨긴다(마운트/언마운트로 하면 아래 view-transition-name 매칭이 끊긴다).
+  // 실제로 "부드럽게 나타나고 사라지는" 느낌은 이제 CSS transition이 아니라
+  // View Transitions API가 만든다 - 아래 pillMorphStyle 참고.
   const isScrollBarVisible = useScrollSearchBarStore((s) => s.isVisible);
   const scrollBarSummary = useScrollSearchBarStore((s) => s.summary);
   const expandScrollBar = useScrollSearchBarStore((s) => s.onExpand);
+  // 이 pill이 지금 화면에 실제로 보일 때만 큰 검색바와 같은 view-transition-name을
+  // 부여한다 - 그래야 스크롤로 접히거나 pill을 눌러 펼칠 때 브라우저가 둘을 같은
+  // 대상으로 보고 모핑 애니메이션을 만들어준다(둘 다 동시에 이 이름을 가지면 안 됨).
+  const pillMorphStyle: MorphTransitionStyle | undefined = isScrollBarVisible
+    ? { viewTransitionName: SEARCH_BAR_VIEW_TRANSITION_NAME }
+    : undefined;
   const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
   const [modeError, setModeError] = useState(""); // 모드 전환 실패 사유
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -200,8 +211,8 @@ const Header = () => {
             켜서 숨겨진 상태에서도 다른 영역(nav, 프로필 등) 클릭을 막지 않는다. */}
         {scrollBarSummary && (
           <div
-            className={`pointer-events-none absolute inset-x-0 top-1/2 hidden -translate-y-1/2 justify-center transition-all duration-300 ease-out md:flex ${
-              isScrollBarVisible ? "scale-100 opacity-100" : "scale-95 opacity-0"
+            className={`absolute inset-x-0 top-1/2 hidden -translate-y-1/2 justify-center md:flex ${
+              isScrollBarVisible ? "" : "pointer-events-none opacity-0"
             }`}
           >
             <button
@@ -209,6 +220,7 @@ const Header = () => {
               onClick={() => expandScrollBar?.()}
               aria-label="검색 조건 펼치기"
               disabled={!isScrollBarVisible}
+              style={pillMorphStyle}
               className={`border-divider pointer-events-auto flex items-center gap-3 rounded-full border bg-white py-2 pr-2 pl-5 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] ${
                 isScrollBarVisible ? "cursor-pointer" : "cursor-default"
               }`}
