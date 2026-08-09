@@ -5,6 +5,7 @@ import { fetchUnavailableDates } from "@/features/host-manage/api/hostApi";
 import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDetailGallery";
 import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetailInfo";
 import HostReservationCalendar, { type UnavailablePeriod } from "@/features/host-manage/components/HostReservationCalendar";
+import PhotoGalleryModal from "@/shared/components/PhotoGalleryModal";
 
 type FetchStatus = "loading" | "success" | "notfound" | "error";
 
@@ -15,6 +16,7 @@ export const HostSpaceDetailPage = () => {
   const [space, setSpace] = useState<HostSpaceDetail | null>(null);
   const [unavailablePeriods, setUnavailablePeriods] = useState<UnavailablePeriod[]>([]);
   const [retryKey, setRetryKey] = useState(0);
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
 
   const id = Number(spaceId);
 
@@ -95,7 +97,7 @@ export const HostSpaceDetailPage = () => {
 
   return (
     <div className="mx-auto flex w-[1200px] flex-col gap-5">
-      <ExploreDetailGallery space={space} />
+      <ExploreDetailGallery space={space} onImageClick={(i) => setGalleryIndex(i)} />
 
       <div className="flex w-full items-start gap-[23px]">
         <div className="w-[689px] shrink-0">
@@ -103,6 +105,13 @@ export const HostSpaceDetailPage = () => {
         </div>
         <HostReservationCalendar unavailablePeriods={unavailablePeriods} />
       </div>
+
+      <PhotoGalleryModal
+        isOpen={galleryIndex !== null}
+        photos={space.imageUrls}
+        initialIndex={galleryIndex ?? 0}
+        onClose={() => setGalleryIndex(null)}
+      />
     </div>
   );
 };

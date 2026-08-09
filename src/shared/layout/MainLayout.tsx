@@ -25,7 +25,7 @@ const SessionBootstrap = () => {
     getCurrentUser()
       .then((user) => {
         const isHostPath = window.location.pathname.startsWith("/host");
-        login(isHostPath ? { ...user, currentMode: "HOST" } : user);
+        login({ ...user, currentMode: isHostPath ? "HOST" : "GUEST" });
       })
       .catch(() => {
         // accessToken/refreshToken 모두 만료 등 복원 실패 → 남은 토큰 정리
@@ -133,7 +133,7 @@ const OAuthCallbackHandler = () => {
           }
           sessionStorage.removeItem("oauth_pending_action");
         }
-        login(user);
+        login({ ...user, currentMode: "GUEST" });
         navigate("/", { replace: true });
       })
       .catch((err) => {

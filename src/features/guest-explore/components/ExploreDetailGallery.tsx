@@ -2,15 +2,19 @@ import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_space
 
 interface ExploreDetailGalleryProps {
   space: ExploreSpaceDetail;
+  onImageClick?: (index: number) => void;
 }
 
-const ExploreDetailGallery = ({ space }: ExploreDetailGalleryProps) => {
+const ExploreDetailGallery = ({ space, onImageClick }: ExploreDetailGalleryProps) => {
   const [mainImage, ...subImages] = space.imageUrls;
   const subImageSlots = Array.from({ length: 4 }, (_, index) => subImages[index]);
 
   return (
     <div className="flex w-full items-center gap-5">
-      <div className="h-[372px] w-[692px] shrink-0 overflow-hidden bg-[#D8D8D8]">
+      <div
+        className={`h-[372px] w-[692px] shrink-0 overflow-hidden bg-[#D8D8D8]${onImageClick ? " cursor-pointer" : ""}`}
+        onClick={() => onImageClick?.(0)}
+      >
         {mainImage && (
           <img
             src={mainImage}
@@ -24,7 +28,8 @@ const ExploreDetailGallery = ({ space }: ExploreDetailGalleryProps) => {
         {subImageSlots.map((url, index) => (
           <div
             key={index}
-            className="h-[180px] w-[240px] overflow-hidden bg-[#D8D8D8]"
+            className={`h-[180px] w-[240px] overflow-hidden bg-[#D8D8D8]${onImageClick && url ? " cursor-pointer" : ""}`}
+            onClick={() => url && onImageClick?.(index + 1)}
           >
             {url && (
               <img
