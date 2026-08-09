@@ -1,3 +1,4 @@
+import { useId } from "react";
 import StepIndicator from "@/shared/components/StepIndicator";
 import Button from "@/shared/components/Button";
 import Logo from "@/shared/components/Logo";
@@ -5,6 +6,7 @@ import iconClose from "@/assets/icons/icon_close.svg";
 import { useNavigate } from "react-router-dom";
 import { HOST_STEPS } from "@/features/host-register/api/mock_register";
 import { useAuthStore } from "@/store/authStore";
+import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 import hostRegisterIllustration from "@/assets/images/host_register_illustration.png";
 
 // 호스트 등록 시작 모달 (인트로)
@@ -14,6 +16,26 @@ import hostRegisterIllustration from "@/assets/images/host_register_illustration
 export const HostRegisterStart = () => {
   const navigate = useNavigate();
   const setMode = useAuthStore((s) => s.setMode);
+  const titleId = useId();
+
+  // X 버튼과 Escape가 같은 동작을 한다 — 호스트 전환을 취소하고 게스트 홈으로
+  const handleClose = () => {
+    setMode("GUEST");
+    navigate("/");
+  };
+
+  // 이 화면은 라우트지만 MainLayout 아래에 있어 Header/Footer가 뒤에 그대로 렌더된다.
+  // 딤이 시각적으로만 덮을 뿐이라, 트랩이 없으면 Tab이 딤 뒤의 안 보이는 헤더·푸터
+  // 링크로 먼저 나가서 포커스 위치를 알 수 없게 된다. aria-modal="true"는 "바깥이
+  // 불활성"이라는 선언이므로 반드시 이 트랩과 세트로만 붙인다.
+  // isOpen이 항상 true인 이유: 마운트되어 있다는 것 자체가 열려 있다는 뜻이다.
+  // TODO(2차): 이 훅은 언마운트 시 포커스를 트리거로 되돌리는데, 이 화면은 닫을 때뿐
+  // 아니라 [등록 시작하기]로 step1에 갈 때도 언마운트된다. 앞으로 갔는데 포커스만
+  // 헤더로 돌아가므로, 위 "모달 열림/닫힘 상태 관리"와 함께 정리한다.
+  const dialogRef = useDialogA11y<HTMLDivElement>({
+    isOpen: true,
+    onClose: handleClose,
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -22,11 +44,25 @@ export const HostRegisterStart = () => {
 
       {/* 모달 카드 — 피그마(1000 x 620 · 패딩 100/80 · gap 80 · radius 12)를 0.9로 줄인 값.
           1000이 화면에서 너무 커서 여백과 이미지만 축소하고 폰트는 디자인 토큰 값 그대로 둔다.
-          높이는 고정하지 않는다 — 오른쪽 컬럼 내용이 정한다 */}
-      <div className="relative z-10 flex w-full max-w-[900px] items-stretch gap-16 rounded-xl bg-white px-20 py-16 shadow-xl">
+          높이는 고정하지 않는다 — 오른쪽 컬럼 내용이 정한다.
+
+          lg 미만에서 여백·gap을 줄이고 이미지를 숨기는 이유:
+          이미지 306 + gap 64 + 오른쪽 컬럼 최소폭 224(StepIndicator w-fit) = 594,
+          여기에 px-20(160)과 바깥 p-4(32)를 더하면 뷰포트 786px 미만에서 오른쪽 컬럼이
+          카드 밖으로 밀린다. fixed라 가로 스크롤도 안 생겨서 [등록 시작하기]와 X 닫기에
+          아예 도달할 수 없게 된다. md(768)로 잡으면 768~785 구간이 18px 모자라 lg로 둔다 */}
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="relative z-10 flex w-full max-w-[900px] items-stretch gap-8 rounded-xl bg-white px-8 py-16 shadow-xl lg:gap-16 lg:px-20"
+      >
         {/* 왼쪽: 대표 이미지 — 피그마 340의 0.9 (내용폭 740 - gap 64 - 오른쪽 370).
-            높이는 self-stretch로 오른쪽 컬럼에 맞추고, object-contain이 세로 가운데로 그린다 */}
-        <div className="w-[306px] shrink-0 self-stretch overflow-hidden rounded-lg">
+            높이는 self-stretch로 오른쪽 컬럼에 맞추고, object-contain이 세로 가운데로 그린다.
+            장식 이미지(alt="")라 좁은 화면에서 숨겨도 잃는 정보가 없다 */}
+        <div className="hidden w-[306px] shrink-0 self-stretch overflow-hidden rounded-lg lg:block">
           <img
             src={hostRegisterIllustration}
             alt=""
@@ -44,10 +80,7 @@ export const HostRegisterStart = () => {
           <button
             type="button"
             aria-label="닫기"
-            onClick={() => {
-              setMode("GUEST"); // 호스트 전환 취소 → 게스트 모드로 복귀
-              navigate("/");
-            }}
+            onClick={handleClose}
             className="text-text-secondary hover:text-text-primary self-end text-xl"
           >
             <img
@@ -63,7 +96,11 @@ export const HostRegisterStart = () => {
 
           {/* 카피 폭이 피그마 380 = 오른쪽 컬럼 전체 폭이라 w-full로 둔다 (두 줄로 접힘) */}
           <div className="mt-5 flex w-full flex-col gap-1">
-            <h1 className="text-text-primary text-[32px] leading-[1.4] font-bold">
+            {/* aria-labelledby로 다이얼로그 이름이 되는 제목 */}
+            <h1
+              id={titleId}
+              className="text-text-primary text-[32px] leading-[1.4] font-bold"
+            >
               호스트 등록
             </h1>
             {/* 피그마 Grey/grey-600 (#747474) = text-tertiary. secondary는 #808080이라 다른 색이다 */}
