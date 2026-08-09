@@ -72,7 +72,7 @@ export const RegisterStep4 = () => {
           {/* 에러가 뜰 땐 숨긴다 — 같은 자리에 두 줄이 겹치지 않게 (RegisterStep2 보증금과 동일한 방식) */}
           {!nameError && (
             <span className="text-text-secondary text-right text-base font-medium">
-              공백 제외 4자 이상 ({nameLength}/20)
+              {form.buildingName.length}/20
             </span>
           )}
         </div>
