@@ -209,7 +209,7 @@ const TossPaymentResultHandler = () => {
           setResult({
             success: false,
             title: "결제에 실패했습니다",
-            description: "결제 정보를 확인 한 후 다시 시도해주시기 바랍니다",
+            description: "결제 정보를 확인한 후 다시 시도해주시기 바랍니다",
           });
         });
       return;
@@ -219,7 +219,7 @@ const TossPaymentResultHandler = () => {
     setResult({
       success: false,
       title: "결제에 실패했습니다",
-      description: params.get("message") ?? "결제가 취소되었거나 실패했습니다.",
+      description: "결제 정보를 확인한 후 다시 시도해주시기 바랍니다", // 그냥 결제 실패와 취소를 구분할 수 없으므로 같은 메시지로 처리하는 게 맞을 듯하다.
     });
   }, []);
 
@@ -228,8 +228,7 @@ const TossPaymentResultHandler = () => {
       isOpen={!!result}
       title={result?.title ?? ""}
       description={result?.description}
-      showCheckIcon={result?.success}
-      showWarningIcon={!result?.success}
+      iconVariant={result?.success ? "check" : "warning"}
       singleButton
       confirmLabel="확인"
       onConfirm={() => setResult(null)}

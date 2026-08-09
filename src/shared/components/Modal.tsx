@@ -11,10 +11,8 @@ interface ModalProps {
   cancelLabel?: string;
   /** true면 확인 버튼 하나만 표시 */
   singleButton?: boolean;
-  /** true면 상단에 파란 체크 아이콘 표시 */
-  showCheckIcon?: boolean;
-  /** true면 상단에 느낌표 회색 아이콘 표시 */
-  showWarningIcon?: boolean;
+  /** check: 상단에 파란 체크 아이콘 표시, warning: 상단에 느낌표 회색 아이콘 표시 */
+  iconVariant?: "check" | "warning";
   /** true면 처리 중으로 보고 확인·취소 버튼과 백드롭·Escape 닫기를 모두 막는다 */
   confirmDisabled?: boolean;
   onConfirm?: () => void;
@@ -28,8 +26,7 @@ const Modal = ({
   confirmLabel = "확인",
   cancelLabel = "취소",
   singleButton = false,
-  showCheckIcon = false,
-  showWarningIcon = false,
+  iconVariant,
   confirmDisabled = false,
   onConfirm,
   onCancel,
@@ -59,14 +56,14 @@ const Modal = ({
       >
         <div className="flex flex-col items-center gap-5">
           {/* 체크 아이콘 (Figma 기준: icon_check_big_sized) */}
-          {showCheckIcon && (
+          {iconVariant === "check" && (
             <img
               src={iconCheckBigSized}
               alt=""
               className="h-[72px] w-[72px]"
             />
           )}
-          {showWarningIcon && (
+          {iconVariant === "warning" && (
             <img
               src={iconWarningBigSized}
               alt=""
