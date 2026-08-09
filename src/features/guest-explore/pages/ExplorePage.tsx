@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import AiRecommendSpace from "@/features/guest-explore/components/AiRecommendSpace";
 import ExploreSpace from "@/features/guest-explore/components/ExploreSpace";
 import RealTimeRecommendSpace from "@/features/guest-explore/components/RealTimeRecommendSpace";
-import Banner from "@/shared/layout/Banner";
+import Banner, { RESULTS_MODE_TOP_OFFSET_PX } from "@/shared/layout/Banner";
 import HeroSearchBar from "@/features/guest-explore/components/HeroSearchBar";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";
 import { useScrollSearchBarStore, type ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
@@ -41,8 +41,22 @@ const formatDateParam = (date: Date) =>
 const parseDateParam = (value: string | null): Date | null => {
   const match = value ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(value) : null;
   if (!match) return null;
-  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-  return Number.isNaN(date.getTime()) ? null : date;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  if (Number.isNaN(date.getTime())) return null;
+  // new Date(y, m, d)는 2026-02-30처럼 없는 날짜를 에러 없이 다음 달로 넘겨서
+  // "만들어"버린다(getTime()이 NaN이 아니게 됨). 실제로 만들어진 날짜가 입력한
+  // 연/월/일과 정확히 같은지 역으로 검증해서 이런 정규화된 날짜를 걸러낸다.
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+  return date;
 };
 
 const filtersFromSearchParams = (params: URLSearchParams): ExploreSearchFilters => {
@@ -143,6 +157,21 @@ export const ExplorePage = () => {
     if (!isScrolledPastBar) setIsOverlayOpen(false);
   }, [isScrolledPastBar]);
 
+  // 오버레이가 펼쳐져 있을 때 Escape로 닫는다(바깥 클릭 닫기와 동일한 동작).
+  // 닫은 뒤에는 포커스가 사라지지 않도록 헤더의 pill 트리거로 되돌린다 -
+  // Header.tsx가 스토어에 등록해둔 focusTrigger를 통해서만 접근 가능하다.
+  useEffect(() => {
+    if (!isOverlayOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        withSearchBarTransition(() => setIsOverlayOpen(false));
+        useScrollSearchBarStore.getState().focusTrigger?.();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOverlayOpen]);
+
   // 위 상태들을 종합해서 헤더(전역 컴포넌트)가 구독하는 스토어에 반영한다.
   // 이 화면을 벗어나거나 스크롤이 위로 돌아가면 pill을 숨긴다.
   useEffect(() => {
@@ -177,8 +206,19 @@ export const ExplorePage = () => {
 
   return (
     <div>
-      {/* 스크롤 감지용 - 검색바가 원래 있던 지점을 표시하는 빈 sentinel */}
-      {hasActiveSearch && <div ref={sentinelRef} aria-hidden="true" />}
+      {/* 스크롤 감지용 - 검색바가 원래 있던 지점을 표시하는 빈 sentinel.
+          Banner보다 앞(형제)에 있어서 그냥 두면 Banner 자신의 상단 여백
+          (RESULTS_MODE_TOP_OFFSET_PX)만큼 실제 검색바 시작 위치보다 위에
+          찍힌다 - marginTop으로 같은 값을 더해서 정확히 검색바 상단과
+          맞춘다(값 자체는 Banner.tsx가 export하는 상수 하나만 참조하므로,
+          그쪽 여백이 바뀌어도 여기 값이 조용히 어긋나지 않는다). */}
+      {hasActiveSearch && (
+        <div
+          ref={sentinelRef}
+          aria-hidden="true"
+          style={{ marginTop: RESULTS_MODE_TOP_OFFSET_PX }}
+        />
+      )}
 
       {/* showImage=false여도 Banner는 항상 렌더링해서 HeroSearchBar가 리마운트되지
           않게 한다(리마운트되면 방금 검색한 조건이 검색바 표시에서 날아간다).

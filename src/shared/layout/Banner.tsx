@@ -33,6 +33,14 @@ const slides: BannerSlide[] = [
 
 const AUTOPLAY_INTERVAL_MS = 40000;
 const SWIPE_THRESHOLD_PX = 50;
+/**
+ * !showImage(검색 결과 화면)일 때 배너 상단에 주는 여백(예전엔 pt-8 클래스로만
+ * 줬었다). ExplorePage.tsx가 스크롤 감지용 sentinel을 검색바의 실제 시작
+ * 위치에 맞추려고 이 값을 그대로 가져다 쓴다 - 값이 두 파일에 각각 하드코딩돼
+ * 있으면 여기가 바뀔 때 sentinel 위치가 조용히 어긋날 수 있어서, 한 곳에서만
+ * 정의하고 export한다.
+ */
+export const RESULTS_MODE_TOP_OFFSET_PX = 32;
 
 interface BannerProps {
   /** 배너 하단에 얹을 콘텐츠 (예: 게스트 메인의 히어로 검색바). */
@@ -141,9 +149,13 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
   return (
     <div
       className={`group relative left-1/2 right-1/2 -mx-[50vw] w-screen bg-cover bg-center transition-[background-image] duration-500 ${
-        showImage ? `-mt-8 ${hasHero ? "h-[483px]" : "h-[300px]"}` : "pt-8"
+        showImage ? `-mt-8 ${hasHero ? "h-[483px]" : "h-[300px]"}` : ""
       }`}
-      style={showImage ? { backgroundImage: `url(${slide.image})` } : undefined}
+      style={
+        showImage
+          ? { backgroundImage: `url(${slide.image})` }
+          : { paddingTop: RESULTS_MODE_TOP_OFFSET_PX }
+      }
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}

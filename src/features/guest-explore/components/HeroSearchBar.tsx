@@ -255,6 +255,11 @@ const HeroSearchBar = ({
         </button>
         {isDateOpen && (
           <div
+            role="dialog"
+            aria-label="날짜 범위 선택"
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setIsDateOpen(false);
+            }}
             className="absolute top-full z-20 mt-2"
             style={{ left: CALENDAR_LEFT_OFFSET_PX }}
           >

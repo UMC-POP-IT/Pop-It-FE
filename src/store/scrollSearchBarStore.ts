@@ -18,11 +18,20 @@ interface ScrollSearchBarState {
   summary: ScrollSearchBarSummary | null;
   /** pill 클릭 시 호출된다 - ExplorePage가 등록해서 검색바 오버레이를 연다. */
   onExpand: (() => void) | null;
+  /**
+   * pill 트리거 버튼(Header.tsx)에 포커스를 되돌릴 때 쓴다. Header가 자기
+   * 버튼 ref로 등록해두면, 오버레이를 닫는 쪽(ExplorePage)이 이걸 호출해서
+   * Escape로 오버레이를 닫았을 때 포커스가 사라지지 않고 트리거로 돌아가게
+   * 한다. isVisible/summary/onExpand와 달리 검색 상태와 무관하게(Header가
+   * 항상 떠 있는 전역 레이아웃이라) 한 번 등록되면 reset()에도 유지된다.
+   */
+  focusTrigger: (() => void) | null;
   setState: (state: {
     isVisible: boolean;
     summary: ScrollSearchBarSummary | null;
     onExpand: (() => void) | null;
   }) => void;
+  setFocusTrigger: (focusTrigger: (() => void) | null) => void;
   reset: () => void;
 }
 
@@ -35,6 +44,8 @@ export const useScrollSearchBarStore = create<ScrollSearchBarState>((set) => ({
   isVisible: false,
   summary: null,
   onExpand: null,
+  focusTrigger: null,
   setState: (state) => set(state),
+  setFocusTrigger: (focusTrigger) => set({ focusTrigger }),
   reset: () => set({ isVisible: false, summary: null, onExpand: null }),
 }));

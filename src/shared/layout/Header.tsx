@@ -25,6 +25,16 @@ const Header = () => {
   const isScrollBarVisible = useScrollSearchBarStore((s) => s.isVisible);
   const scrollBarSummary = useScrollSearchBarStore((s) => s.summary);
   const expandScrollBar = useScrollSearchBarStore((s) => s.onExpand);
+  const setFocusTrigger = useScrollSearchBarStore((s) => s.setFocusTrigger);
+  const pillButtonRef = useRef<HTMLButtonElement>(null);
+
+  // ExplorePage가 오버레이를 닫을 때(Escape 등) 포커스를 이 버튼으로 되돌릴 수
+  // 있도록 등록해둔다 - 스토어를 통해서만 접근 가능하다(ExplorePage는 이 버튼의
+  // DOM을 직접 알 수 없다).
+  useEffect(() => {
+    setFocusTrigger(() => pillButtonRef.current?.focus());
+    return () => setFocusTrigger(null);
+  }, [setFocusTrigger]);
   // 이 pill이 지금 화면에 실제로 보일 때만 큰 검색바와 같은 view-transition-name을
   // 부여한다 - 그래야 스크롤로 접히거나 pill을 눌러 펼칠 때 브라우저가 둘을 같은
   // 대상으로 보고 모핑 애니메이션을 만들어준다(둘 다 동시에 이 이름을 가지면 안 됨).
@@ -216,6 +226,7 @@ const Header = () => {
             }`}
           >
             <button
+              ref={pillButtonRef}
               type="button"
               onClick={() => expandScrollBar?.()}
               aria-label="검색 조건 펼치기"
