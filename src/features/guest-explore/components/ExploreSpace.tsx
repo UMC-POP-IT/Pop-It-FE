@@ -58,7 +58,7 @@ const reconcileHeartCounts = (
 interface ExploreSpaceProps {
   /** HeroSearchBar(히어로 검색바)에서 확정한 검색 조건. */
   filters: ExploreSearchFilters;
-  /** empty state의 [조건 초기화] CTA - 상위(HomePage)의 필터 상태를 초기화한다. */
+  /** empty state의 [조건 초기화] CTA - 상위(ExplorePage)의 필터 상태를 초기화한다. */
   onResetFilters: () => void;
 }
 
