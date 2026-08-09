@@ -46,9 +46,22 @@ interface BannerProps {
    * 날아간다. 그래서 안 보일 땐 렌더링을 생략하는 대신 hidden 클래스로만 감춘다.
    */
   showImage?: boolean;
+  /**
+   * children(검색바)을 화면 어디에 어떻게 배치할지.
+   * "inline"(기본) - 평소처럼 배너 안 제자리에 표시.
+   * "pinned-hidden" - 계속 마운트는 하되 화면에서 안 보이게 한다(검색 결과
+   * 화면에서 스크롤을 내려 헤더의 축소된 pill만 보일 때 - fixed로 미리 옮겨두고
+   * opacity만 0으로 둬서, pill을 눌렀을 때 부드럽게 나타날 수 있게 한다).
+   * "pinned-open" - 헤더(74px) 바로 아래 화면 상단에 고정해서 오버레이로
+   * 띄운다(축소된 pill을 클릭해 다시 펼쳤을 때).
+   * 세 경우 모두 children을 다른 곳으로 옮기지 않고 같은 DOM 자리에서
+   * className만 바꿔서 처리한다 - 그래야 HeroSearchBar가 리마운트되지 않고
+   * 내부 입력 상태가 보존된다(showImage와 같은 원리).
+   */
+  searchBarPosition?: "inline" | "pinned-hidden" | "pinned-open";
 }
 
-const Banner = ({ children, showImage = true }: BannerProps) => {
+const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: BannerProps) => {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const total = slides.length;
@@ -97,6 +110,28 @@ const Banner = ({ children, showImage = true }: BannerProps) => {
 
   const hasHero = Boolean(children); // 히어로 검색바가 있는 화면(게스트 메인)인지
 
+  // Header.tsx의 sticky 헤더 높이(h-[74px])와 반드시 맞춰야 한다 - 오버레이가
+  // 헤더 바로 아래에 딱 붙게 하려면.
+  // pinned 상태에서는 항상 children을 두 겹(바깥 - 화면 전체 폭의 흰 배경,
+  // 안쪽 - max-w-[1200px]로 가운데 정렬된 실제 내용)으로 감싼다. inline일 때도
+  // 같은 2단 구조를 유지하고 바깥쪽만 아무 효과 없는 래퍼로 둔다 - children의
+  // DOM 위치(중첩 깊이)가 상태에 따라 바뀌면 리마운트가 발생하기 때문이다.
+  // 바깥을 화면 폭 전체 흰 배경으로 채우는 이유: 헤더 바로 아래에 "헤더의 흰
+  // 배경이 그대로 이어지는" 느낌을 줘야 한다(둥근 모서리나 카드처럼 붕 떠
+  // 보이면 안 됨) - 그래서 rounded 없이 꽉 채우고, 그림자도 아래쪽에만 옅게.
+  const outerWrapperClassName =
+    searchBarPosition === "inline"
+      ? ""
+      : `fixed top-[74px] left-0 z-30 w-full bg-white shadow-[0px_4px_12px_0px_rgba(0,0,0,0.08)] transition-all duration-300 ease-out ${
+          searchBarPosition === "pinned-open"
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-2 opacity-0"
+        }`;
+  const innerWrapperClassName =
+    searchBarPosition === "inline"
+      ? `w-full max-w-[1200px] ${showImage ? "mt-10 xl:mt-20" : ""}`
+      : "mx-auto w-full max-w-[1200px] px-4 py-4 md:px-10 xl:px-[76px]";
+
   return (
     <div
       className={`group relative left-1/2 right-1/2 -mx-[50vw] w-screen bg-cover bg-center transition-[background-image] duration-500 ${
@@ -121,7 +156,9 @@ const Banner = ({ children, showImage = true }: BannerProps) => {
           </p>
         </div>
         {children && (
-          <div className={`w-full max-w-[1200px] ${showImage ? "mt-10 xl:mt-20" : ""}`}>{children}</div>
+          <div className={outerWrapperClassName}>
+            <div className={innerWrapperClassName}>{children}</div>
+          </div>
         )}
         <div
           aria-atomic="true"

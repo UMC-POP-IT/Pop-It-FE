@@ -3,12 +3,22 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Logo from "@/shared/components/Logo";
 import { useAuthStore } from "@/store/authStore";
 import { logoutApi, switchMode } from "@/shared/utils/oauth";
+import { useScrollSearchBarStore } from "@/store/scrollSearchBarStore";
 
 const Header = () => {
   const { user, mode, setMode, openLoginModal, hostStatus, refreshHostStatus, logout } =
     useAuthStore();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+
+  // 검색 결과 화면(ExplorePage)에서 스크롤을 내려 원래 검색바가 헤더 뒤로
+  // 넘어갔을 때 그 자리에 대신 뜨는 축소된 pill. summary가 있으면(=그 화면에
+  // 있었던 적이 있으면) wrapper는 계속 마운트해두고 opacity/scale만 토글해서
+  // 스크롤에 따라 부드럽게 나타나고 사라지게 한다(마운트/언마운트로 하면
+  // transition이 애니메이션되지 않는다).
+  const isScrollBarVisible = useScrollSearchBarStore((s) => s.isVisible);
+  const scrollBarSummary = useScrollSearchBarStore((s) => s.summary);
+  const expandScrollBar = useScrollSearchBarStore((s) => s.onExpand);
   const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
   const [modeError, setModeError] = useState(""); // 모드 전환 실패 사유
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -175,6 +185,49 @@ const Header = () => {
             )}
           </nav>
         </div>
+
+        {/* 검색 결과 화면 전용: 스크롤을 내리면 이 자리에 축소된 검색바 pill이
+            나타난다. 클릭하면 헤더 바로 아래에 원래 검색바가 오버레이로 펼쳐진다
+            (Banner의 searchBarPosition="pinned-open"). 좁은 화면에서는 넣을
+            공간이 부족해 숨긴다. */}
+        {scrollBarSummary && (
+          <div
+            className={`hidden flex-1 justify-center transition-all duration-300 ease-out md:flex ${
+              isScrollBarVisible
+                ? "translate-y-0 scale-100 opacity-100"
+                : "pointer-events-none -translate-y-1 scale-95 opacity-0"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => expandScrollBar?.()}
+              aria-label="검색 조건 펼치기"
+              className="border-divider flex cursor-pointer items-center gap-3 rounded-full border bg-white py-2 pr-2 pl-5 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)]"
+            >
+              <span className="text-text-primary text-sm font-bold whitespace-nowrap">
+                {scrollBarSummary.categoryLabel}
+              </span>
+              <span aria-hidden="true" className="bg-divider h-4 w-px shrink-0" />
+              <span className="text-text-primary text-sm font-bold whitespace-nowrap">
+                {scrollBarSummary.dateLabel}
+              </span>
+              <span aria-hidden="true" className="bg-divider h-4 w-px shrink-0" />
+              <span className="text-text-primary text-sm font-bold whitespace-nowrap">
+                {scrollBarSummary.districtLabel}
+              </span>
+              <span aria-hidden="true" className="bg-divider h-4 w-px shrink-0" />
+              <span className="text-text-secondary max-w-[120px] truncate text-sm">
+                {scrollBarSummary.keywordLabel}
+              </span>
+              <span className="bg-primary-hover flex size-8 shrink-0 items-center justify-center rounded-full text-white">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+                  <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* 우측: 모드전환 + 프로필 (gap-[20px]) */}
         <div className="ml-auto flex items-center gap-5">

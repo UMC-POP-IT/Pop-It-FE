@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import AiRecommendSpace from "@/features/guest-explore/components/AiRecommendSpace";
 import ExploreSpace from "@/features/guest-explore/components/ExploreSpace";
@@ -5,6 +6,7 @@ import RealTimeRecommendSpace from "@/features/guest-explore/components/RealTime
 import Banner from "@/shared/layout/Banner";
 import HeroSearchBar from "@/features/guest-explore/components/HeroSearchBar";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";
+import { useScrollSearchBarStore, type ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
 import type { ExploreSearchFilters, SpaceCategory } from "@/features/guest-explore/api/space_search_api";
 
 // 검색 실행 여부/조건을 URL 쿼리스트링에 반영한다 - 새로고침해도 결과 화면이
@@ -13,6 +15,9 @@ import type { ExploreSearchFilters, SpaceCategory } from "@/features/guest-explo
 // 날짜(dateRange)는 백엔드가 날짜 필터를 지원하지 않아(검색 결과에 영향이 없는
 // 화면 전용 값) URL에는 반영하지 않는다 - 새로고침/뒤로가기 시 항상 초기화된다.
 const SEARCH_FLAG_PARAM = "search";
+
+// Header.tsx의 sticky 헤더 높이(h-[74px])와 반드시 맞춰야 한다.
+const HEADER_HEIGHT_PX = 74;
 
 const filtersFromSearchParams = (
   params: URLSearchParams,
@@ -40,6 +45,17 @@ export const ExplorePage = () => {
 
   const hasSearched = useSearchHistoryStore((state) => state.hasSearched);
 
+  // 검색 결과 화면에서 스크롤을 내리면 검색바가 헤더의 축소된 pill로 바뀌고,
+  // pill을 클릭하면 헤더 바로 아래에 원래 검색바가 오버레이로 다시 펼쳐진다
+  // (에어비앤비 참고). hasActiveSearch가 아닐 때(검색 전 브라우징 화면)는
+  // 이 로직 전체가 관여하지 않는다.
+  const [isScrolledPastBar, setIsScrolledPastBar] = useState(false);
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [summary, setSummary] = useState<ScrollSearchBarSummary | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const setScrollSearchBarState = useScrollSearchBarStore((s) => s.setState);
+  const resetScrollSearchBar = useScrollSearchBarStore((s) => s.reset);
+
   const handleSearch = (filters: ExploreSearchFilters) => {
     const next = new URLSearchParams();
     next.set(SEARCH_FLAG_PARAM, "1");
@@ -50,6 +66,7 @@ export const ExplorePage = () => {
     // 검색 전 화면에 돌아갈 수 있게 하고, 이미 결과 화면이면(조건만 바꿔 재검색)
     // 히스토리를 계속 쌓지 않도록 현재 항목을 교체한다.
     setSearchParams(next, { replace: hasActiveSearch });
+    setIsOverlayOpen(false); // 재검색하면 펼쳐져 있던 오버레이는 접어서 결과에 집중시킨다
   };
 
   const handleResetFilters = () => {
@@ -58,23 +75,87 @@ export const ExplorePage = () => {
     setSearchParams(next, { replace: true });
   };
 
+  // 검색바가 원래 있던 자리(페이지 맨 위, sentinel)가 헤더 뒤로 넘어가면
+  // "스크롤됨"으로 표시한다. rootMargin으로 헤더 높이만큼 보정해서, 실제로
+  // 헤더 뒤에 가려지는 시점과 최대한 맞춘다.
+  useEffect(() => {
+    if (!hasActiveSearch) {
+      setIsScrolledPastBar(false);
+      return;
+    }
+    const node = sentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsScrolledPastBar(!entry.isIntersecting),
+      { rootMargin: `-${HEADER_HEIGHT_PX}px 0px 0px 0px` },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasActiveSearch]);
+
+  // 스크롤을 다시 올려 원래 검색바가 보이게 되면, 열려있던 오버레이도 접는다.
+  useEffect(() => {
+    if (!isScrolledPastBar) setIsOverlayOpen(false);
+  }, [isScrolledPastBar]);
+
+  // 위 상태들을 종합해서 헤더(전역 컴포넌트)가 구독하는 스토어에 반영한다.
+  // 이 화면을 벗어나거나 스크롤이 위로 돌아가면 pill을 숨긴다.
+  useEffect(() => {
+    if (!hasActiveSearch || !isScrolledPastBar) {
+      resetScrollSearchBar();
+      return;
+    }
+    setScrollSearchBarState({
+      isVisible: !isOverlayOpen,
+      summary,
+      onExpand: () => setIsOverlayOpen(true),
+    });
+  }, [hasActiveSearch, isScrolledPastBar, isOverlayOpen, summary, setScrollSearchBarState, resetScrollSearchBar]);
+
+  // 페이지를 떠날 때(라우트 이동)도 헤더에 남아있는 pill 상태를 정리한다.
+  useEffect(() => resetScrollSearchBar, [resetScrollSearchBar]);
+
+  const searchBarPosition =
+    hasActiveSearch && isScrolledPastBar ? (isOverlayOpen ? "pinned-open" : "pinned-hidden") : "inline";
+
+  // 검색 직후 최상단(아직 스크롤 안 함)에서는 결과화면 전용 스타일(굵은 파란
+  // 테두리, 피그마 node 5019:73539)을 쓰고, 스크롤해서 헤더 pill로 축소됐다가
+  // 다시 펼친 오버레이에서는 첫 메인페이지(hero)와 같은 회색 테두리 디자인을
+  // 쓴다 - 헤더가 그대로 이어지는 느낌을 주려면 배너의 기본 검색바와 같은
+  // 스타일이어야 한다(피그마 Frame 2147225751).
+  const heroSearchBarVariant = !hasActiveSearch ? "hero" : isScrolledPastBar ? "hero" : "compact";
+
   return (
     <div>
+      {/* 스크롤 감지용 - 검색바가 원래 있던 지점을 표시하는 빈 sentinel */}
+      {hasActiveSearch && <div ref={sentinelRef} aria-hidden="true" />}
+
       {/* showImage=false여도 Banner는 항상 렌더링해서 HeroSearchBar가 리마운트되지
           않게 한다(리마운트되면 방금 검색한 조건이 검색바 표시에서 날아간다).
           HeroSearchBar 자체는 searchParams.toString()이 바뀔 때만(검색 실행/
           초기화/뒤로가기 등으로 URL이 실제로 바뀔 때만) key가 바뀌어 새로
           마운트되고, 그때마다 URL이 담고 있는 값으로 표시가 다시 맞춰진다. */}
-      <Banner showImage={!hasActiveSearch}>
+      <Banner showImage={!hasActiveSearch} searchBarPosition={searchBarPosition}>
         <HeroSearchBar
           key={searchParams.toString()}
           onSearch={handleSearch}
-          variant={hasActiveSearch ? "compact" : "hero"}
+          variant={heroSearchBarVariant}
           initialKeyword={keyword}
           initialCategory={spaceCategory}
           initialDistrict={district}
+          onSummaryChange={hasActiveSearch ? setSummary : undefined}
         />
       </Banner>
+
+      {/* 오버레이가 펼쳐져 있을 때, 바깥(콘텐츠) 클릭하면 접는다 */}
+      {searchBarPosition === "pinned-open" && (
+        <div
+          aria-hidden="true"
+          onClick={() => setIsOverlayOpen(false)}
+          className="fixed inset-0 z-20 bg-black/10"
+          style={{ top: HEADER_HEIGHT_PX }}
+        />
+      )}
 
       {/* 검색을 실행하기 전(브라우징 모드)에만 AI 맞춤형/실시간 추천을 보여준다.
           AI 맞춤형 공간은 그중에서도 검색 기록이 있을 때만(hasSearched). */}
