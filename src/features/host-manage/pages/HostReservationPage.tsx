@@ -112,11 +112,6 @@ export const HostReservationPage = () => {
     setIsPaymentModalOpen(true);
   };
 
-  const handleOpenContract = (id: number) => {
-    setApproveTargetId(id);
-    setIsContractModalOpen(true);
-  };
-
   const handleSignContract = async () => {
     if (approveTargetId === null) return;
     setIsApproving(true);
