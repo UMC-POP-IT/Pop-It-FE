@@ -253,7 +253,7 @@ export const RegisterStep5 = () => {
           }
           confirmLabel="확인"
           singleButton
-          showCheckIcon
+          iconVariant="check"
           onCancel={handleDone}
           onConfirm={handleDone}
         />

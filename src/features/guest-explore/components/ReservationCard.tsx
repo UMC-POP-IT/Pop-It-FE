@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "@/shared/components/Button";
 import Modal from "@/shared/components/Modal";
-import PhotoGalleryModal from "@/shared/components/PhotoGalleryModal";
-import { GetPaymentInfo, GetPaymentInfoResponse, GetPresignedURL, GetSubmitCheckoutPhotos, Reservation, Status, SubmitCheckOutPhoto, UploadFileToPresignedURL } from "../api/my_reservation_api";
+import { GetPaymentInfo, GetPaymentInfoResponse, GetPresignedURL, Reservation, Status, SubmitCheckOutPhoto, UploadFileToPresignedURL } from "../api/my_reservation_api";
 import PaymentModal from "@/features/guest-explore/components/contract/PaymentModal";
 import ContractModal from "@/features/guest-explore/components/contract/ContractModal";
 import PhotoVerificationModal from "@/features/guest-explore/components/PhotoVerificationModal";
+import RejectedPhotoModal from "@/features/guest-explore/components/RejectedPhotoModal";
 import { formatDate } from "@/shared/utils/date";
 
 interface ReservationCardProps {
@@ -90,13 +90,11 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   const [isContractModalOpen, setIsContractModalOpen] = useState(false); // 계약서 확인 & 통합 본인 인증 & 전자서명 창 open 여부
   const [agreedToGuide, setAgreedToGuide] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false); // 퇴실 사진 인증 창 open 여부
+  const [isRejectedPhotoModalOpen, setIsRejectedPhotoModalOpen] = useState(false); // 거절된 퇴실 사진 확인 창 open 여부
   const [isPhotoVerifiedDone, setIsPhotoVerifiedDone] = useState(false); // 사진 인증 완료 여부
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false); // 사진 업로드 진행 중 여부
   const [paymentInfo, setPaymentInfo] = useState<GetPaymentInfoResponse | null>(null); // 결제 정보
   const [isPaymentInfoError, setIsPaymentInfoError] = useState(false); // 결제 정보 조회 실패 여부
-  const [isRejectedPhotosOpen, setIsRejectedPhotosOpen] = useState(false); // 거절된 사진 보기 창 open 여부
-  const [rejectedPhotos, setRejectedPhotos] = useState<string[]>([]); // 거절된 사진 목록
-  const [isRejectedPhotosLoading, setIsRejectedPhotosLoading] = useState(false); // 거절된 사진 로딩 여부
 
   const label = isPhotoVerifiedDone ? "퇴실 완료" : cardMeta.label;
   const needsPhotoVerification = cardMeta.needsPhotoVerification && !isPhotoVerifiedDone;
@@ -142,21 +140,6 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
       alert("사진 업로드에 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setIsUploadingPhotos(false);
-    }
-  };
-
-  const handleViewRejectedPhotos = async () => {
-    setIsRejectedPhotosOpen(true);
-    setRejectedPhotos([]);
-    setIsRejectedPhotosLoading(true);
-    try {
-      const { photoUrls } = await GetSubmitCheckoutPhotos(reservation.reservationId);
-      setRejectedPhotos(photoUrls);
-    } catch (error) {
-      console.error(error);
-      setRejectedPhotos([]);
-    } finally {
-      setIsRejectedPhotosLoading(false);
     }
   };
 
@@ -238,7 +221,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
                   사진 인증
                 </Button>
                 {isPhotoRejected && (
-                  <Button variant="secondary" size="sm" onClick={handleViewRejectedPhotos}>
+                  <Button variant="secondary" size="sm" onClick={() => setIsRejectedPhotoModalOpen(true)}>
                     거절된 사진
                   </Button>
                 )}
@@ -311,12 +294,11 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
         onComplete={handlePhotoVerificationComplete}
       />
 
-      {/* 거절된 사진 보기 모달 */}
-      <PhotoGalleryModal
-        isOpen={isRejectedPhotosOpen}
-        photos={rejectedPhotos}
-        isLoading={isRejectedPhotosLoading}
-        onClose={() => setIsRejectedPhotosOpen(false)}
+      {/* Rejected Photo Modal */}
+      <RejectedPhotoModal
+        isOpen={isRejectedPhotoModalOpen}
+        reservationId={reservation.reservationId}
+        onClose={() => setIsRejectedPhotoModalOpen(false)}
       />
     </div>
   );
