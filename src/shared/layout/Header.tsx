@@ -10,6 +10,16 @@ import {
   type MorphTransitionStyle,
 } from "@/shared/utils/viewTransition";
 
+/**
+ * sticky 헤더의 실제 높이(아래 h-[74px]과 반드시 같아야 한다). Banner.tsx의
+ * 고정 오버레이 top 위치, ExplorePage.tsx의 스크롤 감지 rootMargin/오버레이
+ * top이 전부 이 값을 그대로 가져다 쓴다 - 값이 파일마다 따로 하드코딩돼
+ * 있으면 여기(Header.tsx)의 실제 높이가 바뀔 때 조용히 어긋날 수 있어서, 한
+ * 곳에서만 정의하고 export한다(Banner.tsx의 RESULTS_MODE_TOP_OFFSET_PX와
+ * 같은 이유).
+ */
+export const HEADER_HEIGHT_PX = 74;
+
 const Header = () => {
   const { user, mode, setMode, openLoginModal, logout } = useAuthStore();
   const switchToHost = useHostModeSwitch();

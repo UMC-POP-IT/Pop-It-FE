@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, type ReactNode } from "react";
 import background1 from "@/assets/banner/background_1.jpg";
 import background2 from "@/assets/banner/background_2.jpg";
 import background3 from "@/assets/banner/background_3.jpg";
+import { HEADER_HEIGHT_PX } from "@/shared/layout/Header";
 
 interface BannerSlide {
   title: string;
@@ -118,8 +119,9 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
 
   const hasHero = Boolean(children); // 히어로 검색바가 있는 화면(게스트 메인)인지
 
-  // Header.tsx의 sticky 헤더 높이(h-[74px])와 반드시 맞춰야 한다 - 오버레이가
-  // 헤더 바로 아래에 딱 붙게 하려면.
+  // 오버레이가 헤더 바로 아래에 딱 붙게 하려면 Header.tsx가 export하는
+  // HEADER_HEIGHT_PX를 그대로 써야 한다(Tailwind 클래스로는 JS 상수를 못
+  // 넣으니 top만 별도로 인라인 스타일로 준다 - 아래 style 참고).
   // pinned 상태에서는 항상 children을 두 겹(바깥 - 화면 전체 폭의 흰 배경,
   // 안쪽 - max-w-[1200px]로 가운데 정렬된 실제 내용)으로 감싼다. inline일 때도
   // 같은 2단 구조를 유지하고 바깥쪽만 아무 효과 없는 래퍼로 둔다 - children의
@@ -136,11 +138,13 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
   const outerWrapperClassName =
     searchBarPosition === "inline"
       ? ""
-      : `fixed top-[74px] left-0 z-30 w-full bg-white shadow-[0px_4px_12px_0px_rgba(0,0,0,0.08)] ${
+      : `fixed left-0 z-30 w-full bg-white shadow-[0px_4px_12px_0px_rgba(0,0,0,0.08)] ${
           searchBarPosition === "pinned-open"
             ? "opacity-100"
             : "pointer-events-none opacity-0"
         }`;
+  const outerWrapperStyle =
+    searchBarPosition === "inline" ? undefined : { top: HEADER_HEIGHT_PX };
   const innerWrapperClassName =
     searchBarPosition === "inline"
       ? `w-full max-w-[1200px] ${showImage ? "mt-10 xl:mt-20" : ""}`
@@ -174,7 +178,7 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
           </p>
         </div>
         {children && (
-          <div className={outerWrapperClassName}>
+          <div className={outerWrapperClassName} style={outerWrapperStyle}>
             <div className={innerWrapperClassName}>{children}</div>
           </div>
         )}

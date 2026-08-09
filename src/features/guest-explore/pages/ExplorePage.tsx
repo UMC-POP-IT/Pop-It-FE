@@ -4,6 +4,7 @@ import AiRecommendSpace from "@/features/guest-explore/components/AiRecommendSpa
 import ExploreSpace from "@/features/guest-explore/components/ExploreSpace";
 import RealTimeRecommendSpace from "@/features/guest-explore/components/RealTimeRecommendSpace";
 import Banner, { RESULTS_MODE_TOP_OFFSET_PX } from "@/shared/layout/Banner";
+import { HEADER_HEIGHT_PX } from "@/shared/layout/Header";
 import HeroSearchBar from "@/features/guest-explore/components/HeroSearchBar";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";
 import { useScrollSearchBarStore, type ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
@@ -27,9 +28,6 @@ import {
 const SEARCH_FLAG_PARAM = "search";
 const DATE_START_PARAM = "dateStart";
 const DATE_END_PARAM = "dateEnd";
-
-// Header.tsx의 sticky 헤더 높이(h-[74px])와 반드시 맞춰야 한다.
-const HEADER_HEIGHT_PX = 74;
 
 const VALID_SPACE_CATEGORIES = new Set<string>(
   SPACE_CATEGORY_OPTIONS.map((option) => option.value),

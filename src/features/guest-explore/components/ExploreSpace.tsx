@@ -89,6 +89,11 @@ const ExploreSpace = ({
   const [infinitePage, setInfinitePage] = useState(0);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  // 무한스크롤 중(2페이지 이후) 추가 로드가 실패했을 때만 쓴다. 최초 로드
+  // 실패(status="error")와 달리, 이미 화면에 떠 있는 카드들은 그대로 두고
+  // 그리드 하단에 작은 재시도 UI만 보여준다 - 전체를 에러 화면으로 바꾸면
+  // 이미 스크롤해서 본 카드들이 통째로 사라진다.
+  const [hasLoadMoreError, setHasLoadMoreError] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const [status, setStatus] = useState<FetchStatus>("loading");
@@ -147,6 +152,7 @@ const ExploreSpace = ({
         setStatus("loading");
       } else if (isLoadMore) {
         setIsLoadingMore(true);
+        setHasLoadMoreError(false); // 재시도 시작 - 이전 실패 표시를 지운다
       } else {
         setIsRefetching(true);
       }
@@ -185,7 +191,15 @@ const ExploreSpace = ({
         // 500/네트워크 오류처럼 사용자가 재현하기 어려운 문제는 로그가 없으면
         // 원인 파악이 안 된다.
         console.error("공간 탐색 요청 실패:", error);
-        setStatus("error");
+        // 무한스크롤 추가 로드 실패는 status를 "error"로 바꾸지 않는다 -
+        // 그러면 이미 불러온 카드 그리드 전체가 "공간 목록을 불러오지
+        // 못했어요" 화면으로 대체돼버린다. status는 "success"로 유지하고
+        // hasLoadMoreError만 세워서 그리드 하단에 작은 재시도 UI만 보여준다.
+        if (isLoadMore) {
+          setHasLoadMoreError(true);
+        } else {
+          setStatus("error");
+        }
       } finally {
         if (!ignore) {
           setIsRefetching(false);
@@ -210,7 +224,14 @@ const ExploreSpace = ({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && hasNextPage && !isLoadingMore && !isRefetching && status === "success") {
+        if (
+          entry.isIntersecting &&
+          hasNextPage &&
+          !isLoadingMore &&
+          !isRefetching &&
+          !hasLoadMoreError && // 실패한 페이지는 자동으로 건너뛰지 않는다 - "다시 시도" 버튼으로만 재시도한다
+          status === "success"
+        ) {
           setInfinitePage((p) => p + 1);
         }
       },
@@ -218,7 +239,7 @@ const ExploreSpace = ({
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [resultsMode, hasNextPage, isLoadingMore, isRefetching, status]);
+  }, [resultsMode, hasNextPage, isLoadingMore, isRefetching, hasLoadMoreError, status]);
 
   const hasResults = status === "success" && spaces.length > 0;
 
@@ -364,7 +385,21 @@ const ExploreSpace = ({
                   더 불러오는 중이에요
                 </p>
               )}
-              {!hasNextPage && (
+              {hasLoadMoreError && (
+                <div className="flex flex-col items-center gap-2 py-8">
+                  <p className="text-text-secondary text-sm">
+                    추가 공간을 불러오지 못했어요.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setRetryKey((k) => k + 1)}
+                    className="text-primary cursor-pointer text-sm font-medium"
+                  >
+                    다시 시도
+                  </button>
+                </div>
+              )}
+              {!hasNextPage && !hasLoadMoreError && (
                 <p className="text-text-secondary py-8 text-center text-sm">
                   모든 공간을 다 보여드렸어요
                 </p>

@@ -68,13 +68,6 @@ export interface ExploreSearchFilters {
   dateRange: { start: Date | null; end: Date | null };
 }
 
-export const EMPTY_SEARCH_FILTERS: ExploreSearchFilters = {
-  keyword: "",
-  spaceCategory: "",
-  district: "",
-  dateRange: { start: null, end: null },
-};
-
 /** 서버 응답(result.spaces[i]) 원본 스펙 */
 export interface SpaceSearchItemRes {
   spaceId: number;
