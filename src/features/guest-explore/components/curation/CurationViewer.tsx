@@ -27,7 +27,6 @@ export const CurationViewer = ({ property }: CurationViewerProps) => {
     if (hotspot.type === "link" && hotspot.targetSceneId) {
       setCurrentSceneId(hotspot.targetSceneId);
       setSelectedHotspot(null);
-      setHasInteracted(false);
       return;
     }
     setSelectedHotspot((prev) => (prev?.id === hotspot.id ? null : hotspot));
@@ -36,7 +35,6 @@ export const CurationViewer = ({ property }: CurationViewerProps) => {
   const handleSelectScene = (sceneId: string) => {
     setCurrentSceneId(sceneId);
     setSelectedHotspot(null);
-    setHasInteracted(false);
   };
 
   if (!currentScene) {
