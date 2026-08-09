@@ -21,6 +21,7 @@ interface AuthState {
   mode: Mode;
   isLoginModalOpen: boolean;
   pendingAction: PendingAction | null;
+  isSessionReady: boolean;
   /**
    * 호스트 등록 여부 (GET /api/v1/hosts/me 결과)
    *
@@ -32,6 +33,7 @@ interface AuthState {
    */
   hostStatus: HostStatus;
 
+  setSessionReady: () => void;
   setHostStatus: (hostStatus: HostStatus) => void;
   /** 서버에 물어 hostStatus를 갱신하고, 갱신된 값을 돌려준다 */
   refreshHostStatus: () => Promise<HostStatus>;
@@ -53,7 +55,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoginModalOpen: false,
   pendingAction: null,
   hostStatus: "unknown",
+  isSessionReady: false,
 
+  setSessionReady: () => set({ isSessionReady: true }),
   setHostStatus: (hostStatus) => set({ hostStatus }),
 
   refreshHostStatus: async () => {
