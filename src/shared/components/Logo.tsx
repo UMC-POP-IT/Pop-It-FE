@@ -1,7 +1,7 @@
 import logoIcon from "@/assets/icons/logo_icon.svg";
 import logoText from "@/assets/icons/logo_text.svg";
 
-type LogoVariant = "header" | "footer" | "login";
+type LogoVariant = "header" | "footer" | "login" | "error";
 
 interface LogoProps {
   variant: LogoVariant;
@@ -34,11 +34,19 @@ const config: Record<
   },
   login: {
     showIcon: true,
-    iconSize: 60,
-    textWidth: 270,
-    textHeight: 52,
+    iconSize: 42,
+    textWidth: 189,
+    textHeight: 36,
     direction: "flex-row",
-    gap: "gap-[30px]",
+    gap: "gap-[21px]",
+  },
+  error: {
+    showIcon: false,
+    iconSize: 0,
+    textWidth: 108,
+    textHeight: 20.8,
+    direction: "flex-row",
+    gap: "gap-0",
   },
 };
 

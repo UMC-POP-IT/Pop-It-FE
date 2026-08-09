@@ -13,24 +13,38 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   disabled?: boolean;
 }
 
-const Select = ({ options, value, onChange, placeholder, disabled, className = "", ...props }: SelectProps) => (
+const Select = ({
+  options,
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  className = "",
+  ...props
+}: SelectProps) => (
   <div className="relative w-full">
     <select
       value={value}
       onChange={onChange}
       disabled={disabled}
-      className={`border-divider h-14 w-full appearance-none rounded-lg border-2 bg-white px-5 text-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+      className={`border-divider focus:ring-primary h-14 w-full appearance-none rounded-lg border bg-white px-5 text-lg font-medium transition-colors focus:ring-2 focus:outline-none ${
         disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer"
       } ${value ? "text-text-primary" : "text-text-placeholder"} ${className}`}
       {...props}
     >
       {placeholder && (
-        <option value="" disabled>
+        <option
+          value=""
+          disabled
+        >
           {placeholder}
         </option>
       )}
       {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>
+        <option
+          key={opt.value}
+          value={opt.value}
+        >
           {opt.label}
         </option>
       ))}

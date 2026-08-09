@@ -1,4 +1,8 @@
-import type { DateInfo } from "@/features/guest-explore/api/mock_spaces";
+const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 
-export const formatDate = (d: DateInfo) =>
-  `${d.year}.${String(d.month).padStart(2, "0")}.${String(d.day).padStart(2, "0")} (${d.day_type})`;
+// dateStr: "YYYY-MM-DD"
+export const formatDate = (dateStr: string) => {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const d = new Date(year, month - 1, day);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")} (${DAY_NAMES[d.getDay()]})`;
+};

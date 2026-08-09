@@ -1,3 +1,8 @@
+import { useId } from "react";
+import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
+import iconCheckBigSized from "@/assets/icons/icon_check_big_sized.svg";
+import iconWarningBigSized from "@/assets/icons/icon_warn_big_sized.svg";
+
 interface ModalProps {
   isOpen: boolean;
   title: string;
@@ -6,9 +11,9 @@ interface ModalProps {
   cancelLabel?: string;
   /** true면 확인 버튼 하나만 표시 */
   singleButton?: boolean;
-  /** true면 상단에 파란 체크 아이콘 표시 */
-  showCheckIcon?: boolean;
-  /** true면 확인 버튼을 비활성화 (예: 비동기 처리 중 중복 클릭 방지) */
+  /** check: 상단에 파란 체크 아이콘 표시, warning: 상단에 느낌표 회색 아이콘 표시 */
+  iconVariant?: "check" | "warning";
+  /** true면 처리 중으로 보고 확인·취소 버튼과 백드롭·Escape 닫기를 모두 막는다 */
   confirmDisabled?: boolean;
   onConfirm?: () => void;
   onCancel?: () => void;
@@ -21,49 +26,61 @@ const Modal = ({
   confirmLabel = "확인",
   cancelLabel = "취소",
   singleButton = false,
-  showCheckIcon = false,
+  iconVariant,
   confirmDisabled = false,
   onConfirm,
   onCancel,
 }: ModalProps) => {
+  const titleId = useId();
+  const dialogRef = useDialogA11y<HTMLDivElement>({
+    isOpen,
+    // 처리 중에는 Escape로도 닫히지 않도록 닫기 핸들러를 떼어 둔다
+    onClose: confirmDisabled ? undefined : onCancel,
+  });
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
         className="absolute inset-0 bg-black/40"
-        onClick={onCancel}
+        onClick={confirmDisabled ? undefined : onCancel}
       />
-      <div className="relative z-10 flex w-[590px] flex-col items-center gap-10 rounded-xl bg-white py-8">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="relative z-10 flex w-[590px] flex-col items-center gap-10 rounded-xl bg-white py-8"
+      >
         <div className="flex flex-col items-center gap-5">
-          {/* 체크 아이콘 */}
-          {showCheckIcon && (
-            <div className="bg-primary-hover flex h-[72px] w-[72px] items-center justify-center rounded-full">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M5 12L10 17L19 8"
-                  stroke="white"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
+          {/* 체크 아이콘 (Figma 기준: icon_check_big_sized) */}
+          {iconVariant === "check" && (
+            <img
+              src={iconCheckBigSized}
+              alt=""
+              className="h-[72px] w-[72px]"
+            />
+          )}
+          {iconVariant === "warning" && (
+            <img
+              src={iconWarningBigSized}
+              alt=""
+              className="h-[72px] w-[72px]"
+            />
           )}
 
           <div className="flex flex-col items-center gap-2 text-center">
-            <h3 className="text-text-primary text-[22px] font-bold whitespace-pre-line">
+            <h3
+              id={titleId}
+              className="text-text-primary text-[22px] font-bold whitespace-pre-line"
+            >
               {title}
             </h3>
 
             {description && (
-              <p className="text-text-tertiary whitespace-pre-line text-base font-medium">
+              <p className="text-text-tertiary text-base font-medium whitespace-pre-line">
                 {description}
               </p>
             )}
@@ -75,7 +92,7 @@ const Modal = ({
             <button
               onClick={onConfirm}
               disabled={confirmDisabled}
-              className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="bg-primary-hover hover:bg-primary h-14 w-[184px] rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {confirmLabel}
             </button>
@@ -85,7 +102,8 @@ const Modal = ({
             {onCancel && (
               <button
                 onClick={onCancel}
-                className="bg-tag-bg text-text-tertiary h-14 w-[184px] rounded-lg text-lg font-medium"
+                disabled={confirmDisabled}
+                className="bg-surface-blue text-text-primary hover:bg-primary-light h-14 w-[184px] rounded-lg text-lg font-medium disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {cancelLabel}
               </button>
@@ -94,7 +112,7 @@ const Modal = ({
               <button
                 onClick={onConfirm}
                 disabled={confirmDisabled}
-                className="bg-primary-hover h-14 w-[184px] rounded-lg text-lg font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="bg-primary-hover hover:bg-primary h-14 w-[184px] rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {confirmLabel}
               </button>

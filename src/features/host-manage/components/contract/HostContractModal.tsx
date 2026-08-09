@@ -1,17 +1,24 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Button from "@/shared/components/Button";
-import type {
-  HostReservation,
-  MockHostSpace,
-} from "@/features/host-manage/api/mock_host_data";
+import type { ApiHostReservation } from "@/types";
 import Authentication from "@/features/guest-explore/components/contract/Authentication";
-import SignatureBoard from "@/features/guest-explore/components/contract/SignatureBoard";
+import SignatureBoard, { type SignatureBoardRef } from "@/features/guest-explore/components/contract/SignatureBoard";
 import { formatHostDate, getDurationDays } from "@/features/host-manage/utils/dateUtils";
+import {
+  GetPresignedURL,
+  UploadFileToPresignedURL,
+  SubmitSignature,
+} from "@/features/guest-explore/api/my_reservation_api";
+
+interface SpaceBasicInfo {
+  name: string;
+  address: string;
+}
 
 interface HostContractModalProps {
   isOpen: boolean;
-  reservation: HostReservation;
-  space: MockHostSpace;
+  reservation: ApiHostReservation;
+  space: SpaceBasicInfo;
   onClose: () => void;
   onComplete: () => void;
 }
@@ -25,6 +32,32 @@ const HostContractModal = ({
 }: HostContractModalProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSigned, setIsSigned] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
+  const signatureBoardRef = useRef<SignatureBoardRef>(null);
+
+  const handleComplete = async () => {
+    const signatureBlob = await signatureBoardRef.current?.getSignatureBlob();
+    if (!signatureBlob) return;
+    setIsSubmitting(true);
+    setSubmitError(false);
+    try {
+      const { uploads } = await GetPresignedURL({
+        uploadType: "CONTRACT_SIGNATURE",
+        files: [{ contentType: "image/png" }],
+      });
+      const { presignedUrl, fileUrl } = uploads[0];
+      const signatureFile = new File([signatureBlob], `signature_${reservation.reservationId}_host.png`, { type: "image/png" });
+      await UploadFileToPresignedURL(presignedUrl, signatureFile);
+      await SubmitSignature(reservation.reservationId, { signatureUrl: fileUrl });
+      onComplete();
+    } catch (err) {
+      console.error("[HostContractModal] 서명 제출 실패:", err);
+      setSubmitError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -33,7 +66,7 @@ const HostContractModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden={true} />
+      <div className="absolute inset-0 bg-black/40" onClick={isSubmitting ? undefined : onClose} aria-hidden={true} />
       <div
         className="relative z-10 flex max-h-[85vh] w-full max-w-[590px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
         role="dialog"
@@ -117,12 +150,19 @@ const HostContractModal = ({
           </div>
 
           <Authentication onIsAuthenticated={setIsAuthenticated} />
-          <SignatureBoard onIsSigned={setIsSigned} />
+          <SignatureBoard ref={signatureBoardRef} onIsSigned={setIsSigned} />
+
+          {submitError && (
+            <p role="alert" className="text-sm font-medium text-[#f74b4b]">
+              서명 제출에 실패했습니다. 잠시 후 다시 시도해주세요.
+            </p>
+          )}
 
           <div className="flex flex-row justify-center gap-5">
             <button
-              className="bg-contract-guide-bg w-40 rounded-lg py-3 text-text-secondary"
+              className="bg-contract-guide-bg w-40 rounded-lg py-3 text-text-secondary disabled:opacity-50"
               onClick={onClose}
+              disabled={isSubmitting}
             >
               취소
             </button>
@@ -130,10 +170,10 @@ const HostContractModal = ({
               variant="primary"
               size="md"
               className="w-40"
-              disabled={!(isAuthenticated && isSigned)}
-              onClick={onComplete}
+              disabled={!(isAuthenticated && isSigned) || isSubmitting}
+              onClick={handleComplete}
             >
-              작성 완료
+              {isSubmitting ? "제출 중..." : "작성 완료"}
             </Button>
           </div>
         </div>

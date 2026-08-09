@@ -1,15 +1,21 @@
 import type { Space } from "@/types";
 import Badge from "@/shared/components/Badge";
-
+import { mapSpaceCategoryTag } from "@/shared/utils/spaceCategory";
 interface SpaceCardProps {
   space: Space;
   isWished?: boolean;
   onClick?: () => void;
   onWishToggle?: (e: React.MouseEvent) => void;
-  /** 이미지 위 카테고리 뱃지 (ex. 팝업스토어) */
+  /** 이미지 위 카테고리 뱃지. 원본 enum 문자열(ex. "POPUP_STORE")을 받는다 */
   categoryTag?: string;
   /** AI 추천 이유 뱃지 (ex. 최근 본 공간보다 15% 저렴해요) */
   matchReason?: string;
+  /**
+   * 카드 hover 효과. 기본값 "lift"는 기존 카드 살짝 떠오름+그림자(입체감) 효과이고,
+   * "dim"은 실시간 추천 공간 카드와 동일하게 이미지만 어둡게 흐려지는 효과다.
+   * 공간 탐색 섹션 카드만 "dim"을 쓰고, 나머지(AI 맞춤형/찜한 공간)는 기존 "lift"를 유지한다.
+   */
+  hoverEffect?: "lift" | "dim";
 }
 
 const SpaceCard = ({
@@ -19,21 +25,28 @@ const SpaceCard = ({
   onWishToggle,
   categoryTag,
   matchReason,
+  hoverEffect = "lift",
 }: SpaceCardProps) => (
   <div
     onClick={onClick}
-    className="border-border cursor-pointer overflow-hidden border border-transparent bg-white transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl"
+    className={`border-border group cursor-pointer overflow-hidden border border-transparent bg-white transition-all duration-300 ease-out ${
+      hoverEffect === "dim" ? "" : "hover:-translate-y-1 hover:shadow-xl"
+    }`}
     role="button"
     tabIndex={0}
     onKeyDown={(event) => {if (event.key === "Enter") onClick?.()}}
   >
     {/* 이미지 */}
-    <div className="bg-bg relative aspect-[4/3]">
+    <div data-card-image className="bg-bg relative aspect-[4/3]">
       {space.imageUrls[0] ? (
         <img
           src={space.imageUrls[0]}
           alt={space.name}
-          className="h-full w-full object-cover"
+          className={`h-full w-full object-cover ${
+            hoverEffect === "dim"
+              ? "transition-[filter] duration-500 group-hover:brightness-75"
+              : ""
+          }`}
         />
       ) : (
         <div className="bg-bg h-full w-full" />
@@ -53,7 +66,7 @@ const SpaceCard = ({
       </button>
       {categoryTag && (
         <div className="absolute right-2 bottom-2">
-          <Badge variant="category" label={categoryTag} />
+          <Badge variant="category" label={mapSpaceCategoryTag(categoryTag)} />
         </div>
       )}
     </div>
@@ -99,7 +112,7 @@ const SpaceCard = ({
               key={`${keyword}-${i}`}
               className="bg-tag-bg text-text-tag rounded-full px-2 py-0.5 text-xs"
             >
-              #{keyword}
+              {keyword.startsWith("#") ? keyword : `#${keyword}`}
             </span>
           ))}
         </div>

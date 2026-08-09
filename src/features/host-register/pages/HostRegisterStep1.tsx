@@ -17,16 +17,24 @@ export const HostRegisterStep1 = () => {
   const setValues = useHostRegisterStore((s) => s.setValues);
   const [isAddrOpen, setIsAddrOpen] = useState(false);
   const [addrError, setAddrError] = useState(""); // 서울 외 지역 선택 시 에러
+  // 서버 규칙: 숫자 10자리 (스웨거 businessRegistrationNumber)
+  // 입력을 시작한 뒤에만 문구를 띄운다 — 빈 칸에 빨간 글씨가 먼저 뜨면 거슬린다
+  const businessNumberError =
+    form.businessNumber !== "" && form.businessNumber.length !== 10
+      ? "사업자등록번호는 숫자 10자리여야 합니다"
+      : "";
+
   const isValid =
     form.taxpayerType !== "" &&
-    form.businessNumber !== "" &&
+    form.businessNumber.length === 10 &&
     form.storeName.trim() !== "" &&
-    form.businessAddress.trim() !== "";
+    form.businessAddress.trim() !== "" &&
+    form.businessLicenseImage !== null;
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
+    <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
-      <h1 className="text-text-primary text-center text-2xl font-bold">
+      <h1 className="text-text-primary text-center text-[32px] font-bold">
         호스트 등록
       </h1>
 
@@ -34,21 +42,24 @@ export const HostRegisterStep1 = () => {
       <StepIndicator
         steps={HOST_STEPS}
         currentStep={0}
+        spacing="compact"
       />
 
       {/* 섹션: 사업자 정보 */}
       <div className="flex flex-col gap-6">
         {/* 섹션 제목 + 안내문 */}
         <div className="border-border flex flex-col gap-1 border-b pb-6">
-          <h2 className="text-text-primary text-lg font-bold">사업자 정보</h2>
-          <p className="text-text-secondary text-sm">
+          <h2 className="text-text-primary text-[28px] font-bold">
+            사업자 정보
+          </h2>
+          <p className="text-text-tertiary text-base font-medium">
             안전한 거래를 위해 사업자 정보가 필요합니다.
           </p>
         </div>
 
         {/* 과세자 등록 (택1) — store 연결됨 */}
         <div className="flex flex-col gap-2">
-          <span className="text-text-primary text-sm font-bold">
+          <span className="text-text-primary text-[22px] font-bold">
             과세자 등록
           </span>
           <div
@@ -70,7 +81,7 @@ export const HostRegisterStep1 = () => {
                   }`}
                 >
                   <span
-                    className={`text-sm font-medium ${isSelected ? "text-primary" : "text-text-primary"}`}
+                    className={`text-xl font-bold ${isSelected ? "text-primary" : "text-text-primary"}`}
                   >
                     {opt.title}
                   </span>
@@ -87,19 +98,23 @@ export const HostRegisterStep1 = () => {
         <div className="flex flex-col gap-2">
           <label
             htmlFor="business-number"
-            className="text-text-primary text-sm font-bold"
+            className="text-text-primary text-[22px] font-bold"
           >
             사업자 등록 번호
           </label>
           <Input
             id="business-number"
             placeholder="000-00-00000"
+            inputMode="numeric"
             value={form.businessNumber}
             onChange={(e) =>
               setValues({
-                businessNumber: e.target.value.replace(/[^0-9]/g, ""),
+                businessNumber: e.target.value
+                  .replace(/[^0-9]/g, "")
+                  .slice(0, 10),
               })
             }
+            error={businessNumberError}
           />
         </div>
 
@@ -108,13 +123,15 @@ export const HostRegisterStep1 = () => {
           label="사업자 등록증 사본"
           placeholder="사업자 등록증 사본 파일을 첨부해주세요"
           hint="* JPG, PNG, PDF 최대 10MB"
+          file={form.businessLicenseImage}
+          onFileChange={(file) => setValues({ businessLicenseImage: file })}
         />
 
         {/* 상호명 */}
         <div className="flex flex-col gap-2">
           <label
             htmlFor="business-name"
-            className="text-text-primary text-sm font-bold"
+            className="text-text-primary text-[22px] font-bold"
           >
             상호명
           </label>
@@ -130,12 +147,15 @@ export const HostRegisterStep1 = () => {
         <div className="flex flex-col gap-2">
           <label
             htmlFor="business-address"
-            className="text-text-primary text-sm font-bold"
+            className="text-text-primary text-[22px] font-bold"
           >
             사업장 주소
           </label>
-          <div className="flex gap-2">
-            <div className="flex-1">
+          {/* 피그마: 입력창 590 + gap 20 + 버튼 184 = 본문 794 */}
+          <div className="flex items-start gap-5">
+            {/* 안내문을 Input과 같은 칸에 둔다 — 에러 문구(Input 내부)와 위치를 맞추기 위함.
+                행 바깥에 두면 버튼 폭까지 포함한 오른쪽 끝으로 밀려 서로 어긋난다 */}
+            <div className="flex flex-1 flex-col gap-1">
               <Input
                 id="business-address"
                 placeholder="주소 찾기로 주소를 입력해주세요"
@@ -143,23 +163,24 @@ export const HostRegisterStep1 = () => {
                 readOnly
                 error={addrError}
               />
+              {/* 안내문 (에러 없을 때만) */}
+              {!addrError && (
+                <span className="text-text-secondary text-right text-base font-medium">
+                  현재 서울 지역만 등록 가능합니다
+                </span>
+              )}
             </div>
             <Button
               variant="black"
-              size="md"
+              size="field"
               onClick={() => {
                 setAddrError("");
-                setIsAddrOpen(true)}}
+                setIsAddrOpen(true);
+              }}
             >
               주소 찾기
             </Button>
           </div>
-          {/* 안내문 (에러 없을 때만) */}
-          {!addrError && (
-            <span className="text-text-disabled text-xs">
-              현재 서울 지역만 등록 가능합니다
-            </span>
-          )}
           <Input
             placeholder="상세 주소를 입력해주세요"
             aria-label="상세 주소"
@@ -175,7 +196,7 @@ export const HostRegisterStep1 = () => {
       <div className="flex justify-end">
         <Button
           variant="primary"
-          size="md"
+          size="nav"
           disabled={!isValid}
           onClick={() => navigate("/host/host-register/step2")}
         >

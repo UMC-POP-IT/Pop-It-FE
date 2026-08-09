@@ -1,83 +1,83 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import RealTimeBanner from "@/features/guest-explore/components/RealTimeBanner";
-import { recommendSpaces } from "@/features/guest-explore/api/mock_spaces";
-import type { Space } from "@/types";
+import type { recommendSpace } from "../api/spaces_api";
 import { ScrollButton } from "./ScrollButton";
 import { useNavigate } from "react-router-dom";
+import { getRealTimeRecommend } from "../api/spaces_api";
+import { useCardCarousel } from "@/features/guest-explore/hooks/useCardCarousel";
 
-const avgDayCost =
-  recommendSpaces.reduce((sum, space) => sum + space.cost.day, 0) /
-  recommendSpaces.length;
-
-const getRecommendReason = (space: Space) => {
-  const cheaperPercent = Math.round((1 - space.cost.day / avgDayCost) * 100);
-  return `성수동 대비 ${cheaperPercent}% 저렴한 ${space.name}`; // ex. 성수동 대비 15% 저렴한 팝업스토어
-};
+// SpaceCard 3개 단위로 스크롤
+const CARDS_PER_SCROLL = 3;
 
 const RealTimeRecommendSpace = () => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
+  const [spaces, setSpaces] = useState<recommendSpace[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   const navigate = useNavigate();
 
-  // 좌/우 스크롤 버튼 활성화 여부 업데이트
-  const updateScrollButtons = () => {
-    const container = scrollRef.current;
-    if (!container) return;
-    setCanScrollPrev(container.scrollLeft > 1);
-    setCanScrollNext(
-      container.scrollLeft + container.clientWidth < container.scrollWidth - 1,
-    );
-  };
+  const { scrollRef, canScrollPrev, canScrollNext, imageCenter, scrollByCard } =
+    useCardCarousel(CARDS_PER_SCROLL, [spaces.length, isLoading]);
 
-  useLayoutEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-    updateScrollButtons();
-    container.addEventListener("scroll", updateScrollButtons);
-    window.addEventListener("resize", updateScrollButtons);
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+    setIsError(false);
+
+    getRealTimeRecommend()
+      .then((data) => {
+        if (!isMounted) return;
+        setSpaces(data?.spaces ?? []);
+      })
+      .catch((error) => {
+        console.error("실시간 추천 공간 조회 실패", error);
+        if (!isMounted) return;
+        setIsError(true);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
     return () => {
-      container.removeEventListener("scroll", updateScrollButtons);
-      window.removeEventListener("resize", updateScrollButtons);
+      isMounted = false;
     };
   }, []);
-
-  // SpaceCard 단위로 스크롤
-  const scrollByCard = (direction: 1 | -1) => {
-    const container = scrollRef.current;
-    if (!container) return;
-    const card = container.firstElementChild as HTMLElement | null;
-    const step = (card?.clientWidth ?? container.clientWidth) + 16;
-    container.scrollBy({ left: direction * step, behavior: "smooth" });
-  };
 
   return (
     <section className="flex flex-col gap-4 mt-20">
       <h2 className="text-text-primary text-2xl font-bold">실시간 추천 공간</h2>
 
       <div className="relative">
-        {canScrollPrev && <ScrollButton direction="prev" position={"1/2"} onClick={() => scrollByCard(-1)} />}
+        {canScrollPrev && imageCenter !== null && <ScrollButton direction="prev" topOffset={imageCenter} onClick={() => scrollByCard(-1)} />}
 
+        {/* overflow-x-hidden은 휠/트랙패드/드래그 스크롤을 의도적으로 차단하기 위함 (화살표 버튼의 scrollBy만 허용) */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex gap-4 overflow-x-hidden scroll-smooth"
         >
-          {recommendSpaces.map((space) => (
-            <div
-              key={space.id}
-              className="w-[calc((100%-2*1rem)/3)] flex-none"
-            >
-              <RealTimeBanner
-                space={space}
-                matchReason={getRecommendReason(space)}
-                onClick={() => navigate(`/spaces/${space.id}`)}
-              />
-            </div>
-          ))}
+          {isLoading ? (
+            <p role="status" aria-live="polite" className="text-text-secondary text-sm">
+              실시간 추천 공간 로딩 UI 추가 예정
+            </p>
+          ) : isError ? (
+            <p role="alert" aria-live="assertive" className="text-text-secondary text-sm">
+              실시간 추천 공간 조회 실패 UI 추가 예정
+            </p>
+          ) : (
+            spaces.map((space) => (
+              <div
+                key={space.spaceId}
+                className="w-[calc((100%-2*1rem)/3)] flex-none"
+              >
+                <RealTimeBanner
+                  space={space}
+                  onClick={() => navigate(`/spaces/${space.spaceId}`)}
+                />
+              </div>
+            ))
+          )}
         </div>
-
-        {canScrollNext && <ScrollButton direction="next" position={"1/2"} onClick={() => scrollByCard(1)} />}
+        {canScrollNext && imageCenter !== null && <ScrollButton direction="next" topOffset={imageCenter} onClick={() => scrollByCard(1)} />}
       </div>
     </section>
   );

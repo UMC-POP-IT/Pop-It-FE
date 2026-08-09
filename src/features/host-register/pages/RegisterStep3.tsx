@@ -9,22 +9,59 @@ import {
   USAGE_OPTIONS,
   STRUCTURE_OPTIONS,
   FLOOR_TYPE_OPTIONS,
-  HEATING_OPTIONS,
-  SECURITY_OPTIONS,
-  ETC_OPTIONS,
 } from "@/features/host-register/api/mock_register";
 import { NO_SPINNER, blockNonNumeric } from "@/shared/utils/numberInput";
+import { useEffect, useState } from "react";
+import { getFacilities } from "@/features/host-register/api/facility_api";
+import type {
+  FacilityCategory,
+  FacilityCategoryGroup,
+} from "@/features/host-register/api/facility_api";
+import FacilityChipGroup from "@/features/host-register/components/FacilityChipGroup";
+
+// 서버 카테고리 → 화면 라벨 (서버는 영어 enum, 화면은 한글)
+const FACILITY_CATEGORY_LABEL: Record<FacilityCategory, string> = {
+  HEATING_COOLING: "냉난방",
+  SECURITY: "보안",
+  ETC: "기타",
+};
 
 export const RegisterStep3 = () => {
   const isEdit = useRegisterStore((s) => s.isEdit);
   const navigate = useNavigate();
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
+  // 시설 목록 (서버에서 받아옴)
+  const [facilityGroups, setFacilityGroups] = useState<FacilityCategoryGroup[]>(
+    [],
+  );
+
+  const [isFacilityLoading, setIsFacilityLoading] = useState(true);
+  const [facilityError, setFacilityError] = useState(false);
+
+  useEffect(() => {
+    getFacilities()
+      .then((data) => setFacilityGroups(data.facilities))
+      .catch((err: unknown) => {
+        // 에러 객체 전체를 찍으면 요청 정보(토큰 등)까지 노출될 수 있어 메시지만 남긴다
+        const message = err instanceof Error ? err.message : "알 수 없는 오류";
+        console.error("시설 목록 조회 실패:", message);
+        setFacilityError(true);
+      })
+      .finally(() => setIsFacilityLoading(false));
+  }, []);
+
+  // 시설 선택 토글 — 이미 있으면 빼고, 없으면 넣는다
+  const toggleFacility = (facilityId: number) =>
+    setValues({
+      facilityIds: form.facilityIds.includes(facilityId)
+        ? form.facilityIds.filter((id) => id !== facilityId)
+        : [...form.facilityIds, facilityId],
+    });
 
   //반지층, 옥탑은 '몇 층' 숫자가 없어 층수 입력칸을 숨긴다
-  const needsFloorNumber=
-    form.floorType !== "반지층" && form.floorType !=="옥탑";
-
+  const needsFloorNumber =
+    form.floorType !== "반지층" && form.floorType !== "옥탑";
 
   const isValid =
     form.usage !== "" &&
@@ -35,7 +72,7 @@ export const RegisterStep3 = () => {
     form.hasParking !== null;
 
   return (
-    <div className="mx-auto flex w-full max-w-[794px] flex-col gap-8 px-4 py-6">
+    <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
       <h1 className="text-text-primary text-center text-[32px] font-bold">
         {isEdit ? "공간 수정" : "공간 등록"}
@@ -105,7 +142,7 @@ export const RegisterStep3 = () => {
               </span>
             </div>
           </div>
-          <span className="text-text-placeholder text-base font-bold">
+          <span className="text-text-secondary text-right text-base font-medium">
             ㎡ 입력 시 평이 자동 계산돼요
           </span>
         </div>
@@ -120,30 +157,29 @@ export const RegisterStep3 = () => {
             const hidesFloor = floorType === "반지층" || floorType === "옥탑";
             setValues({
               floorType,
-              floor: hidesFloor ? "": form.floor,
-            })
+              floor: hidesFloor ? "" : form.floor,
+            });
           }}
         />
 
         {needsFloorNumber && (
           <div className="relative">
-          <Input
-            type="number"
-            aria-label="층수"
-            placeholder="층수 입력"
-            value={form.floor}
-            onChange={(e) =>
-              setValues({ floor: e.target.value.replace(/[^0-9]/g, "") })
-            }
-            onKeyDown={blockNonNumeric}
-            className={NO_SPINNER}
-          />
-          <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
-            층
-          </span>
-        </div>
+            <Input
+              type="number"
+              aria-label="층수"
+              placeholder="층수 입력"
+              value={form.floor}
+              onChange={(e) =>
+                setValues({ floor: e.target.value.replace(/[^0-9]/g, "") })
+              }
+              onKeyDown={blockNonNumeric}
+              className={NO_SPINNER}
+            />
+            <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
+              층
+            </span>
+          </div>
         )}
-        
 
         {/* 주차 — 주차 가능 / 주차 불가능 (택1)*/}
         <ChipGroup
@@ -165,36 +201,37 @@ export const RegisterStep3 = () => {
         <span className="text-text-primary text-[22px] font-bold">
           시설 정보
         </span>
-        <ChipGroup
-          label="냉난방"
-          options={HEATING_OPTIONS}
-          selected={form.heatingList}
-          onChange={(next) => setValues({ heatingList: next })}
-          multiple
-          labelVariant="secondary"
-        />
-        <ChipGroup
-          label="보안"
-          options={SECURITY_OPTIONS}
-          selected={form.securityList}
-          onChange={(next) => setValues({ securityList: next })}
-          multiple
-          labelVariant="secondary"
-        />
-        <ChipGroup
-          label="기타"
-          options={ETC_OPTIONS}
-          selected={form.etcList}
-          onChange={(next) => setValues({ etcList: next })}
-          multiple
-          labelVariant="secondary"
-        />
+        {isFacilityLoading ? (
+          <span
+            role="status"
+            className="text-text-placeholder text-base font-bold"
+          >
+            시설 목록을 불러오는 중이에요...
+          </span>
+        ) : facilityError ? (
+          <span
+            role="alert"
+            className="text-danger text-right text-base font-bold"
+          >
+            시설 목록을 불러오지 못했어요. 새로고침 후 다시 시도해주세요
+          </span>
+        ) : (
+          facilityGroups.map((group) => (
+            <FacilityChipGroup
+              key={group.category}
+              label={FACILITY_CATEGORY_LABEL[group.category]}
+              items={group.items}
+              selectedIds={form.facilityIds}
+              onToggle={toggleFacility}
+            />
+          ))
+        )}
       </div>
 
       {/* 이전 / 다음으로 (다음으로는 초기 비활성) */}
       <div className="flex justify-end gap-2">
         <Button
-          variant="gray"
+          variant="secondary"
           size="nav"
           onClick={() => navigate("/host/register/step2")}
         >

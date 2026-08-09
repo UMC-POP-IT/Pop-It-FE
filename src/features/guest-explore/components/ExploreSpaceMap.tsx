@@ -5,13 +5,20 @@ import MapBackground from "./MapBackground";
 import { useKakaoLoader } from "@/shared/hooks/useKakaoLoader";
 import { useWishStore } from "@/store/wishStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
-import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
+import type { SpaceSummary } from "@/features/guest-explore/api/space_search_api";
+import { mapSpaceCategoryTag } from "@/shared/utils/spaceCategory";
 
 interface ExploreSpaceMapProps {
   /** 지도 위에 가격 마커로 노출할 공간 목록 */
-  spaces: ExploreSpaceDetail[];
+  spaces: SpaceSummary[];
   onSelectSpace: (spaceId: number) => void;
-  onClose: () => void;
+  /**
+   * 찜 토글 핸들러. 넘기지 않으면 컴포넌트 내부에서 로그인 가드만 거쳐 바로
+   * 토글한다 - 그 경우 wishStore의 wishedIds는 갱신되지만, 목록 뷰(ExploreSpace)가
+   * 들고 있는 카드별 heartCount는 갱신되지 않는다. 지도 위 찜하기가 목록의
+   * heartCount에도 반영되게 하려면 ExploreSpace의 onWishToggle을 그대로 넘긴다.
+   */
+  onWishToggle?: (space: SpaceSummary) => void;
 }
 
 const DEFAULT_LEVEL = 6;
@@ -21,7 +28,7 @@ const FALLBACK_CENTER = { lat: 37.4979, lng: 127.0276 };
 const ExploreSpaceMap = ({
   spaces,
   onSelectSpace,
-  onClose,
+  onWishToggle,
 }: ExploreSpaceMapProps) => {
   const { isLoaded, error } = useKakaoLoader();
   const [selectedSpaceId, setSelectedSpaceId] = useState<number | null>(null);
@@ -57,7 +64,7 @@ const ExploreSpaceMap = ({
                     className={`rounded-full border px-3 py-1 text-sm font-bold whitespace-nowrap shadow-sm ${
                       space.id === selectedSpaceId
                         ? "border-primary bg-primary text-white"
-                        : "border-border bg-white text-text-primary"
+                        : "border-border text-text-primary bg-white"
                     }`}
                   >
                     {space.cost.day.toLocaleString()}원
@@ -90,7 +97,7 @@ const ExploreSpaceMap = ({
                       </div>
                       <div className="flex flex-col items-start gap-0.5 text-left">
                         <span className="text-primary text-xs font-bold">
-                          {selectedSpace.category}
+                          {mapSpaceCategoryTag(selectedSpace.category)}
                         </span>
                         <span className="text-text-primary text-sm font-bold">
                           {selectedSpace.name}
@@ -110,7 +117,11 @@ const ExploreSpaceMap = ({
                           ? "찜 해제하기"
                           : "찜하기"
                       }
-                      onClick={() => handleWishToggle(selectedSpace.id)}
+                      onClick={() =>
+                        onWishToggle
+                          ? onWishToggle(selectedSpace)
+                          : handleWishToggle(selectedSpace.id)
+                      }
                       className={`text-lg leading-none ${
                         wishedIds.includes(selectedSpace.id)
                           ? "text-red-500"
@@ -135,15 +146,6 @@ const ExploreSpaceMap = ({
           </div>
         </>
       )}
-
-      <button
-        type="button"
-        aria-label="닫기"
-        onClick={onClose}
-        className="bg-primary absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full text-white shadow-md"
-      >
-        ✕
-      </button>
     </div>
   );
 };

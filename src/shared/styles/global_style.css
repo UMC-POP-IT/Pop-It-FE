@@ -49,7 +49,7 @@
   /* ────────────────────────────────
      위험 / 취소
   ──────────────────────────────── */
-  --color-danger: #ff8b8b; /* 예약 취소, 위험 액션 버튼 텍스트/테두리 */
+  --color-danger: #f74b4b; /* Red/red-400 | 에러 문구, 예약 취소·위험 액션 버튼 텍스트/테두리 */
   --color-danger-light: #fff0f0; /* 취소 버튼 hover 배경 */
 
   /* ────────────────────────────────
@@ -77,12 +77,12 @@
   /* ────────────────────────────────
      소셜 로그인
   ──────────────────────────────── */
-  --color-kakao: #FEE500; /* 카카오 공식 컬러 | 카카오 버튼 배경 */
+  --color-kakao: #fee500; /* 카카오 공식 컬러 | 카카오 버튼 배경 */
   --color-kakao-text: #363636; /* Grey/grey-900   | 카카오 버튼 텍스트 */
   --color-naver: #00cb4b; /* 네이버 공식 컬러 | 네이버 버튼 배경 */
   --color-naver-text: #ffffff; /* Grey/white       | 네이버 버튼 텍스트 */
   --color-google: #ffffff; /* 구글 버튼 배경 */
-  --color-google-text: #5b5b5b; /* 구글 버튼 텍스트 */
+  --color-google-text: #1f1f1f; /* 구글 버튼 텍스트 | 구글 공식 가이드라인 */
   --color-google-border: #e0e0e0; /* 구글 버튼 테두리 */
 }
 
@@ -92,4 +92,20 @@
     background-color: var(--color-bg);
     color: var(--color-text-primary);
   }
+}
+
+/* 검색바 ↔ 헤더 축소 pill 모핑 애니메이션 (View Transitions API).
+   HeroSearchBar.tsx와 Header.tsx가 현재 화면에 실제로 보이는 쪽에만 같은
+   view-transition-name(search-bar)을 부여하면, 브라우저가 두 박스의 위치/크기를
+   자동으로 보간해서 하나가 다른 하나로 모핑되는 것처럼 보여준다
+   (src/shared/utils/viewTransition.ts 참고). 기본 250ms보다 살짝 느리고
+   부드럽게 커스터마이즈한다. */
+::view-transition-group(search-bar) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(search-bar),
+::view-transition-new(search-bar) {
+  animation-duration: 320ms;
 }

@@ -35,8 +35,16 @@ export const SceneStage = ({ scene, selectedHotspotId, onSelectHotspot, onIntera
         makeDefault
       />
 
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[5, 8, 5]} intensity={1.2} castShadow />
+      <ambientLight intensity={0.85} />
+      <hemisphereLight args={["#ffffff", "#d9d4c9", 0.45]} />
+      <directionalLight
+        position={[5, 8, 5]}
+        intensity={1.2}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-bias={-0.0005}
+      />
+      <directionalLight position={[-4, 5, -3]} intensity={0.35} />
 
       <Suspense fallback={null}>
         <ModelErrorBoundary resetKey={modelUrl} fallback={<PlaceholderRoom />}>
@@ -44,7 +52,8 @@ export const SceneStage = ({ scene, selectedHotspotId, onSelectHotspot, onIntera
         </ModelErrorBoundary>
       </Suspense>
 
-      <ContactShadows position={[0, 0, 0]} opacity={0.35} scale={10} blur={2} far={4} />
+      {/* 모델 바닥과 같은 y=0에 두면 depth 버퍼가 겹쳐 z-fighting(깜빡임)이 생겨 살짝 띄움 */}
+      <ContactShadows position={[0, 0.01, 0]} opacity={0.35} scale={10} blur={2} far={4} />
 
       {hotspots.map((hotspot) => (
         <HotspotMarker

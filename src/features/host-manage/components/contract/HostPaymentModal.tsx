@@ -1,16 +1,20 @@
 import Button from "@/shared/components/Button";
-import type {
-  HostReservation,
-  MockHostSpace,
-} from "@/features/host-manage/api/mock_host_data";
+import type { ApiHostReservation } from "@/types";
 import { formatHostDate, getDurationDays } from "@/features/host-manage/utils/dateUtils";
+
+interface SpaceBasicInfo {
+  name: string;
+  address: string;
+}
 
 interface HostPaymentModalProps {
   isOpen: boolean;
-  reservation: HostReservation;
-  space: MockHostSpace;
+  reservation: ApiHostReservation;
+  space: SpaceBasicInfo;
   agreedToGuide: boolean;
   onAgreedToGuideChange: (agreed: boolean) => void;
+  isSubmitting?: boolean;
+  submitError?: boolean;
   onClose: () => void;
   onSignContract: () => void;
 }
@@ -21,21 +25,21 @@ const HostPaymentModal = ({
   space,
   agreedToGuide,
   onAgreedToGuideChange,
+  isSubmitting = false,
+  submitError = false,
   onClose,
   onSignContract,
 }: HostPaymentModalProps) => {
   if (!isOpen) return null;
 
   const { startDate, endDate, totalPrice } = reservation;
-  const deposit = Math.round(totalPrice * 0.2);
-  const insurance = Math.round(totalPrice * 0.05);
   const platformFee = Math.round(totalPrice * 0.1);
   const netAmount = totalPrice - platformFee;
   const days = getDurationDays(startDate, endDate);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40" onClick={isSubmitting ? undefined : onClose} />
       <div className="relative z-10 flex w-[420px] flex-col gap-4 rounded-2xl bg-white p-6 shadow-xl">
         <h3 className="text-text-primary text-lg font-bold">입금 예정</h3>
 
@@ -56,14 +60,6 @@ const HostPaymentModal = ({
           <div className="flex justify-between">
             <span className="text-text-secondary">임대료</span>
             <span className="text-text-primary font-medium">{totalPrice.toLocaleString()}원</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-text-secondary">보증금 (에스크로)</span>
-            <span className="text-text-primary font-medium">{deposit.toLocaleString()}원</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-text-secondary">보험료</span>
-            <span className="text-text-primary font-medium">{insurance.toLocaleString()}원</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">플랫폼 수수료 10%</span>
@@ -98,12 +94,19 @@ const HostPaymentModal = ({
           정책을 확인했습니다.)
         </label>
 
+        {submitError && (
+          <p role="alert" className="text-sm font-medium text-text-danger">
+            예약 승인에 실패했습니다. 잠시 후 다시 시도해주세요.
+          </p>
+        )}
+
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="md"
             className="flex-1 border-none! bg-secure-payment-bg! text-text-secondary! font-normal"
             onClick={onClose}
+            disabled={isSubmitting}
           >
             돌아가기
           </Button>
@@ -111,10 +114,10 @@ const HostPaymentModal = ({
             variant="primary"
             size="md"
             className="flex-1 font-normal"
-            disabled={!agreedToGuide}
+            disabled={!agreedToGuide || isSubmitting}
             onClick={onSignContract}
           >
-            계약서 서명하기
+            {isSubmitting ? "승인 중..." : "계약서 서명하기"}
           </Button>
         </div>
       </div>

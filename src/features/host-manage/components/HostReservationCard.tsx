@@ -1,27 +1,25 @@
-import type {
-  HostReservation,
-  MockGuestInfo,
-  MockHostSpace,
-} from "@/features/host-manage/api/mock_host_data";
+import type { ApiHostReservation, ReservationStatus } from "@/types";
 import iconPerson from "@/assets/icons/icon_person.svg";
+
 interface HostReservationCardProps {
-  reservation: HostReservation;
-  guest: MockGuestInfo;
-  space: MockHostSpace;
+  reservation: ApiHostReservation;
   onDetail?: () => void;
   onApprove?: () => void;
   onReject?: () => void;
   onPhotoView?: () => void;
   onCheckoutApprove?: () => void;
   onCheckoutReject?: () => void;
+  onOpenContract?: () => void;
 }
 
-const STATUS_LABEL: Record<HostReservation["status"], string> = {
-  PENDING: "승인 대기",
+const STATUS_LABEL: Record<ReservationStatus, string> = {
+  PENDING_APPROVAL: "승인 대기",
   APPROVED: "계약 대기",
-  CONTRACTED: "계약 완료",
+  CONTRACT_COMPLETED: "결제 대기",
+  PAYMENT_COMPLETED: "계약 완료",
   IN_USE: "사용 중",
-  COMPLETED: "사용 완료",
+  USAGE_COMPLETED: "사용 완료",
+  CHECKOUT_COMPLETED: "사용 완료",
   CANCELLED: "취소됨",
 };
 
@@ -34,17 +32,15 @@ const formatDate = (dateStr: string) => {
 
 export const HostReservationCard = ({
   reservation,
-  guest,
-  space,
   onDetail,
   onApprove,
   onReject,
   onPhotoView,
   onCheckoutApprove,
   onCheckoutReject,
+  onOpenContract,
 }: HostReservationCardProps) => {
-  const { status, startDate, endDate, totalPrice } = reservation;
-  const hasCheckoutPhoto = (reservation.checkoutPhotoUrls?.length ?? 0) > 0;
+  const { status, startDate, endDate, totalPrice, usagePurpose, guest, space, isPhotoVerified } = reservation;
 
   return (
     <div>
@@ -64,7 +60,7 @@ export const HostReservationCard = ({
             </span>
           </div>
           <p className="text-text-tag line-clamp-1 text-base font-medium">
-            {guest.businessDescription}
+            {usagePurpose}
           </p>
         </div>
       </div>
@@ -74,10 +70,10 @@ export const HostReservationCard = ({
         <div className="flex items-start gap-7">
           {/* 이미지 */}
           <div className="bg-thumbnail-bg h-[190px] w-[190px] flex-shrink-0 overflow-hidden">
-            {space.imageUrls[0] && (
+            {space.thumbnailUrl && (
               <img
-                src={space.imageUrls[0]}
-                alt={space.name}
+                src={space.thumbnailUrl}
+                alt={space.buildingName}
                 className="h-full w-full object-cover"
               />
             )}
@@ -90,8 +86,8 @@ export const HostReservationCard = ({
                 {STATUS_LABEL[status]}
               </span>
               <div className="flex flex-col items-start gap-1">
-                <p className="text-xl font-bold text-black">{space.name}</p>
-                <p className="text-text-primary text-base">
+                <p className="text-xl font-bold text-black">{space.buildingName}</p>
+                <p className="text-text-primary text-base font-medium">
                   {formatDate(startDate)} ~ {formatDate(endDate)}
                 </p>
               </div>
@@ -106,84 +102,105 @@ export const HostReservationCard = ({
 
         {/* 버튼 */}
         <div className="flex h-[190px] flex-shrink-0 flex-col items-end justify-end gap-2">
-          {/* 사용 완료 · 퇴실 사진 미등록 안내 */}
-          {status === "COMPLETED" && !hasCheckoutPhoto && (
-            <p className="text-primary text-base font-medium">
-              퇴실 사진이 아직 등록되지 않았습니다.
-            </p>
-          )}
-
           <div className="flex items-center gap-1">
-            {status === "PENDING" && (
+            {status === "PENDING_APPROVAL" && (
               <>
                 <button
                   onClick={onDetail}
-                  className="bg-surface-blue text-text-primary h-10 rounded-lg px-6 py-1.5 text-base font-bold"
+                  className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 rounded-lg px-6 py-1.5 text-base font-bold"
                 >
                   공간 상세
                 </button>
                 <button
                   onClick={onReject}
-                  className="text-danger h-10 w-[107px] text-base font-bold"
+                  className="hover:bg-danger-light h-10 w-[108px] rounded-lg bg-[#fff3f3] text-base font-bold text-[#f74b4b]"
                 >
                   예약 거절
                 </button>
                 <button
                   onClick={onApprove}
-                  className="bg-primary-hover h-10 w-[107px] rounded-lg text-base font-bold text-white"
+                  className="bg-primary-hover hover:bg-primary h-10 w-[108px] rounded-lg text-base font-bold text-white"
                 >
                   예약 승인
                 </button>
               </>
             )}
 
-            {(status === "APPROVED" ||
-              status === "CONTRACTED" ||
-              status === "IN_USE") && (
+            {status === "APPROVED" && (
+              <>
+                <button
+                  onClick={onDetail}
+                  className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 rounded-lg px-6 py-1.5 text-base font-bold"
+                >
+                  공간 상세
+                </button>
+                <button
+                  onClick={onOpenContract}
+                  className="bg-primary-hover hover:bg-primary h-10 w-[108px] rounded-lg text-base font-bold text-white"
+                >
+                  계약서 서명
+                </button>
+              </>
+            )}
+
+            {(status === "CONTRACT_COMPLETED" || status === "PAYMENT_COMPLETED" || status === "IN_USE") && (
               <button
                 onClick={onDetail}
-                className="bg-surface-blue text-text-primary h-10 rounded-lg px-6 py-1.5 text-base font-bold"
+                className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 rounded-lg px-6 py-1.5 text-base font-bold"
               >
                 공간 상세
               </button>
             )}
 
-            {status === "COMPLETED" && (
+            {status === "USAGE_COMPLETED" && isPhotoVerified && (
               <>
                 <button
                   onClick={onDetail}
-                  className="bg-surface-blue text-text-primary h-10 rounded-lg px-6 py-1.5 text-base font-bold"
+                  className="hover:bg-primary-light h-10 rounded-lg bg-[#f0f6fe] px-6 py-1.5 text-base font-bold text-[#121212]"
                 >
                   공간 상세
                 </button>
                 <button
                   onClick={onPhotoView}
-                  disabled={!hasCheckoutPhoto}
-                  className={
-                    hasCheckoutPhoto
-                      ? "bg-primary-hover h-10 rounded-lg px-6 py-1.5 text-base font-bold text-white"
-                      : "bg-surface-blue h-10 cursor-not-allowed rounded-lg px-6 py-1.5 text-base font-bold text-[#8cb8fa]"
-                  }
+                  className="hover:bg-primary-light h-10 rounded-lg bg-[#f0f6fe] px-6 py-1.5 text-base font-bold text-[#121212]"
                 >
                   퇴실 사진 보기
                 </button>
-                {hasCheckoutPhoto && (
-                  <>
-                    <button
-                      onClick={onCheckoutReject}
-                      className="text-danger h-10 px-4 text-base font-bold"
-                    >
-                      퇴실 거부
-                    </button>
-                    <button
-                      onClick={onCheckoutApprove}
-                      className="bg-primary-hover h-10 rounded-lg px-6 py-1.5 text-base font-bold text-white"
-                    >
-                      퇴실 승인
-                    </button>
-                  </>
-                )}
+                <button
+                  onClick={onCheckoutReject}
+                  className="hover:bg-danger-light h-10 w-[108px] rounded-lg bg-[#fff3f3] px-6 py-1.5 text-base font-bold text-[#f74b4b]"
+                >
+                  퇴실 거부
+                </button>
+                <button
+                  onClick={onCheckoutApprove}
+                  className="hover:bg-primary h-10 w-[108px] rounded-lg bg-[#3783f7] px-6 py-1.5 text-base font-bold text-white"
+                >
+                  퇴실 승인
+                </button>
               </>
+            )}
+
+            {status === "USAGE_COMPLETED" && !isPhotoVerified && (
+              <div className="flex flex-col items-end gap-2">
+                <span className="w-full text-right text-base font-medium text-[#0564f5]">
+                  퇴실 사진이 아직 등록되지 않았습니다.
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={onDetail}
+                    className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 rounded-lg px-6 py-1.5 text-base font-bold"
+                  >
+                    공간 상세
+                  </button>
+                  <button
+                    disabled
+                    className="bg-surface-blue h-10 rounded-lg px-6 py-1.5 text-base font-bold text-[#8cb8fa]"
+                  >
+                    퇴실 사진 보기
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

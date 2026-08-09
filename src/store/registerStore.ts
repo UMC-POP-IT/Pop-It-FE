@@ -1,7 +1,14 @@
 import { create } from "zustand";
 
-// 공간 등록 폼 데이터 (5단계 전체를 보관) — 화면 입력값 저장용
-// (전송용 형식/enum 변환은 2차 API 연동 때)
+/**
+ * 공간 사진 한 장.
+ * 등록은 새로 고른 파일만, 수정은 기존 사진(S3 URL)과 새 파일이 섞인다.
+ * kind로 구분해 제출 시 new만 업로드하고 existing은 URL을 그대로 쓴다.
+ */
+export type SpacePhoto =
+  | { kind: "existing"; url: string } // 서버에 이미 저장된 사진
+  | { kind: "new"; file: File }; // 이번에 새로 고른 사진
+
 export interface SpaceRegisterForm {
   // Step1 위치/구조
   ownerType: string;
@@ -10,6 +17,8 @@ export interface SpaceRegisterForm {
   district: string;
   address: string;
   detailAddress: string;
+  latitude: number | null; // 위도(카카오 Geocoder 변환값)
+  longitude: number | null; //경도
   // Step2 거래정보
   deposit: string;
   priceDay: string;
@@ -22,14 +31,12 @@ export interface SpaceRegisterForm {
   floorType: string;
   floor: string;
   hasParking: boolean | null;
-  heatingList: string[];
-  securityList: string[];
-  etcList: string[];
+  facilityIds: number[];
   // Step4 상세정보
   buildingName: string; // 공간명
   description: string;
   // Step5 사진
-  photoList: File[];
+  photoList: SpacePhoto[];
 }
 
 interface RegisterState {
@@ -49,6 +56,8 @@ const initialForm: SpaceRegisterForm = {
   district: "",
   address: "",
   detailAddress: "",
+  latitude: null,
+  longitude: null,
   deposit: "",
   priceDay: "",
   startDate: "",
@@ -59,9 +68,7 @@ const initialForm: SpaceRegisterForm = {
   floorType: "",
   floor: "",
   hasParking: null,
-  heatingList: [],
-  securityList: [],
-  etcList: [],
+  facilityIds: [],
   buildingName: "",
   description: "",
   photoList: [],
