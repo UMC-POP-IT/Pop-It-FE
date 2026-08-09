@@ -1,3 +1,4 @@
+import { useId } from "react";
 import StepIndicator from "@/shared/components/StepIndicator";
 import Input from "@/shared/components/Input";
 import Button from "@/shared/components/Button";
@@ -28,6 +29,9 @@ export const RegisterStep4 = () => {
       : "";
 
   const isValid = nameLength >= 4 && descriptionLength >= 10;
+
+  // 오류 문구를 textarea와 묶기 위한 id (스크린리더가 입력 이름 뒤에 이어서 읽게)
+  const descriptionHintId = useId();
 
   return (
     <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
@@ -82,11 +86,17 @@ export const RegisterStep4 = () => {
             공간 설명
           </span>
           <div className="relative">
+            {/* 위 <span>공간 설명</span>은 textarea와 연결되지 않은 순수 텍스트라
+                aria-label로 이름을 따로 준다. placeholder는 입력을 시작하면
+                사라지는 값이라 이름으로 삼기에 불안정하다 */}
             <textarea
               rows={8}
               maxLength={1000}
               value={form.description}
               onChange={(e) => setValues({ description: e.target.value })}
+              aria-label="공간 설명"
+              aria-invalid={descriptionError !== ""}
+              aria-describedby={descriptionHintId}
               placeholder={
                 "예: 성수역 도보 3분 거리입니다. 인테리어가 깔끔하여 전시회에 적합합니다.\n주변 상권이 좋아 유동인구가 많습니다"
               }
@@ -102,12 +112,18 @@ export const RegisterStep4 = () => {
             </span>
           </div>
           {/* Input과 달리 textarea는 error prop이 없어 문구를 직접 그린다 (클래스는 Input.tsx와 동일).
-      회색 안내는 두지 않는다 — 칸 안에 이미 글자수 카운터가 있어 안내가 두 줄로 겹친다 */}
-          {descriptionError && (
-            <span className="text-danger text-right text-base font-bold">
-              {descriptionError}
-            </span>
-          )}
+              회색 안내는 두지 않는다 — 칸 안에 0/1000 카운터가 있고, 10자 미만이면 어차피
+              이 빨간 문구가 떠서 요건이 전달된다.
+              단 노드는 조건부로 넣었다 빼지 않는다 — 라이브 영역은 '있던 요소의 내용이
+              바뀔 때' 읽어주므로, 요소가 새로 생기면 스크린리더가 놓친다.
+              비었을 때는 empty:hidden으로 죽여 gap-2만큼의 빈 줄이 생기지 않게 한다 */}
+          <span
+            id={descriptionHintId}
+            aria-live="polite"
+            className="text-danger text-right text-base font-bold empty:hidden"
+          >
+            {descriptionError}
+          </span>
         </div>
 
         {/* TIP 박스 */}

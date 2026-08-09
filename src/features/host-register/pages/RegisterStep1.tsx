@@ -9,7 +9,7 @@ import {
   STEPS,
   BUILDING_TYPES,
 } from "@/features/host-register/api/mock_register";
-import { useState } from "react";
+import { useState, useId } from "react";
 import AddressSearchModal from "@/features/host-register/components/AddressSearchModal";
 import { useKakaoLoader } from "@/shared/hooks/useKakaoLoader";
 import { geocodeAddress } from "@/shared/utils/geocodeAddress";
@@ -23,6 +23,8 @@ export const RegisterStep1 = () => {
   const [isAddrOpen, setIsAddrOpen] = useState(false);
   const [addrError, setAddrError] = useState(""); // 서울 외 지역 선택 시 에러
   const { isLoaded, error: kakaoError } = useKakaoLoader(); // 카카오 SDK 로드 (좌표 변환에 필요)
+  // 글자수 안내를 상세 주소 입력과 묶기 위한 id
+  const detailAddressHintId = useId();
   const isValid =
     form.buildingType !== "" &&
     form.address !== "" &&
@@ -122,15 +124,22 @@ export const RegisterStep1 = () => {
           </div>
 
           {/* 상세 주소 — 서버 SpaceCreateReq.addressDetail이 30자 제한.
-    안내를 Input과 한 칸에 묶어 gap-1로 붙인다 (위 주소 안내문과 같은 간격) */}
+    안내를 Input과 한 칸에 묶어 gap-1로 붙인다 (위 주소 안내문과 같은 간격).
+    placeholder는 입력을 시작하면 사라지므로 이름은 aria-label로 고정하고,
+    30자 제한 안내는 aria-describedby로 입력과 묶어 함께 읽히게 한다 */}
           <div className="flex flex-col gap-1">
             <Input
+              aria-label="상세 주소"
+              aria-describedby={detailAddressHintId}
               placeholder="상세 주소를 입력해주세요"
               value={form.detailAddress}
               onChange={(e) => setValues({ detailAddress: e.target.value })}
               maxLength={30}
             />
-            <span className="text-text-secondary text-right text-base font-medium">
+            <span
+              id={detailAddressHintId}
+              className="text-text-secondary text-right text-base font-medium"
+            >
               {form.detailAddress.length}/30
             </span>
           </div>
