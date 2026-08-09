@@ -48,7 +48,6 @@ const HostGuard = () => {
   return user ? <Outlet /> : <Navigate to="/" replace />;
 };
 
-
 export const router = createBrowserRouter([
   {
     // 라우트 트리 어디서든 로더/렌더 중 에러가 던져지면 오류 페이지로 대체
@@ -89,7 +88,7 @@ export const router = createBrowserRouter([
           { path: "/reservations", element: <MyReservationPage /> },
           { path: "/spaces/:spaceId/view", element: <SpaceViewPage /> },
 
-          // 호스트 전용 페이지 (비로그인 접근 시 홈으로)
+          // 호스트 전용 (비로그인 시 홈으로 리다이렉트)
           {
             element: <HostGuard />,
             children: [
