@@ -77,10 +77,13 @@ export const HostReservationPage = () => {
     loadReservations();
   }, [loadReservations]);
 
-  const matchesTab = (r: ApiHostReservation, status: ReservationStatus) =>
-    status === "CHECKOUT_COMPLETED"
-      ? r.status === "USAGE_COMPLETED"
-      : r.status === status;
+  // "계약 완료" 탭은 계약 서명만 끝난 상태(CONTRACT_COMPLETED, 결제 전/실패)와
+  // 결제까지 끝난 상태(PAYMENT_COMPLETED)를 함께 묶고, 카드 라벨에서 세부 상태를 구분해 보여준다.
+  const matchesTab = (r: ApiHostReservation, status: ReservationStatus) => {
+    if (status === "CHECKOUT_COMPLETED") return r.status === "USAGE_COMPLETED";
+    if (status === "CONTRACT_COMPLETED") return r.status === "CONTRACT_COMPLETED" || r.status === "PAYMENT_COMPLETED";
+    return r.status === status;
+  };
 
   const getTabCount = (status: ReservationStatus) =>
     reservations.filter((r) => matchesTab(r, status)).length;

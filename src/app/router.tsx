@@ -1,9 +1,9 @@
 // src/app/router.tsx
 import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
+import { useAuthStore } from "@/store/authStore";
 import { MainLayout } from "@/shared/layout/MainLayout";
 import { AuthLayout } from "@/shared/layout/AuthLayout";
 import { ErrorPage } from "@/shared/pages/ErrorPage";
-import { useAuthStore } from "@/store/authStore";
 
 // 인증
 import { LoginPage } from "@/features/auth/pages/LoginPage";
@@ -88,7 +88,7 @@ export const router = createBrowserRouter([
           { path: "/reservations", element: <MyReservationPage /> },
           { path: "/spaces/:spaceId/view", element: <SpaceViewPage /> },
 
-          // 호스트 전용 (비로그인 시 홈으로 리다이렉트)
+          // 호스트 전용 페이지 (비로그인 접근 시 홈으로)
           {
             element: <HostGuard />,
             children: [

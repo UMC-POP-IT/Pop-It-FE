@@ -45,6 +45,7 @@ export type ReservationStatus =
   | "PENDING_APPROVAL"
   | "APPROVED"
   | "CONTRACT_COMPLETED"
+  | "PAYMENT_COMPLETED"
   | "IN_USE"
   | "USAGE_COMPLETED"
   | "CHECKOUT_COMPLETED"

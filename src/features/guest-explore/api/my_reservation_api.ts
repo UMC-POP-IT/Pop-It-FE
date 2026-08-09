@@ -1,8 +1,8 @@
 import { apiFetch } from "@/shared/utils/apiClient";
 
-// 차례대로 승인 대기, 승인 완료, 계약 완료(이용 전), 사용 중, 사용 완료, 퇴실 완료, 취소
-export type Status = "PENDING_APPROVAL" | "APPROVED" | "CONTRACT_COMPLETED" | "IN_USE" | "USAGE_COMPLETED" | "CHECKOUT_COMPLETED" | "CANCELLED";
-export type ContractStatus = "HOST_PENDING_SIGNATURE" | "GUEST_PENDING_SIGNATURE" | "COMPLETED"
+// 차례대로 승인 대기, 승인 완료, 계약 완료(결제 전/실패), 결제 완료(이용 전), 사용 중, 사용 완료, 퇴실 완료, 취소
+export type Status = "PENDING_APPROVAL" | "APPROVED" | "CONTRACT_COMPLETED" | "PAYMENT_COMPLETED" | "IN_USE" | "USAGE_COMPLETED" | "CHECKOUT_COMPLETED" | "CANCELLED";
+export type ContractStatus = "HOST_SIGNATURE_PENDING" | "GUEST_SIGNATURE_PENDING" | "PENDING_PAYMENT" | "COMPLETED"
 export interface Reservation {
 	reservationId: number;
     status: Status;
@@ -51,6 +51,7 @@ export interface GetEachResStateCountsResponse {
       PENDING_APPROVAL: number;
       APPROVED: number;
       CONTRACT_COMPLETED: number;
+      PAYMENT_COMPLETED: number;
       IN_USE: number;
       USAGE_COMPLETED: number;
       CHECKOUT_COMPLETED: number;
@@ -130,6 +131,8 @@ export interface CreateReservationResponse {
 }
 
 export interface GetPaymentInfoResponse {
+    contractId: number;
+    contractStatus: ContractStatus;
     spaceName: string;
     startDate: string;
     endDate: string;
@@ -253,7 +256,7 @@ export const SubmitSignature = (reservationId: number, request: SubmitSignatureR
         body: JSON.stringify(request),
 });
 
-// 결제 - 결제 예정 정보 조회 ~ DONE
+// 결제 - 결제 예정 정보 조회 ~ DONE + contractId 추가해야 됨
 export const GetPaymentInfo = (reservationId: number) => 
     apiFetch<GetPaymentInfoResponse>(`/api/v1/reservations/${reservationId}/contracts/payment-preview`);
 
