@@ -238,7 +238,6 @@ export const HostReservationPage = () => {
                 onDetail={() => navigate(`/host/spaces/${reservation.space.spaceId}`)}
                 onApprove={() => handleApproveClick(reservation.reservationId)}
                 onReject={() => setRejectTargetId(reservation.reservationId)}
-                onOpenContract={() => handleOpenContract(reservation.reservationId)}
                 onPhotoView={() => openPhotoView(reservation)}
                 onCheckoutApprove={() => setCheckoutApproveTargetId(reservation.reservationId)}
                 onCheckoutReject={() => setCheckoutRejectTargetId(reservation.reservationId)}
