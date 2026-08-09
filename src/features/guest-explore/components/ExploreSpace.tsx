@@ -128,6 +128,12 @@ const ExploreSpace = ({
     setCurrentPage(1);
     setInfinitePage(0);
     setSpaces([]);
+    // 이전 검색에서 무한스크롤 추가 로드가 실패한 채로 남아있으면(true), 새
+    // 검색은 infinitePage가 0부터 다시 시작하므로 isLoadMore가 false가 되어
+    // "다시 시도" 버튼을 눌러도 이 값을 false로 되돌릴 기회가 영영 없다 -
+    // 그 결과 새로 불러온 성공한 결과에도 에러 UI가 계속 뜨고, IntersectionObserver의
+    // !hasLoadMoreError 가드에 걸려 무한스크롤 자체가 막혀버린다. 여기서 같이 리셋한다.
+    setHasLoadMoreError(false);
   }
 
   // hasLoadedOnceRef 갱신은 렌더 중이 아니라 여기서만 한다 - ref를 렌더 도중에

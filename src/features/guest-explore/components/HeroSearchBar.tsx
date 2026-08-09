@@ -11,6 +11,7 @@ import {
 import {
   SPACE_CATEGORY_OPTIONS,
   SEOUL_DISTRICTS,
+  MAX_KEYWORD_LENGTH,
   type SpaceCategory,
   type ExploreSearchFilters,
 } from "@/features/guest-explore/api/space_search_api";
@@ -185,7 +186,10 @@ const HeroSearchBar = ({
     setIsDateOpen(false);
     markSearched();
     onSearch({
-      keyword: keywordInput.trim(),
+      // input에 maxLength를 걸어뒀지만, 붙여넣기 등으로 넘는 값이 들어올 수
+      // 있으니 실제로 검색을 확정하는 여기서도 한 번 더 자른다(ExplorePage의
+      // URL 복원 경로와 같은 상한을 쓴다 - space_search_api.ts 참고).
+      keyword: keywordInput.trim().slice(0, MAX_KEYWORD_LENGTH),
       spaceCategory: category,
       district,
       dateRange,
@@ -308,6 +312,7 @@ const HeroSearchBar = ({
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSubmit();
             }}
+            maxLength={MAX_KEYWORD_LENGTH}
             placeholder="공간 · 지역 세부 검색"
             className="text-text-primary placeholder:text-text-placeholder w-full text-[20px] leading-[1.4] font-medium outline-none"
           />

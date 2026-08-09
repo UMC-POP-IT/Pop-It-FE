@@ -13,6 +13,7 @@ import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import {
   SPACE_CATEGORY_OPTIONS,
   SEOUL_DISTRICTS,
+  MAX_KEYWORD_LENGTH,
   type ExploreSearchFilters,
   type SpaceCategory,
 } from "@/features/guest-explore/api/space_search_api";
@@ -33,13 +34,6 @@ const VALID_SPACE_CATEGORIES = new Set<string>(
   SPACE_CATEGORY_OPTIONS.map((option) => option.value),
 );
 const VALID_DISTRICTS = new Set<string>(SEOUL_DISTRICTS);
-
-// 검색어는 그냥 화면에 표시되고 백엔드로 그대로 전달될 뿐이라 XSS/인젝션
-// 위험은 없지만(React가 알아서 이스케이프하고, 요청도 쿼리스트링으로 안전하게
-// 인코딩된다), URL을 직접 조작해서 비정상적으로 긴 문자열을 넣으면 화면
-// 레이아웃이 깨지거나 불필요하게 큰 요청이 나갈 수 있다. 앞뒤 공백을 지우고
-// 길이를 제한해서 방어한다.
-const MAX_KEYWORD_LENGTH = 100;
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 /** Date → "YYYY-MM-DD"(로컬 날짜, 타임존 변환 없이 그대로). */

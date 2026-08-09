@@ -45,6 +45,15 @@ export const SEOUL_DISTRICTS = [
 /** 그리드 4x4 = 한 페이지당 16개 */
 export const DEFAULT_PAGE_SIZE = 16;
 
+/**
+ * 검색어 최대 길이. XSS/인젝션 방어 목적은 아니고(React가 알아서 이스케이프
+ * 하고 요청도 쿼리스트링으로 안전하게 인코딩된다), 비정상적으로 긴 문자열이
+ * 화면 레이아웃을 깨뜨리거나 불필요하게 큰 요청을 만드는 걸 막기 위함이다.
+ * HeroSearchBar(직접 입력)와 ExplorePage(URL 복원) 양쪽 다 이 값을 써서
+ * 어느 경로로 들어오든 같은 상한이 적용되게 한다.
+ */
+export const MAX_KEYWORD_LENGTH = 100;
+
 export interface SpaceSearchParams {
   keyword?: string;
   spaceCategory?: SpaceCategory | "";
