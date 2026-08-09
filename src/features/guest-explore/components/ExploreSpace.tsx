@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SpaceCard from "@/shared/components/SpaceCard";
-import ExploreSearchFilterBar from "./ExploreSearchFilterBar";
 import ExplorePagination from "./ExplorePagination";
 import ExploreSpaceMap from "./ExploreSpaceMap";
 import ExploreSpaceEmptyState from "./ExploreSpaceEmptyState";
@@ -9,7 +8,7 @@ import {
   getSpaces,
   toSpaceSummary,
   DEFAULT_PAGE_SIZE,
-  type SpaceCategory,
+  type ExploreSearchFilters,
   type SpaceSummary,
 } from "@/features/guest-explore/api/space_search_api";
 import { useWishStore } from "@/store/wishStore";
@@ -17,8 +16,6 @@ import { useAuthStore } from "@/store/authStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
 
 type FetchStatus = "loading" | "success" | "error";
-
-const KEYWORD_DEBOUNCE_MS = 400;
 
 /**
  * 새로 받아온 목록(summaries)에 로컬 찜 상태로 인한 낙관적 heartCount 보정을
@@ -58,15 +55,16 @@ const reconcileHeartCounts = (
   });
 };
 
-const ExploreSpace = () => {
+interface ExploreSpaceProps {
+  /** HeroSearchBar(히어로 검색바)에서 확정한 검색 조건. */
+  filters: ExploreSearchFilters;
+  /** empty state의 [조건 초기화] CTA - 상위(HomePage)의 필터 상태를 초기화한다. */
+  onResetFilters: () => void;
+}
+
+const ExploreSpace = ({ filters, onResetFilters }: ExploreSpaceProps) => {
   const navigate = useNavigate();
   const [isMapView, setIsMapView] = useState(false);
-
-  // 검색창은 즉시 반영(입력값 표시), 실제 API 호출은 디바운스된 keyword로 나간다.
-  const [keywordInput, setKeywordInput] = useState("");
-  const [keyword, setKeyword] = useState("");
-  const [category, setCategory] = useState<SpaceCategory | "">("");
-  const [district, setDistrict] = useState("");
   const [currentPage, setCurrentPage] = useState(1); // 화면 표기는 1부터, API 요청 시 -1
 
   const [status, setStatus] = useState<FetchStatus>("loading");
@@ -83,36 +81,12 @@ const ExploreSpace = () => {
   const user = useAuthStore((state) => state.user);
   const { handleWishToggle } = useWishGuard();
 
-  // 검색어 디바운스: 타이핑이 멈춘 뒤 400ms 후에만 실제 조회 조건에 반영하고,
-  // 동시에 1페이지로 리셋한다(같은 시점에 상태를 함께 바꿔 불필요한 재조회를 막는다).
+  const { keyword, spaceCategory, district } = filters;
+
+  // 상위(HeroSearchBar)에서 새 검색 조건이 확정될 때마다 1페이지로 되돌린다.
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setKeyword(keywordInput.trim());
-      setCurrentPage(1);
-    }, KEYWORD_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [keywordInput]);
-
-  const handleCategoryChange = (value: SpaceCategory | "") => {
-    setCategory(value);
     setCurrentPage(1);
-  };
-
-  const handleDistrictChange = (value: string) => {
-    setDistrict(value);
-    setCurrentPage(1);
-  };
-
-  // 검색 결과가 없을 때 empty state의 [조건 초기화] CTA: 검색어·카테고리·지역 필터를
-  // 모두 해제하고 1페이지로 되돌린다. keywordInput까지 같이 비워야 디바운스 타이머가
-  // 지연 없이 즉시 keyword=""로 반영되고, 검색 입력창 UI도 함께 초기화된다.
-  const handleResetFilters = () => {
-    setKeywordInput("");
-    setKeyword("");
-    setCategory("");
-    setDistrict("");
-    setCurrentPage(1);
-  };
+  }, [keyword, spaceCategory, district]);
 
   useEffect(() => {
     let ignore = false;
@@ -129,7 +103,7 @@ const ExploreSpace = () => {
       try {
         const result = await getSpaces({
           keyword: keyword || undefined,
-          spaceCategory: category || undefined,
+          spaceCategory: spaceCategory || undefined,
           district: district || undefined,
           page: currentPage - 1,
           size: DEFAULT_PAGE_SIZE,
@@ -170,7 +144,7 @@ const ExploreSpace = () => {
       ignore = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyword, category, district, currentPage, retryKey]);
+  }, [keyword, spaceCategory, district, currentPage, retryKey]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / DEFAULT_PAGE_SIZE));
 
@@ -196,18 +170,28 @@ const ExploreSpace = () => {
 
   return (
     <section className="mt-14 w-full">
-      <h2 className="text-text-primary mb-6 text-2xl font-bold">공간 탐색</h2>
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-text-primary text-2xl font-bold">공간 탐색</h2>
 
-      <ExploreSearchFilterBar
-        isMapView={isMapView}
-        onToggleMapView={() => setIsMapView((prev) => !prev)}
-        keyword={keywordInput}
-        onKeywordChange={setKeywordInput}
-        category={category}
-        onCategoryChange={handleCategoryChange}
-        district={district}
-        onDistrictChange={handleDistrictChange}
-      />
+        <button
+          type="button"
+          aria-pressed={isMapView}
+          onClick={() => setIsMapView((prev) => !prev)}
+          className={`flex items-center justify-center gap-[6px] rounded-full px-4 py-[10px] text-lg transition-colors ${
+            isMapView
+              ? "bg-primary text-white"
+              : "bg-primary-light text-text-primary hover:bg-primary-light/80"
+          }`}
+        >
+          <svg width="20" height="20" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+            <path
+              d="M11.5334 5.26611C11.6648 5.23524 11.8043 5.25006 11.9276 5.31169L17.5 8.09733L23.0724 5.31169C23.2531 5.22134 23.4679 5.23069 23.6398 5.33675C23.8118 5.44304 23.9167 5.63133 23.9167 5.8335V20.4168C23.9167 20.6378 23.7919 20.8398 23.5942 20.9386L17.7609 23.8553C17.5967 23.9374 17.4033 23.9374 17.2391 23.8553L11.6667 21.0685L6.09424 23.8553C5.91355 23.9457 5.69877 23.9363 5.52686 23.8302C5.35488 23.724 5.25 23.5357 5.25 23.3335V8.75016C5.25 8.52921 5.3748 8.32717 5.57243 8.22835L11.4058 5.31169L11.5334 5.26611ZM6.41667 9.11019V22.389L11.0833 20.0557V6.77686L6.41667 9.11019ZM12.25 20.0557L16.9167 22.389V9.11019L12.25 6.77686V20.0557ZM18.0833 9.11019V22.389L22.75 20.0557V6.77686L18.0833 9.11019Z"
+              fill="currentColor"
+            />
+          </svg>
+          <span>지도</span>
+        </button>
+      </div>
 
       {status === "loading" && (
         <div className="bg-tag-bg mt-6 flex h-[400px] w-full items-center justify-center rounded-xl">
@@ -233,7 +217,7 @@ const ExploreSpace = () => {
       )}
 
       {status === "success" && isMapView && spaces.length === 0 && (
-        <ExploreSpaceEmptyState onResetFilters={handleResetFilters} />
+        <ExploreSpaceEmptyState onResetFilters={onResetFilters} />
       )}
 
       {status === "success" && isMapView && spaces.length > 0 && (
@@ -246,7 +230,7 @@ const ExploreSpace = () => {
       )}
 
       {status === "success" && !isMapView && spaces.length === 0 && (
-        <ExploreSpaceEmptyState onResetFilters={handleResetFilters} />
+        <ExploreSpaceEmptyState onResetFilters={onResetFilters} />
       )}
 
       {status === "success" && !isMapView && spaces.length > 0 && (

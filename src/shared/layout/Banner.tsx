@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, type ReactNode } from "react";
 import background1 from "@/assets/banner/background_1.jpg";
 import background2 from "@/assets/banner/background_2.jpg";
 import background3 from "@/assets/banner/background_3.jpg";
@@ -34,7 +34,12 @@ const slides: BannerSlide[] = [
 const AUTOPLAY_INTERVAL_MS = 40000;
 const SWIPE_THRESHOLD_PX = 50;
 
-const Banner = () => {
+interface BannerProps {
+  /** 배너 하단에 얹을 콘텐츠 (예: 게스트 메인의 히어로 검색바). */
+  children?: ReactNode;
+}
+
+const Banner = ({ children }: BannerProps) => {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const total = slides.length;
@@ -83,7 +88,7 @@ const Banner = () => {
 
   return (
     <div
-      className="group relative left-1/2 right-1/2 -mx-[50vw] -mt-8 h-[300px] w-screen bg-cover bg-center transition-[background-image] duration-500"
+      className={`group relative left-1/2 right-1/2 -mx-[50vw] -mt-8 w-screen bg-cover bg-center transition-[background-image] duration-500 ${children ? "h-[483px]" : "h-[300px]"}`}
       style={{ backgroundImage: `url(${slide.image})` }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -92,12 +97,17 @@ const Banner = () => {
       onTouchCancel={resetTouchState}
     >
       <div
-        className={`relative mx-auto flex h-full w-full max-w-screen-xl flex-col justify-center gap-4 px-10 md:px-16 ${slide.textClassName}`}
+        className={`relative mx-auto flex h-full w-full max-w-screen-xl flex-col justify-center px-4 md:px-10 xl:px-[76px] ${slide.textClassName}`}
       >
-        <h2 className="text-2xl leading-snug font-bold whitespace-pre-line md:text-3xl">
-          {slide.title}
-        </h2>
-        <p className="text-sm opacity-80 md:text-base">{slide.subtitle}</p>
+        <div className="flex flex-col gap-4">
+          <h2 className={`leading-snug font-bold whitespace-pre-line ${children ? "text-3xl md:text-4xl xl:text-[40px] xl:font-extrabold" : "text-2xl md:text-3xl"}`}>
+            {slide.title}
+          </h2>
+          <p className={`opacity-80 ${children ? "text-sm md:text-base xl:text-[20px]" : "text-sm md:text-base"}`}>
+            {slide.subtitle}
+          </p>
+        </div>
+        {children && <div className="mt-10 w-full max-w-[1200px] xl:mt-20">{children}</div>}
         <div aria-atomic="true" aria-live="polite" className="absolute right-10 bottom-6 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white md:right-16">
           {current + 1} / {total}
         </div>

@@ -1,0 +1,200 @@
+import { useRef, useState } from "react";
+import FilterDropdown from "./FilterDropdown";
+import DateRangeCalendar, { type DateRange } from "@/shared/components/DateRangeCalendar";
+import { useOutsideClick } from "@/shared/hooks/useOutsideClick";
+import { useSearchHistoryStore } from "@/store/searchHistoryStore";
+import {
+  SPACE_CATEGORY_OPTIONS,
+  SEOUL_DISTRICTS,
+  type SpaceCategory,
+  type ExploreSearchFilters,
+} from "@/features/guest-explore/api/space_search_api";
+
+const byKoreanLabel = <T extends { label: string }>(a: T, b: T) =>
+  a.label.localeCompare(b.label, "ko");
+
+const CATEGORY_OPTIONS: { value: SpaceCategory | ""; label: string }[] = [
+  { value: "", label: "전체" },
+  ...[...SPACE_CATEGORY_OPTIONS].sort(byKoreanLabel),
+];
+
+const DISTRICT_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "서울 전체" },
+  ...SEOUL_DISTRICTS.map((d) => ({ value: d, label: d })).sort(byKoreanLabel),
+];
+
+const DISTRICT_MAX_VISIBLE_OPTIONS = 6;
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const formatShort = (d: Date) => `${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`;
+const isSameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+const formatDateRangeLabel = (range: DateRange) => {
+  if (!range.start) return "전체";
+  if (!range.end || isSameDay(range.start, range.end)) return formatShort(range.start);
+  return `${formatShort(range.start)} ~ ${formatShort(range.end)}`;
+};
+
+// 세그먼트 트리거 공통 스타일: 배경/테두리 없이 라벨(작게) + 값(굵게) 2줄.
+// 바깥 pill의 border/구분선은 HeroSearchBar 래퍼가 담당한다.
+const segmentTriggerClassName =
+  "flex h-full w-full cursor-pointer flex-col items-start justify-center gap-1.5 px-8 py-4 text-left";
+
+// 피그마 고정폭(공간유형 227 / 날짜 215 / 지역 215)과 동일하게 맞춘다.
+// 날짜 드롭다운 패널을 검색바 왼쪽 라인에 맞추려면(아래 CALENDAR_LEFT_OFFSET_PX)
+// 이 폭이 실제 렌더 폭과 항상 같아야 하므로 min-w가 아니라 고정 w로 둔다.
+const CATEGORY_SEGMENT_WIDTH_PX = 227;
+const DATE_SEGMENT_WIDTH_PX = 215;
+const DISTRICT_SEGMENT_WIDTH_PX = 215;
+// 날짜 세그먼트 자신의 왼쪽 기준으로 -공간유형폭만큼 당겨서, 패널의 왼쪽 끝이
+// 검색바 전체의 왼쪽 끝(공간 유형 라벨 시작 지점)과 정확히 맞도록 한다.
+const CALENDAR_LEFT_OFFSET_PX = -CATEGORY_SEGMENT_WIDTH_PX;
+
+interface SegmentTriggerContentProps {
+  label: string;
+  value: string;
+}
+
+const SegmentTriggerContent = ({ label, value }: SegmentTriggerContentProps) => (
+  <>
+    <span className="text-text-secondary text-[18px] leading-[1.4]">{label}</span>
+    <span className="text-text-primary text-[20px] leading-[1.4] font-bold">{value}</span>
+  </>
+);
+
+interface HeroSearchBarProps {
+  onSearch: (filters: ExploreSearchFilters) => void;
+}
+
+/**
+ * 히어로 배너 안에 들어가는 통합 검색바.
+ * 공간유형/날짜/지역은 선택 즉시 반영되지 않고, 검색 버튼(또는 검색어 입력에서
+ * Enter)을 눌러야 한 번에 확정되어 onSearch로 전달된다 - AI 맞춤형 공간 노출
+ * 조건("검색을 실행한 적 있음")과 의미를 맞추기 위함이다.
+ */
+const HeroSearchBar = ({ onSearch }: HeroSearchBarProps) => {
+  const [keywordInput, setKeywordInput] = useState("");
+  const [category, setCategory] = useState<SpaceCategory | "">("");
+  const [district, setDistrict] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
+  const [isDateOpen, setIsDateOpen] = useState(false);
+  const dateContainerRef = useRef<HTMLDivElement>(null);
+
+  useOutsideClick(dateContainerRef, () => setIsDateOpen(false), isDateOpen);
+
+  const markSearched = useSearchHistoryStore((s) => s.markSearched);
+
+  const handleSubmit = () => {
+    setIsDateOpen(false);
+    markSearched();
+    onSearch({
+      keyword: keywordInput.trim(),
+      spaceCategory: category,
+      district,
+      dateRange,
+    });
+  };
+
+  return (
+    // overflow-hidden을 주지 않는다 - 드롭다운/캘린더 패널이 이 pill의 자식으로
+    // absolute 포지셔닝되는데, 여기 overflow-hidden이 있으면 패널이 pill 안쪽에서
+    // 잘려 보인다. 세그먼트들은 자체 배경이 없어(overflow 없어도) 둥근 모서리
+    // 밖으로 삐져나오지 않는다.
+    <div className="border-text-secondary flex items-stretch rounded-full border bg-white">
+      <div
+        className="border-[#c5c5c5] flex shrink-0 items-stretch border-r"
+        style={{ width: CATEGORY_SEGMENT_WIDTH_PX }}
+      >
+        <FilterDropdown
+          ariaLabel="공간 용도 필터"
+          options={CATEGORY_OPTIONS}
+          value={category}
+          onChange={setCategory}
+          triggerClassName={segmentTriggerClassName}
+          renderTrigger={({ selected }) => (
+            <SegmentTriggerContent label="공간 유형" value={selected?.label ?? "전체"} />
+          )}
+        />
+      </div>
+
+      <div
+        className="border-[#c5c5c5] relative flex shrink-0 items-stretch border-r"
+        style={{ width: DATE_SEGMENT_WIDTH_PX }}
+        ref={dateContainerRef}
+      >
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded={isDateOpen}
+          onClick={() => setIsDateOpen((prev) => !prev)}
+          className={segmentTriggerClassName}
+        >
+          <SegmentTriggerContent label="날짜" value={formatDateRangeLabel(dateRange)} />
+        </button>
+        {isDateOpen && (
+          <div
+            className="absolute top-full z-20 mt-2"
+            style={{ left: CALENDAR_LEFT_OFFSET_PX }}
+          >
+            <DateRangeCalendar
+              value={dateRange}
+              onChange={setDateRange}
+              onConfirm={() => setIsDateOpen(false)}
+              onReset={() => setDateRange({ start: null, end: null })}
+            />
+          </div>
+        )}
+      </div>
+
+      <div
+        className="border-[#c5c5c5] flex shrink-0 items-stretch border-r"
+        style={{ width: DISTRICT_SEGMENT_WIDTH_PX }}
+      >
+        <FilterDropdown
+          ariaLabel="지역(구) 필터"
+          options={DISTRICT_OPTIONS}
+          value={district}
+          onChange={setDistrict}
+          maxVisibleOptions={DISTRICT_MAX_VISIBLE_OPTIONS}
+          triggerClassName={segmentTriggerClassName}
+          renderTrigger={({ selected }) => (
+            <SegmentTriggerContent label="지역" value={selected?.label ?? "서울 전체"} />
+          )}
+        />
+      </div>
+
+      <div className="flex flex-1 items-center gap-2.5 pr-3">
+        <div className="flex flex-1 flex-col justify-center gap-1.5 px-5 py-4">
+          <label htmlFor="hero-search-keyword" className="text-text-secondary text-[18px] leading-[1.4]">
+            검색어
+          </label>
+          <input
+            id="hero-search-keyword"
+            type="text"
+            value={keywordInput}
+            onChange={(e) => setKeywordInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSubmit();
+            }}
+            placeholder="공간 · 지역 세부 검색"
+            className="text-text-primary placeholder:text-text-placeholder w-full text-[20px] leading-[1.4] font-medium outline-none"
+          />
+        </div>
+        <button
+          type="button"
+          aria-label="검색"
+          onClick={handleSubmit}
+          className="bg-primary-hover flex size-12 shrink-0 items-center justify-center rounded-full text-white"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+            <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default HeroSearchBar;
