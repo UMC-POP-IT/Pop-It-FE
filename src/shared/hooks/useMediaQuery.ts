@@ -6,15 +6,15 @@ import { useEffect, useState } from "react";
  * 때마다 자동으로 갱신된다.
  */
 export const useMediaQuery = (query: string): boolean => {
-  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+  const [isMatches, setIsMatches] = useState(() => window.matchMedia(query).matches);
 
   useEffect(() => {
     const mediaQueryList = window.matchMedia(query);
-    const handleChange = () => setMatches(mediaQueryList.matches);
+    const handleChange = () => setIsMatches(mediaQueryList.matches);
     handleChange(); // query 문자열이 바뀌었을 수도 있으니 구독 직후 한 번 동기화
     mediaQueryList.addEventListener("change", handleChange);
     return () => mediaQueryList.removeEventListener("change", handleChange);
   }, [query]);
 
-  return matches;
+  return isMatches;
 };
