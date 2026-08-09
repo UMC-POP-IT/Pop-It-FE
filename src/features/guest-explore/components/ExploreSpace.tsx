@@ -111,8 +111,16 @@ const ExploreSpace = ({ filters, onResetFilters, resultsMode = false }: ExploreS
     setCurrentPage(1);
     setInfinitePage(0);
     setSpaces([]);
-    hasLoadedOnceRef.current = false;
   }
+
+  // hasLoadedOnceRef 갱신은 렌더 중이 아니라 여기서만 한다 - ref를 렌더 도중에
+  // mutate하는 건 impure해서(StrictMode 이중 렌더/버려지는 렌더에서 부작용이
+  // 생길 수 있음) 지양해야 한다는 지적을 반영했다. 아래 조회 effect보다 먼저
+  // 선언돼 있어야 같은 커밋에서 먼저 실행되어, 조회 effect가 항상 리셋된 값을
+  // 보게 된다(effect는 선언 순서대로 실행된다).
+  useEffect(() => {
+    hasLoadedOnceRef.current = false;
+  }, [prevFilterKey]);
 
   useEffect(() => {
     let ignore = false;

@@ -7,25 +7,62 @@ import Banner from "@/shared/layout/Banner";
 import HeroSearchBar from "@/features/guest-explore/components/HeroSearchBar";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";
 import { useScrollSearchBarStore, type ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
-import type { ExploreSearchFilters, SpaceCategory } from "@/features/guest-explore/api/space_search_api";
+import {
+  SPACE_CATEGORY_OPTIONS,
+  type ExploreSearchFilters,
+  type SpaceCategory,
+} from "@/features/guest-explore/api/space_search_api";
 
 // 검색 실행 여부/조건을 URL 쿼리스트링에 반영한다 - 새로고침해도 결과 화면이
 // 유지되고, URL을 복사/공유하면 같은 검색 결과로 다시 진입할 수 있고, 브라우저
 // 뒤로가기를 누르면 검색 전 화면으로 자연스럽게 돌아간다.
-// 날짜(dateRange)는 백엔드가 날짜 필터를 지원하지 않아(검색 결과에 영향이 없는
-// 화면 전용 값) URL에는 반영하지 않는다 - 새로고침/뒤로가기 시 항상 초기화된다.
+// 날짜(dateRange)도 여기 포함해서 URL에 반영한다 - 백엔드 /api/v1/spaces가
+// 날짜 필터를 지원하지 않아 getSpaces 요청에는 여전히 실어 보내지 않지만
+// (ExploreSpace는 filters.dateRange를 아예 읽지 않는다), URL에 안 담으면
+// 검색 실행 직후·새로고침·뒤로가기마다 사용자가 고른 날짜가 화면에서 조용히
+// 사라져버리는 문제가 있었다.
 const SEARCH_FLAG_PARAM = "search";
+const DATE_START_PARAM = "dateStart";
+const DATE_END_PARAM = "dateEnd";
 
 // Header.tsx의 sticky 헤더 높이(h-[74px])와 반드시 맞춰야 한다.
 const HEADER_HEIGHT_PX = 74;
 
-const filtersFromSearchParams = (
-  params: URLSearchParams,
-): Pick<ExploreSearchFilters, "keyword" | "spaceCategory" | "district"> => ({
-  keyword: params.get("keyword") ?? "",
-  spaceCategory: (params.get("spaceCategory") as SpaceCategory | null) ?? "",
-  district: params.get("district") ?? "",
-});
+const VALID_SPACE_CATEGORIES = new Set<string>(
+  SPACE_CATEGORY_OPTIONS.map((option) => option.value),
+);
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+/** Date → "YYYY-MM-DD"(로컬 날짜, 타임존 변환 없이 그대로). */
+const formatDateParam = (date: Date) =>
+  `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+/** "YYYY-MM-DD" → Date. 형식이 안 맞거나 없으면 null(잘못된 URL을 조용히 무시). */
+const parseDateParam = (value: string | null): Date | null => {
+  const match = value ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(value) : null;
+  if (!match) return null;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const filtersFromSearchParams = (params: URLSearchParams): ExploreSearchFilters => {
+  // URL은 사용자가 직접 편집하거나 오래된 링크를 통해 들어올 수 있어, 실제
+  // 존재하는 카테고리 값인지 검증한다. 검증 없이 그냥 캐스팅만 하면 잘못된
+  // 값이 그대로 FilterDropdown(라벨을 못 찾아 빈 칸)과 getSpaces 요청(백엔드가
+  // 모르는 카테고리)까지 흘러들어간다.
+  const rawCategory = params.get("spaceCategory");
+  const spaceCategory: SpaceCategory | "" =
+    rawCategory && VALID_SPACE_CATEGORIES.has(rawCategory) ? (rawCategory as SpaceCategory) : "";
+
+  return {
+    keyword: params.get("keyword") ?? "",
+    spaceCategory,
+    district: params.get("district") ?? "",
+    dateRange: {
+      start: parseDateParam(params.get(DATE_START_PARAM)),
+      end: parseDateParam(params.get(DATE_END_PARAM)),
+    },
+  };
+};
 
 export const ExplorePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,13 +72,8 @@ export const ExplorePage = () => {
   // 개별 필터 값 유무만으로는 판단할 수 없다). true면 배너 이미지/AI 추천/실시간
   // 추천이 사라지고 검색 결과 전용 화면(무한스크롤)으로 바뀐다.
   const hasActiveSearch = searchParams.get(SEARCH_FLAG_PARAM) === "1";
-  const { keyword, spaceCategory, district } = filtersFromSearchParams(searchParams);
-  const searchFilters: ExploreSearchFilters = {
-    keyword,
-    spaceCategory,
-    district,
-    dateRange: { start: null, end: null },
-  };
+  const searchFilters = filtersFromSearchParams(searchParams);
+  const { keyword, spaceCategory, district, dateRange } = searchFilters;
 
   const hasSearched = useSearchHistoryStore((state) => state.hasSearched);
 
@@ -62,6 +94,8 @@ export const ExplorePage = () => {
     if (filters.keyword) next.set("keyword", filters.keyword);
     if (filters.spaceCategory) next.set("spaceCategory", filters.spaceCategory);
     if (filters.district) next.set("district", filters.district);
+    if (filters.dateRange.start) next.set(DATE_START_PARAM, formatDateParam(filters.dateRange.start));
+    if (filters.dateRange.end) next.set(DATE_END_PARAM, formatDateParam(filters.dateRange.end));
     // 아직 결과 화면이 아니었다면(처음 검색) 새 히스토리 항목을 쌓아 뒤로가기로
     // 검색 전 화면에 돌아갈 수 있게 하고, 이미 결과 화면이면(조건만 바꿔 재검색)
     // 히스토리를 계속 쌓지 않도록 현재 항목을 교체한다.
@@ -143,6 +177,7 @@ export const ExplorePage = () => {
           initialKeyword={keyword}
           initialCategory={spaceCategory}
           initialDistrict={district}
+          initialDateRange={dateRange}
           onSummaryChange={hasActiveSearch ? setSummary : undefined}
         />
       </Banner>

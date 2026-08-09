@@ -111,7 +111,7 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-40 w-full bg-white drop-shadow-[0px_4px_5px_rgba(0,0,0,0.12)]">
       {/* 피그마: 전체 px-[40px], 좌측 gap-[32px](로고↔nav), 우측 gap-[20px] */}
-      <div className="flex h-[74px] w-full items-center px-[10px] md:px-[40px]">
+      <div className="relative flex h-[74px] w-full items-center px-[10px] md:px-[40px]">
         {/* 좌측: 로고 + nav (gap-[32px]) */}
         <div className="flex items-center gap-8">
           <NavLink
@@ -186,23 +186,30 @@ const Header = () => {
           </nav>
         </div>
 
-        {/* 검색 결과 화면 전용: 스크롤을 내리면 이 자리에 축소된 검색바 pill이
+        {/* 검색 결과 화면 전용: 스크롤을 내리면 헤더 정중앙에 축소된 검색바 pill이
             나타난다. 클릭하면 헤더 바로 아래에 원래 검색바가 오버레이로 펼쳐진다
             (Banner의 searchBarPosition="pinned-open"). 좁은 화면에서는 넣을
-            공간이 부족해 숨긴다. */}
+            공간이 부족해 숨긴다.
+            좌/우 그룹(로고+nav, 모드전환+프로필)의 너비가 서로 달라서 그 사이의
+            남는 공간만 flex-1로 채우면 헤더 전체 기준으로는 중앙에서 벗어난다.
+            그래서 이 wrapper는 일반 flex 흐름에서 빼고 부모(relative)를 기준으로
+            absolute + inset-x-0 + justify-center로 항상 헤더 정중앙에 오게 한다.
+            wrapper는 pointer-events-none으로 두고, 실제 버튼만 pointer-events-auto로
+            켜서 숨겨진 상태에서도 다른 영역(nav, 프로필 등) 클릭을 막지 않는다. */}
         {scrollBarSummary && (
           <div
-            className={`hidden flex-1 justify-center transition-all duration-300 ease-out md:flex ${
-              isScrollBarVisible
-                ? "translate-y-0 scale-100 opacity-100"
-                : "pointer-events-none -translate-y-1 scale-95 opacity-0"
+            className={`pointer-events-none absolute inset-x-0 top-1/2 hidden -translate-y-1/2 justify-center transition-all duration-300 ease-out md:flex ${
+              isScrollBarVisible ? "scale-100 opacity-100" : "scale-95 opacity-0"
             }`}
           >
             <button
               type="button"
               onClick={() => expandScrollBar?.()}
               aria-label="검색 조건 펼치기"
-              className="border-divider flex cursor-pointer items-center gap-3 rounded-full border bg-white py-2 pr-2 pl-5 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)]"
+              disabled={!isScrollBarVisible}
+              className={`border-divider pointer-events-auto flex items-center gap-3 rounded-full border bg-white py-2 pr-2 pl-5 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] ${
+                isScrollBarVisible ? "cursor-pointer" : "cursor-default"
+              }`}
             >
               <span className="text-text-primary text-sm font-bold whitespace-nowrap">
                 {scrollBarSummary.categoryLabel}

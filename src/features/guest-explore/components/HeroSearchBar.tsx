@@ -89,12 +89,17 @@ interface HeroSearchBarProps {
   /**
    * URL 쿼리스트링에서 복원한 초기값(딥링크/뒤로가기/조건 초기화 대응).
    * 상위(ExplorePage)가 URL이 바뀔 때마다 이 컴포넌트를 key로 새로 마운트시켜서
-   * 넘겨주므로, 여기서는 useState의 초기값으로만 쓰면 된다. 날짜는 URL에
-   * 반영하지 않으므로 항상 빈 값에서 시작한다.
+   * 넘겨주므로, 여기서는 useState의 초기값으로만 쓰면 된다.
    */
   initialKeyword?: string;
   initialCategory?: SpaceCategory | "";
   initialDistrict?: string;
+  /**
+   * 날짜도 URL에 반영된다(getSpaces 요청에는 여전히 실어 보내지 않지만, 검색
+   * 실행 직후·새로고침·뒤로가기 때 화면에서 조용히 사라지지 않도록 화면 표시용
+   * 상태만 복원한다).
+   */
+  initialDateRange?: DateRange;
   /**
    * 지금 화면에 표시 중인 라벨(공간유형/날짜/지역/검색어)이 바뀔 때마다 호출된다.
    * 검색 결과 화면(compact)에서 스크롤을 내렸을 때 헤더에 뜨는 축소된 pill이
@@ -118,12 +123,13 @@ const HeroSearchBar = ({
   initialKeyword = "",
   initialCategory = "",
   initialDistrict = "",
+  initialDateRange = { start: null, end: null },
   onSummaryChange,
 }: HeroSearchBarProps) => {
   const [keywordInput, setKeywordInput] = useState(initialKeyword);
   const [category, setCategory] = useState<SpaceCategory | "">(initialCategory);
   const [district, setDistrict] = useState(initialDistrict);
-  const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
+  const [dateRange, setDateRange] = useState<DateRange>(initialDateRange);
   const [isDateOpen, setIsDateOpen] = useState(false);
   const dateContainerRef = useRef<HTMLDivElement>(null);
 
