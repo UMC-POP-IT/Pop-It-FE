@@ -40,7 +40,11 @@ import { SpaceEditEntry } from "@/features/host-register/pages/SpaceEditEntry";
 const HostGuard = () => {
   const user = useAuthStore((s) => s.user);
   const isSessionReady = useAuthStore((s) => s.isSessionReady);
-  if (!isSessionReady) return null;
+  if (!isSessionReady) return (
+    <div className="bg-tag-bg flex h-[224px] w-full items-center justify-center rounded-xl">
+      <p className="text-text-primary text-xl font-medium">불러오는 중...</p>
+    </div>
+  );
   return user ? <Outlet /> : <Navigate to="/" replace />;
 };
 

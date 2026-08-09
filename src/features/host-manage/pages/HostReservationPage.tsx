@@ -112,6 +112,11 @@ export const HostReservationPage = () => {
     setIsPaymentModalOpen(true);
   };
 
+  const handleOpenContract = (id: number) => {
+    setApproveTargetId(id);
+    setIsContractModalOpen(true);
+  };
+
   const handleSignContract = async () => {
     if (approveTargetId === null) return;
     setIsApproving(true);
@@ -236,6 +241,7 @@ export const HostReservationPage = () => {
                 onPhotoView={() => openPhotoView(reservation)}
                 onCheckoutApprove={() => setCheckoutApproveTargetId(reservation.reservationId)}
                 onCheckoutReject={() => setCheckoutRejectTargetId(reservation.reservationId)}
+                onOpenContract={() => handleOpenContract(reservation.reservationId)}
               />
             ))}
           </div>
