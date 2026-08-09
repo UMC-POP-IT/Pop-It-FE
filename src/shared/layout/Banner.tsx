@@ -37,9 +37,18 @@ const SWIPE_THRESHOLD_PX = 50;
 interface BannerProps {
   /** 배너 하단에 얹을 콘텐츠 (예: 게스트 메인의 히어로 검색바). */
   children?: ReactNode;
+  /**
+   * false면 배경 이미지/캐러셀 텍스트/카운터를 감춘 얇은 흰 바만 남기고 children만
+   * 보여준다(검색 실행 후 결과 화면). 이 소속 형제 엘리먼트 배열 구조 자체는
+   * showImage 값과 무관하게 항상 동일하게 유지해야 한다 - 조건부로 엘리먼트를
+   * 아예 안 그리면(트리에서 제거) children(검색바) 자리의 인덱스가 밀려서 React가
+   * 다른 타입으로 오인해 리마운트시키고, 그 안의 HeroSearchBar 입력 상태가
+   * 날아간다. 그래서 안 보일 땐 렌더링을 생략하는 대신 hidden 클래스로만 감춘다.
+   */
+  showImage?: boolean;
 }
 
-const Banner = ({ children }: BannerProps) => {
+const Banner = ({ children, showImage = true }: BannerProps) => {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const total = slides.length;
@@ -86,10 +95,14 @@ const Banner = ({ children }: BannerProps) => {
 
   const slide = slides[current];
 
+  const hasHero = Boolean(children); // 히어로 검색바가 있는 화면(게스트 메인)인지
+
   return (
     <div
-      className={`group relative left-1/2 right-1/2 -mx-[50vw] -mt-8 w-screen bg-cover bg-center transition-[background-image] duration-500 ${children ? "h-[483px]" : "h-[300px]"}`}
-      style={{ backgroundImage: `url(${slide.image})` }}
+      className={`group relative left-1/2 right-1/2 -mx-[50vw] w-screen bg-cover bg-center transition-[background-image] duration-500 ${
+        showImage ? `-mt-8 ${hasHero ? "h-[483px]" : "h-[300px]"}` : "pt-8"
+      }`}
+      style={showImage ? { backgroundImage: `url(${slide.image})` } : undefined}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
@@ -97,18 +110,24 @@ const Banner = ({ children }: BannerProps) => {
       onTouchCancel={resetTouchState}
     >
       <div
-        className={`relative mx-auto flex h-full w-full max-w-screen-xl flex-col justify-center px-4 md:px-10 xl:px-[76px] ${slide.textClassName}`}
+        className={`relative mx-auto flex w-full max-w-screen-xl flex-col justify-center px-4 md:px-10 xl:px-[76px] ${showImage ? `h-full ${slide.textClassName}` : ""}`}
       >
-        <div className="flex flex-col gap-4">
-          <h2 className={`leading-snug font-bold whitespace-pre-line ${children ? "text-3xl md:text-4xl xl:text-[40px] xl:font-extrabold" : "text-2xl md:text-3xl"}`}>
+        <div className={`flex flex-col gap-4 ${showImage ? "" : "hidden"}`}>
+          <h2 className={`leading-snug font-bold whitespace-pre-line ${hasHero ? "text-3xl md:text-4xl xl:text-[40px] xl:font-extrabold" : "text-2xl md:text-3xl"}`}>
             {slide.title}
           </h2>
-          <p className={`opacity-80 ${children ? "text-sm md:text-base xl:text-[20px]" : "text-sm md:text-base"}`}>
+          <p className={`opacity-80 ${hasHero ? "text-sm md:text-base xl:text-[20px]" : "text-sm md:text-base"}`}>
             {slide.subtitle}
           </p>
         </div>
-        {children && <div className="mt-10 w-full max-w-[1200px] xl:mt-20">{children}</div>}
-        <div aria-atomic="true" aria-live="polite" className="absolute right-10 bottom-6 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white md:right-16">
+        {children && (
+          <div className={`w-full max-w-[1200px] ${showImage ? "mt-10 xl:mt-20" : ""}`}>{children}</div>
+        )}
+        <div
+          aria-atomic="true"
+          aria-live="polite"
+          className={`absolute right-10 bottom-6 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white md:right-16 ${showImage ? "" : "hidden"}`}
+        >
           {current + 1} / {total}
         </div>
       </div>

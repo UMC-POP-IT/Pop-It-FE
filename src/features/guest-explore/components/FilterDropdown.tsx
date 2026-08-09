@@ -22,8 +22,13 @@ interface FilterDropdownProps<T extends string> {
    * 열림/닫힘 상태, 키보드/외부 클릭 처리 등 나머지 동작은 그대로 재사용된다.
    */
   renderTrigger?: (args: { selected: FilterDropdownOption<T> | undefined; isOpen: boolean }) => ReactNode;
-  /** 기본 pill 트리거 대신 renderTrigger를 쓸 때 버튼에 적용할 className */
-  triggerClassName?: string;
+  /**
+   * 기본 pill 트리거 대신 renderTrigger를 쓸 때 버튼에 적용할 className.
+   * 열림 여부에 따라 트리거 스타일을 바꿔야 하면(예: 열렸을 때 배경 강조)
+   * 함수로 넘긴다 - isOpen은 이 컴포넌트가 내부에서 관리해서 부모에게
+   * 노출하지 않으므로, 부모가 직접 조건부 className을 만들 수 없다.
+   */
+  triggerClassName?: string | ((isOpen: boolean) => string);
 }
 
 // 옵션 버튼 한 줄의 실제 높이(px) - py-3(24px) + text-lg 기본 줄높이(28px).
@@ -132,7 +137,12 @@ const FilterDropdown = function <T extends string>({
   };
 
   return (
-    <div className="relative" ref={containerRef}>
+    // h-full w-full: HeroSearchBar처럼 고정폭 부모 안에 넣고 renderTrigger로
+    // 트리거를 꽉 채우려는 경우, 이 루트 div가 먼저 부모(고정폭 wrapper) 크기를
+    // 그대로 채워야 그 안의 버튼도 w-full/h-full이 실제로 꽉 찬다. 이게 없으면
+    // 버튼이 텍스트 내용만큼만 좁게 렌더링되고(예: bg-primary-light가 절반만
+    // 채워짐), 나머지는 빈 여백으로 남는다.
+    <div className="relative h-full w-full" ref={containerRef}>
       <button
         ref={triggerRef}
         type="button"
@@ -142,7 +152,9 @@ const FilterDropdown = function <T extends string>({
         onClick={() => (isOpen ? setIsOpen(false) : openDropdown())}
         className={
           renderTrigger
-            ? triggerClassName
+            ? typeof triggerClassName === "function"
+              ? triggerClassName(isOpen)
+              : triggerClassName
             : `flex cursor-pointer items-center gap-2 rounded-lg bg-tag-bg px-4 py-3 text-lg text-text-primary transition-colors hover:bg-tag-bg/80 focus:ring-primary focus:outline-none focus:ring-2 ${
                 isOpen ? "ring-primary ring-2" : ""
               }`

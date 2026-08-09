@@ -170,7 +170,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
                 onClick={() =>
                   setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
                 }
-                className="text-text-primary hover:bg-primary-light active:bg-primary-light flex h-8 w-8 items-center justify-center rounded-full text-xl transition-colors"
+                className="text-text-primary hover:bg-primary-light active:bg-primary-light flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors"
               >
                 ‹
               </button>
@@ -187,7 +187,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
                 onClick={() =>
                   setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
                 }
-                className="text-text-primary hover:bg-primary-light active:bg-primary-light flex h-8 w-8 items-center justify-center rounded-full text-xl transition-colors"
+                className="text-text-primary hover:bg-primary-light active:bg-primary-light flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors"
               >
                 ›
               </button>
@@ -216,7 +216,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
                   onClick={() => handleSelectDate(date)}
                   disabled={isDateDisabled(date)}
                   aria-pressed={isSelectedEndpoint(date)}
-                  className={`relative box-border flex h-[46px] w-[60px] items-center justify-center border-0 p-0 text-base font-bold disabled:cursor-not-allowed ${getDayClassName(date)}`}
+                  className={`relative box-border flex h-[46px] w-[60px] cursor-pointer items-center justify-center border-0 p-0 text-base font-bold disabled:cursor-not-allowed ${getDayClassName(date)}`}
                 >
                   {renderDayNumber(date)}
                 </button>
@@ -250,14 +250,14 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
         <button
           type="button"
           onClick={handleReset}
-          className="border-primary-hover text-primary-hover flex h-[52px] w-[94px] items-center justify-center rounded-lg border bg-white text-lg font-bold"
+          className="border-primary-hover text-primary-hover flex h-[52px] w-[94px] cursor-pointer items-center justify-center rounded-lg border bg-white text-lg font-bold"
         >
           초기화
         </button>
         <button
           type="button"
           onClick={onConfirm}
-          className="bg-primary-hover flex h-[52px] w-[94px] items-center justify-center rounded-lg text-lg font-bold text-white"
+          className="bg-primary-hover flex h-[52px] w-[94px] cursor-pointer items-center justify-center rounded-lg text-lg font-bold text-white"
         >
           확인
         </button>

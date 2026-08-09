@@ -60,12 +60,24 @@ interface ExploreSpaceProps {
   filters: ExploreSearchFilters;
   /** empty state의 [조건 초기화] CTA - 상위(ExplorePage)의 필터 상태를 초기화한다. */
   onResetFilters: () => void;
+  /**
+   * 검색을 실제로 실행한 뒤의 결과 전용 화면인지 여부.
+   * true면 "공간 탐색" 제목을 숨기고, 페이지네이션 대신 무한스크롤로 동작한다.
+   */
+  resultsMode?: boolean;
 }
 
-const ExploreSpace = ({ filters, onResetFilters }: ExploreSpaceProps) => {
+const ExploreSpace = ({ filters, onResetFilters, resultsMode = false }: ExploreSpaceProps) => {
   const navigate = useNavigate();
   const [isMapView, setIsMapView] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1); // 화면 표기는 1부터, API 요청 시 -1
+  const [currentPage, setCurrentPage] = useState(1); // 페이지네이션 모드에서만 사용(화면 표기는 1부터)
+
+  // 무한스크롤 모드 전용: 다음에 불러올 페이지(0부터)와, 더 불러올 페이지가
+  // 있는지/지금 다음 페이지를 불러오는 중인지.
+  const [infinitePage, setInfinitePage] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const [status, setStatus] = useState<FetchStatus>("loading");
   const [spaces, setSpaces] = useState<SpaceSummary[]>([]);
@@ -83,21 +95,30 @@ const ExploreSpace = ({ filters, onResetFilters }: ExploreSpaceProps) => {
 
   const { keyword, spaceCategory, district } = filters;
 
-  // 상위(HeroSearchBar)에서 새 검색 조건이 확정될 때마다 1페이지로 되돌린다.
+  // 상위(HeroSearchBar)에서 새 검색 조건이 확정되거나(검색 실행 등) 결과 화면
+  // 모드가 바뀌면 처음부터 다시 불러온다.
   useEffect(() => {
     setCurrentPage(1);
-  }, [keyword, spaceCategory, district]);
+    setInfinitePage(0);
+    setSpaces([]);
+    hasLoadedOnceRef.current = false;
+  }, [keyword, spaceCategory, district, resultsMode]);
 
   useEffect(() => {
     let ignore = false;
+    const pageToFetch = resultsMode ? infinitePage : currentPage - 1;
+    const isLoadMore = resultsMode && infinitePage > 0;
 
     const load = async () => {
-      // 최초 조회일 때만 전체 로딩 화면을 띄운다. 이미 한 번 성공한 뒤라면
-      // 기존 목록은 그대로 두고 배경에서만 다시 조회한다.
-      if (hasLoadedOnceRef.current) {
-        setIsRefetching(true);
-      } else {
+      // 최초 조회일 때만 전체 로딩 화면을 띄운다. 그 다음부터는 무한스크롤로
+      // 다음 페이지를 이어붙이는 중(하단 로딩 표시)이거나, 배경에서 다시
+      // 조회하는 중(기존 목록 유지)으로 나눠서 처리한다.
+      if (!hasLoadedOnceRef.current) {
         setStatus("loading");
+      } else if (isLoadMore) {
+        setIsLoadingMore(true);
+      } else {
+        setIsRefetching(true);
       }
 
       try {
@@ -105,7 +126,7 @@ const ExploreSpace = ({ filters, onResetFilters }: ExploreSpaceProps) => {
           keyword: keyword || undefined,
           spaceCategory: spaceCategory || undefined,
           district: district || undefined,
-          page: currentPage - 1,
+          page: pageToFetch,
           size: DEFAULT_PAGE_SIZE,
         });
         if (ignore) return;
@@ -119,10 +140,12 @@ const ExploreSpace = ({ filters, onResetFilters }: ExploreSpaceProps) => {
         // syncWished 직후의 최신 wishedIds를 기준으로, 로컬 찜 상태가 서버와
         // 다른 카드는 heartCount를 그대로 덮어쓰지 않고 보정해서 병합한다.
         const freshWishedIds = useWishStore.getState().wishedIds;
-        setSpaces((prev) =>
-          reconcileHeartCounts(summaries, prev, freshWishedIds),
-        );
+        setSpaces((prev) => {
+          const base = isLoadMore ? prev : [];
+          return [...base, ...reconcileHeartCounts(summaries, prev, freshWishedIds)];
+        });
         setTotalCount(result.totalCount);
+        setHasNextPage(result.hasNext);
         setStatus("success");
         hasLoadedOnceRef.current = true;
       } catch (error) {
@@ -134,7 +157,10 @@ const ExploreSpace = ({ filters, onResetFilters }: ExploreSpaceProps) => {
         console.error("공간 탐색 요청 실패:", error);
         setStatus("error");
       } finally {
-        if (!ignore) setIsRefetching(false);
+        if (!ignore) {
+          setIsRefetching(false);
+          setIsLoadingMore(false);
+        }
       }
     };
 
@@ -144,7 +170,25 @@ const ExploreSpace = ({ filters, onResetFilters }: ExploreSpaceProps) => {
       ignore = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyword, spaceCategory, district, currentPage, retryKey]);
+  }, [keyword, spaceCategory, district, currentPage, infinitePage, resultsMode, retryKey]);
+
+  // 무한스크롤 모드: 그리드 맨 아래 sentinel이 화면에 보이면 다음 페이지를 이어붙인다.
+  useEffect(() => {
+    if (!resultsMode) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasNextPage && !isLoadingMore && !isRefetching && status === "success") {
+          setInfinitePage((p) => p + 1);
+        }
+      },
+      { rootMargin: "400px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [resultsMode, hasNextPage, isLoadingMore, isRefetching, status]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / DEFAULT_PAGE_SIZE));
 
@@ -170,26 +214,46 @@ const ExploreSpace = ({ filters, onResetFilters }: ExploreSpaceProps) => {
 
   return (
     <section className="mt-14 w-full">
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-text-primary text-2xl font-bold">공간 탐색</h2>
+      <div className={`mb-6 flex items-center ${resultsMode ? "justify-end" : "justify-between"}`}>
+        {!resultsMode && <h2 className="text-text-primary text-2xl font-bold">공간 탐색</h2>}
 
         <button
           type="button"
           aria-pressed={isMapView}
           onClick={() => setIsMapView((prev) => !prev)}
-          className={`flex items-center justify-center gap-[6px] rounded-full px-4 py-[10px] text-lg transition-colors ${
+          className={`flex cursor-pointer items-center justify-center gap-[6px] rounded-full px-4 py-[10px] text-lg transition-colors ${
             isMapView
               ? "bg-primary text-white"
               : "bg-primary-light text-text-primary hover:bg-primary-light/80"
           }`}
         >
-          <svg width="20" height="20" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-            <path
-              d="M11.5334 5.26611C11.6648 5.23524 11.8043 5.25006 11.9276 5.31169L17.5 8.09733L23.0724 5.31169C23.2531 5.22134 23.4679 5.23069 23.6398 5.33675C23.8118 5.44304 23.9167 5.63133 23.9167 5.8335V20.4168C23.9167 20.6378 23.7919 20.8398 23.5942 20.9386L17.7609 23.8553C17.5967 23.9374 17.4033 23.9374 17.2391 23.8553L11.6667 21.0685L6.09424 23.8553C5.91355 23.9457 5.69877 23.9363 5.52686 23.8302C5.35488 23.724 5.25 23.5357 5.25 23.3335V8.75016C5.25 8.52921 5.3748 8.32717 5.57243 8.22835L11.4058 5.31169L11.5334 5.26611ZM6.41667 9.11019V22.389L11.0833 20.0557V6.77686L6.41667 9.11019ZM12.25 20.0557L16.9167 22.389V9.11019L12.25 6.77686V20.0557ZM18.0833 9.11019V22.389L22.75 20.0557V6.77686L18.0833 9.11019Z"
-              fill="currentColor"
-            />
-          </svg>
-          <span>지도</span>
+          {isMapView ? (
+            <>
+              <span>지도</span>
+              {/* 지도가 열려있을 때는 같은 버튼이 닫기(X) 역할도 겸한다 - 피그마
+                  node 5019:73566의 btn_close 스타일(흰 원 배경 + 파란 X)과 동일. */}
+              <span className="flex shrink-0 items-center justify-center rounded-full bg-white p-[2px]">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path
+                    d="M5.5 5.5L14.5 14.5M14.5 5.5L5.5 14.5"
+                    stroke="#3783F7"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+            </>
+          ) : (
+            <>
+              <svg width="20" height="20" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                <path
+                  d="M11.5334 5.26611C11.6648 5.23524 11.8043 5.25006 11.9276 5.31169L17.5 8.09733L23.0724 5.31169C23.2531 5.22134 23.4679 5.23069 23.6398 5.33675C23.8118 5.44304 23.9167 5.63133 23.9167 5.8335V20.4168C23.9167 20.6378 23.7919 20.8398 23.5942 20.9386L17.7609 23.8553C17.5967 23.9374 17.4033 23.9374 17.2391 23.8553L11.6667 21.0685L6.09424 23.8553C5.91355 23.9457 5.69877 23.9363 5.52686 23.8302C5.35488 23.724 5.25 23.5357 5.25 23.3335V8.75016C5.25 8.52921 5.3748 8.32717 5.57243 8.22835L11.4058 5.31169L11.5334 5.26611ZM6.41667 9.11019V22.389L11.0833 20.0557V6.77686L6.41667 9.11019ZM12.25 20.0557L16.9167 22.389V9.11019L12.25 6.77686V20.0557ZM18.0833 9.11019V22.389L22.75 20.0557V6.77686L18.0833 9.11019Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span>지도</span>
+            </>
+          )}
         </button>
       </div>
 
@@ -209,7 +273,7 @@ const ExploreSpace = ({ filters, onResetFilters }: ExploreSpaceProps) => {
           <button
             type="button"
             onClick={() => setRetryKey((k) => k + 1)}
-            className="text-primary text-sm font-medium"
+            className="text-primary cursor-pointer text-sm font-medium"
           >
             다시 시도
           </button>
@@ -224,7 +288,6 @@ const ExploreSpace = ({ filters, onResetFilters }: ExploreSpaceProps) => {
         <ExploreSpaceMap
           spaces={spaces}
           onSelectSpace={(spaceId) => navigate(`/spaces/${spaceId}`)}
-          onClose={() => setIsMapView(false)}
           onWishToggle={onWishToggle}
         />
       )}
@@ -253,11 +316,28 @@ const ExploreSpace = ({ filters, onResetFilters }: ExploreSpaceProps) => {
             ))}
           </div>
 
-          <ExplorePagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+          {resultsMode ? (
+            <>
+              {/* IntersectionObserver가 관찰하는 빈 sentinel - 화면에 보이면 다음 페이지를 이어붙인다 */}
+              <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
+              {isLoadingMore && (
+                <p className="text-text-secondary py-8 text-center text-sm">
+                  더 불러오는 중이에요
+                </p>
+              )}
+              {!hasNextPage && (
+                <p className="text-text-secondary py-8 text-center text-sm">
+                  모든 공간을 다 보여드렸어요
+                </p>
+              )}
+            </>
+          ) : (
+            <ExplorePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </>
       )}
     </section>
