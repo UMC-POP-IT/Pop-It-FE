@@ -84,33 +84,35 @@ export const router = createBrowserRouter([
           { path: "/reservations", element: <MyReservationPage /> },
           { path: "/spaces/:spaceId/view", element: <SpaceViewPage /> },
 
-      // 호스트 전용 페이지 (비로그인 접근 시 홈으로)
-      {
-        element: <HostGuard />,
-        children: [
-          // 3번 팀원 - 공간등록
-          { path: "/host/register", element: <RegisterStep1 /> },
-          { path: "/host/register/step2", element: <RegisterStep2 /> },
-          { path: "/host/register/step3", element: <RegisterStep3 /> },
-          { path: "/host/register/step4", element: <RegisterStep4 /> },
-          { path: "/host/register/step5", element: <RegisterStep5 /> },
-
-          //공간수정
-          { path: "/host/register/edit/:spaceId", element: <SpaceEditEntry /> },
-
-          // 3번 팀원 - 호스트 등록 (게스트 → 호스트 전환)
-          { path: "/host/host-register", element: <HostRegisterStart /> },
-          { path: "/host/host-register/step1", element: <HostRegisterStep1 /> },
-          { path: "/host/host-register/step2", element: <HostRegisterStep2 /> },
+          // 호스트 전용 페이지 (비로그인 접근 시 홈으로)
           {
-            path: "/host/host-register/complete",
-            element: <HostRegisterComplete />,
-          },
+            element: <HostGuard />,
+            children: [
+              // 3번 팀원 - 공간등록
+              { path: "/host/register", element: <RegisterStep1 /> },
+              { path: "/host/register/step2", element: <RegisterStep2 /> },
+              { path: "/host/register/step3", element: <RegisterStep3 /> },
+              { path: "/host/register/step4", element: <RegisterStep4 /> },
+              { path: "/host/register/step5", element: <RegisterStep5 /> },
 
-          // 4번 팀원 - 내공간관리/예약관리
-          { path: "/host/spaces", element: <MySpacePage /> },
-          { path: "/host/spaces/:spaceId", element: <HostSpaceDetailPage /> },
-          { path: "/host/reservations", element: <HostReservationPage /> },
+              //공간수정
+              { path: "/host/register/edit/:spaceId", element: <SpaceEditEntry /> },
+
+              // 3번 팀원 - 호스트 등록 (게스트 → 호스트 전환)
+              { path: "/host/host-register", element: <HostRegisterStart /> },
+              { path: "/host/host-register/step1", element: <HostRegisterStep1 /> },
+              { path: "/host/host-register/step2", element: <HostRegisterStep2 /> },
+              {
+                path: "/host/host-register/complete",
+                element: <HostRegisterComplete />,
+              },
+
+              // 4번 팀원 - 내공간관리/예약관리
+              { path: "/host/spaces", element: <MySpacePage /> },
+              { path: "/host/spaces/:spaceId", element: <HostSpaceDetailPage /> },
+              { path: "/host/reservations", element: <HostReservationPage /> },
+            ],
+          },
         ],
       },
 
