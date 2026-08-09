@@ -8,6 +8,7 @@ import HeroSearchBar from "@/features/guest-explore/components/HeroSearchBar";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";
 import { useScrollSearchBarStore, type ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
 import { withSearchBarTransition } from "@/shared/utils/viewTransition";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import {
   SPACE_CATEGORY_OPTIONS,
   type ExploreSearchFilters,
@@ -102,6 +103,13 @@ export const ExplorePage = () => {
   // 모핑 기능을 켠다 - "조건에 맞는 공간이 없어요" 빈 결과 화면에서는 이 기능
   // 자체가 필요 없다(ExploreSpace가 결과 유무를 알려준다).
   const [hasResults, setHasResults] = useState(false);
+  // Header.tsx의 축소 pill은 좁은 화면에 넣을 공간이 없어 `hidden md:flex`로
+  // md(768px) 미만에서 아예 숨긴다. 그런데 검색바를 md 미만에서도 접기만 하면
+  // 큰 검색바도 사라지고(pill은 안 보이니) 되돌릴 방법이 없어져서 스크롤을
+  // 맨 위로 올리기 전까진 검색 조건에 다시 접근할 수 없는 함정이 생긴다(코드래빗
+  // 리뷰 지적). 그래서 이 축소 기능 자체를 Tailwind md 브레이크포인트와 맞춰
+  // 데스크톱에서만 켠다 - 모바일에서는 검색바가 항상 원래 자리에 그대로 있다.
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const [summary, setSummary] = useState<ScrollSearchBarSummary | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const setScrollSearchBarState = useScrollSearchBarStore((s) => s.setState);
@@ -133,7 +141,7 @@ export const ExplorePage = () => {
   // "스크롤됨"으로 표시한다. rootMargin으로 헤더 높이만큼 보정해서, 실제로
   // 헤더 뒤에 가려지는 시점과 최대한 맞춘다.
   useEffect(() => {
-    if (!hasActiveSearch || !hasResults) {
+    if (!hasActiveSearch || !hasResults || !isDesktop) {
       setIsScrolledPastBar(false);
       return;
     }
@@ -150,7 +158,7 @@ export const ExplorePage = () => {
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [hasActiveSearch, hasResults]);
+  }, [hasActiveSearch, hasResults, isDesktop]);
 
   // 스크롤을 다시 올려 원래 검색바가 보이게 되면, 열려있던 오버레이도 접는다.
   useEffect(() => {
@@ -191,7 +199,7 @@ export const ExplorePage = () => {
   useEffect(() => resetScrollSearchBar, [resetScrollSearchBar]);
 
   const searchBarPosition =
-    hasActiveSearch && hasResults && isScrolledPastBar
+    hasActiveSearch && hasResults && isDesktop && isScrolledPastBar
       ? isOverlayOpen
         ? "pinned-open"
         : "pinned-hidden"
