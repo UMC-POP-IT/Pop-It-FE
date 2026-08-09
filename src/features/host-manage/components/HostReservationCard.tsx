@@ -9,7 +9,6 @@ interface HostReservationCardProps {
   onPhotoView?: () => void;
   onCheckoutApprove?: () => void;
   onCheckoutReject?: () => void;
-  onOpenContract?: () => void;
 }
 
 const STATUS_LABEL: Record<ReservationStatus, string> = {
@@ -37,7 +36,6 @@ export const HostReservationCard = ({
   onPhotoView,
   onCheckoutApprove,
   onCheckoutReject,
-  onOpenContract,
 }: HostReservationCardProps) => {
   const { status, startDate, endDate, totalPrice, usagePurpose, guest, space, isPhotoVerified } = reservation;
 

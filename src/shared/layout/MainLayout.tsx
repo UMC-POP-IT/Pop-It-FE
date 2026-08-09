@@ -19,9 +19,13 @@ import { TOSS_PENDING_PAYMENT_KEY, clearTossPaymentCache } from "@/features/gues
 // 앱 시작 시 토큰이 있으면 /users/me로 로그인 상태를 복원한다.
 const SessionBootstrap = () => {
   const login = useAuthStore((s) => s.login);
+  const setSessionReady = useAuthStore((s) => s.setSessionReady);
 
   useEffect(() => {
-    if (!localStorage.getItem("access_token")) return;
+    if (!localStorage.getItem("access_token")) {
+      setSessionReady();
+      return;
+    }
     getCurrentUser()
       .then((user) => {
         const isHostPath = window.location.pathname.startsWith("/host");
@@ -31,8 +35,11 @@ const SessionBootstrap = () => {
         // accessToken/refreshToken 모두 만료 등 복원 실패 → 남은 토큰 정리
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
+      })
+      .finally(() => {
+        setSessionReady();
       });
-  }, [login]);
+  }, [login, setSessionReady]);
 
   return null;
 };

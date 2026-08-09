@@ -30,7 +30,7 @@ const PhotoGalleryModal = ({
 
   useEffect(() => {
     if (isOpen) setPhotoIndex(initialIndex);
-  }, [isOpen]);
+  }, [isOpen, initialIndex]);
 
   if (!isOpen) return null;
 
