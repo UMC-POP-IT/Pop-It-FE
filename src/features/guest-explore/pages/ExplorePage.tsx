@@ -1,7 +1,7 @@
 import { useSearchParams } from "react-router-dom";
-import AiRecommendSpace from "../components/AiRecommendSpace";
-import ExploreSpace from "../components/ExploreSpace";
-import RealTimeRecommendSpace from "../components/RealTimeRecommendSpace";
+import AiRecommendSpace from "@/features/guest-explore/components/AiRecommendSpace";
+import ExploreSpace from "@/features/guest-explore/components/ExploreSpace";
+import RealTimeRecommendSpace from "@/features/guest-explore/components/RealTimeRecommendSpace";
 import Banner from "@/shared/layout/Banner";
 import HeroSearchBar from "@/features/guest-explore/components/HeroSearchBar";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";

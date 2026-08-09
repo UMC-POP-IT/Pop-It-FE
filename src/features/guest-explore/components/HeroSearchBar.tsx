@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import FilterDropdown from "./FilterDropdown";
+import FilterDropdown from "@/features/guest-explore/components/FilterDropdown";
 import DateRangeCalendar, { type DateRange } from "@/shared/components/DateRangeCalendar";
 import { useOutsideClick } from "@/shared/hooks/useOutsideClick";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";
@@ -139,117 +139,125 @@ const HeroSearchBar = ({
   };
 
   return (
-    // overflow-hidden을 주지 않는다 - 드롭다운/캘린더 패널이 이 pill의 자식으로
-    // absolute 포지셔닝되는데, 여기 overflow-hidden이 있으면 패널이 pill 안쪽에서
-    // 잘려 보인다. 세그먼트들은 자체 배경이 없어(overflow 없어도) 둥근 모서리
-    // 밖으로 삐져나오지 않는다.
-    <div className={`flex items-stretch rounded-full bg-white ${outerBorderClassName}`}>
-      <div className="flex shrink-0 items-stretch" style={{ width: CATEGORY_SEGMENT_WIDTH_PX }}>
-        <FilterDropdown
-          ariaLabel="공간 용도 필터"
-          options={CATEGORY_OPTIONS}
-          value={category}
-          onChange={setCategory}
-          // 맨 왼쪽 세그먼트라 열렸을 때 배경(bg-primary-light)이 pill의 둥근
-          // 왼쪽 모서리 밖으로 각지게 삐져나오지 않도록 그때만 왼쪽을 둥글린다.
-          triggerClassName={(isOpen) =>
-            `${segmentTriggerClassName(isOpen)} ${isOpen ? "rounded-l-full" : ""}`
-          }
-          renderTrigger={({ selected }) => (
-            <SegmentTriggerContent
-              label="공간 유형"
-              value={selected?.label ?? "전체"}
-              labelClassName={labelClassName}
-            />
-          )}
-        />
-      </div>
-
-      <SegmentDivider />
-
-      <div
-        className="relative flex shrink-0 items-stretch"
-        style={{ width: DATE_SEGMENT_WIDTH_PX }}
-        ref={dateContainerRef}
-      >
-        <button
-          type="button"
-          aria-haspopup="dialog"
-          aria-expanded={isDateOpen}
-          onClick={() => setIsDateOpen((prev) => !prev)}
-          className={segmentTriggerClassName(isDateOpen)}
-        >
-          <SegmentTriggerContent
-            label="날짜"
-            value={formatDateRangeLabel(dateRange)}
-            labelClassName={labelClassName}
-          />
-        </button>
-        {isDateOpen && (
-          <div
-            className="absolute top-full z-20 mt-2"
-            style={{ left: CALENDAR_LEFT_OFFSET_PX }}
-          >
-            <DateRangeCalendar
-              value={dateRange}
-              onChange={setDateRange}
-              onConfirm={() => setIsDateOpen(false)}
-              onReset={() => setDateRange({ start: null, end: null })}
-            />
-          </div>
-        )}
-      </div>
-
-      <SegmentDivider />
-
-      <div className="flex shrink-0 items-stretch" style={{ width: DISTRICT_SEGMENT_WIDTH_PX }}>
-        <FilterDropdown
-          ariaLabel="지역(구) 필터"
-          options={DISTRICT_OPTIONS}
-          value={district}
-          onChange={setDistrict}
-          maxVisibleOptions={DISTRICT_MAX_VISIBLE_OPTIONS}
-          triggerClassName={segmentTriggerClassName}
-          renderTrigger={({ selected }) => (
-            <SegmentTriggerContent
-              label="지역"
-              value={selected?.label ?? "서울 전체"}
-              labelClassName={labelClassName}
-            />
-          )}
-        />
-      </div>
-
-      <SegmentDivider />
-
-      <div className="flex flex-1 items-center gap-2.5 pr-3">
-        <div className="flex flex-1 flex-col justify-center gap-1.5 px-5 py-4">
-          <label htmlFor="hero-search-keyword" className={`text-[18px] leading-[1.4] ${labelClassName}`}>
-            검색어
-          </label>
-          <input
-            id="hero-search-keyword"
-            type="text"
-            value={keywordInput}
-            onChange={(e) => setKeywordInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSubmit();
-            }}
-            placeholder="공간 · 지역 세부 검색"
-            className="text-text-primary placeholder:text-text-placeholder w-full text-[20px] leading-[1.4] font-medium outline-none"
+    // 세그먼트 폭이 고정 픽셀(227/215/215)이라 좁은 화면에서는 다 합친 폭이
+    // 뷰포트보다 커질 수 있다. 완전한 모바일 전용 세로 스택 레이아웃은 별도
+    // 모바일 피그마 디자인이 필요해 이번엔 포함하지 않고, 대신 페이지 전체가
+    // 옆으로 밀리지 않도록 이 바 안에서만 가로 스크롤되게 감싼다(w-full
+    // overflow-x-auto) - 데스크톱 고정폭 디자인은 그대로 유지된다. 안쪽 바는
+    // w-max로 내용 폭 그대로 잡아서 억지로 눌려찌그러들지 않게 한다.
+    <div className="w-full overflow-x-auto">
+      {/* overflow-hidden을 주지 않는다 - 드롭다운/캘린더 패널이 이 pill의 자식으로
+          absolute 포지셔닝되는데, 여기 overflow-hidden이 있으면 패널이 pill 안쪽에서
+          잘려 보인다. 세그먼트들은 자체 배경이 없어(overflow 없어도) 둥근 모서리
+          밖으로 삐져나오지 않는다. */}
+      <div className={`flex w-max items-stretch rounded-full bg-white ${outerBorderClassName}`}>
+        <div className="flex shrink-0 items-stretch" style={{ width: CATEGORY_SEGMENT_WIDTH_PX }}>
+          <FilterDropdown
+            ariaLabel="공간 용도 필터"
+            options={CATEGORY_OPTIONS}
+            value={category}
+            onChange={setCategory}
+            // 맨 왼쪽 세그먼트라 열렸을 때 배경(bg-primary-light)이 pill의 둥근
+            // 왼쪽 모서리 밖으로 각지게 삐져나오지 않도록 그때만 왼쪽을 둥글린다.
+            triggerClassName={(isOpen) =>
+              `${segmentTriggerClassName(isOpen)} ${isOpen ? "rounded-l-full" : ""}`
+            }
+            renderTrigger={({ selected }) => (
+              <SegmentTriggerContent
+                label="공간 유형"
+                value={selected?.label ?? "전체"}
+                labelClassName={labelClassName}
+              />
+            )}
           />
         </div>
-        <button
-          type="button"
-          aria-label="검색"
-          onClick={handleSubmit}
-          className="bg-primary-hover flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-full text-white"
+
+        <SegmentDivider />
+
+        <div
+          className="relative flex shrink-0 items-stretch"
+          style={{ width: DATE_SEGMENT_WIDTH_PX }}
+          ref={dateContainerRef}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-            <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            aria-expanded={isDateOpen}
+            onClick={() => setIsDateOpen((prev) => !prev)}
+            className={segmentTriggerClassName(isDateOpen)}
+          >
+            <SegmentTriggerContent
+              label="날짜"
+              value={formatDateRangeLabel(dateRange)}
+              labelClassName={labelClassName}
+            />
+          </button>
+          {isDateOpen && (
+            <div
+              className="absolute top-full z-20 mt-2"
+              style={{ left: CALENDAR_LEFT_OFFSET_PX }}
+            >
+              <DateRangeCalendar
+                value={dateRange}
+                onChange={setDateRange}
+                onConfirm={() => setIsDateOpen(false)}
+                onReset={() => setDateRange({ start: null, end: null })}
+              />
+            </div>
+          )}
+        </div>
+
+        <SegmentDivider />
+
+        <div className="flex shrink-0 items-stretch" style={{ width: DISTRICT_SEGMENT_WIDTH_PX }}>
+          <FilterDropdown
+            ariaLabel="지역(구) 필터"
+            options={DISTRICT_OPTIONS}
+            value={district}
+            onChange={setDistrict}
+            maxVisibleOptions={DISTRICT_MAX_VISIBLE_OPTIONS}
+            triggerClassName={segmentTriggerClassName}
+            renderTrigger={({ selected }) => (
+              <SegmentTriggerContent
+                label="지역"
+                value={selected?.label ?? "서울 전체"}
+                labelClassName={labelClassName}
+              />
+            )}
+          />
+        </div>
+
+        <SegmentDivider />
+
+        <div className="flex flex-1 items-center gap-2.5 pr-3">
+          <div className="flex flex-1 flex-col justify-center gap-1.5 px-5 py-4">
+            <label htmlFor="hero-search-keyword" className={`text-[18px] leading-[1.4] ${labelClassName}`}>
+              검색어
+            </label>
+            <input
+              id="hero-search-keyword"
+              type="text"
+              value={keywordInput}
+              onChange={(e) => setKeywordInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSubmit();
+              }}
+              placeholder="공간 · 지역 세부 검색"
+              className="text-text-primary placeholder:text-text-placeholder w-full text-[20px] leading-[1.4] font-medium outline-none"
+            />
+          </div>
+          <button
+            type="button"
+            aria-label="검색"
+            onClick={handleSubmit}
+            className="bg-primary-hover flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-full text-white"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+              <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );

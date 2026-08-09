@@ -96,13 +96,23 @@ const ExploreSpace = ({ filters, onResetFilters, resultsMode = false }: ExploreS
   const { keyword, spaceCategory, district } = filters;
 
   // 상위(HeroSearchBar)에서 새 검색 조건이 확정되거나(검색 실행 등) 결과 화면
-  // 모드가 바뀌면 처음부터 다시 불러온다.
-  useEffect(() => {
+  // 모드가 바뀌면 처음부터 다시 불러와야 한다. 이걸 별도 useEffect로 하면(예전
+  // 코드) 그 리셋 effect와 아래 조회 effect가 같은 커밋에서 함께 실행될 때,
+  // 조회 effect가 리셋이 반영되기 전의 오래된 currentPage/infinitePage 값을
+  // 그대로 읽어서 잘못된 페이지로 먼저 한 번 요청을 보내버리는 문제가 있었다
+  // (setState는 다음 렌더에 반영되지 같은 effect flush 안에서 즉시 반영되지
+  // 않기 때문). 그래서 effect 대신 렌더 도중에 바로 리셋해서(React가 안내하는
+  // "prop이 바뀌면 렌더 중에 state를 조정하는" 패턴) 아래 조회 effect가 항상
+  // 리셋이 끝난 값으로만 실행되게 한다.
+  const filterKey = `${keyword}|${spaceCategory}|${district}|${resultsMode}`;
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey);
     setCurrentPage(1);
     setInfinitePage(0);
     setSpaces([]);
     hasLoadedOnceRef.current = false;
-  }, [keyword, spaceCategory, district, resultsMode]);
+  }
 
   useEffect(() => {
     let ignore = false;

@@ -51,7 +51,7 @@ export interface SpaceSearchParams {
   district?: string;
   /** 0부터 시작 */
   page?: number;
-  /** 1~50, 기본 28 */
+  /** 1~50, 기본 16(DEFAULT_PAGE_SIZE) */
   size?: number;
 }
 
