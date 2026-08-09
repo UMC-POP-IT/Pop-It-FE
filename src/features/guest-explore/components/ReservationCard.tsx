@@ -6,6 +6,7 @@ import { GetPaymentInfo, GetPaymentInfoResponse, GetPresignedURL, Reservation, S
 import PaymentModal from "@/features/guest-explore/components/contract/PaymentModal";
 import ContractModal from "@/features/guest-explore/components/contract/ContractModal";
 import PhotoVerificationModal from "@/features/guest-explore/components/PhotoVerificationModal";
+import RejectedPhotoModal from "@/features/guest-explore/components/RejectedPhotoModal";
 import { formatDate } from "@/shared/utils/date";
 
 interface ReservationCardProps {
@@ -89,6 +90,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   const [isContractModalOpen, setIsContractModalOpen] = useState(false); // 계약서 확인 & 통합 본인 인증 & 전자서명 창 open 여부
   const [agreedToGuide, setAgreedToGuide] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false); // 퇴실 사진 인증 창 open 여부
+  const [isRejectedPhotoModalOpen, setIsRejectedPhotoModalOpen] = useState(false); // 거절된 퇴실 사진 확인 창 open 여부
   const [isPhotoVerifiedDone, setIsPhotoVerifiedDone] = useState(false); // 사진 인증 완료 여부
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false); // 사진 업로드 진행 중 여부
   const [paymentInfo, setPaymentInfo] = useState<GetPaymentInfoResponse | null>(null); // 결제 정보
@@ -219,7 +221,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
                   사진 인증
                 </Button>
                 {isPhotoRejected && (
-                  <Button variant="secondary" size="sm">
+                  <Button variant="secondary" size="sm" onClick={() => setIsRejectedPhotoModalOpen(true)}>
                     거절된 사진
                   </Button>
                 )}
@@ -290,6 +292,13 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
         isOpen={isPhotoModalOpen}
         onClose={() => setIsPhotoModalOpen(false)}
         onComplete={handlePhotoVerificationComplete}
+      />
+
+      {/* Rejected Photo Modal */}
+      <RejectedPhotoModal
+        isOpen={isRejectedPhotoModalOpen}
+        reservationId={reservation.reservationId}
+        onClose={() => setIsRejectedPhotoModalOpen(false)}
       />
     </div>
   );

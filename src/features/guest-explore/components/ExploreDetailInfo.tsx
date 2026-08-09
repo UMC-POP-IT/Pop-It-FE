@@ -245,6 +245,8 @@ const ExploreDetailInfo = ({
       {property && (
         <CurationModal
           property={property}
+          buildingName={space.name}
+          area={space.area}
           isOpen={isCurationOpen}
           onClose={() => setIsCurationOpen(false)}
         />

@@ -3,11 +3,12 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Logo from "@/shared/components/Logo";
 import { useAuthStore } from "@/store/authStore";
 import { logoutApi, switchMode } from "@/shared/utils/oauth";
+import { useHostModeSwitch } from "@/shared/hooks/useHostModeSwitch";
 import { useScrollSearchBarStore } from "@/store/scrollSearchBarStore";
 
 const Header = () => {
-  const { user, mode, setMode, openLoginModal, hostStatus, refreshHostStatus, logout } =
-    useAuthStore();
+  const { user, mode, setMode, openLoginModal, logout } = useAuthStore();
+  const switchToHost = useHostModeSwitch();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
@@ -60,7 +61,9 @@ const Header = () => {
     setIsProfileMenuOpen(false);
     logout();
     navigate("/");
-    logoutApi().catch((err) => console.error("[Header] 로그아웃 서버 요청 실패:", err));
+    logoutApi().catch((err) =>
+      console.error("[Header] 로그아웃 서버 요청 실패:", err),
+    );
   };
 
   const handleModeToggle = async () => {
@@ -85,26 +88,12 @@ const Header = () => {
       return;
     }
 
-    // 게스트 → 호스트: 아직 안 물어봤으면 지금 물어보고 결과를 기다린다
-    const status =
-      hostStatus === "unknown" ? await refreshHostStatus() : hostStatus;
-
-    // 조회에 실패하면 등록/미등록을 알 수 없다.
-    // 미등록으로 단정하면 이미 등록한 호스트를 등록 화면으로 보내게 되므로 여기서 멈춘다.
-    if (status === "unknown") {
+    // 게스트 → 호스트: 조회·모드 변경·이동·서버 동기화는 훅이 처리한다.
+    // 조회에 실패하면(unknown) 훅이 이동하지 않고 돌려주므로 여기서 안내만 띄운다.
+    if ((await switchToHost()) === "unknown") {
       setModeError(
         "호스트 정보를 확인하지 못했습니다. 잠시 후 다시 시도해주세요",
       );
-      return;
-    }
-
-    setMode("HOST");
-    navigate(status === "registered" ? "/host/spaces" : "/host/host-register");
-    if (status === "registered") {
-      // 서버 쪽 currentMode도 동기화 (실패해도 화면 전환은 이미 끝났으니 막지 않는다)
-      switchMode("HOST").catch((err) => {
-        console.error("[Header] 호스트 모드 전환 서버 동기화 실패:", err);
-      });
     }
   };
 
@@ -135,7 +124,9 @@ const Header = () => {
                     }`
                   }
                 >
-                  <span className="flex h-full w-[72px] items-center justify-center">내 공간</span>
+                  <span className="flex h-full w-[72px] items-center justify-center">
+                    내 공간
+                  </span>
                 </NavLink>
                 <NavLink
                   to="/host/reservations"
@@ -147,7 +138,9 @@ const Header = () => {
                     }`
                   }
                 >
-                  <span className="flex h-full w-[72px] items-center justify-center">예약 관리</span>
+                  <span className="flex h-full w-[72px] items-center justify-center">
+                    예약 관리
+                  </span>
                 </NavLink>
               </>
             ) : (
@@ -162,24 +155,33 @@ const Header = () => {
                     }`
                   }
                 >
-                  <span className="flex h-full w-[72px] items-center justify-center">공간탐색</span>
+                  <span className="flex h-full w-[72px] items-center justify-center">
+                    공간탐색
+                  </span>
                 </NavLink>
                 <button
                   onClick={() => {
                     if (!user) {
-                      openLoginModal({ type: "navigate", path: "/reservations" });
+                      openLoginModal({
+                        type: "navigate",
+                        path: "/reservations",
+                      });
                       return;
                     }
                     navigate("/reservations");
                   }}
-                  aria-current={pathname === "/reservations" ? "page" : undefined}
+                  aria-current={
+                    pathname === "/reservations" ? "page" : undefined
+                  }
                   className={`flex h-full w-[112px] items-center justify-center px-[10px] text-base font-bold transition-colors ${
                     pathname === "/reservations"
                       ? "text-primary [&>span]:border-b-2 [&>span]:border-[#0564f5]"
                       : "text-text-primary"
                   }`}
                 >
-                  <span className="flex h-full w-[72px] items-center justify-center">나의 예약</span>
+                  <span className="flex h-full w-[72px] items-center justify-center">
+                    나의 예약
+                  </span>
                 </button>
               </>
             )}

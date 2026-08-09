@@ -131,9 +131,9 @@ export const HostRegisterStep2 = () => {
     form.bankbookImage !== null;
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-6">
+    <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
       {/* 페이지 제목 (가운데) */}
-      <h1 className="text-text-primary text-center text-2xl font-bold">
+      <h1 className="text-text-primary text-center text-[32px] font-bold">
         호스트 등록
       </h1>
 
@@ -148,10 +148,10 @@ export const HostRegisterStep2 = () => {
       <div className="flex flex-col gap-6">
         {/* 섹션 제목 + 안내문 */}
         <div className="border-border flex flex-col gap-1 border-b pb-6">
-          <h2 className="text-text-primary text-lg font-bold">
+          <h2 className="text-text-primary text-[28px] font-bold">
             정산 계좌 정보
           </h2>
-          <p className="text-text-secondary text-sm">
+          <p className="text-text-tertiary text-base font-medium">
             정산 및 세금계산서 발행에 사용됩니다.
           </p>
         </div>
@@ -170,7 +170,7 @@ export const HostRegisterStep2 = () => {
         <div className="flex flex-col gap-2">
           <label
             htmlFor="bank"
-            className="text-text-primary text-sm font-bold"
+            className="text-text-primary text-[22px] font-bold"
           >
             은행
           </label>
@@ -187,7 +187,7 @@ export const HostRegisterStep2 = () => {
         <div className="flex flex-col gap-2">
           <label
             htmlFor="account-number"
-            className="text-text-primary text-sm font-bold"
+            className="text-text-primary text-[22px] font-bold"
           >
             정산 입금 계좌 번호
           </label>
@@ -205,7 +205,7 @@ export const HostRegisterStep2 = () => {
         <div className="flex flex-col gap-2">
           <label
             htmlFor="account-holder"
-            className="text-text-primary text-sm font-bold"
+            className="text-text-primary text-[22px] font-bold"
           >
             예금주
           </label>
@@ -216,8 +216,9 @@ export const HostRegisterStep2 = () => {
             onChange={(e) => setValues({ accountHolder: e.target.value })}
             maxLength={20}
           />
-          <span className="text-text-disabled text-xs">
-            * 사업자 등록증(대표자명)과 일치해야 합니다.
+          <span className="text-text-secondary text-right text-base font-medium">
+            * 사업자 등록증(대표자명)과 일치해야 합니다. (
+            {form.accountHolder.length}/20)
           </span>
         </div>
       </div>
@@ -225,7 +226,7 @@ export const HostRegisterStep2 = () => {
       {submitError && (
         <span
           role="alert"
-          className="text-danger self-end text-sm"
+          className="text-danger self-end text-base font-bold"
         >
           {submitError}
         </span>
@@ -234,14 +235,15 @@ export const HostRegisterStep2 = () => {
       {/* 이전 / 다음으로 버튼 (우측 정렬) */}
       <div className="flex justify-end gap-2">
         <Button
-          variant="gray"
+          variant="secondary"
+          size="nav"
           onClick={() => navigate("/host/host-register/step1")}
         >
           이전
         </Button>
         <Button
           variant="primary"
-          size="md"
+          size="nav"
           disabled={!isValid || isSubmitting}
           onClick={handleSubmit}
         >
