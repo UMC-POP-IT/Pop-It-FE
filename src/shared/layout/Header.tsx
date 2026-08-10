@@ -313,7 +313,7 @@ const Header = () => {
           {/* 로그인 상태에 따라 분기 — 모바일에서는 Figma에 없어서 숨김 */}
           {user ? (
             <div
-              className="relative hidden md:block"
+              className="relative hidden md:flex md:items-center"
               ref={profileMenuRef}
             >
               <button
@@ -322,7 +322,7 @@ const Header = () => {
                 aria-haspopup="menu"
                 aria-expanded={isProfileMenuOpen}
                 aria-controls="profile-menu"
-                className="text-text-primary flex h-[74px] w-auto items-center justify-center gap-3 py-[14px] text-base min-[768px]:max-[1023px]:w-[164px] xl:w-[164px]"
+                className="text-text-primary flex h-[74px] w-auto items-center justify-center gap-3 py-[14px] text-base md:max-lg:w-[164px] xl:w-[164px]"
               >
                 <div className="bg-primary-light flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full p-[8px]">
                   <svg
