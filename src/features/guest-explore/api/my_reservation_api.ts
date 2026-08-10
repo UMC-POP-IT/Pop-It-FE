@@ -37,7 +37,7 @@ export interface CancelReservationResponse {
 }
 
 export interface SubmitCheckOutPhotoRequest {
-    photoUrls: string[];
+    imageUrls: string[];
 }
 
 export interface SubmitCheckOutPhotoResponse {

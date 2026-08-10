@@ -141,7 +141,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
       await Promise.all(uploads.map(({ presignedUrl }, index) => UploadFileToPresignedURL(presignedUrl, files[index])));
 
       await SubmitCheckOutPhoto(reservation.reservationId, {
-        photoUrls: uploads.map(({ fileUrl }) => fileUrl),
+        imageUrls: uploads.map(({ fileUrl }) => fileUrl),
       });
 
       setIsPhotoModalOpen(false);
@@ -301,6 +301,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
       {/* Photo Verification Modal */}
       <PhotoVerificationModal
         isOpen={isPhotoModalOpen}
+        isSubmitting={isUploadingPhotos}
         onClose={() => setIsPhotoModalOpen(false)}
         onComplete={handlePhotoVerificationComplete}
       />
