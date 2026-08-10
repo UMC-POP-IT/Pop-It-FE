@@ -8,8 +8,13 @@ import {
   TAXPAYER_OPTIONS,
 } from "@/features/host-register/api/mock_register";
 import { useHostRegisterStore } from "@/store/registerStore";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState, type ChangeEvent } from "react";
 import AddressSearchModal from "@/features/host-register/components/AddressSearchModal";
+import {
+  caretIndexAfterDigits,
+  formatBusinessNumber,
+} from "@/features/host-register/utils/format_business_number";
+import { sanitizeNumber } from "@/shared/utils/sanitizeNumber";
 
 export const HostRegisterStep1 = () => {
   const navigate = useNavigate();
@@ -30,6 +35,30 @@ export const HostRegisterStep1 = () => {
     form.businessAddress.trim() !== "" &&
     form.businessDetailAddress.trim() !== "" &&
     form.businessLicenseImage !== null;
+
+  // 하이픈이 끼워지면 표시 문자열 길이가 바뀐다. React가 새 value를 DOM에 넣는 순간
+  // 브라우저는 커서를 끝으로 보내므로, 가운데를 고치면 커서가 뒤로 튕긴다.
+  // 입력 시점에 "커서 앞 숫자 개수"를 기억해뒀다가 렌더 직후 같은 자리로 되돌린다.
+  const businessInputRef = useRef<HTMLInputElement | null>(null);
+  const caretDigitsRef = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    const input = businessInputRef.current;
+    const digitsBeforeCaret = caretDigitsRef.current;
+    // null이면 사업자번호 입력이 원인이 아닌 렌더 — 커서를 건드리지 않는다
+    if (!input || digitsBeforeCaret === null) return;
+    caretDigitsRef.current = null;
+    const caret = caretIndexAfterDigits(input.value, digitsBeforeCaret);
+    input.setSelectionRange(caret, caret);
+  });
+
+  const handleBusinessNumberChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value; // 브라우저가 방금 만든 값 (하이픈 포함)
+    const caret = e.target.selectionStart ?? raw.length;
+    businessInputRef.current = e.target;
+    caretDigitsRef.current = sanitizeNumber(raw.slice(0, caret)).length;
+    setValues({ businessNumber: sanitizeNumber(raw).slice(0, 10) });
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
@@ -106,14 +135,8 @@ export const HostRegisterStep1 = () => {
             id="business-number"
             placeholder="000-00-00000"
             inputMode="numeric"
-            value={form.businessNumber}
-            onChange={(e) =>
-              setValues({
-                businessNumber: e.target.value
-                  .replace(/[^0-9]/g, "")
-                  .slice(0, 10),
-              })
-            }
+            value={formatBusinessNumber(form.businessNumber)}
+            onChange={handleBusinessNumberChange}
             error={businessNumberError}
           />
         </div>
