@@ -63,9 +63,16 @@ const parseDateString = (str: string) => {
 // 예약 가능 기간: 시작일 기준 최대 3개월 (host-register/DateRangePicker의 계약 한도와 동일한 기준을 사용)
 const MAX_RESERVATION_MONTHS = 3;
 
-// 어떤 날짜에 개월 수를 더한 로컬 자정 Date (호스트 계약 한도 계산과 동일한 방식)
-const addMonths = (date: Date, months: number) =>
-  new Date(date.getFullYear(), date.getMonth() + months, date.getDate());
+// 어떤 날짜에 개월 수를 더한 로컬 자정 Date (호스트 계약 한도 계산과 동일한 방식).
+// 대상 월에 같은 '일'이 없으면 그 달의 마지막 날로 자른다.
+// (new Date(y, m+3, 30)처럼 없는 날짜를 넣으면 JS가 조용히 다음 달로 넘긴다.
+//  11/30 시작이 "2/30" -> 3/2 가 되면서 이틀이 더 허용되던 버그, #222)
+const addMonths = (date: Date, months: number) => {
+  const year = date.getFullYear();
+  const month = date.getMonth() + months;
+  const lastDay = new Date(year, month + 1, 0).getDate(); // 다음 달 0일 = 대상 월 마지막 날
+  return new Date(year, month, Math.min(date.getDate(), lastDay));
+};
 
 const ExploreReservationCard = ({
   spaceId,
