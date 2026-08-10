@@ -7,6 +7,9 @@ import DateRangePicker from "@/features/host-register/components/DateRangePicker
 import { STEPS } from "@/features/host-register/api/mock_register";
 import { NO_SPINNER, blockNonNumeric } from "@/shared/utils/numberInput";
 
+/** 서버 pricePerDay가 int32(최대 2,147,483,647원)라서 만원 단위 입력은 여기까지 */
+const MAX_PRICE_DAY_MANWON = 214_748;
+
 export const RegisterStep2 = () => {
   const isEdit = useRegisterStore((s) => s.isEdit);
   const navigate = useNavigate();
@@ -18,6 +21,12 @@ export const RegisterStep2 = () => {
 
   //금액: 일 단가 입력됐는지 (주/월 가격은 상세 페이지에서 일 단가로 계산)
   const hasPrice = form.priceDay !== "";
+
+  // 상한을 넘기면 서버(int32)가 못 받는다 — 제출 실패 대신 이 칸에서 바로 알린다
+  const priceDayError =
+    Number(form.priceDay) > MAX_PRICE_DAY_MANWON
+      ? `1일 대여료는 ${MAX_PRICE_DAY_MANWON.toLocaleString()}만원 이하로 입력해 주세요`
+      : "";
 
   //기간: 시작일 + 종료일 둘 다 입력됐나
   const hasPeriod = form.startDate !== "" && form.endDate !== "";
@@ -98,8 +107,9 @@ export const RegisterStep2 = () => {
                   }
                   onKeyDown={blockNonNumeric}
                   className={NO_SPINNER}
+                  error={priceDayError}
                 />
-                <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
+                <span className="text-text-secondary pointer-events-none absolute top-7 right-4 -translate-y-1/2 text-lg font-medium">
                   만원/일
                 </span>
               </div>
@@ -129,8 +139,7 @@ export const RegisterStep2 = () => {
         </div>
       </div>
 
-      {/* 이전 / 다음으로 버튼 (우측 정렬)
-          TODO(2차): 유효성 검사 통과 시 활성화 */}
+      {/* 이전 / 다음으로 버튼 (우측 정렬)*/}
       <div className="flex justify-end gap-2">
         <Button
           variant="secondary"
