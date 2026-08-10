@@ -131,7 +131,7 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-40 w-full bg-white drop-shadow-[0px_4px_5px_rgba(0,0,0,0.12)]">
       {/* 피그마: 전체 px-[40px], 좌측 gap-[32px](로고↔nav), 우측 gap-[20px] */}
-      <div className="relative flex h-[74px] w-full items-center px-[16px] min-[768px]:max-[1023px]:px-[40px] min-[1024px]:px-[clamp(24px,17.31vw_-_153.23px,96px)]">
+      <div className="relative flex h-[74px] w-full items-center px-4 md:px-10 xl:px-24">
         {/* 좌측: 로고 + nav (gap-[32px]) */}
         <div className="flex items-center gap-8">
           <NavLink
@@ -272,7 +272,7 @@ const Header = () => {
         )}
 
         {/* 우측: 모드전환 + 프로필 (gap-[20px]) */}
-        <div className="ml-auto flex items-center gap-5 min-[768px]:max-[1023px]:-mr-[32px]">
+        <div className="ml-auto flex items-center gap-5 md:-mr-[32px] xl:mr-0">
           {/* 모드 전환 버튼 — 게스트 모드 나의 예약 탭에서는 숨김 */}
           {!hideModeToggle && (
             <>
