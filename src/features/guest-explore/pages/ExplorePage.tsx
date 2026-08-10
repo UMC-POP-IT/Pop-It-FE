@@ -267,12 +267,17 @@ export const ExplorePage = () => {
           AI 맞춤형 공간은 그중에서도 검색 기록이 있을 때만(hasSearched). */}
       {!hasActiveSearch && hasSearched && <AiRecommendSpace />}
       {!hasActiveSearch && <RealTimeRecommendSpace />}
-      <ExploreSpace
-        filters={searchFilters}
-        onResetFilters={handleResetFilters}
-        resultsMode={hasActiveSearch}
-        onHasResultsChange={(next) => withSearchBarTransition(() => setHasResults(next))}
-      />
+      {/* 게스트 메인페이지 첫화면(검색 실행 전)에서는 "공간 탐색" 섹션을 노출하지
+          않는다 - 검색을 실제로 실행한 뒤(hasActiveSearch)의 결과 화면에서만
+          같은 컴포넌트를 검색 결과 그리드로 사용한다(#248). */}
+      {hasActiveSearch && (
+        <ExploreSpace
+          filters={searchFilters}
+          onResetFilters={handleResetFilters}
+          resultsMode={hasActiveSearch}
+          onHasResultsChange={(next) => withSearchBarTransition(() => setHasResults(next))}
+        />
+      )}
     </div>
   );
 };
