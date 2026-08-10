@@ -1,6 +1,7 @@
 import { apiFetch } from "@/shared/utils/apiClient";
 import type { ApiHostReservation, ApiMySpace, ReservationStatus } from "@/types";
 
+
 interface HostReservationsResult {
   reservations: ApiHostReservation[];
   hasNext: boolean;
@@ -20,7 +21,7 @@ interface ReservationActionResult {
 }
 
 interface CheckoutPhotosResult {
-  photoUrls: string[];
+  imageUrls: string[];
 }
 
 interface IdentityVerificationResult {
@@ -45,9 +46,14 @@ export async function fetchHostReservations(params?: {
   if (params?.cursor != null) query.set("cursor", String(params.cursor));
   if (params?.size != null) query.set("size", String(params.size));
   const qs = query.toString();
-  return apiFetch<HostReservationsResult>(
-    `/api/v1/reservations/host${qs ? `?${qs}` : ""}`,
-  );
+  try {
+    const result = await apiFetch<HostReservationsResult>(
+      `/api/v1/reservations/host${qs ? `?${qs}` : ""}`,
+    );
+    return result;
+  } catch {
+    throw new Error("예약 목록을 불러오지 못했습니다.");
+  }
 }
 
 export async function approveReservation(
@@ -88,7 +94,7 @@ export async function fetchCheckoutPhotos(
   const result = await apiFetch<CheckoutPhotosResult>(
     `/api/v1/reservations/${reservationId}/checkout-images`,
   );
-  return result.photoUrls ?? [];
+  return result.imageUrls ?? [];
 }
 
 export async function fetchMySpaces(params?: {
@@ -99,9 +105,14 @@ export async function fetchMySpaces(params?: {
   if (params?.page != null) query.set("page", String(params.page));
   if (params?.size != null) query.set("size", String(params.size));
   const qs = query.toString();
-  return apiFetch<MySpacesResult>(
-    `/api/v1/spaces/me${qs ? `?${qs}` : ""}`,
-  );
+  try {
+    const result = await apiFetch<MySpacesResult>(
+      `/api/v1/spaces/me${qs ? `?${qs}` : ""}`,
+    );
+    return result;
+  } catch {
+    throw new Error("공간 목록을 불러오지 못했습니다.");
+  }
 }
 
 export async function verifyIdentity(identityVerificationId: string): Promise<IdentityVerificationResult> {

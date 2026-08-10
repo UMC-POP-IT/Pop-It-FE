@@ -205,7 +205,7 @@ export const MySpacePage = () => {
                 <div className="flex flex-col items-start gap-2">
                   <span className="text-primary text-base font-bold">등록 완료</span>
                   <div className="flex flex-col items-start gap-1">
-                    <p className="text-xl font-bold text-black">{space.buildingName}</p>
+                    <p className="w-full truncate text-xl font-bold text-black">{space.buildingName}</p>
                     <p className="text-text-primary text-base font-medium">
                       {formatDate(space.registeredAt)}
                     </p>

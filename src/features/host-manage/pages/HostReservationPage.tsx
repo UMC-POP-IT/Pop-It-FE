@@ -77,12 +77,27 @@ export const HostReservationPage = () => {
     loadReservations();
   }, [loadReservations]);
 
-  // "계약 완료" 탭은 계약 서명만 끝난 상태(CONTRACT_COMPLETED, 결제 전/실패)와
-  // 결제까지 끝난 상태(PAYMENT_COMPLETED)를 함께 묶고, 카드 라벨에서 세부 상태를 구분해 보여준다.
+  // PAYMENT_COMPLETED 상태는 날짜 기준으로 실효 status를 계산해 탭/라벨에 반영한다.
+  // 백엔드가 IN_USE·USAGE_COMPLETED로 자동 전환하지 않으므로 프론트에서 처리한다.
+  const computeEffectiveStatus = (r: ApiHostReservation): ReservationStatus => {
+    if (r.status !== "PAYMENT_COMPLETED") return r.status;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(r.startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(r.endDate);
+    end.setHours(0, 0, 0, 0);
+    if (today >= start && today <= end) return "IN_USE";
+    if (today > end) return "USAGE_COMPLETED";
+    return "PAYMENT_COMPLETED";
+  };
+
   const matchesTab = (r: ApiHostReservation, status: ReservationStatus) => {
-    if (status === "CHECKOUT_COMPLETED") return r.status === "USAGE_COMPLETED";
-    if (status === "CONTRACT_COMPLETED") return r.status === "CONTRACT_COMPLETED" || r.status === "PAYMENT_COMPLETED";
-    return r.status === status;
+    const effective = computeEffectiveStatus(r);
+    if (status === "CHECKOUT_COMPLETED") return effective === "USAGE_COMPLETED";
+    if (status === "APPROVED") return effective === "APPROVED" || effective === "CONTRACT_COMPLETED";
+    if (status === "CONTRACT_COMPLETED") return effective === "PAYMENT_COMPLETED";
+    return effective === status;
   };
 
   const getTabCount = (status: ReservationStatus) =>
@@ -228,11 +243,11 @@ export const HostReservationPage = () => {
             </button>
           </div>
         ) : filtered.length > 0 ? (
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-5">
             {filtered.map((reservation) => (
               <HostReservationCard
                 key={reservation.reservationId}
-                reservation={reservation}
+                reservation={{ ...reservation, status: computeEffectiveStatus(reservation) }}
                 onDetail={() => navigate(`/host/spaces/${reservation.space.spaceId}`)}
                 onApprove={() => handleApproveClick(reservation.reservationId)}
                 onReject={() => setRejectTargetId(reservation.reservationId)}

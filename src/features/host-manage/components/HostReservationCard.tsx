@@ -64,7 +64,7 @@ export const HostReservationCard = ({
       </div>
 
       {/* 공간 정보 — 모바일·태블릿은 이미지+텍스트 위, 버튼 아래(세로) / 데스크탑(1024~)만 한 줄(가로) */}
-      <div className="border-divider flex flex-col gap-10 border-b py-5 min-[1024px]:flex-row min-[1024px]:items-end min-[1024px]:justify-between min-[1024px]:gap-7">
+      <div className="border-divider flex flex-col gap-5 border-b py-5 min-[1024px]:flex-row min-[1024px]:items-end min-[1024px]:justify-between min-[1024px]:gap-7">
         <div className="flex items-start gap-3 md:gap-7">
           {/* 이미지 — 모바일 150px(정사각), 태블릿 148px, 데스크탑 190px */}
           <div className="bg-thumbnail-bg aspect-square w-[150px] flex-shrink-0 overflow-hidden md:aspect-auto md:h-[190px] md:w-[190px] min-[768px]:max-[1023px]:h-[148px] min-[768px]:max-[1023px]:w-[148px]">
@@ -84,7 +84,7 @@ export const HostReservationCard = ({
                 {STATUS_LABEL[status]}
               </span>
               <div className="flex flex-col items-start gap-1">
-                <p className="text-xl font-bold text-black">{space.buildingName}</p>
+                <p className="w-full truncate text-xl font-bold text-black">{space.buildingName}</p>
                 {/* 모바일은 시작일/~/종료일 세 줄, 태블릿+는 한 줄 (Figma 5299:34808 확인) */}
                 <div className="text-text-primary flex flex-col items-start text-base font-medium md:flex-row md:items-center md:gap-1">
                   <span>{formatDate(startDate)}</span>
@@ -103,7 +103,7 @@ export const HostReservationCard = ({
         </div>
 
         {/* 버튼 — 고정폭(모바일 104px, 태블릿+ 108px), 글씨는 항상 한 줄(whitespace-nowrap) */}
-        <div className="flex w-full flex-shrink-0 flex-col items-start justify-start gap-2 min-[1024px]:h-[190px] min-[1024px]:w-auto min-[1024px]:items-end min-[1024px]:justify-end">
+        <div className="flex min-h-[84px] w-full flex-shrink-0 flex-col items-start justify-end gap-2 min-[1024px]:h-[190px] min-[1024px]:min-h-0 min-[1024px]:w-auto min-[1024px]:items-end min-[1024px]:justify-end">
           {status === "PENDING_APPROVAL" && (
             <div className="flex w-full flex-wrap items-center gap-1 md:w-auto">
               <button
@@ -166,8 +166,8 @@ export const HostReservationCard = ({
           )}
 
           {status === "USAGE_COMPLETED" && !isPhotoVerified && (
-            <div className="flex w-full flex-col items-end gap-2">
-              <span className="w-full text-right text-base font-medium text-[#0564f5]">
+            <div className="flex w-full flex-col items-start gap-2 min-[1024px]:items-end">
+              <span className="w-full text-left text-base font-medium text-[#0564f5] min-[1024px]:text-right">
                 퇴실 사진이 아직 등록되지 않았습니다.
               </span>
               <div className="flex w-full flex-wrap items-center gap-1 md:w-auto">
