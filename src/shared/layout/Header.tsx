@@ -27,9 +27,18 @@ const Header = () => {
   const { pathname } = useLocation();
 
   // 검색 결과 화면(ExplorePage)에서 스크롤을 내려 원래 검색바가 헤더 뒤로
-  // 넘어갔을 때 그 자리에 대신 뜨는 축소된 pill. summary가 있으면(=그 화면에
-  // 있었던 적이 있으면) wrapper는 계속 마운트해두고 opacity만 토글해서 보이거나
-  // 숨긴다(마운트/언마운트로 하면 아래 view-transition-name 매칭이 끊긴다).
+  // 넘어갔을 때 그 자리에 대신 뜨는 축소된 pill.
+  // - 오버레이를 열고 닫을 때(pill 클릭 ↔ Escape/바깥클릭)는 summary는 그대로
+  //   둔 채 isVisible만 토글하므로(ExplorePage 참고) wrapper가 계속
+  //   마운트된 채 opacity만 바뀐다.
+  // - 스크롤을 다시 올려 pill 자체가 필요 없어지면 ExplorePage가
+  //   resetScrollSearchBar()로 summary까지 null로 밀어버려 wrapper가 통째로
+  //   언마운트된다 - 아래 opacity-0 분기는 이 경로에선 안 거친다.
+  //   view-transition-name 매칭은 이 언마운트 여부와 무관하다: 그 시점엔
+  //   이미 HeroSearchBar 쪽(isMorphTarget)이 새 스냅샷에서 이름을 넘겨받으므로
+  //   (양쪽 스냅샷에 이름을 가진 엘리먼트가 정확히 하나씩만 있으면 되고, 같은
+  //   DOM 노드가 유지될 필요는 없다), wrapper가 마운트돼 있든 아니든 모핑
+  //   결과는 동일하다.
   // 실제로 "부드럽게 나타나고 사라지는" 느낌은 이제 CSS transition이 아니라
   // View Transitions API가 만든다 - 아래 pillMorphStyle 참고.
   const isScrollBarVisible = useScrollSearchBarStore((s) => s.isVisible);
