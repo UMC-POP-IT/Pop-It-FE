@@ -11,7 +11,7 @@ const FOOTER_LINKS = [
 
 const Footer = () => (
   <footer className="bg-bg-footer mt-20 min-h-[302px] w-full pb-[70px] md:pb-0">
-    <div className="flex flex-col items-start justify-start gap-5 px-[16px] py-15 min-[768px]:flex-row min-[768px]:justify-between min-[768px]:gap-8 min-[768px]:px-[clamp(24px,17.31vw_-_153.23px,96px)]">
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-start gap-5 px-4 py-15 md:flex-row md:justify-between md:gap-8 md:px-6">
       <div className="flex flex-col gap-5">
         <p className="text-text-tag text-sm font-medium">주식회사 팝잇</p>
         <div className="text-text-tag flex flex-col gap-1 text-xs tracking-[-0.1px] leading-[1.5]">
