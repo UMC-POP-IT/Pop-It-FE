@@ -16,7 +16,6 @@ export const HostRegisterStep1 = () => {
   const form = useHostRegisterStore((s) => s.form);
   const setValues = useHostRegisterStore((s) => s.setValues);
   const [isAddrOpen, setIsAddrOpen] = useState(false);
-  const [addrError, setAddrError] = useState(""); // 서울 외 지역 선택 시 에러
   // 서버 규칙: 숫자 10자리 (스웨거 businessRegistrationNumber)
   // 입력을 시작한 뒤에만 문구를 띄운다 — 빈 칸에 빨간 글씨가 먼저 뜨면 거슬린다
   const businessNumberError =
@@ -153,30 +152,19 @@ export const HostRegisterStep1 = () => {
           </label>
           {/* 피그마: 입력창 590 + gap 20 + 버튼 184 = 본문 794 */}
           <div className="flex items-start gap-5">
-            {/* 안내문을 Input과 같은 칸에 둔다 — 에러 문구(Input 내부)와 위치를 맞추기 위함.
-                행 바깥에 두면 버튼 폭까지 포함한 오른쪽 끝으로 밀려 서로 어긋난다 */}
-            <div className="flex flex-1 flex-col gap-1">
+            {/* 입력창이 남은 폭을 다 먹고 버튼은 고정폭 */}
+            <div className="flex-1">
               <Input
                 id="business-address"
                 placeholder="주소 찾기로 주소를 입력해주세요"
                 value={form.businessAddress}
                 readOnly
-                error={addrError}
               />
-              {/* 안내문 (에러 없을 때만) */}
-              {!addrError && (
-                <span className="text-text-secondary text-right text-base font-medium">
-                  현재 서울 지역만 등록 가능합니다
-                </span>
-              )}
             </div>
             <Button
               variant="black"
               size="field"
-              onClick={() => {
-                setAddrError("");
-                setIsAddrOpen(true);
-              }}
+              onClick={() => setIsAddrOpen(true)}
             >
               주소 찾기
             </Button>
@@ -207,16 +195,7 @@ export const HostRegisterStep1 = () => {
       <AddressSearchModal
         isOpen={isAddrOpen}
         onClose={() => setIsAddrOpen(false)}
-        onComplete={({ address, sido }) => {
-          // 서울 외 지역 → 빨간 에러 + 기존 주소값 비우기 (유효성 우회 방지)
-          if (!sido.startsWith("서울")) {
-            setAddrError("서울 외 지역은 선택하실 수 없습니다");
-            setValues({ businessAddress: "" });
-            return;
-          }
-          setAddrError("");
-          setValues({ businessAddress: address });
-        }}
+        onComplete={({ address }) => setValues({ businessAddress: address })}
       />
     </div>
   );
