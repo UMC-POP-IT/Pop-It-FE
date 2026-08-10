@@ -216,10 +216,14 @@ export const HostRegisterStep2 = () => {
             onChange={(e) => setValues({ accountHolder: e.target.value })}
             maxLength={20}
           />
-          <span className="text-text-secondary text-right text-base font-medium">
-            * 사업자 등록증(대표자명)과 일치해야 합니다. (
-            {form.accountHolder.length}/20)
-          </span>
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-text-secondary text-left text-base font-medium">
+              * 사업자 등록증(대표자명)과 일치해야 합니다.
+            </span>
+            <span className="text-text-secondary shrink-0 text-right text-base font-medium">
+              {form.accountHolder.length}/20
+            </span>
+          </div>
         </div>
       </div>
 

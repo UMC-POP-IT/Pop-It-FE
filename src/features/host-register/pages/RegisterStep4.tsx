@@ -120,7 +120,7 @@ export const RegisterStep4 = () => {
           <span
             id={descriptionHintId}
             aria-live="polite"
-            className="text-danger text-right text-base font-bold empty:hidden"
+            className="text-danger text-left text-base font-bold empty:hidden"
           >
             {descriptionError}
           </span>

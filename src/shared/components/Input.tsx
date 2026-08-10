@@ -24,7 +24,7 @@ const Input = ({ label, error, className = "", ...props }: InputProps) => {
         <span
           id={errorId}
           role="alert"
-          className="text-danger text-right text-base font-bold"
+          className="text-danger text-left text-base font-bold"
         >
           {error}
         </span>

@@ -163,14 +163,14 @@ export const RegisterStep3 = () => {
             <span
               id="area-message"
               role="alert"
-              className="text-danger text-right text-base font-bold"
+              className="text-danger text-left text-base font-bold"
             >
               {areaError}
             </span>
           ) : (
             <span
               id="area-message"
-              className="text-text-secondary text-right text-base font-medium"
+              className="text-text-secondary text-left text-base font-medium"
             >
               ㎡ 입력 시 평이 자동 계산돼요
             </span>
