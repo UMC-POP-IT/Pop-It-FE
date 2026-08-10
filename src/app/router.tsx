@@ -29,6 +29,7 @@ import { HostRegisterStart } from "@/features/host-register/pages/HostRegisterSt
 import { HostRegisterStep1 } from "@/features/host-register/pages/HostRegisterStep1";
 import { HostRegisterStep2 } from "@/features/host-register/pages/HostRegisterStep2";
 import { HostRegisterComplete } from "@/features/host-register/pages/HostRegisterComplete";
+import { HostRegisterGuard } from "@/features/host-register/components/HostRegisterGuard";
 
 // 4번 팀원 (챈 - 내공간관리/예약관리/로그인)
 import { MySpacePage } from "@/features/host-manage/pages/MySpacePage";
@@ -103,12 +104,33 @@ export const router = createBrowserRouter([
               { path: "/host/register/edit/:spaceId", element: <SpaceEditEntry /> },
 
               // 3번 팀원 - 호스트 등록 (게스트 → 호스트 전환)
-              { path: "/host/host-register", element: <HostRegisterStart /> },
-              { path: "/host/host-register/step1", element: <HostRegisterStep1 /> },
-              { path: "/host/host-register/step2", element: <HostRegisterStep2 /> },
+              // 이미 등록을 마친 계정이 뒤로가기로 되돌아오면 /host/spaces로 보낸다
               {
-                path: "/host/host-register/complete",
-                element: <HostRegisterComplete />,
+                element: <HostRegisterGuard />,
+                children: [
+                  {
+                    path: "/host/host-register",
+                    element: <HostRegisterStart />,
+                  },
+                  {
+                    path: "/host/host-register/step1",
+                    element: <HostRegisterStep1 />,
+                  },
+                  {
+                    path: "/host/host-register/step2",
+                    element: <HostRegisterStep2 />,
+                  },
+                ],
+              },
+              // 완료 화면은 등록을 막 마친 1회만 통과시킨다
+              {
+                element: <HostRegisterGuard allowJustRegistered />,
+                children: [
+                  {
+                    path: "/host/host-register/complete",
+                    element: <HostRegisterComplete />,
+                  },
+                ],
               },
 
               // 4번 팀원 - 내공간관리/예약관리

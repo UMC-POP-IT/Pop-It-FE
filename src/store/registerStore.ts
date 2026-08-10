@@ -106,7 +106,9 @@ export interface HostRegisterForm {
 
 interface HostRegisterState {
   form: HostRegisterForm;
+  isJustRegistered: boolean;
   setValues: (values: Partial<HostRegisterForm>) => void;
+  setJustRegistered: (isJustRegistered: boolean) => void;
   reset: () => void;
 }
 
@@ -125,7 +127,9 @@ const initialHostForm: HostRegisterForm = {
 
 export const useHostRegisterStore = create<HostRegisterState>((set) => ({
   form: initialHostForm,
+  isJustRegistered: false,
   setValues: (values) =>
     set((state) => ({ form: { ...state.form, ...values } })),
-  reset: () => set({ form: initialHostForm }),
+  setJustRegistered: (isJustRegistered) => set({ isJustRegistered }),
+  reset: () => set({ form: initialHostForm, isJustRegistered: false }),
 }));
