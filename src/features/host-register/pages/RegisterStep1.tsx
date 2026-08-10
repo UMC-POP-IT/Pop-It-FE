@@ -168,6 +168,7 @@ export const RegisterStep1 = () => {
               address: "",
               city: "",
               district: "",
+              detailAddress: "",
               latitude: null,
               longitude: null,
             });

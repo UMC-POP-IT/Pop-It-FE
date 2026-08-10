@@ -1,4 +1,7 @@
-import { uploadFiles } from "@/features/host-register/api/upload_api";
+import {
+  uploadFiles,
+  validateSpacePhoto,
+} from "@/features/host-register/api/upload_api";
 import { toSpaceRequest } from "@/features/host-register/utils/to_space_request";
 import {
   createSpace,
@@ -138,9 +141,22 @@ export const RegisterStep5 = () => {
               multiple
               onChange={(e) => {
                 const picked = Array.from(e.target.files ?? []);
+                e.target.value = ""; // 같은 파일을 다시 골라도 onChange가 뜨도록 비운다
+
+                // ① 형식·용량부터 거른다 — 제출할 때가 아니라 고르는 순간에
+                const validFiles: File[] = [];
+                const rejectedMessages: string[] = [];
+                for (const file of picked) {
+                  const message = validateSpacePhoto(file);
+                  if (message)
+                    rejectedMessages.push(`${file.name}: ${message}`);
+                  else validFiles.push(file);
+                }
+
+                // ② 통과한 것 중 남은 자리만큼만 받는다
                 const room = Math.max(0, MAX_PHOTOS - form.photoList.length);
-                const accepted = picked.slice(0, room);
-                const dropped = picked.length - accepted.length;
+                const accepted = validFiles.slice(0, room);
+                const dropped = validFiles.length - accepted.length;
 
                 setValues({
                   photoList: [
@@ -151,13 +167,15 @@ export const RegisterStep5 = () => {
                     })),
                   ],
                 });
-                // 넘친 만큼은 조용히 버리지 않고 몇 장이 빠졌는지 알린다
-                setPhotoNotice(
-                  dropped > 0
-                    ? `사진은 최대 ${MAX_PHOTOS}장까지 등록할 수 있어 ${dropped}장은 추가되지 않았습니다`
-                    : "",
-                );
-                e.target.value = ""; // 같은 파일을 다시 골라도 onChange가 뜨도록 비운다
+
+                // 빠진 건 이유까지 전부 알린다 (조용히 버리지 않는다)
+                const notices = [...rejectedMessages];
+                if (dropped > 0) {
+                  notices.push(
+                    `사진은 최대 ${MAX_PHOTOS}장까지 등록할 수 있어 ${dropped}장은 추가되지 않았습니다`,
+                  );
+                }
+                setPhotoNotice(notices.join("\n"));
               }}
               className="sr-only"
             />
@@ -178,11 +196,12 @@ export const RegisterStep5 = () => {
           ))}
         </div>
 
-        {/* 개수 제한으로 빠진 사진 안내 — 나타나는 순간 스크린 리더가 읽도록 role="alert" */}
+        {/* 개수 제한·형식 오류로 빠진 사진 안내 — 나타나는 순간 스크린 리더가 읽도록 role="alert".
+            여러 줄이 될 수 있어 whitespace-pre-line으로 \n을 살린다 */}
         {photoNotice && (
           <span
             role="alert"
-            className="text-danger text-right text-base font-bold"
+            className="text-danger text-right text-base font-bold whitespace-pre-line"
           >
             {photoNotice}
           </span>

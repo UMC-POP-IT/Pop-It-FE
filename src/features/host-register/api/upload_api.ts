@@ -51,6 +51,21 @@ export const validateFile = (file: File): string | null => {
   return null;
 };
 
+/**
+ * 공간 사진 한 장을 검사한다.
+ * validateFile과 달리 PDF를 받지 않는다 — 갤러리에 <img>로 그려지는 값이라 이미지여야 한다.
+ */
+export const validateSpacePhoto = (file: File): string | null => {
+  const contentType = getContentType(file);
+  if (contentType !== "image/jpeg" && contentType !== "image/png") {
+    return "JPG, PNG 이미지만 등록할 수 있습니다";
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    return "파일 크기는 10MB 이하여야 합니다";
+  }
+  return null;
+};
+
 interface PresignedUrlListRes {
   uploads: { presignedUrl: string; fileUrl: string }[];
 }

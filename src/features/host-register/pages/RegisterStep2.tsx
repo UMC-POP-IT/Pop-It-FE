@@ -7,6 +7,9 @@ import DateRangePicker from "@/features/host-register/components/DateRangePicker
 import { STEPS } from "@/features/host-register/api/mock_register";
 import { NO_SPINNER, blockNonNumeric } from "@/shared/utils/numberInput";
 
+/** 서버 pricePerDay가 int32(최대 2,147,483,647원)라서 만원 단위 입력은 여기까지 */
+const MAX_PRICE_DAY_MANWON = 214_748;
+
 export const RegisterStep2 = () => {
   const isEdit = useRegisterStore((s) => s.isEdit);
   const navigate = useNavigate();
@@ -19,11 +22,17 @@ export const RegisterStep2 = () => {
   //금액: 일 단가 입력됐는지 (주/월 가격은 상세 페이지에서 일 단가로 계산)
   const hasPrice = form.priceDay !== "";
 
+  // 값이 있을 때만 상한 검사 — 빈 칸은 "미입력"이지 "잘못된 값"이 아니다
+  const priceDayError =
+    hasPrice && Number(form.priceDay) > MAX_PRICE_DAY_MANWON
+      ? `1일 대여료는 ${MAX_PRICE_DAY_MANWON.toLocaleString()}만원 이하로 입력해 주세요`
+      : "";
+
   //기간: 시작일 + 종료일 둘 다 입력됐나
   const hasPeriod = form.startDate !== "" && form.endDate !== "";
 
-  //전부 통과 + 보증금 에러 없음 -> 유효
-  const isValid = hasPrice && hasPeriod && !depositError;
+  //전부 통과 + 보증금·대여료 에러 없음 -> 유효
+  const isValid = hasPrice && hasPeriod && !depositError && !priceDayError;
 
   return (
     <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
@@ -98,8 +107,9 @@ export const RegisterStep2 = () => {
                   }
                   onKeyDown={blockNonNumeric}
                   className={NO_SPINNER}
+                  error={priceDayError}
                 />
-                <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
+                <span className="text-text-secondary pointer-events-none absolute top-7 right-4 -translate-y-1/2 text-lg font-medium">
                   만원/일
                 </span>
               </div>
@@ -129,8 +139,7 @@ export const RegisterStep2 = () => {
         </div>
       </div>
 
-      {/* 이전 / 다음으로 버튼 (우측 정렬)
-          TODO(2차): 유효성 검사 통과 시 활성화 */}
+      {/* 이전 / 다음으로 버튼 (우측 정렬)*/}
       <div className="flex justify-end gap-2">
         <Button
           variant="secondary"
