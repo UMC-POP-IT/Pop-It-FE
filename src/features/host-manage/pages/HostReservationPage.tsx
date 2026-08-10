@@ -83,10 +83,10 @@ export const HostReservationPage = () => {
     if (r.status !== "PAYMENT_COMPLETED") return r.status;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const start = new Date(r.startDate);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(r.endDate);
-    end.setHours(0, 0, 0, 0);
+    const [sy, sm, sd] = r.startDate.split("-").map(Number);
+    const [ey, em, ed] = r.endDate.split("-").map(Number);
+    const start = new Date(sy, sm - 1, sd);
+    const end = new Date(ey, em - 1, ed);
     if (today >= start && today <= end) return "IN_USE";
     if (today > end) return "USAGE_COMPLETED";
     return "PAYMENT_COMPLETED";
@@ -94,7 +94,7 @@ export const HostReservationPage = () => {
 
   const matchesTab = (r: ApiHostReservation, status: ReservationStatus) => {
     const effective = computeEffectiveStatus(r);
-    if (status === "CHECKOUT_COMPLETED") return effective === "USAGE_COMPLETED";
+    if (status === "CHECKOUT_COMPLETED") return effective === "USAGE_COMPLETED" || effective === "CHECKOUT_COMPLETED";
     if (status === "APPROVED") return effective === "APPROVED" || effective === "CONTRACT_COMPLETED";
     if (status === "CONTRACT_COMPLETED") return effective === "PAYMENT_COMPLETED";
     return effective === status;

@@ -78,7 +78,7 @@ export const HostReservationCard = ({
           </div>
 
           {/* 텍스트 */}
-          <div className="flex flex-1 flex-col items-start justify-between md:w-[258px] md:flex-none min-[768px]:max-[1023px]:h-[148px] min-[1024px]:h-[190px]">
+          <div className="flex flex-1 min-w-0 flex-col items-start justify-between md:w-[258px] md:flex-none min-[768px]:max-[1023px]:h-[148px] min-[1024px]:h-[190px]">
             <div className="flex flex-col items-start gap-2">
               <span className="text-primary text-base font-bold">
                 {STATUS_LABEL[status]}
