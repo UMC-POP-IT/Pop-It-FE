@@ -100,7 +100,7 @@ export async function fetchMySpaces(params?: {
   if (params?.size != null) query.set("size", String(params.size));
   const qs = query.toString();
   return apiFetch<MySpacesResult>(
-    `/api/v1/spaces/my${qs ? `?${qs}` : ""}`,
+    `/api/v1/spaces/me${qs ? `?${qs}` : ""}`,
   );
 }
 
