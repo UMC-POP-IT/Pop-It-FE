@@ -28,6 +28,7 @@ export const HostRegisterStep1 = () => {
     form.businessNumber.length === 10 &&
     form.storeName.trim() !== "" &&
     form.businessAddress.trim() !== "" &&
+    form.businessDetailAddress.trim() !== "" &&
     form.businessLicenseImage !== null;
 
   return (
