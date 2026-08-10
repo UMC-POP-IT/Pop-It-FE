@@ -22,9 +22,9 @@ export const RegisterStep2 = () => {
   //금액: 일 단가 입력됐는지 (주/월 가격은 상세 페이지에서 일 단가로 계산)
   const hasPrice = form.priceDay !== "";
 
-  // 상한을 넘기면 서버(int32)가 못 받는다 — 제출 실패 대신 이 칸에서 바로 알린다
+  // 값이 있을 때만 상한 검사 — 빈 칸은 "미입력"이지 "잘못된 값"이 아니다
   const priceDayError =
-    Number(form.priceDay) > MAX_PRICE_DAY_MANWON
+    hasPrice && Number(form.priceDay) > MAX_PRICE_DAY_MANWON
       ? `1일 대여료는 ${MAX_PRICE_DAY_MANWON.toLocaleString()}만원 이하로 입력해 주세요`
       : "";
 
