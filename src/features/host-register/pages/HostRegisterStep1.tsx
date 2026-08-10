@@ -10,6 +10,7 @@ import {
 import { useHostRegisterStore } from "@/store/registerStore";
 import { useState } from "react";
 import AddressSearchModal from "@/features/host-register/components/AddressSearchModal";
+import { formatBusinessNumber } from "@/features/host-register/utils/format_business_number";
 
 export const HostRegisterStep1 = () => {
   const navigate = useNavigate();
@@ -106,7 +107,7 @@ export const HostRegisterStep1 = () => {
             id="business-number"
             placeholder="000-00-00000"
             inputMode="numeric"
-            value={form.businessNumber}
+            value={formatBusinessNumber(form.businessNumber)}
             onChange={(e) =>
               setValues({
                 businessNumber: e.target.value
