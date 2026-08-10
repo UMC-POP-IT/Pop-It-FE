@@ -60,20 +60,20 @@ const Logo = ({ variant }: LogoProps) => {
           width={32}
           height={32}
           alt="POP-IT"
-          className="block min-[768px]:hidden"
+          className="block md:hidden"
         />
         <img
           src={logoIcon}
           width={40}
           height={40}
           alt="POP-IT"
-          className="hidden min-[768px]:max-[1023px]:block"
+          className="hidden md:block lg:hidden"
         />
         <img
           src={logoText}
           height={26}
           alt="POP-IT"
-          className="hidden min-[1024px]:block"
+          className="hidden lg:block"
         />
       </div>
     );
