@@ -40,8 +40,8 @@ const MobileBottomNav = () => {
   const exploreLabel = mode === "HOST" ? "내 공간" : "공간 탐색";
   const reservationLabel = mode === "HOST" ? "예약 관리" : "나의 예약";
 
-  const isExploreActive = pathname === exploreTo;
-  const isReservationActive = pathname === reservationTo;
+  const isExploreActive = pathname === exploreTo || pathname.startsWith(exploreTo + "/");
+  const isReservationActive = pathname === reservationTo || pathname.startsWith(reservationTo + "/");
 
   const handleExploreClick = () => {
     navigate(exploreTo);

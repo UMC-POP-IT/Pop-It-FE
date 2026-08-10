@@ -85,7 +85,8 @@ const Logo = ({ variant }: LogoProps) => {
       <div className="flex items-center gap-2.5 min-[768px]:gap-4">
         <img
           src={logoIcon}
-          alt="POP-IT"
+          alt=""
+          aria-hidden="true"
           className="h-[17px] w-[17px] min-[768px]:h-[28px] min-[768px]:w-[28px]"
         />
         <img
