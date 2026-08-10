@@ -8,7 +8,7 @@ interface LogoProps {
 }
 
 const config: Record<
-  LogoVariant,
+  "login" | "error",
   {
     showIcon: boolean;
     iconSize: number;
@@ -18,20 +18,6 @@ const config: Record<
     gap: string;
   }
 > = {
-  header: {
-    showIcon: false,
-    iconSize: 0,
-    textHeight: 26,
-    direction: "flex-row",
-    gap: "gap-0",
-  },
-  footer: {
-    showIcon: true,
-    iconSize: 28,
-    textHeight: 24,
-    direction: "flex-row",
-    gap: "gap-4",
-  },
   login: {
     showIcon: true,
     iconSize: 42,
@@ -98,7 +84,7 @@ const Logo = ({ variant }: LogoProps) => {
     );
   }
 
-  const { showIcon, iconSize, textWidth, textHeight, direction, gap } = config[variant];
+  const { showIcon, iconSize, textWidth, textHeight, direction, gap } = config[variant as "login" | "error"];
 
   return (
     <div className={`flex items-center ${direction} ${gap}`}>

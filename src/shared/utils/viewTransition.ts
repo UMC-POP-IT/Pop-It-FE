@@ -41,7 +41,7 @@ export const withSearchBarTransition = (update: () => void) => {
   searchBarTransitionActive = true;
   document.startViewTransition(() => {
     flushSync(update);
-  }).finished.finally(() => {
+  }).finished.catch(() => {}).finally(() => {
     searchBarTransitionActive = false;
   });
 };
