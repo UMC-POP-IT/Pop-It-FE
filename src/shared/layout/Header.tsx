@@ -272,7 +272,7 @@ const Header = () => {
         )}
 
         {/* 우측: 모드전환 + 프로필 (gap-[20px]) */}
-        <div className="ml-auto flex items-center gap-5 md:-mr-[32px] lg:mr-0">
+        <div className="ml-auto flex items-center gap-5 md:max-lg:-mr-[32px]">
           {/* 모드 전환 버튼 — 게스트 모드 나의 예약 탭에서는 숨김 */}
           {!hideModeToggle && (
             <>
