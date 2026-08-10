@@ -1,7 +1,6 @@
 import { apiFetch } from "@/shared/utils/apiClient";
 import type { ApiHostReservation, ApiMySpace, ReservationStatus } from "@/types";
 
-
 interface HostReservationsResult {
   reservations: ApiHostReservation[];
   hasNext: boolean;
@@ -28,7 +27,6 @@ interface IdentityVerificationResult {
   isVerified: boolean;
   verifiedAt: string | null;
 }
-
 
 export async function fetchUnavailableDates(spaceId: number): Promise<{ startDate: string; endDate: string }[]> {
   const result = await apiFetch<{ unavailableDates: { startDate: string; endDate: string }[] }>(
@@ -88,7 +86,7 @@ export async function fetchCheckoutPhotos(
   reservationId: number,
 ): Promise<string[]> {
   const result = await apiFetch<CheckoutPhotosResult>(
-    `/api/v1/reservations/${reservationId}/checkout-images/me`,
+    `/api/v1/reservations/${reservationId}/checkout-images`,
   );
   return result.photoUrls ?? [];
 }
@@ -116,7 +114,6 @@ export async function verifyIdentity(identityVerificationId: string): Promise<Id
 export async function fetchIdentityVerificationStatus(): Promise<IdentityVerificationResult> {
   return apiFetch("/api/v1/users/me/verifications");
 }
-
 
 export async function deleteSpace(spaceId: number): Promise<void> {
   await apiFetch(`/api/v1/spaces/${spaceId}`, { method: "DELETE" });
