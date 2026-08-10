@@ -115,11 +115,6 @@ export const HostReservationPage = () => {
     setIsPaymentModalOpen(true);
   };
 
-  const handleOpenContract = (id: number) => {
-    setApproveTargetId(id);
-    setIsContractModalOpen(true);
-  };
-
   const handleSignContract = async () => {
     if (approveTargetId === null) return;
     setIsApproving(true);
@@ -209,14 +204,14 @@ export const HostReservationPage = () => {
   return (
     <div className="flex flex-col gap-10">
       <div className="flex flex-col gap-1">
-        <h1 className="text-text-primary text-[28px] font-bold">예약 관리</h1>
+        <h1 className="text-text-primary text-[24px] font-bold md:text-[28px]">예약 관리</h1>
         <p className="text-lg font-medium text-[#747474]">
           예약 승인 과정을 한 곳에서 관리해 보세요!
         </p>
       </div>
 
       <div className="flex flex-col gap-5">
-        <Tab tabs={tabs} activeIndex={activeTab} onChange={setActiveTab} />
+        <Tab tabs={tabs} activeIndex={activeTab} onChange={setActiveTab} hideCountOnMobile />
 
         {isLoading ? (
           <div className="bg-tag-bg flex h-[224px] w-full items-center justify-center rounded-xl">
@@ -244,7 +239,6 @@ export const HostReservationPage = () => {
                 onPhotoView={() => openPhotoView(reservation)}
                 onCheckoutApprove={() => setCheckoutApproveTargetId(reservation.reservationId)}
                 onCheckoutReject={() => setCheckoutRejectTargetId(reservation.reservationId)}
-                onOpenContract={() => handleOpenContract(reservation.reservationId)}
               />
             ))}
           </div>

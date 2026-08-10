@@ -140,12 +140,12 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-40 w-full bg-white drop-shadow-[0px_4px_5px_rgba(0,0,0,0.12)]">
       {/* 피그마: 전체 px-[40px], 좌측 gap-[32px](로고↔nav), 우측 gap-[20px] */}
-      <div className="relative flex h-[74px] w-full items-center px-[10px] md:px-[40px]">
+      <div className="relative flex h-[74px] w-full items-center px-4 md:px-10 xl:px-24">
         {/* 좌측: 로고 + nav (gap-[32px]) */}
         <div className="flex items-center gap-8">
           <NavLink
             to={mode === "HOST" ? "/host/spaces" : "/"}
-            className="flex h-[74px] w-[120px] flex-shrink-0 items-center justify-center xl:w-[180px]"
+            className="flex h-[74px] w-auto flex-shrink-0 items-center justify-center xl:w-[180px]"
           >
             <Logo variant="header" />
           </NavLink>
@@ -281,38 +281,48 @@ const Header = () => {
         )}
 
         {/* 우측: 모드전환 + 프로필 (gap-[20px]) */}
-        <div className="ml-auto flex items-center gap-5">
+        <div className="ml-auto flex items-center gap-5 md:max-lg:-mr-[32px]">
           {/* 모드 전환 버튼 — 게스트 모드 나의 예약 탭에서는 숨김 */}
           {!hideModeToggle && (
-            <button
-              onClick={handleModeToggle}
-              className="bg-primary-light text-text-primary flex items-center rounded p-[4px] text-base transition-colors"
-            >
-              <span className="hidden px-[4px] md:inline">
-                {mode === "GUEST" ? "호스트 전환" : "게스트 전환"}
-              </span>
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
+            <>
+              {/* 태블릿/데스크탑: 아이콘 포함 pill */}
+              <button
+                onClick={handleModeToggle}
+                className="bg-primary-light text-text-primary hidden items-center rounded p-[4px] text-base transition-colors md:flex"
               >
-                <path
-                  d="M9 6L15 12L9 18"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
+                <span className="hidden px-[4px] md:inline">
+                  {mode === "GUEST" ? "호스트 전환" : "게스트 전환"}
+                </span>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M9 6L15 12L9 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              {/* 모바일: 텍스트만 있는 작은 pill (Figma 모바일 헤더 — nav/로그인/프로필 없음) */}
+              <button
+                onClick={handleModeToggle}
+                className="bg-primary-light text-text-primary flex items-center rounded px-[8px] py-[6px] text-xs font-medium transition-colors md:hidden"
+              >
+                {mode === "GUEST" ? "호스트 전환" : "게스트 전환"}
+              </button>
+            </>
           )}
 
-          {/* 로그인 상태에 따라 분기 */}
+          {/* 로그인 상태에 따라 분기 — 모바일에서는 Figma에 없어서 숨김 */}
           {user ? (
             <div
-              className="relative"
+              className="relative hidden md:flex md:items-center"
               ref={profileMenuRef}
             >
               <button
@@ -321,7 +331,7 @@ const Header = () => {
                 aria-haspopup="menu"
                 aria-expanded={isProfileMenuOpen}
                 aria-controls="profile-menu"
-                className="text-text-primary flex h-[74px] w-auto items-center justify-center gap-3 py-[14px] text-base xl:w-[164px]"
+                className="text-text-primary flex h-[74px] w-auto items-center justify-center gap-3 py-[14px] text-base md:max-lg:w-[164px] xl:w-[164px]"
               >
                 <div className="bg-primary-light flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full p-[8px]">
                   <svg
@@ -365,7 +375,7 @@ const Header = () => {
               )}
             </div>
           ) : (
-            <div className="flex h-[74px] w-auto items-center justify-center md:w-[164px]">
+            <div className="hidden h-[74px] w-auto items-center justify-center md:flex md:w-[164px]">
               <button
                 onClick={() => openLoginModal()}
                 className="flex h-[40px] w-full items-center justify-center rounded-[8px] border border-[#3783f7] bg-white px-[24px] py-[6px] text-base leading-[1.4] font-bold text-[#0564f5] whitespace-nowrap"

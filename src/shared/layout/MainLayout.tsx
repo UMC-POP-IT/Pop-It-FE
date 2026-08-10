@@ -7,6 +7,7 @@ import {
 import { useEffect, useState } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
+import MobileBottomNav from "./MobileBottomNav";
 import Modal from "@/shared/components/Modal";
 import { LoginModal } from "@/shared/components/LoginModal";
 import { useAuthStore } from "@/store/authStore";
@@ -293,10 +294,11 @@ export const MainLayout = () => (
   // 뷰포트를 넘겨 가로 스크롤을 유발하므로, 뷰포트 폭인 이 루트에서 그 여분만 잘라낸다.
   <div className="bg-bg flex min-h-screen flex-col overflow-x-clip">
     <Header />
-    <main className="mx-auto w-full max-w-screen-xl flex-1 px-6 py-8">
+    <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-8 md:px-6">
       <Outlet />
     </main>
     <Footer />
+    <MobileBottomNav />
     <LoginModal />
     <SessionBootstrap />
     <PendingActionExecutor />
