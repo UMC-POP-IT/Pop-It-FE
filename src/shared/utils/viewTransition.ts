@@ -30,12 +30,18 @@ export type MorphTransitionStyle = CSSProperties & { viewTransitionName?: string
  * 그냥 즉시 update()만 실행한다 - 기능은 동일하고 전환 애니메이션만 생략된다
  * (progressive enhancement, 별도 폴백 코드가 필요 없다).
  */
+/** withSearchBarTransition이 실행 중인 동안 true. Banner가 구독해서 flash 방지에 쓴다. */
+export let searchBarTransitionActive = false;
+
 export const withSearchBarTransition = (update: () => void) => {
   if (typeof document.startViewTransition !== "function") {
     update();
     return;
   }
+  searchBarTransitionActive = true;
   document.startViewTransition(() => {
     flushSync(update);
+  }).finished.finally(() => {
+    searchBarTransitionActive = false;
   });
 };

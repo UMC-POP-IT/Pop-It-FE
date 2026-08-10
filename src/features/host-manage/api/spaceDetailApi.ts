@@ -1,5 +1,6 @@
 import { apiFetch } from "@/shared/utils/apiClient";
 import { formatFloorLabel } from "@/shared/utils/floorLabel";
+import { SPACE_CATEGORY_LABEL } from "@/shared/utils/spaceCategory";
 
 // ============================================================
 // GET /api/v1/spaces/{spaceId} — 호스트 공간 상세 조회
@@ -63,11 +64,12 @@ export interface HostSpaceDetail {
 }
 
 const BUILDING_TYPE_LABEL: Record<string, string> = {
-  LARGE_OFFICE: "대형 오피스",
-};
-
-const SPACE_CATEGORY_LABEL: Record<string, string> = {
-  POPUP_STORE: "팝업스토어",
+  LARGE_OFFICE: "대형 사무실",
+  SMALL_MEDIUM_OFFICE: "중소형 사무실",
+  OFFICETEL: "오피스텔 형",
+  COMPLEX_COMMERCIAL: "단지내 상가",
+  GENERAL_COMMERCIAL: "일반 상가",
+  MIXED_USE_COMMERCIAL: "복합 상가",
 };
 
 const labelOf = (map: Record<string, string>, value: string) =>
@@ -98,7 +100,7 @@ export const toHostSpaceDetail = (detail: SpaceDetailRes): HostSpaceDetail => {
     keywords: detail.facilities.map((f) => f.name),
     description: detail.description,
     createdAt: "",
-    category: labelOf(SPACE_CATEGORY_LABEL, detail.spaceCategory),
+    category: SPACE_CATEGORY_LABEL[detail.spaceCategory] ?? detail.spaceCategory,
     area: detail.exclusiveArea,
     facilities: detail.facilities.map((f) => f.name),
     spaceInfo,

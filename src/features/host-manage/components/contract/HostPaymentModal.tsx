@@ -38,9 +38,9 @@ const HostPaymentModal = ({
   const days = getDurationDays(startDate, endDate);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={isSubmitting ? undefined : onClose} />
-      <div className="relative z-10 flex w-[420px] flex-col gap-4 rounded-2xl bg-white p-6 shadow-xl">
+      <div className="relative z-10 flex w-full max-w-[420px] flex-col gap-4 rounded-2xl bg-white p-6 shadow-xl">
         <h3 className="text-text-primary text-lg font-bold">입금 예정</h3>
 
         <div className="flex flex-col gap-2 text-sm">

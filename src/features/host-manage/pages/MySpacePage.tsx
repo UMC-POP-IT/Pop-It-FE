@@ -115,11 +115,11 @@ export const MySpacePage = () => {
 
   return (
     <div className="flex flex-col gap-5 pt-[48px]">
-      {/* 페이지 헤더 */}
-      <div className="flex items-start justify-between">
+      {/* 페이지 헤더 — 모바일은 폭 부족하면 버튼이 아래로 줄바꿈 */}
+      <div className="flex flex-wrap items-start justify-between gap-y-5">
         <div className="flex flex-col gap-1">
-          <h1 className="text-text-primary text-[28px] font-bold">내 공간</h1>
-          <p className="text-text-tertiary text-lg font-medium">
+          <h1 className="text-text-primary text-[16px] font-bold md:text-[28px]">내 공간</h1>
+          <p className="text-text-tertiary text-xs font-medium md:text-lg">
             내가 등록한 공간을 한곳에서 모아보세요
           </p>
         </div>
@@ -145,7 +145,7 @@ export const MySpacePage = () => {
           {spaces.map((space, index) => (
             <div
               key={space.spaceId}
-              className={`relative flex items-end justify-between gap-7 py-5 ${
+              className={`relative flex flex-col gap-4 py-5 md:flex-row md:items-end md:justify-between md:gap-7 ${
                 index !== spaces.length - 1 ? "border-divider border-b" : ""
               }`}
             >
@@ -189,9 +189,9 @@ export const MySpacePage = () => {
                 )}
               </div>
 
-              <div className="flex items-start gap-7">
+              <div className="flex items-start gap-3 md:gap-7">
                 {/* 공간 이미지 */}
-                <div className="bg-thumbnail-bg h-[190px] w-[190px] flex-shrink-0 overflow-hidden">
+                <div className="bg-thumbnail-bg aspect-square w-[150px] flex-shrink-0 overflow-hidden md:aspect-auto md:h-[190px] md:w-[190px]">
                   {space.thumbnailUrl && (
                     <img
                       src={space.thumbnailUrl}
@@ -206,7 +206,7 @@ export const MySpacePage = () => {
                   <span className="text-primary text-base font-bold">등록 완료</span>
                   <div className="flex flex-col items-start gap-1">
                     <p className="text-xl font-bold text-black">{space.buildingName}</p>
-                    <p className="text-text-primary text-base">
+                    <p className="text-text-primary text-base font-medium">
                       {formatDate(space.registeredAt)}
                     </p>
                   </div>
@@ -216,7 +216,7 @@ export const MySpacePage = () => {
               {/* 공간 상세 버튼 */}
               <button
                 onClick={() => navigate(`/host/spaces/${space.spaceId}`)}
-                className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 flex-shrink-0 rounded-lg px-6 py-1.5 text-base font-bold"
+                className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 flex-shrink-0 self-end rounded-lg px-6 py-1.5 text-base font-bold"
               >
                 공간 상세
               </button>

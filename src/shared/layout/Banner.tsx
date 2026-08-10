@@ -1,8 +1,9 @@
-import { useEffect, useState, useRef, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useState, useRef, type ReactNode } from "react";
 import background1 from "@/assets/banner/background_1.jpg";
 import background2 from "@/assets/banner/background_2.jpg";
 import background3 from "@/assets/banner/background_3.jpg";
 import { HEADER_HEIGHT_PX } from "@/shared/layout/Header";
+import { searchBarTransitionActive } from "@/shared/utils/viewTransition";
 
 interface BannerSlide {
   title: string;
@@ -77,6 +78,26 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
+  // pinned-hidden → inline 전환 시 View Transition 없이 갑자기 전환되면(라우트 이동 등)
+  // children이 순간 보이는 flash가 발생한다. searchBarPosition을 그대로 쓰지 않고
+  // actualPosition state를 거쳐서 적용한다. pinned-hidden → inline 전환이면서
+  // View Transition이 아닌 경우(라우트 이동 등)에만 한 프레임 지연해서 반영하고,
+  // 나머지는 즉시 반영한다. 이렇게 하면 outerWrapper가 opacity-0을 유지하는 동안
+  // children이 화면에 보이지 않아 flash가 없다.
+  const [actualPosition, setActualPosition] = useState<"inline" | "pinned-hidden" | "pinned-open">(searchBarPosition);
+  const prevPositionRef = useRef(searchBarPosition);
+
+  useLayoutEffect(() => {
+    const prev = prevPositionRef.current;
+    prevPositionRef.current = searchBarPosition;
+    if (prev === "pinned-hidden" && searchBarPosition === "inline" && !searchBarTransitionActive) {
+      const id = requestAnimationFrame(() => setActualPosition("inline"));
+      return () => cancelAnimationFrame(id);
+    } else {
+      setActualPosition(searchBarPosition);
+    }
+  }, [searchBarPosition]);
+
   const goTo = (index: number) => setCurrent((index + total) % total);
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -136,17 +157,17 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
   // 남겨두면 View Transition이 "이후" 화면을 캡처하는 순간 아직 opacity가 다
   // 안 바뀐 중간 상태를 찍어버려 애니메이션이 어긋난다.
   const outerWrapperClassName =
-    searchBarPosition === "inline"
+    actualPosition === "inline"
       ? ""
       : `fixed left-0 z-30 w-full bg-white shadow-[0px_4px_12px_0px_rgba(0,0,0,0.08)] ${
-          searchBarPosition === "pinned-open"
+          actualPosition === "pinned-open"
             ? "opacity-100"
             : "pointer-events-none opacity-0"
         }`;
   const outerWrapperStyle =
-    searchBarPosition === "inline" ? undefined : { top: HEADER_HEIGHT_PX };
+    actualPosition === "inline" ? undefined : { top: HEADER_HEIGHT_PX };
   const innerWrapperClassName =
-    searchBarPosition === "inline"
+    actualPosition === "inline"
       ? `w-full max-w-[1200px] ${showImage ? "mt-10 xl:mt-20" : ""}`
       : "mx-auto w-full max-w-[1200px] px-4 py-4 md:px-10 xl:px-[76px]";
 

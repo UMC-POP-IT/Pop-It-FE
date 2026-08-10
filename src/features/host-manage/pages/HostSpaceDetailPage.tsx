@@ -96,11 +96,11 @@ export const HostSpaceDetailPage = () => {
   }
 
   return (
-    <div className="mx-auto flex w-[1200px] flex-col gap-5">
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5">
       <ExploreDetailGallery space={space} onImageClick={(i) => setGalleryIndex(i)} />
 
-      <div className="flex w-full items-start gap-[23px]">
-        <div className="w-[689px] shrink-0">
+      <div className="flex w-full flex-col items-start gap-5 min-[1024px]:flex-row min-[1024px]:gap-[23px]">
+        <div className="w-full min-[1024px]:w-[clamp(468px,53.125vw_-_76px,689px)] min-[1024px]:shrink-0">
           <ExploreDetailInfo space={space} variant="host" />
         </div>
         <HostReservationCalendar unavailablePeriods={unavailablePeriods} />

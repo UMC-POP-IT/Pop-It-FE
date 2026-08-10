@@ -10,8 +10,8 @@ const FOOTER_LINKS = [
 ];
 
 const Footer = () => (
-  <footer className="bg-bg-footer mt-20 min-h-[302px] w-full">
-    <div className="mx-auto flex max-w-screen-xl items-start justify-between gap-8 px-30 py-15">
+  <footer className="bg-bg-footer mt-20 min-h-[302px] w-full pb-[70px] md:pb-0">
+    <div className="flex flex-col items-start justify-start gap-5 px-[16px] py-15 min-[768px]:flex-row min-[768px]:justify-between min-[768px]:gap-8 min-[768px]:px-[clamp(24px,17.31vw_-_153.23px,96px)]">
       <div className="flex flex-col gap-5">
         <p className="text-text-tag text-sm font-medium">주식회사 팝잇</p>
         <div className="text-text-tag flex flex-col gap-1 text-xs tracking-[-0.1px] leading-[1.5]">
@@ -49,7 +49,7 @@ const Footer = () => (
         </p>
       </div>
 
-      <div className="flex-shrink-0">
+      <div className="order-first flex-shrink-0 min-[768px]:order-none">
         <Logo variant="footer" />
       </div>
     </div>
