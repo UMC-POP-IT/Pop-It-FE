@@ -10,7 +10,12 @@ import {
   STRUCTURE_OPTIONS,
   FLOOR_TYPE_OPTIONS,
 } from "@/features/host-register/api/mock_register";
-import { NO_SPINNER, blockNonNumeric } from "@/shared/utils/numberInput";
+import {
+  NO_SPINNER,
+  blockNonDecimal,
+  blockNonNumeric,
+  filterDecimal,
+} from "@/shared/utils/numberInput";
 import { useEffect, useState } from "react";
 import { getFacilities } from "@/features/host-register/api/facility_api";
 import type {
@@ -63,10 +68,17 @@ export const RegisterStep3 = () => {
   const needsFloorNumber =
     form.floorType !== "반지층" && form.floorType !== "옥탑";
 
+  // 서버 exclusiveArea엔 하한 검증이 없어 0·음수도 그대로 저장된다 → FE가 막는다
+  const areaError =
+    form.area !== "" && !(Number(form.area) > 0)
+      ? "전용 면적은 0보다 큰 값으로 입력해 주세요"
+      : "";
+
   const isValid =
     form.usage !== "" &&
     form.spaceStructure !== "" &&
     form.area !== "" &&
+    !areaError &&
     form.floorType !== "" &&
     (!needsFloorNumber || form.floor !== "") &&
     form.hasParking !== null;
@@ -116,7 +128,10 @@ export const RegisterStep3 = () => {
                 type="number"
                 aria-label="전용 면적 (제곱미터)"
                 value={form.area}
-                onChange={(e) => setValues({ area: e.target.value })}
+                onChange={(e) =>
+                  setValues({ area: filterDecimal(e.target.value) })
+                }
+                onKeyDown={blockNonDecimal}
                 className="text-text-primary placeholder:text-text-secondary h-14 w-full [appearance:textfield] rounded-lg bg-[#F2F2F2] pr-12 pl-5 text-right text-lg font-medium transition-colors focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
               <span className="text-text-secondary pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 text-lg font-medium">
@@ -142,9 +157,15 @@ export const RegisterStep3 = () => {
               </span>
             </div>
           </div>
-          <span className="text-text-secondary text-right text-base font-medium">
-            ㎡ 입력 시 평이 자동 계산돼요
-          </span>
+          {areaError ? (
+            <span className="text-danger text-right text-base font-bold">
+              {areaError}
+            </span>
+          ) : (
+            <span className="text-text-secondary text-right text-base font-medium">
+              ㎡ 입력 시 평이 자동 계산돼요
+            </span>
+          )}
         </div>
 
         {/* 층수 유형(택1) + 상세 층수 입력 */}
