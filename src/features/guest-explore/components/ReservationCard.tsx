@@ -67,19 +67,8 @@ const getCardMeta = (r: Reservation): CardMeta => {
       isDone: false
     };
 
-  // 계약(서명)은 끝났지만 결제가 아직 안 됐거나 실패한 상태
-  if (r.status === "CONTRACT_COMPLETED")
-    return {
-      label: "결제 대기",
-      showCancel: false,
-      showContract: false,
-      needsPhotoVerification: false,
-      isPhotoRejected: false,
-      isAwaitingHostApproval: false,
-      isDone: false
-    };
-
-  if (r.status === "APPROVED")
+  // 승인은 됐지만 계약(서명)·결제 중 하나라도 안 끝난 상태 (결제 취소/실패 후 재시도 포함)
+  if (r.status === "APPROVED" || r.status === "CONTRACT_COMPLETED")
     return {
       label: "승인 완료",
       showCancel: true,
@@ -173,7 +162,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
     let ignore = false;
 
     const loadPaymentInfo = async (status: Status) => {
-      if (status !== "APPROVED") return;
+      if (status !== "APPROVED" && status !== "CONTRACT_COMPLETED") return;
       setIsPaymentInfoError(false);
       try {
         const data = await GetPaymentInfo(reservation.reservationId);
