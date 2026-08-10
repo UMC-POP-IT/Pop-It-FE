@@ -84,7 +84,7 @@ export const RegisterStep2 = () => {
                 </span>
               </div>
               {!depositError && (
-                <span className="text-text-secondary text-right text-base font-medium">
+                <span className="text-text-secondary text-left text-base font-medium">
                   최대 100만원 설정 가능
                 </span>
               )}
@@ -133,7 +133,7 @@ export const RegisterStep2 = () => {
             }
           />
 
-          <span className="text-text-secondary text-right text-base font-medium">
+          <span className="text-text-secondary text-left text-base font-medium">
             최대 3개월 신청 가능
           </span>
         </div>

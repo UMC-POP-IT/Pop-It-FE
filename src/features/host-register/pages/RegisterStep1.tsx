@@ -114,7 +114,7 @@ export const RegisterStep1 = () => {
       에러(Input 내부, 590 칸)와는 끝이 어긋나지만 둘은 동시에 뜨지 않는다.
       주소만 있고 좌표가 없으면 재검색을 유도한다 */}
             {!addrError && (
-              <span className="text-text-secondary text-right text-base font-medium">
+              <span className="text-text-secondary text-left text-base font-medium">
                 {form.address !== "" &&
                 (form.latitude === null || form.longitude === null)
                   ? "주소를 다시 검색해주세요"

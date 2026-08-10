@@ -71,12 +71,12 @@ const FileUploadRow = ({
       {error ? (
         <span
           role="alert"
-          className="text-danger text-right text-base font-bold"
+          className="text-danger text-left text-base font-bold"
         >
           {error}
         </span>
       ) : (
-        <span className="text-text-secondary text-right text-base font-medium">
+        <span className="text-text-secondary text-left text-base font-medium">
           {hint}
         </span>
       )}
