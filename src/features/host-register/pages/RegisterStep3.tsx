@@ -110,7 +110,7 @@ export const RegisterStep3 = () => {
           onChange={(next) => setValues({ usage: next[0] ?? "" })}
         />
         <ChipGroup
-          label="공간 정보"
+          label="공간 구조"
           options={STRUCTURE_OPTIONS}
           selected={form.spaceStructure ? [form.spaceStructure] : []}
           onChange={(next) => setValues({ spaceStructure: next[0] ?? "" })}
