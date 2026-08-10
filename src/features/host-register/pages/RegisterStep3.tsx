@@ -127,6 +127,8 @@ export const RegisterStep3 = () => {
               <input
                 type="number"
                 aria-label="전용 면적 (제곱미터)"
+                aria-invalid={areaError !== ""}
+                aria-describedby="area-message"
                 value={form.area}
                 onChange={(e) =>
                   setValues({ area: filterDecimal(e.target.value) })
@@ -158,11 +160,18 @@ export const RegisterStep3 = () => {
             </div>
           </div>
           {areaError ? (
-            <span className="text-danger text-right text-base font-bold">
+            <span
+              id="area-message"
+              role="alert"
+              className="text-danger text-right text-base font-bold"
+            >
               {areaError}
             </span>
           ) : (
-            <span className="text-text-secondary text-right text-base font-medium">
+            <span
+              id="area-message"
+              className="text-text-secondary text-right text-base font-medium"
+            >
               ㎡ 입력 시 평이 자동 계산돼요
             </span>
           )}

@@ -31,8 +31,8 @@ export const RegisterStep2 = () => {
   //기간: 시작일 + 종료일 둘 다 입력됐나
   const hasPeriod = form.startDate !== "" && form.endDate !== "";
 
-  //전부 통과 + 보증금 에러 없음 -> 유효
-  const isValid = hasPrice && hasPeriod && !depositError;
+  //전부 통과 + 보증금·대여료 에러 없음 -> 유효
+  const isValid = hasPrice && hasPeriod && !depositError && !priceDayError;
 
   return (
     <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
