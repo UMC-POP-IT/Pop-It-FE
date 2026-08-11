@@ -92,6 +92,9 @@ export const DateRangePicker = ({
   const [isDragging, setIsDragging] = useState(false);
   // 끌기 시작한 지점의 세로 좌표. null이면 끄는 중이 아니다
   const dragStartRef = useRef<number | null>(null);
+  // 지금까지 끌어내린 거리. dragY와 같은 값이지만 리렌더를 기다리지 않는다.
+  // pointerup에서 100px 판정에 쓰려면 이쪽이어야 한다 — 아래 handleDragEnd 참고
+  const dragYRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null); // 달력 전체를 가리키는 리모컨
   // 팝업을 연 필드 버튼 — 닫을 때 여기로 포커스를 되돌린다
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -134,6 +137,30 @@ export const DateRangePicker = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen, startDate, endDate, onConfirm]);
+
+  // 바텀시트가 떠 있는 동안 뒤 페이지 스크롤을 잠근다.
+  // 딤이 화면 전체를 덮어 사용자에게는 모달인데, 딤 위를 위아래로 쓸면 뒤의 등록 폼이
+  // 그대로 스크롤된다. 시트를 닫으면 화면이 엉뚱한 위치에 가 있게 된다.
+  // md 이상에서는 잠그면 안 된다 — 거기서는 딤 없이 필드 아래 붙는 팝업이라
+  // 페이지를 굴리지 못하게 만들면 달력을 연 채로 아래 필드를 볼 수 없다.
+  // 48rem(768px)은 Tailwind md와 같은 값이다 (프로젝트에서 breakpoint를 덮어쓰지 않았다).
+  useEffect(() => {
+    if (!isOpen) return;
+    const desktopQuery = window.matchMedia("(min-width: 48rem)");
+    const previousOverflow = document.body.style.overflow;
+    // 연 채로 화면을 회전하거나 창을 늘이면 시트가 팝업으로 바뀌므로 잠금도 따라 풀린다
+    const applyLock = () => {
+      document.body.style.overflow = desktopQuery.matches
+        ? previousOverflow
+        : "hidden";
+    };
+    applyLock();
+    desktopQuery.addEventListener("change", applyLock);
+    return () => {
+      desktopQuery.removeEventListener("change", applyLock);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
 
   // 시작일 기준 '최대 3개월'을 넘는 날짜인지 (계약 한도)
   const isOverLimit = (date: Date) =>
@@ -237,6 +264,7 @@ export const DateRangePicker = ({
   // 이게 없으면 빠르게 내릴 때 시트가 중간에 멈춘다
   const handleDragStart = (e: React.PointerEvent<HTMLDivElement>) => {
     dragStartRef.current = e.clientY;
+    dragYRef.current = 0; // 지난 제스처의 거리가 남아 첫 판정을 흐리지 않게 한다
     setIsDragging(true);
     e.currentTarget.setPointerCapture(e.pointerId);
   };
@@ -244,15 +272,23 @@ export const DateRangePicker = ({
   const handleDragMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (dragStartRef.current === null) return;
     // 아래로 끄는 것만 따라간다 — 위로 올리면 시트가 화면 위로 떠버린다
-    setDragY(Math.max(0, e.clientY - dragStartRef.current));
+    const distance = Math.max(0, e.clientY - dragStartRef.current);
+    dragYRef.current = distance; // 즉시 반영 (판정용)
+    setDragY(distance); // 리렌더를 거쳐 시트를 그린다 (표시용)
   };
 
   const handleDragEnd = () => {
     if (dragStartRef.current === null) return;
     dragStartRef.current = null;
     setIsDragging(false);
+    // 판정은 state가 아니라 ref로 한다. pointermove의 setDragY는 리렌더를 한 번 거치는데,
+    // React가 연속 이벤트의 갱신을 뒤로 미룰 수 있어 시트를 빠르게 튕겨 내리면
+    // pointerup 시점의 dragY가 마지막 move보다 작다. 그러면 충분히 내렸는데도
+    // 닫히지 않고 제자리로 돌아간다. ref는 리렌더를 기다리지 않아 항상 최신이다
+    const distance = dragYRef.current;
+    dragYRef.current = 0;
     // 100px 넘게 내렸으면 닫고, 아니면 제자리로 되돌린다 (transition이 되돌아가는 걸 그려준다)
-    if (dragY > 100) closeWithSave();
+    if (distance > 100) closeWithSave();
     else setDragY(0);
   };
 
@@ -339,8 +375,9 @@ export const DateRangePicker = ({
               ›
             </button>
           )}
-          {/* lg 미만은 달 카드가 하나뿐이라 ›도 이 카드가 갖는다.
-              데스크톱에서는 오른쪽 카드에 › 가 따로 있으므로 숨긴다 */}
+          {/* md 미만(바텀시트)은 달 카드가 하나뿐이라 ›도 이 카드가 갖는다.
+              md 이상에서는 오른쪽 달 카드가 자기 ›를 그리므로 여기 것은 숨긴다.
+              (태블릿에서 다음 달로 못 넘어가는 게 아니라, › 주인이 바뀌는 것이다) */}
           {arrow === "prev" && (
             <button
               type="button"
@@ -465,20 +502,18 @@ export const DateRangePicker = ({
 
       {isOpen && (
         <>
-          {/* 딤 — 바텀시트일 때만. 데스크톱 팝업은 화면을 덮지 않는다 */}
+          {/* 딤 — 바텀시트일 때만. md 이상 팝업은 화면을 덮지 않는다.
+              닫는 동작은 손잡이로 끌어내릴 때와 같아야 하므로 closeWithSave를 그대로 쓴다.
+              같은 코드를 여기 한 번 더 쓰면 나중에 닫기 동작을 바꿀 때 한쪽만 고쳐
+              "딤으로 닫을 때와 끌어내려 닫을 때 결과가 다른" 상태가 된다 */}
           <div
             className="fixed inset-0 z-40 bg-black/40 md:hidden"
-            onClick={() => {
-              if (startDate && endDate)
-                onConfirm(toYmd(startDate), toYmd(endDate));
-              setIsOpen(false);
-              setDragY(0);
-            }}
+            onClick={closeWithSave}
           />
 
-          {/* lg 미만: 화면 아래에 붙는 바텀시트 (위 모서리만 radius 20, 안쪽 16, 높이는 내용만큼)
-              lg 이상: 필드 아래에 뜨는 896px 팝업 — 448 카드 2개.
-                       본문(644)보다 넓어 좌우로 126씩 넘치므로 left-1/2 + -translate-x-1/2로
+          {/* md 미만: 화면 아래에 붙는 바텀시트 (위 모서리만 radius 20, 안쪽 16, 높이는 내용만큼)
+              md 이상: 필드 아래에 뜨는 팝업 — 태블릿 616(308 카드 2개) / 데스크톱 896(448 카드 2개).
+                       데스크톱은 본문(644)보다 넓어 좌우로 126씩 넘치므로 left-1/2 + -translate-x-1/2로
                        가운데 정렬해 넘침을 대칭으로 만든다.
                        MainLayout의 overflow-x-clip이 가로 스크롤바 생성을 막는다 */}
           <div
@@ -508,7 +543,7 @@ export const DateRangePicker = ({
               <div className="bg-divider h-1 w-10 rounded-full" />
             </div>
 
-            {/* 달 카드 — lg 미만은 1개월, 데스크톱은 2개월 나란히 */}
+            {/* 달 카드 — md 미만(바텀시트)은 1개월, md 이상은 2개월 나란히 */}
             <div className="flex">
               {renderMonth(viewDate, "prev")}
               <div className="hidden md:block">

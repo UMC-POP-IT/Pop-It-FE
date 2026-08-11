@@ -39,9 +39,15 @@ export const HostRegisterStart = () => {
 
   return (
     // 카드 바깥 여백 — 모바일 16 / 태블릿 24
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6">
-      {/* 딤 배경 */}
-      <div className="absolute inset-0 bg-black/40" />
+    // 카드 높이는 내용이 정하므로(고정하지 않는다) 360×640처럼 짧은 화면에서는
+    // 카드가 뷰포트보다 커진다. 그래서 overflow-y-auto가 필요하다.
+    // 정렬은 items-center가 아니라 카드 쪽 m-auto로 준다 — 아래 카드 주석 참고
+    <div className="fixed inset-0 z-50 flex overflow-y-auto p-4 md:p-6">
+      {/* 딤 배경 — absolute가 아니라 fixed다.
+          바깥에 overflow-y-auto가 붙으면서 이 요소가 스크롤 컨테이너의 자식이 됐다.
+          absolute inset-0은 스크롤되는 내용과 함께 위로 밀려 올라가 첫 화면만 덮는다.
+          fixed는 스크롤과 무관하게 뷰포트를 덮는다 */}
+      <div className="fixed inset-0 bg-black/40" />
 
       {/* 모달 카드 — 3단이 배치까지 다르다.
             모바일 : 세로 1단, 전부 가운데 정렬, 버튼은 카드 폭 전체
@@ -56,7 +62,19 @@ export const HostRegisterStart = () => {
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="relative z-10 flex w-full max-w-[360px] flex-col rounded-xl bg-white p-5 shadow-xl md:max-w-[88%] md:px-20 md:py-[60px] lg:max-w-[900px] lg:py-16"
+        // m-auto로 가운데 정렬한다. 부모의 items-center가 아니다.
+        // 부모에 items-center를 주면 카드가 화면보다 클 때 넘친 절반이 컨테이너의
+        // '시작 경계 바깥'으로 나가는데 스크롤은 그 방향으로 가지 않아, 카드 윗부분에
+        // 영영 닿을 수 없다. 반대로 items-start로 눕히면 카드가 짧을 때도 위에 붙어
+        // 다른 모달들(LoginModal·Modal·AddressSearchModal)과 위치가 달라진다.
+        // flex 항목의 auto 마진은 남는 공간이 있으면 나눠 가져 가운데로 오고,
+        // 넘치면 0으로 접혀 시작 지점부터 그려진다 — 두 경우가 다 맞는다.
+        //
+        // 태블릿 폭은 뷰포트 비율(88%)이 아니라 시안 값 854를 상한으로 쓴다.
+        // 88%로 두면 768 뷰포트에서 가용 720의 88% = 634가 되고, 여기서 좌우 패딩 160과
+        // 이미지 240·간격 60을 빼면 오른쪽 컬럼에 174밖에 안 남아 제목과 안내문이 뭉갠다.
+        // 854 상한이면 768에서는 가용 폭 720을 그대로 쓰고, 902 이상에서만 854에 멈춘다
+        className="relative z-10 m-auto flex w-full max-w-[360px] flex-col rounded-xl bg-white p-5 shadow-xl md:max-w-[854px] md:px-20 md:py-[60px] lg:max-w-[900px] lg:py-16"
       >
         {/* X 닫기 — 모바일·태블릿은 카드 오른쪽 위.
             (공통 X 컴포넌트가 없어 LoginModal과 동일하게 raw button을 쓴다) */}

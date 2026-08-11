@@ -61,7 +61,11 @@ const FileUploadRow = ({
           aria-label={`${label} 파일 찾기`}
           // 모바일 156 / 데스크톱 184 — Button size="nav"과 같은 규격.
           // self-end: 세로로 내려올 때 오른쪽 끝에 붙인다 (시안)
-          className="bg-text-primary flex h-14 w-[156px] shrink-0 cursor-pointer items-center justify-center self-end rounded-lg text-xl font-bold whitespace-nowrap text-white transition-colors hover:bg-gray-800 md:w-[184px] md:self-auto"
+          // focus-within: 포커스를 받는 건 아래 sr-only input이라 label에는 :focus가 걸리지 않는다.
+          // 그래서 Tab으로 여기 왔을 때 화면상 아무 변화가 없어 키보드 사용자가 위치를 잃는다.
+          // 자식이 포커스를 가지면 부모에 걸리는 focus-within으로 링을 그린다.
+          // ring-offset: 버튼 배경이 진한 검정이라 링이 배경에 묻히지 않게 흰 여백을 한 겹 둔다
+          className="bg-text-primary focus-within:ring-primary flex h-14 w-[156px] shrink-0 cursor-pointer items-center justify-center self-end rounded-lg text-xl font-bold whitespace-nowrap text-white transition-colors focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-800 md:w-[184px] md:self-auto"
         >
           파일 찾기
           <input

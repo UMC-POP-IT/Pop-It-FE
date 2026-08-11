@@ -71,10 +71,17 @@ export const RegisterStep4 = () => {
         <div className="mt-7 flex flex-col gap-12">
           {/* 공간명 */}
           <div className="flex flex-col gap-2">
-            <span className="text-text-primary text-[22px] font-bold">
+            {/* span이 아니라 label + htmlFor다. span은 바로 아래 Input과 아무 관계가 없어
+                스크린리더가 이 칸을 "편집"이라고만 읽는다 (무엇을 넣는 칸인지 알 수 없다).
+                HostRegisterStep1의 사업자 등록 번호와 같은 방식 */}
+            <label
+              htmlFor="building-name"
+              className="text-text-primary text-[22px] font-bold"
+            >
               공간명
-            </span>
+            </label>
             <Input
+              id="building-name"
               placeholder="예: 성수 000 건물"
               value={form.buildingName}
               onChange={(e) => setValues({ buildingName: e.target.value })}

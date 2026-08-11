@@ -52,6 +52,43 @@ export const HostRegisterStep1 = () => {
     input.setSelectionRange(caret, caret);
   });
 
+  // 과세자 카드 두 장의 DOM 참조. 화살표 키로 포커스를 직접 옮겨야 해서 필요하다
+  const taxpayerRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  // 지금 tabIndex=0을 가질 카드. 아무것도 안 골랐으면 첫 카드가 진입점이 된다
+  const selectedTaxpayerIndex = TAXPAYER_OPTIONS.findIndex(
+    (opt) => opt.title === form.taxpayerType,
+  );
+  const tabbableTaxpayerIndex =
+    selectedTaxpayerIndex >= 0 ? selectedTaxpayerIndex : 0;
+
+  /**
+   * radiogroup의 표준 키보드 동작.
+   *
+   * role="radio"를 붙이면 스크린리더는 "라디오 버튼"이라고 읽는다. 그런데 실제 조작은
+   * 일반 버튼이라 Tab으로 하나씩 들어가야 했다. 읽히는 것과 되는 것이 어긋나면
+   * 키보드 사용자는 안내받은 대로 눌렀는데 아무 일도 안 일어나는 상태가 된다.
+   *
+   * 네이티브 라디오 그룹은 이렇게 동작한다:
+   *  - 그룹 전체가 Tab 한 번에 들어가고 나간다 (roving tabIndex — 그룹 안에서
+   *    tabIndex=0인 항목은 항상 하나뿐이고 나머지는 -1)
+   *  - 안에서는 ←→↑↓로 옮기고, 옮기는 순간 선택도 같이 바뀐다
+   */
+  const handleTaxpayerKeyDown = (
+    e: React.KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    const isForward = e.key === "ArrowRight" || e.key === "ArrowDown";
+    const isBackward = e.key === "ArrowLeft" || e.key === "ArrowUp";
+    if (!isForward && !isBackward) return;
+    // 그대로 두면 ↓가 페이지를 스크롤한다
+    e.preventDefault();
+    const count = TAXPAYER_OPTIONS.length;
+    // +count 후 나머지 — 첫 항목에서 ←를 눌러도 음수가 되지 않고 마지막으로 돈다
+    const next = (index + (isForward ? 1 : -1) + count) % count;
+    setValues({ taxpayerType: TAXPAYER_OPTIONS[next].title });
+    taxpayerRefs.current[next]?.focus();
+  };
+
   const handleBusinessNumberChange = (e: ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value; // 브라우저가 방금 만든 값 (하이픈 포함)
     const caret = e.target.selectionStart ?? raw.length;
@@ -120,7 +157,7 @@ export const HostRegisterStep1 = () => {
               role="radiogroup"
               aria-label="과세자 유형 선택"
             >
-              {TAXPAYER_OPTIONS.map((opt) => {
+              {TAXPAYER_OPTIONS.map((opt, index) => {
                 const isSelected = form.taxpayerType === opt.title;
                 return (
                   <button
@@ -128,6 +165,13 @@ export const HostRegisterStep1 = () => {
                     type="button"
                     role="radio"
                     aria-checked={isSelected}
+                    ref={(el) => {
+                      taxpayerRefs.current[index] = el;
+                    }}
+                    // 그룹 안에서 Tab이 멈추는 자리는 한 곳뿐이다.
+                    // 나머지는 -1이라 Tab이 건너뛰고, 화살표 키로만 옮긴다
+                    tabIndex={index === tabbableTaxpayerIndex ? 0 : -1}
+                    onKeyDown={(e) => handleTaxpayerKeyDown(e, index)}
                     onClick={() => setValues({ taxpayerType: opt.title })}
                     className={`flex h-[100px] flex-1 flex-col items-start rounded-lg border p-5 text-left transition-colors ${
                       isSelected

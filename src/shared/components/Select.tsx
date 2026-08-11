@@ -58,8 +58,12 @@ const Select = ({
   const open = () => {
     if (disabled) return;
     setIsOpen(true);
-    // 이미 고른 값이 있으면 거기서부터, 없으면 첫 항목부터
-    setActiveIndex(options.findIndex((opt) => opt.value === value));
+    // 이미 고른 값이 있으면 거기서부터, 없으면 첫 항목부터.
+    // findIndex는 못 찾으면 -1을 준다. 그대로 두면 아직 아무것도 안 고른 상태에서
+    // 열자마자 Enter를 눌렀을 때 아래 handleKeyDown의 activeIndex >= 0에 걸려
+    // 아무 일도 일어나지 않는다 (네이티브 select는 첫 항목을 고른다)
+    const selectedIndex = options.findIndex((opt) => opt.value === value);
+    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
   };
 
   const select = (optionValue: string) => {
@@ -69,6 +73,16 @@ const Select = ({
 
   // 바깥 클릭으로 닫기 — 사용자가 이미 다른 곳으로 갔으므로 포커스는 되돌리지 않는다
   useOutsideClick(containerRef, () => close(false), isOpen);
+
+  // options가 줄어들면 사라진 항목의 ref가 배열 끝에 남는다.
+  // 목록을 닫으면 <ul>이 언마운트되며 ref 콜백이 null로 불려 비워지지만,
+  // 열어둔 채 목록이 바뀌는 경우(검색·필터가 붙을 때)는 그 정리가 일어나지 않는다.
+  // 길이를 맞춰두면 scrollIntoView가 떼어진 노드를 잡는 일이 없다.
+  // deps가 options가 아니라 options.length인 이유: 호출부가 map()으로 배열을
+  // 매 렌더 새로 만들어 넘기므로 참조 비교로는 매 렌더 실행된다
+  useEffect(() => {
+    optionRefs.current.length = options.length;
+  }, [options.length]);
 
   // 키보드로 옮긴 항목이 목록 밖으로 나가면 따라 스크롤한다.
   // 8개가 다 안 보이고 5개까지만 보이므로(max-h) 이게 없으면 커서를 놓친다
