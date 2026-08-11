@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_spaces";
 
 interface ExploreDetailGalleryProps {
@@ -22,15 +22,22 @@ const ExploreDetailGallery = ({
   const totalImageCount = space.imageUrls.length;
   const hiddenImageCount = totalImageCount - (1 + VISIBLE_SUB_IMAGE_COUNT);
 
-  // 로드에 실패한 이미지 인덱스(space.imageUrls 기준)를 기억해두고, 해당 칸은
+  // 로드에 실패한 이미지 URL을 기억해두고, 해당 칸은
   // 깨진 이미지 대신 기존 플레이스홀더(회색 배경)만 보여준다.
-  const [failedIndices, setFailedIndices] = useState<Set<number>>(new Set());
-  const markFailed = (index: number) =>
-    setFailedIndices((prev) =>
-      prev.has(index) ? prev : new Set(prev).add(index),
+  const [failedImageUrls, setFailedImageUrls] = useState<Set<string>>(
+    new Set(),
+  );
+
+  useEffect(() => {
+    setFailedImageUrls(new Set());
+  }, [space.imageUrls]);
+
+  const markFailed = (url: string) =>
+    setFailedImageUrls((prev) =>
+      prev.has(url) ? prev : new Set(prev).add(url),
     );
 
-  const mainImageFailed = failedIndices.has(0);
+  const mainImageFailed = mainImage ? failedImageUrls.has(mainImage) : false;
 
   return (
     <div className="flex w-full items-center gap-5">
@@ -46,7 +53,7 @@ const ExploreDetailGallery = ({
               src={mainImage}
               alt={space.name}
               className="h-full w-full object-cover"
-              onError={() => markFailed(0)}
+              onError={() => markFailed(mainImage)}
             />
           )}
         </button>
@@ -57,7 +64,7 @@ const ExploreDetailGallery = ({
               src={mainImage}
               alt={space.name}
               className="h-full w-full object-cover"
-              onError={() => markFailed(0)}
+              onError={() => markFailed(mainImage)}
             />
           )}
         </div>
@@ -67,7 +74,7 @@ const ExploreDetailGallery = ({
         {subImageSlots.map((url, index) => {
           // subImageSlots는 space.imageUrls에서 대표 이미지를 뺀 배열이라, 실제 인덱스는 +1.
           const actualIndex = index + 1;
-          const failed = failedIndices.has(actualIndex);
+          const failed = url ? failedImageUrls.has(url) : false;
           const isLastSlot = index === VISIBLE_SUB_IMAGE_COUNT - 1;
           const showOverlay = isLastSlot && hiddenImageCount > 0;
 
@@ -78,7 +85,7 @@ const ExploreDetailGallery = ({
                   src={url}
                   alt={`${space.name} ${index + 2}`}
                   className="h-full w-full object-cover"
-                  onError={() => markFailed(actualIndex)}
+                  onError={() => markFailed(url)}
                 />
               )}
               {showOverlay && (
