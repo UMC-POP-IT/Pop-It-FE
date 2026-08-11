@@ -20,7 +20,7 @@ interface ReservationActionResult {
 }
 
 interface CheckoutPhotosResult {
-  photoUrls: string[];
+  imageUrls: string[];
 }
 
 interface IdentityVerificationResult {
@@ -88,7 +88,7 @@ export async function fetchCheckoutPhotos(
   const result = await apiFetch<CheckoutPhotosResult>(
     `/api/v1/reservations/${reservationId}/checkout-images`,
   );
-  return result.photoUrls ?? [];
+  return result.imageUrls ?? [];
 }
 
 export async function fetchMySpaces(params?: {
