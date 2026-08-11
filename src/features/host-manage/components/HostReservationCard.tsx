@@ -76,8 +76,8 @@ export const HostReservationCard = ({
 
       {/* 공간 정보 — 이미지+텍스트 위, 버튼 아래(세로) 고정. 사진 하단~버튼 상단 40px 고정 간격
           (Figma 실측: 태블릿 5584:60218 = 20(이미지 wrapper 하단 패딩)+20(gap), 모바일 5584:65807 동일 구조로 재확인) */}
-      <div className="border-divider flex flex-col gap-10 border-b py-5">
-        <div className="flex items-start gap-3 md:gap-7">
+      <div className="border-divider flex flex-col gap-10 border-b py-5 min-[1024px]:flex-row min-[1024px]:items-start">
+        <div className="flex items-start gap-3 md:gap-7 min-[1024px]:flex-1 min-[1024px]:min-w-0">
           {/* 이미지 — 모바일 150px(정사각), 태블릿 148px, 데스크탑 190px */}
           <div className="bg-thumbnail-bg aspect-square w-[150px] flex-shrink-0 overflow-hidden min-[768px]:max-[1023px]:aspect-auto min-[768px]:max-[1023px]:h-[148px] min-[768px]:max-[1023px]:w-[148px] min-[1024px]:aspect-auto min-[1024px]:h-[190px] min-[1024px]:w-[190px]">
             {space.thumbnailUrl && (

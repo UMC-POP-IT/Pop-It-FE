@@ -114,7 +114,7 @@ export const HostReservationPage = () => {
 
   const matchesTab = (r: ApiHostReservation, status: ReservationStatus) => {
     const effective = computeEffectiveStatus(r);
-    if (status === "CHECKOUT_COMPLETED") return effective === "USAGE_COMPLETED" || effective === "CHECKOUT_COMPLETED";
+    if (status === "CHECKOUT_COMPLETED") return effective === "USAGE_COMPLETED";
     if (status === "APPROVED") return effective === "APPROVED" || effective === "CONTRACT_COMPLETED";
     if (status === "CONTRACT_COMPLETED") return effective === "PAYMENT_COMPLETED";
     return effective === status;
@@ -260,7 +260,7 @@ export const HostReservationPage = () => {
       </div>
 
       <div className="flex flex-col gap-5">
-        <Tab tabs={tabs} activeIndex={activeTab} onChange={setActiveTab} scrollable />
+        <Tab tabs={tabs} activeIndex={activeTab} onChange={setActiveTab} scrollOnMobile />
 
         {isLoading ? (
           <div className="bg-tag-bg flex h-[224px] w-full items-center justify-center rounded-xl">
