@@ -13,6 +13,7 @@ import {
   approveCheckout,
   rejectCheckout,
   fetchCheckoutPhotos,
+  verifyIdentity,
 } from "@/features/host-manage/api/hostApi";
 import type { ApiHostReservation, ReservationStatus } from "@/types";
 
@@ -51,6 +52,18 @@ export const HostReservationPage = () => {
   const [isApproving, setIsApproving] = useState(false);
   const [approveError, setApproveError] = useState(false);
 
+
+  // 모바일 포트원 redirect 복귀 시 URL 파라미터로 본인인증 확정 처리
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const identityVerificationId = params.get("identityVerificationId");
+    if (!identityVerificationId) return;
+    verifyIdentity(identityVerificationId).catch(() => {});
+    params.delete("identityVerificationId");
+    params.delete("identityVerificationTxId");
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+    window.history.replaceState(null, "", newUrl);
+  }, []);
 
   const loadReservations = useCallback(async () => {
     try {
@@ -148,6 +161,12 @@ export const HostReservationPage = () => {
   };
 
   const closeContractModal = () => {
+    setIsContractModalOpen(false);
+    setApproveTargetId(null);
+    // 서명 없이 닫은 경우 재조회하지 않음 (서버는 APPROVED지만 로컬 상태 유지)
+  };
+
+  const completeContractModal = () => {
     setIsContractModalOpen(false);
     setApproveTargetId(null);
     loadReservations();
@@ -337,7 +356,7 @@ export const HostReservationPage = () => {
               address: approveTarget.space.address,
             }}
             onClose={closeContractModal}
-            onComplete={closeContractModal}
+            onComplete={completeContractModal}
           />
         </>
       )}
