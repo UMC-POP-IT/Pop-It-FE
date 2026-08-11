@@ -86,6 +86,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: (user) => {
     // 이전 사용자의 찜 동기화 상태가 다음 로그인 사용자에게 그대로 남지 않도록 초기화
     useWishStore.getState().reset();
+    // logout()에도 같은 초기화가 있지만 여기서도 한 번 더 한다.
+    // OAuth 콜백은 logout()을 거치지 않고 login()만 부르므로(MainLayout의 OAuthCallbackHandler),
+    // 로그아웃 없이 계정이 바뀌면 앞 사용자의 계좌번호·사업자등록번호와
+    // 완료 화면 통과권이 그대로 남는다.
+    useRegisterStore.getState().reset();
+    useHostRegisterStore.getState().reset();
     set({ user, mode: user.currentMode, isLoginModalOpen: false });
   },
   setMode: (mode) => set({ mode }),
