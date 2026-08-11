@@ -74,13 +74,13 @@ const Modal = ({
           <div className="flex flex-col items-center gap-2 text-center">
             <h3
               id={titleId}
-              className="text-text-primary text-[22px] font-bold whitespace-pre-line"
+              className="text-text-primary text-[22px] font-bold whitespace-pre-line break-keep"
             >
               {title}
             </h3>
 
             {description && (
-              <p className="text-text-tertiary text-base font-medium whitespace-pre-line">
+              <p className="text-text-tertiary text-base font-medium whitespace-pre-line break-keep">
                 {description}
               </p>
             )}
