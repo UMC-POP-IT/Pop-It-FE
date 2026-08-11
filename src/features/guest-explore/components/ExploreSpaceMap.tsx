@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
 import KakaoMap from "./KakaoMap";
 import KakaoMapOverlay from "./KakaoMapOverlay";
 import MapBackground from "./MapBackground";
@@ -6,6 +6,7 @@ import { useKakaoLoader } from "@/shared/hooks/useKakaoLoader";
 import { useWishStore } from "@/store/wishStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
+import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 import type { SpaceSummary } from "@/features/guest-explore/api/space_search_api";
 import { mapSpaceCategoryTag } from "@/shared/utils/spaceCategory";
 
@@ -35,15 +36,34 @@ const ExploreSpaceMap = ({
 }: ExploreSpaceMapProps) => {
   const { isLoaded, error } = useKakaoLoader();
   const [selectedSpaceId, setSelectedSpaceId] = useState<number | null>(null);
+  const [sheetDragOffsetY, setSheetDragOffsetY] = useState(0);
   const wishedIds = useWishStore((state) => state.wishedIds);
   const { handleWishToggle } = useWishGuard();
   const isMobile = useMediaQuery("(max-width: 767px)");
   const sheetDragStartYRef = useRef<number | null>(null);
-
+  const sheetInitialFocusRef = useRef<HTMLDivElement>(null);
   const center = spaces[0]
     ? { lat: spaces[0].latitude, lng: spaces[0].longitude }
     : FALLBACK_CENTER;
   const selectedSpace = spaces.find((space) => space.id === selectedSpaceId);
+  const isMobileSheetOpen = Boolean(selectedSpace && isMobile);
+  const sheetDialogRef = useDialogA11y<HTMLDivElement>({
+    isOpen: isMobileSheetOpen,
+    onClose: () => setSelectedSpaceId(null),
+    initialFocusRef: sheetInitialFocusRef,
+  });
+
+  useEffect(() => {
+    if (!isMobileSheetOpen) {
+      setSheetDragOffsetY(0);
+      return;
+    }
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [isMobileSheetOpen]);
 
   const handleMarkerClick = (space: SpaceSummary, map: kakao.maps.Map) => {
     setSelectedSpaceId(space.id);
@@ -57,12 +77,20 @@ const ExploreSpaceMap = ({
 
   const handleSheetDragStart = (event: PointerEvent<HTMLDivElement>) => {
     sheetDragStartYRef.current = event.clientY;
+    setSheetDragOffsetY(0);
     event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleSheetDragMove = (event: PointerEvent<HTMLDivElement>) => {
+    const startY = sheetDragStartYRef.current;
+    if (startY === null) return;
+    setSheetDragOffsetY(Math.max(0, event.clientY - startY));
   };
 
   const handleSheetDragEnd = (event: PointerEvent<HTMLDivElement>) => {
     const startY = sheetDragStartYRef.current;
     sheetDragStartYRef.current = null;
+    setSheetDragOffsetY(0);
     if (startY === null) return;
     if (event.clientY - startY >= MOBILE_SHEET_CLOSE_DRAG_Y) {
       setSelectedSpaceId(null);
@@ -177,15 +205,24 @@ const ExploreSpaceMap = ({
       )}
 
       {selectedSpace && isMobile && (
-        <div className="absolute inset-x-0 bottom-0 z-30 rounded-t-[20px] bg-white shadow-[0px_-4px_10px_rgba(0,0,0,0.16)]">
+        <div
+          ref={sheetDialogRef}
+          role="dialog"
+          aria-label={`${selectedSpace.name} 공간 정보`}
+          className="absolute inset-x-0 bottom-0 z-30 rounded-t-[20px] bg-white shadow-[0px_-4px_10px_rgba(0,0,0,0.16)] transition-transform duration-150 ease-out"
+          style={{ transform: `translateY(${sheetDragOffsetY}px)` }}
+        >
+          <div ref={sheetInitialFocusRef} tabIndex={-1} className="sr-only" />
           <div
             role="button"
             tabIndex={0}
             aria-label="공간 카드 접기"
             onPointerDown={handleSheetDragStart}
+            onPointerMove={handleSheetDragMove}
             onPointerUp={handleSheetDragEnd}
             onPointerCancel={() => {
               sheetDragStartYRef.current = null;
+              setSheetDragOffsetY(0);
             }}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
@@ -197,26 +234,46 @@ const ExploreSpaceMap = ({
           >
             <span aria-hidden="true" className="h-1 w-10 rounded-full bg-[#999999]" />
           </div>
-          <button
-            type="button"
-            onClick={() => onSelectSpace(selectedSpace.id)}
-            className="block w-full px-3 pb-4 text-left"
-          >
+          <div className="px-3 pb-4 text-left">
             <div className="bg-bg relative aspect-[4/3] w-full overflow-hidden rounded-t-lg">
-              {selectedSpace.imageUrls[0] && (
-                <img
-                  src={selectedSpace.imageUrls[0]}
-                  alt={selectedSpace.name}
-                  className="h-full w-full object-cover"
-                />
-              )}
+              <button
+                type="button"
+                onClick={() => onSelectSpace(selectedSpace.id)}
+                className="block h-full w-full"
+              >
+                {selectedSpace.imageUrls[0] && (
+                  <img
+                    src={selectedSpace.imageUrls[0]}
+                    alt={selectedSpace.name}
+                    className="h-full w-full object-cover"
+                  />
+                )}
+              </button>
               <div className="absolute right-2 bottom-2">
                 <span className="rounded bg-black/35 px-2 py-1 text-[10px] font-medium text-white">
                   {mapSpaceCategoryTag(selectedSpace.category)}
                 </span>
               </div>
+              <button
+                type="button"
+                aria-label={wishedIds.includes(selectedSpace.id) ? "찜 해제하기" : "찜하기"}
+                onClick={() =>
+                  onWishToggle
+                    ? onWishToggle(selectedSpace)
+                    : handleWishToggle(selectedSpace.id)
+                }
+                className={`absolute top-3 right-3 text-lg leading-none ${
+                  wishedIds.includes(selectedSpace.id) ? "text-red-500" : "text-white drop-shadow"
+                }`}
+              >
+                {wishedIds.includes(selectedSpace.id) ? "♥" : "♡"}
+              </button>
             </div>
-            <div className="flex items-start justify-between gap-3 px-1 pt-3">
+            <button
+              type="button"
+              onClick={() => onSelectSpace(selectedSpace.id)}
+              className="flex w-full items-start justify-between gap-3 px-1 pt-3 text-left"
+            >
               <div className="min-w-0">
                 <span className="text-text-primary block truncate text-sm font-bold">
                   {selectedSpace.name}
@@ -241,22 +298,8 @@ const ExploreSpaceMap = ({
               <span className="text-text-secondary flex shrink-0 items-center gap-0.5 text-xs">
                 ♡ {selectedSpace.heartCount}
               </span>
-            </div>
-          </button>
-          <button
-            type="button"
-            aria-label={wishedIds.includes(selectedSpace.id) ? "찜 해제하기" : "찜하기"}
-            onClick={() =>
-              onWishToggle
-                ? onWishToggle(selectedSpace)
-                : handleWishToggle(selectedSpace.id)
-            }
-            className={`absolute top-16 right-5 text-lg leading-none ${
-              wishedIds.includes(selectedSpace.id) ? "text-red-500" : "text-white drop-shadow"
-            }`}
-          >
-            {wishedIds.includes(selectedSpace.id) ? "♥" : "♡"}
-          </button>
+            </button>
+          </div>
         </div>
       )}
     </div>

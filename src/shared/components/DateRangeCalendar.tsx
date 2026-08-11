@@ -60,6 +60,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
   // (840px짜리 2개월 다이얼로그는 768px 뷰포트에서 애초에 다 들어가지도 않는다).
   // lg(1024) 미만이면 1개월, 그 이상이면 기존과 동일하게 2개월을 보여준다.
   const isTwoMonthView = useMediaQuery("(min-width: 1024px)");
+  const isMobileCalendar = useMediaQuery("(max-width: 767px)");
 
   const secondViewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
   // 실제로 화면에 보이는 달 중 가장 오른쪽(=가장 미래) 달. 2개월 뷰에서는 secondViewDate,
@@ -208,18 +209,18 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
         </div>
 
         <div className="flex w-full flex-col items-center gap-3">
-          <div className="grid grid-cols-7">
+          <div className="grid w-full grid-cols-7">
             {WEEKDAYS.map((day) => (
               <span
                 key={day}
-                className="text-text-primary flex w-[52px] items-center justify-center py-2 text-sm md:w-[60px]"
+                className="text-text-primary flex min-w-0 items-center justify-center py-2 text-sm"
               >
                 {day}
               </span>
             ))}
           </div>
 
-          <div className="grid grid-cols-7">
+          <div className="grid w-full grid-cols-7">
             {cells.map((date, index) =>
               date ? (
                 <button
@@ -228,12 +229,12 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
                   onClick={() => handleSelectDate(date)}
                   disabled={isDateDisabled(date)}
                   aria-pressed={isSelectedEndpoint(date)}
-                  className={`focus-visible:ring-primary relative box-border flex h-[46px] w-[52px] cursor-pointer items-center justify-center border-0 p-0 text-base font-bold focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed md:w-[60px] ${getDayClassName(date)}`}
+                  className={`focus-visible:ring-primary relative box-border flex h-[46px] min-w-0 cursor-pointer items-center justify-center border-0 p-0 text-base font-bold focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed ${getDayClassName(date)}`}
                 >
                   {renderDayNumber(date)}
                 </button>
               ) : (
-                <span key={`blank-${index}`} className="h-[46px] w-[52px] md:w-[60px]" aria-hidden="true" />
+                <span key={`blank-${index}`} className="h-[46px] min-w-0" aria-hidden="true" />
               ),
             )}
           </div>
@@ -244,15 +245,19 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
 
   return (
     <div
-      role="dialog"
-      aria-label="날짜 범위 선택"
+      role={isMobileCalendar ? undefined : "dialog"}
+      aria-label={isMobileCalendar ? undefined : "날짜 범위 선택"}
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           e.stopPropagation();
           onConfirm();
         }
       }}
-      className="border-divider mx-auto flex h-[520px] w-[420px] max-w-[calc(100vw-24px)] shrink-0 flex-col items-center rounded-xl border-2 bg-white shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]"
+      className={`mx-auto flex w-full shrink-0 flex-col items-center bg-white ${
+        isMobileCalendar
+          ? "h-auto"
+          : "border-divider h-[520px] w-[420px] max-w-[calc(100vw-24px)] rounded-xl border-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]"
+      }`}
     >
       <div className="flex items-center rounded-xl">
         {isTwoMonthView ? (
@@ -264,7 +269,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
           renderMonth(viewDate, { showPrevArrow: true, showNextArrow: true })
         )}
       </div>
-      <div className="flex w-full items-center justify-end gap-5 p-5">
+      <div className="flex w-full items-center justify-end gap-5 p-5 max-md:pt-2">
         <button
           type="button"
           onClick={handleReset}

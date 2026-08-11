@@ -61,10 +61,9 @@ const Header = () => {
   const pillMorphStyle: MorphTransitionStyle | undefined = isScrollBarVisible
     ? { viewTransitionName: SEARCH_BAR_VIEW_TRANSITION_NAME }
     : undefined;
-  // 스크롤된 검색 결과 화면에서는 우측 액션(모드 전환/프로필) 자리에 축소 검색바를
-  // 대신 보여준다. 모든 뷰포트에서 같은 자리와 같은 pill 구조를 쓰면 모바일에서
-  // 중앙 검색창이 카드 위를 어색하게 덮거나, 데스크톱에서 nav와 겹치는 일을 피할 수 있다.
-  const hidePillOverlappingActions = Boolean(scrollBarSummary);
+  // 축소 검색바 pill이 실제로 보이는 동안에만 우측 액션(모드 전환/프로필)을 숨긴다.
+  // pill을 눌러 원래 검색바를 펼친 상태에서는 pill이 사라지므로 액션도 다시 접근 가능해야 한다.
+  const hideHeaderActions = Boolean(scrollBarSummary) && isScrollBarVisible;
   const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
   const [modeError, setModeError] = useState(""); // 모드 전환 실패 사유
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -235,7 +234,7 @@ const Header = () => {
 
         {/* 검색 결과 화면 전용: 스크롤을 내리면 우측 액션 자리의 축소 검색바 pill이
             나타난다. 클릭하면 헤더 바로 아래에 원래 검색바가 오버레이로 펼쳐진다. */}
-        {scrollBarSummary && (
+        {scrollBarSummary && isScrollBarVisible && (
           <div
             className={`pointer-events-none ml-auto flex min-w-0 justify-end ${
               isScrollBarVisible ? "" : "opacity-0"
@@ -274,7 +273,7 @@ const Header = () => {
         {/* 우측: 모드전환 + 프로필 (gap-[20px]) */}
         <div
           className={`ml-auto flex items-center gap-4 md:max-lg:-mr-[32px] md:gap-5 ${
-            hidePillOverlappingActions ? "hidden" : ""
+            hideHeaderActions ? "hidden" : ""
           }`}
         >
           {/* 모드 전환 버튼 — 게스트 모드 나의 예약 탭에서는 숨김 */}

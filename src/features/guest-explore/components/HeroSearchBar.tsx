@@ -51,7 +51,7 @@ const formatDateRangeLabel = (range: DateRange) => {
 // 데스크톱/태블릿 px-8 py-4를 그대로 쓰면 3등분된 328px 폭 안에서 라벨+값이
 // 줄바꿈되거나 넘친다. md(768) 미만에서만 좁은 여백을 쓰고 그 이상은 기존 그대로.
 const segmentTriggerClassName = (isOpen: boolean) =>
-  `flex h-full w-full cursor-pointer flex-col items-start justify-center gap-1 px-5 py-2.5 text-left transition-colors md:gap-1.5 md:px-8 md:py-4 ${
+  `flex h-full w-full min-w-0 cursor-pointer flex-col items-start justify-center gap-1 overflow-hidden px-5 py-2.5 text-left transition-colors md:gap-1.5 md:px-8 md:py-4 ${
     isOpen ? "bg-primary-light" : ""
   }`;
 
@@ -85,8 +85,8 @@ interface SegmentTriggerContentProps {
 // 피그마 모바일 스펙: 라벨 12px / 값 14px (태블릿 이상은 기존 18px/20px 유지).
 const SegmentTriggerContent = ({ label, value, labelClassName }: SegmentTriggerContentProps) => (
   <>
-    <span className={`text-[12px] leading-[1.4] md:text-[18px] ${labelClassName}`}>{label}</span>
-    <span className="text-text-primary text-[14px] leading-[1.4] font-bold md:text-[20px]">{value}</span>
+    <span className={`block max-w-full truncate text-[12px] leading-[1.4] md:text-[18px] ${labelClassName}`}>{label}</span>
+    <span className="text-text-primary block max-w-full truncate text-[14px] leading-[1.4] font-bold md:text-[20px]">{value}</span>
   </>
 );
 
