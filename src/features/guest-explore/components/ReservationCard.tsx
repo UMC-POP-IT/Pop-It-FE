@@ -50,6 +50,9 @@ const getCardMeta = (r: Reservation): CardMeta => {
         showCancel: false,
         showContract: false,
         needsPhotoVerification: !isCheckoutApproved && !isAwaitingHostApproval,
+        // status와 무관하게 서버 값을 그대로 담는 raw 필드. 현재는 아래 needsPhotoVerification이
+        // isCheckoutApproved일 때 항상 false라 화면에 영향이 없지만, 이 필드를 gating 없이
+        // 재사용하면 승인된 예약에서도 거절 UI가 뜨는 버그가 재발할 수 있으니 주의.
         isPhotoRejected: r.checkoutRejected,
         isAwaitingHostApproval,
         isDone: true
