@@ -3,6 +3,7 @@ import iconPerson from "@/assets/icons/icon_person.svg";
 
 interface HostReservationCardProps {
   reservation: ApiHostReservation;
+  effectiveStatus?: ReservationStatus;
   onDetail?: () => void;
   onApprove?: () => void;
   onReject?: () => void;
@@ -31,6 +32,7 @@ const formatDate = (dateStr: string) => {
 
 export const HostReservationCard = ({
   reservation,
+  effectiveStatus,
   onDetail,
   onApprove,
   onReject,
@@ -39,6 +41,7 @@ export const HostReservationCard = ({
   onCheckoutReject,
 }: HostReservationCardProps) => {
   const { status, startDate, endDate, totalPrice, usagePurpose, guest, space, isPhotoVerified } = reservation;
+  const displayStatus = effectiveStatus ?? status;
 
   return (
     <div>
@@ -81,7 +84,7 @@ export const HostReservationCard = ({
           <div className="flex flex-1 min-w-0 flex-col items-start justify-between md:w-[258px] md:flex-none min-[768px]:max-[1023px]:h-[148px] min-[1024px]:h-[190px]">
             <div className="flex flex-col items-start gap-2">
               <span className="text-primary text-base font-bold">
-                {STATUS_LABEL[status]}
+                {STATUS_LABEL[displayStatus]}
               </span>
               <div className="flex flex-col items-start gap-1">
                 <p className="w-full truncate text-xl font-bold text-black">{space.buildingName}</p>

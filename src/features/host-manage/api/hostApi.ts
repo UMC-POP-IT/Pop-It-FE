@@ -1,7 +1,6 @@
 import { apiFetch } from "@/shared/utils/apiClient";
 import type { ApiHostReservation, ApiMySpace, ReservationStatus } from "@/types";
 
-
 interface HostReservationsResult {
   reservations: ApiHostReservation[];
   hasNext: boolean;

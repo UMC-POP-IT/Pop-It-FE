@@ -247,7 +247,8 @@ export const HostReservationPage = () => {
             {filtered.map((reservation) => (
               <HostReservationCard
                 key={reservation.reservationId}
-                reservation={{ ...reservation, status: computeEffectiveStatus(reservation) }}
+                reservation={reservation}
+                effectiveStatus={computeEffectiveStatus(reservation)}
                 onDetail={() => navigate(`/host/spaces/${reservation.space.spaceId}`)}
                 onApprove={() => handleApproveClick(reservation.reservationId)}
                 onReject={() => setRejectTargetId(reservation.reservationId)}
