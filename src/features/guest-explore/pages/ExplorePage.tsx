@@ -6,7 +6,6 @@ import RealTimeRecommendSpace from "@/features/guest-explore/components/RealTime
 import Banner, { RESULTS_MODE_TOP_OFFSET_PX } from "@/shared/layout/Banner";
 import { HEADER_HEIGHT_PX } from "@/shared/layout/Header";
 import HeroSearchBar from "@/features/guest-explore/components/HeroSearchBar";
-import { useSearchHistoryStore } from "@/store/searchHistoryStore";
 import { useScrollSearchBarStore, type ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
 import { withSearchBarTransition } from "@/shared/utils/viewTransition";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
@@ -96,8 +95,6 @@ export const ExplorePage = () => {
   const hasActiveSearch = searchParams.get(SEARCH_FLAG_PARAM) === "1";
   const searchFilters = filtersFromSearchParams(searchParams);
   const { keyword, spaceCategory, district, dateRange } = searchFilters;
-
-  const hasSearched = useSearchHistoryStore((state) => state.hasSearched);
 
   // 검색 결과 화면에서 스크롤을 내리면 검색바가 헤더의 축소된 pill로 바뀌고,
   // pill을 클릭하면 헤더 바로 아래에 원래 검색바가 오버레이로 다시 펼쳐진다
@@ -264,17 +261,35 @@ export const ExplorePage = () => {
       )}
 
       {/* 검색을 실행하기 전(브라우징 모드)에만 AI 맞춤형/실시간 추천을 보여준다.
-          AI 맞춤형 공간은 그중에서도 검색 기록이 있을 때만(hasSearched). */}
-      {!hasActiveSearch && hasSearched && <AiRecommendSpace />}
+          AiRecommendSpace는 신규 유저 여부(hasActivityHistory, 서버 응답)를
+          이미 자체적으로 확인해서 트래킹 이력이 없으면 스스로 null을 렌더한다
+          (컴포넌트 내부 참고). 이 로컬 hasSearched(브라우저별 localStorage)로
+          한 번 더 감싸면 두 기준이 어긋날 때 - 예: 다른 기기/세션에서 이미
+          검색한 이력이 있는 유저라 서버는 hasActivityHistory=true를 내려줘도
+          이 브라우저에 저장된 hasSearched가 false면 - 정상적으로 노출돼야 할
+          AI 맞춤형 섹션이 조용히 숨어버리는 문제가 있어 제거했다(코드리뷰
+          지적). RealTimeRecommendSpace는 그런 자체 게이팅이 없어 여기 조건이
+          유일한 노출 기준이므로 그대로 둔다. */}
+      {!hasActiveSearch && <AiRecommendSpace />}
       {!hasActiveSearch && <RealTimeRecommendSpace />}
       {/* 게스트 메인페이지 첫화면(검색 실행 전)에서는 "공간 탐색" 섹션을 노출하지
           않는다 - 검색을 실제로 실행한 뒤(hasActiveSearch)의 결과 화면에서만
-          같은 컴포넌트를 검색 결과 그리드로 사용한다(#248). */}
+          같은 컴포넌트를 검색 결과 그리드로 사용한다(#248).
+          마운트/언마운트를 반복하면서 페이지·목록 상태가 초기화되는 것 아니냐는
+          리뷰가 있었는데, ExploreSpace 내부의 filterKey가 이미 resultsMode를
+          포함하고 있어(컴포넌트 참고) 브라우징↔결과 모드 전환은 마운트 여부와
+          무관하게 항상 페이지/목록을 리셋하도록 설계돼 있다 - 즉 언마운트가
+          추가로 잃는 상태가 없고, 안 보이는 목록을 계속 백그라운드에서
+          불러오지 않아도 되는 지금 방식이 더 낫다고 판단해 유지한다. */}
       {hasActiveSearch && (
         <ExploreSpace
           filters={searchFilters}
           onResetFilters={handleResetFilters}
           resultsMode={hasActiveSearch}
+          // ExploreSpace는 hasActiveSearch일 때만 마운트되므로, 이 콜백도
+          // 검색 결과 화면에서만 호출된다 - 검색 결과 유무에 따라 검색바가
+          // pinned⇄inline으로 실제 자리를 옮길 때만 트랜지션이 걸리고, 화면
+          // 밖(브라우징 모드)에서 조용히 트랜지션이 발생하는 경우는 없다.
           onHasResultsChange={(next) => withSearchBarTransition(() => setHasResults(next))}
         />
       )}
