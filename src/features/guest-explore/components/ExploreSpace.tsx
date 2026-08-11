@@ -366,7 +366,7 @@ const ExploreSpace = ({
       {status === "success" && !isMapView && spaces.length > 0 && (
         <>
           <div
-            className={`mt-4 grid grid-cols-1 gap-x-6 gap-y-8 transition-opacity sm:grid-cols-2 md:mt-6 md:gap-y-10 lg:grid-cols-4 ${
+            className={`mt-4 grid grid-cols-1 gap-x-6 gap-y-8 transition-opacity md:mt-6 md:grid-cols-2 md:gap-y-10 lg:grid-cols-4 ${
               isRefetching ? "pointer-events-none opacity-50" : ""
             }`}
           >
