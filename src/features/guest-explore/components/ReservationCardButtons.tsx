@@ -79,13 +79,13 @@ export const ReservationCardButtons = ({
             <Button
               variant="secondary"
               size="sm"
-              className={
+              className={`!text-primary ${
                 isAwaitingHostApproval ?
                   isMobile ?
                     FLUID_BUTTON_CLASS_MOBILE_LONG
                   : FLUID_BUTTON_CLASS_LONG
                 : FLUID_BUTTON_CLASS
-              }
+              }`}
               disabled
             >
               {isAwaitingHostApproval ? ( isMobile ? "승인 대기중..." : "호스트 승인 대기중...") : "인증 완료"}
