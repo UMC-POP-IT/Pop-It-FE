@@ -86,6 +86,12 @@ export const DateRangePicker = ({
   );
   // 선택 불가 날짜를 눌렀을 때 달력 아래에 띄울 안내 (없으면 null)
   const [dateError, setDateError] = useState<string | null>(null);
+  // 바텀시트를 손잡이로 끌어내린 거리(px). 0이면 제자리
+  const [dragY, setDragY] = useState(0);
+  // 끄는 중에는 transition을 끈다 — 안 그러면 손가락보다 시트가 늦게 따라온다
+  const [isDragging, setIsDragging] = useState(false);
+  // 끌기 시작한 지점의 세로 좌표. null이면 끄는 중이 아니다
+  const dragStartRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null); // 달력 전체를 가리키는 리모컨
   // 팝업을 연 필드 버튼 — 닫을 때 여기로 포커스를 되돌린다
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -99,6 +105,8 @@ export const DateRangePicker = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setIsOpen(false);
+        // 끌던 중에 Esc를 누르면 내려간 위치가 남아, 다시 열 때 시트가 삐뚤게 뜬다
+        setDragY(0);
         triggerRef.current?.focus(); // 팝업이 사라지기 전에 포커스를 트리거로 되돌림
       }
     };
@@ -216,6 +224,47 @@ export const DateRangePicker = ({
     return day;
   };
 
+  // 딤을 누르거나 시트를 끌어내려 닫을 때 — 고른 범위가 완성돼 있으면 저장하고 닫는다.
+  // (바깥 클릭으로 닫는 기존 동작과 같게 맞춘다)
+  const closeWithSave = () => {
+    if (startDate && endDate) onConfirm(toYmd(startDate), toYmd(endDate));
+    setIsOpen(false);
+    setDragY(0);
+  };
+
+  // 손잡이 끌기 — 포인터 이벤트라 터치·마우스·펜을 한 번에 받는다.
+  // setPointerCapture: 손가락이 손잡이를 벗어나도 이 요소가 계속 move/up을 받게 한다.
+  // 이게 없으면 빠르게 내릴 때 시트가 중간에 멈춘다
+  const handleDragStart = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragStartRef.current = e.clientY;
+    setIsDragging(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handleDragMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragStartRef.current === null) return;
+    // 아래로 끄는 것만 따라간다 — 위로 올리면 시트가 화면 위로 떠버린다
+    setDragY(Math.max(0, e.clientY - dragStartRef.current));
+  };
+
+  const handleDragEnd = () => {
+    if (dragStartRef.current === null) return;
+    dragStartRef.current = null;
+    setIsDragging(false);
+    // 100px 넘게 내렸으면 닫고, 아니면 제자리로 되돌린다 (transition이 되돌아가는 걸 그려준다)
+    if (dragY > 100) closeWithSave();
+    else setDragY(0);
+  };
+
+  // 초기화 → 고른 범위를 비운다. store까지 같이 비우지 않으면 시트를 닫았을 때
+  // 필드에는 예전 날짜가 그대로 남아 "초기화했는데 왜 남아있지"가 된다
+  const handleReset = () => {
+    setStartDate(null);
+    setEndDate(null);
+    setDateError(null);
+    onConfirm("", "");
+  };
+
   // 확인 → store에 저장하고 팝업 닫기
   const handleConfirm = () => {
     if (startDate && endDate) {
@@ -254,9 +303,10 @@ export const DateRangePicker = ({
 
   // 한 달치 달력 카드. arrow로 이 카드에 붙일 화살표를 정한다 (피그마: 왼쪽 달 ‹, 오른쪽 달 ›)
   const renderMonth = (base: Date, arrow: "prev" | "next") => (
-    // 피그마 card_calendar_X5: W 448 = px-3.5(14)×2 + 60px×7
+    // 데스크톱 피그마 card_calendar_X5: W 448 = px-3.5(14)×2 + 60px×7.
+    // lg 미만(바텀시트)은 달이 하나뿐이라 시트 폭을 그대로 쓴다 (모바일 328 × 그리드 230).
     // 헤더↔요일 간격 28 = gap-3(12) + 헤더 mb-4(16)
-    <div className="flex w-[448px] shrink-0 flex-col gap-3 px-3.5 py-5">
+    <div className="flex w-full shrink-0 flex-col gap-3 lg:w-[448px] lg:px-3.5 lg:py-5">
       {/* 월 헤더 — 라벨은 카드 정중앙.
           갈 수 없는 방향의 화살표는 아예 렌더링하지 않되(게스트 예약 달력과 동일),
           w-8 자리는 그대로 비워둬 월 라벨이 한쪽으로 밀리지 않게 한다 */}
@@ -284,6 +334,18 @@ export const DateRangePicker = ({
               onClick={goNext}
               aria-label="다음 달"
               className="text-text-primary flex h-8 w-8 items-center justify-center text-xl"
+            >
+              ›
+            </button>
+          )}
+          {/* lg 미만은 달 카드가 하나뿐이라 ›도 이 카드가 갖는다.
+              데스크톱에서는 오른쪽 카드에 › 가 따로 있으므로 숨긴다 */}
+          {arrow === "prev" && (
+            <button
+              type="button"
+              onClick={goNext}
+              aria-label="다음 달"
+              className="text-text-primary flex h-8 w-8 items-center justify-center text-xl lg:hidden"
             >
               ›
             </button>
@@ -356,7 +418,8 @@ export const DateRangePicker = ({
         ].map((field) => (
           <div
             key={field.label}
-            className="flex flex-col gap-2"
+            // 모바일 필드 묶음 96 = 라벨 28 + gap 12 + 입력칸 56
+            className="flex flex-col gap-3 lg:gap-2"
           >
             {/* 같은 페이지의 다른 하위 필드 라벨(전용면적 등)과 동일한 계층 */}
             <span className="text-text-tertiary text-xl font-bold">
@@ -399,50 +462,96 @@ export const DateRangePicker = ({
         ))}
       </div>
 
-      {/* 달력 팝업 (isOpen일 때만, 필드 아래에 떠 있음)
-          피그마: 448px 카드 2개 = 896px. 본문(794px)보다 넓어 좌우로 51px씩 넘치므로
-          left-1/2 + -translate-x-1/2 로 가운데 정렬해 양쪽 넘침을 대칭으로 만든다.
-          MainLayout의 overflow-x-clip이 가로 스크롤바 생성을 막는다 */}
       {isOpen && (
-        <div
-          id={popupId}
-          role="dialog"
-          aria-label="계약 가능 기간 선택"
-          className="border-border absolute left-1/2 z-10 mt-2 w-[896px] -translate-x-1/2 overflow-hidden rounded-lg border bg-white shadow-lg"
-        >
-          {/* 달력 카드 2개 — 패딩은 각 카드가 자기 안에서 갖는다 */}
-          <div className="flex">
-            {renderMonth(viewDate, "prev")}
-            {renderMonth(nextMonth, "next")}
-          </div>
+        <>
+          {/* 딤 — 바텀시트일 때만. 데스크톱 팝업은 화면을 덮지 않는다 */}
+          <div
+            className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+            onClick={() => {
+              if (startDate && endDate)
+                onConfirm(toYmd(startDate), toYmd(endDate));
+              setIsOpen(false);
+              setDragY(0);
+            }}
+          />
 
-          {/* 고를 수 없는 날짜를 눌렀을 때만 나타남.
-              role="alert"이면 스크린리더가 포커스를 옮기지 않고도 즉시 읽어준다 */}
-          {dateError && (
-            <p
-              role="alert"
-              className="text-danger px-5 text-sm font-medium"
+          {/* lg 미만: 화면 아래에 붙는 바텀시트 (위 모서리만 radius 20, 안쪽 16, 높이는 내용만큼)
+              lg 이상: 필드 아래에 뜨는 896px 팝업 — 448 카드 2개.
+                       본문(644)보다 넓어 좌우로 126씩 넘치므로 left-1/2 + -translate-x-1/2로
+                       가운데 정렬해 넘침을 대칭으로 만든다.
+                       MainLayout의 overflow-x-clip이 가로 스크롤바 생성을 막는다 */}
+          <div
+            id={popupId}
+            role="dialog"
+            aria-label="계약 가능 기간 선택"
+            // 끌어내린 만큼 시트를 내린다. dragY가 0이면 transform을 아예 안 줘야
+            // lg의 -translate-x-1/2(가로 가운데 정렬)를 덮어쓰지 않는다
+            style={{
+              transform: dragY ? `translateY(${dragY}px)` : undefined,
+              transition: isDragging ? "none" : "transform 200ms ease-out",
+            }}
+            className="border-border fixed inset-x-0 bottom-0 z-50 rounded-t-[20px] border bg-white px-4 pt-1 pb-4 shadow-lg lg:absolute lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:z-10 lg:mt-2 lg:w-[896px] lg:-translate-x-1/2 lg:overflow-hidden lg:rounded-lg lg:p-0"
+          >
+            {/* 손잡이 바 40×4 — 끌어내려 닫는다. 데스크톱 팝업엔 없다.
+                py-2로 손가락이 닿는 범위를 바보다 위아래 8씩 넓히고, 시트 pt-1(4)과 합쳐
+                바가 시안대로 위에서 12에 놓인다. 아래 mb-1(4)+패딩 8 = 12.
+                touch-none: 이게 없으면 브라우저가 끌기를 '페이지 스크롤'로 가로챈다 */}
+            <div
+              role="presentation"
+              onPointerDown={handleDragStart}
+              onPointerMove={handleDragMove}
+              onPointerUp={handleDragEnd}
+              onPointerCancel={handleDragEnd}
+              className="mb-1 flex cursor-grab touch-none justify-center py-2 active:cursor-grabbing lg:hidden"
             >
-              {dateError}
-            </p>
-          )}
+              <div className="bg-divider h-1 w-10 rounded-full" />
+            </div>
 
-          {/* 선택 범위 + 확인 — 피그마: padding 20, 우측 정렬, 버튼 94×52 */}
-          <div className="flex items-center justify-between p-5">
-            {/* 보조 정보라 작고 회색으로 — 확인 버튼이 시선을 먼저 받게 한다 */}
-            <span className="text-text-secondary text-base font-medium">
-              {fieldText(startDate, "시작일")} ~ {fieldText(endDate, "종료일")}
-            </span>
-            <button
-              type="button"
-              disabled={!(startDate && endDate)}
-              onClick={handleConfirm}
-              className="bg-primary-hover flex h-[52px] w-[94px] shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white disabled:opacity-40"
-            >
-              확인
-            </button>
+            {/* 달 카드 — lg 미만은 1개월, 데스크톱은 2개월 나란히 */}
+            <div className="flex">
+              {renderMonth(viewDate, "prev")}
+              <div className="hidden lg:block">
+                {renderMonth(nextMonth, "next")}
+              </div>
+            </div>
+
+            {/* 고를 수 없는 날짜를 눌렀을 때만 나타남.
+                role="alert"이면 스크린리더가 포커스를 옮기지 않고도 즉시 읽어준다 */}
+            {dateError && (
+              <p
+                role="alert"
+                className="text-danger text-sm font-medium lg:px-5"
+              >
+                {dateError}
+              </p>
+            )}
+
+            {/* 하단 — lg 미만: [초기화] [확인] 우측 정렬, 그리드에서 40 아래.
+                데스크톱: 왼쪽에 선택 범위 텍스트 + 오른쪽 [확인], padding 20 (기존 그대로) */}
+            <div className="mt-10 flex items-center justify-end gap-5 lg:mt-0 lg:justify-between lg:p-5">
+              {/* 보조 정보라 작고 회색으로 — 확인 버튼이 시선을 먼저 받게 한다 */}
+              <span className="text-text-secondary hidden text-base font-medium lg:inline">
+                {fieldText(startDate, "시작일")} ~{" "}
+                {fieldText(endDate, "종료일")}
+              </span>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="text-text-secondary hover:text-text-primary shrink-0 text-lg font-bold lg:hidden"
+              >
+                초기화
+              </button>
+              <button
+                type="button"
+                disabled={!(startDate && endDate)}
+                onClick={handleConfirm}
+                className="bg-primary-hover flex h-[52px] w-[94px] shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white disabled:opacity-40"
+              >
+                확인
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
