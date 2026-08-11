@@ -23,12 +23,14 @@ export const TAXATION_TYPE_TO_ENUM: Record<string, TaxationTypeEnum> = {
 };
 
 /** 은행 (HostRegisterStep2) */
+// 키는 화면에 보이는 이름(BANK_OPTIONS와 반드시 같아야 toEnum이 찾는다),
+// 값은 스웨거 BankEnum 그대로다. 화면 이름만 시안에 맞춰 KB/NH 접두어를 붙였다
 export const BANK_TO_ENUM: Record<string, BankEnum> = {
-  국민은행: "KB",
+  KB국민은행: "KB",
   신한은행: "SHINHAN",
   우리은행: "WOORI",
   하나은행: "HANA",
-  농협은행: "NH",
+  NH농협은행: "NH",
   기업은행: "IBK",
   카카오뱅크: "KAKAO_BANK",
   토스뱅크: "TOSS_BANK",
