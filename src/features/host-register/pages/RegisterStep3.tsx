@@ -84,182 +84,208 @@ export const RegisterStep3 = () => {
     form.hasParking !== null;
 
   return (
-    <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
-      {/* 페이지 제목 (가운데) */}
-      <h1 className="text-text-primary text-center text-[32px] font-bold">
+    // 여백·폭 규격은 RegisterStep1과 동일 (본문 328/535/644, 위 134 / 아래 120·88)
+    <div className="mx-auto flex w-full max-w-[535px] flex-col pt-0 pb-14 md:pt-[102px] md:pb-[88px] lg:max-w-[644px]">
+      {/* 페이지 제목 (가운데) — 모바일 28 / md 이상 32 */}
+      <h1 className="text-text-primary text-center text-[28px] font-bold md:text-[32px]">
         {isEdit ? "공간 수정" : "공간 등록"}
       </h1>
 
-      {/* 상단 진행바 — 2 = 세 번째 단계(공간 정보) */}
-      <StepIndicator
-        steps={STEPS}
-        currentStep={2}
-      />
+      {/* 상단 진행바 — 2 = 세 번째 단계(공간 정보).
+          StepIndicator에 className prop이 없어 div로 감싸 간격을 준다.
+          컴포넌트 안에 py-3(12)이 이미 있어 피그마 36 = mt-6(24) + 12.
+          모바일은 20 = mt-2(8) + 12 */}
+      <div className="mt-2 md:mt-6">
+        <StepIndicator
+          steps={STEPS}
+          currentStep={2}
+        />
+      </div>
 
-      {/* 섹션: 공간 정보 */}
-      <div className="flex flex-col gap-6">
-        <h2 className="text-text-primary border-border border-b pb-2 text-[28px] font-bold">
+      {/* 섹션: 공간 정보 — 피그마 74 = mt-[62px] + 진행바 아래 py-3(12).
+          모바일은 58 = mt-[46px] + 12 */}
+      <div className="mt-[46px] flex flex-col md:mt-[62px]">
+        <h2 className="text-text-primary border-border border-b pb-6 text-[24px] font-bold md:text-[28px]">
           공간 정보
         </h2>
 
-        {/* 기본 정보 / 공간 구조 (택1) */}
-        <ChipGroup
-          label="기본 정보"
-          options={USAGE_OPTIONS}
-          selected={form.usage ? [form.usage] : []}
-          onChange={(next) => setValues({ usage: next[0] ?? "" })}
-        />
-        <ChipGroup
-          label="공간 구조"
-          options={STRUCTURE_OPTIONS}
-          selected={form.spaceStructure ? [form.spaceStructure] : []}
-          onChange={(next) => setValues({ spaceStructure: next[0] ?? "" })}
-        />
+        {/* 입력 필드 묶음 — 구분선 아래 28(mt-7).
+            이 화면만 필드 사이가 60(gap-15) — 기본 정보·공간 구조·면적·층수·주차·시설 정보 6개 기준.
+            층수 입력칸과 시설 카테고리는 각각 위 항목에 딸린 것이라 따로 묶어 60에서 뺀다 */}
+        <div className="mt-7 flex flex-col gap-15">
+          {/* 기본 정보 / 공간 구조 (택1) */}
+          <ChipGroup
+            label="기본 정보"
+            options={USAGE_OPTIONS}
+            selected={form.usage ? [form.usage] : []}
+            onChange={(next) => setValues({ usage: next[0] ?? "" })}
+          />
+          <ChipGroup
+            label="공간 구조"
+            options={STRUCTURE_OPTIONS}
+            selected={form.spaceStructure ? [form.spaceStructure] : []}
+            onChange={(next) => setValues({ spaceStructure: next[0] ?? "" })}
+          />
 
-        {/* 면적 — ㎡ 입력 시 평 자동 환산 (평은 읽기 전용·파생값이라 store 저장 X) */}
-        <div className="flex flex-col gap-2">
-          <span className="text-text-primary text-[22px] font-bold">면적</span>
-          <span className="text-text-tertiary text-xl font-bold">
-            전용 면적
-          </span>
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <input
-                type="number"
-                aria-label="전용 면적 (제곱미터)"
-                aria-invalid={areaError !== ""}
-                aria-describedby="area-message"
-                value={form.area}
-                onChange={(e) =>
-                  setValues({ area: filterDecimal(e.target.value) })
-                }
-                onKeyDown={blockNonDecimal}
-                className="text-text-primary placeholder:text-text-secondary h-14 w-full [appearance:textfield] rounded-lg bg-[#F2F2F2] pr-12 pl-5 text-right text-lg font-medium transition-colors focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-              />
-              <span className="text-text-secondary pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 text-lg font-medium">
-                ㎡
-              </span>
+          {/* 면적 — ㎡ 입력 시 평 자동 환산 (평은 읽기 전용·파생값이라 store 저장 X) */}
+          <div className="flex flex-col gap-2">
+            <span className="text-text-primary text-[22px] font-bold">
+              면적
+            </span>
+            <span className="text-text-tertiary text-xl font-bold">
+              전용 면적
+            </span>
+            {/* ㎡칸 ↔ = ↔ 평칸 — 모바일 12 / md 이상 8 */}
+            <div className="flex items-center gap-3 md:gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="number"
+                  aria-label="전용 면적 (제곱미터)"
+                  aria-invalid={areaError !== ""}
+                  aria-describedby="area-message"
+                  value={form.area}
+                  onChange={(e) =>
+                    setValues({ area: filterDecimal(e.target.value) })
+                  }
+                  onKeyDown={blockNonDecimal}
+                  // focus:outline-none은 브라우저 기본 포커스 링을 지운다. 대체 표시가 없으면
+                  // 키보드로 이동했을 때 지금 어느 칸에 있는지 알 수 없다.
+                  // 공통 Input(shared/components/Input.tsx)과 같은 조합을 쓴다
+                  className="text-text-primary placeholder:text-text-secondary border-divider focus:border-primary focus:ring-primary h-14 w-full [appearance:textfield] rounded-lg border bg-white pr-12 pl-5 text-right text-lg font-medium transition-colors focus:ring-2 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+                <span className="text-text-secondary pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 text-lg font-medium">
+                  ㎡
+                </span>
+              </div>
+              <span className="text-text-secondary text-2xl">=</span>
+              <div className="relative flex-1">
+                {/* 평 = ㎡ × 0.3025 (자동 계산, 읽기 전용) */}
+                <input
+                  type="number"
+                  aria-label="평 환산 (자동 계산)"
+                  value={
+                    form.area !== ""
+                      ? (Number(form.area) * 0.3025).toFixed(1)
+                      : ""
+                  }
+                  readOnly
+                  // readOnly는 disabled와 달리 포커스를 받는다 — Tab이 여기 들어오므로
+                  // 위 ㎡ 칸과 같은 포커스 표시가 필요하다
+                  className="text-text-primary placeholder:text-text-secondary border-divider focus:border-primary focus:ring-primary h-14 w-full [appearance:textfield] rounded-lg border bg-white pr-12 pl-5 text-right text-lg font-medium transition-colors focus:ring-2 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+                <span className="text-text-secondary pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 text-lg font-medium">
+                  평
+                </span>
+              </div>
             </div>
-            <span className="text-text-secondary text-2xl">=</span>
-            <div className="relative flex-1">
-              {/* 평 = ㎡ × 0.3025 (자동 계산, 읽기 전용) */}
-              <input
-                type="number"
-                aria-label="평 환산 (자동 계산)"
-                value={
-                  form.area !== ""
-                    ? (Number(form.area) * 0.3025).toFixed(1)
-                    : ""
-                }
-                readOnly
-                className="text-text-primary placeholder:text-text-secondary h-14 w-full [appearance:textfield] rounded-lg bg-[#F2F2F2] pr-12 pl-5 text-right text-lg font-medium transition-colors focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-              />
-              <span className="text-text-secondary pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 text-lg font-medium">
-                평
+            {areaError ? (
+              <span
+                id="area-message"
+                role="alert"
+                className="text-danger text-left text-base font-bold"
+              >
+                {areaError}
               </span>
-            </div>
+            ) : (
+              <span
+                id="area-message"
+                className="text-text-secondary text-left text-base font-medium"
+              >
+                ㎡ 입력 시 평이 자동 계산돼요
+              </span>
+            )}
           </div>
-          {areaError ? (
-            <span
-              id="area-message"
-              role="alert"
-              className="text-danger text-left text-base font-bold"
-            >
-              {areaError}
+
+          {/* 층수 유형(택1) + 상세 층수 입력 — 둘이 한 필드라 60 밖으로 묶고 안쪽은 기존 24를 쓴다 */}
+          <div className="flex flex-col gap-6">
+            <ChipGroup
+              label="층수"
+              options={FLOOR_TYPE_OPTIONS}
+              selected={form.floorType ? [form.floorType] : []}
+              onChange={(next) => {
+                const floorType = next[0] ?? "";
+                const hidesFloor =
+                  floorType === "반지층" || floorType === "옥탑";
+                setValues({
+                  floorType,
+                  floor: hidesFloor ? "" : form.floor,
+                });
+              }}
+            />
+
+            {needsFloorNumber && (
+              <div className="relative">
+                <Input
+                  type="number"
+                  aria-label="층수"
+                  placeholder="층수 입력"
+                  value={form.floor}
+                  onChange={(e) =>
+                    setValues({ floor: e.target.value.replace(/[^0-9]/g, "") })
+                  }
+                  onKeyDown={blockNonNumeric}
+                  className={NO_SPINNER}
+                />
+                <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
+                  층
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* 주차 — 주차 가능 / 주차 불가능 (택1)*/}
+          <ChipGroup
+            label="주차"
+            options={["주차 가능", "주차 불가능"]}
+            selected={
+              form.hasParking === true
+                ? ["주차 가능"]
+                : form.hasParking === false
+                  ? ["주차 불가능"]
+                  : []
+            }
+            onChange={(next) =>
+              setValues({ hasParking: next[0] === "주차 가능" })
+            }
+          />
+
+          {/* 시설 정보 (다중 선택) — 라벨과 카테고리별 칩이 한 필드라 60 밖으로 묶는다 */}
+          <div className="flex flex-col gap-6">
+            <span className="text-text-primary text-[22px] font-bold">
+              시설 정보
             </span>
-          ) : (
-            <span
-              id="area-message"
-              className="text-text-secondary text-left text-base font-medium"
-            >
-              ㎡ 입력 시 평이 자동 계산돼요
-            </span>
-          )}
+            {isFacilityLoading ? (
+              <span
+                role="status"
+                className="text-text-placeholder text-base font-bold"
+              >
+                시설 목록을 불러오는 중이에요...
+              </span>
+            ) : facilityError ? (
+              <span
+                role="alert"
+                className="text-danger text-right text-base font-bold"
+              >
+                시설 목록을 불러오지 못했어요. 새로고침 후 다시 시도해주세요
+              </span>
+            ) : (
+              facilityGroups.map((group) => (
+                <FacilityChipGroup
+                  key={group.category}
+                  label={FACILITY_CATEGORY_LABEL[group.category]}
+                  items={group.items}
+                  selectedIds={form.facilityIds}
+                  onToggle={toggleFacility}
+                />
+              ))
+            )}
+          </div>
         </div>
-
-        {/* 층수 유형(택1) + 상세 층수 입력 */}
-        <ChipGroup
-          label="층수"
-          options={FLOOR_TYPE_OPTIONS}
-          selected={form.floorType ? [form.floorType] : []}
-          onChange={(next) => {
-            const floorType = next[0] ?? "";
-            const hidesFloor = floorType === "반지층" || floorType === "옥탑";
-            setValues({
-              floorType,
-              floor: hidesFloor ? "" : form.floor,
-            });
-          }}
-        />
-
-        {needsFloorNumber && (
-          <div className="relative">
-            <Input
-              type="number"
-              aria-label="층수"
-              placeholder="층수 입력"
-              value={form.floor}
-              onChange={(e) =>
-                setValues({ floor: e.target.value.replace(/[^0-9]/g, "") })
-              }
-              onKeyDown={blockNonNumeric}
-              className={NO_SPINNER}
-            />
-            <span className="text-text-secondary pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg font-medium">
-              층
-            </span>
-          </div>
-        )}
-
-        {/* 주차 — 주차 가능 / 주차 불가능 (택1)*/}
-        <ChipGroup
-          label="주차"
-          options={["주차 가능", "주차 불가능"]}
-          selected={
-            form.hasParking === true
-              ? ["주차 가능"]
-              : form.hasParking === false
-                ? ["주차 불가능"]
-                : []
-          }
-          onChange={(next) =>
-            setValues({ hasParking: next[0] === "주차 가능" })
-          }
-        />
-
-        {/* 시설 정보 (다중 선택) */}
-        <span className="text-text-primary text-[22px] font-bold">
-          시설 정보
-        </span>
-        {isFacilityLoading ? (
-          <span
-            role="status"
-            className="text-text-placeholder text-base font-bold"
-          >
-            시설 목록을 불러오는 중이에요...
-          </span>
-        ) : facilityError ? (
-          <span
-            role="alert"
-            className="text-danger text-right text-base font-bold"
-          >
-            시설 목록을 불러오지 못했어요. 새로고침 후 다시 시도해주세요
-          </span>
-        ) : (
-          facilityGroups.map((group) => (
-            <FacilityChipGroup
-              key={group.category}
-              label={FACILITY_CATEGORY_LABEL[group.category]}
-              items={group.items}
-              selectedIds={form.facilityIds}
-              onToggle={toggleFacility}
-            />
-          ))
-        )}
       </div>
 
-      {/* 이전 / 다음으로 (다음으로는 초기 비활성) */}
-      <div className="flex justify-end gap-2">
+      {/* 이전 / 다음으로 (다음으로는 초기 비활성) — 피그마 72 (3단 공통).
+          버튼 사이는 모바일 16 / md 이상 8 */}
+      <div className="mt-18 flex justify-end gap-4 md:gap-2">
         <Button
           variant="secondary"
           size="nav"
@@ -317,7 +343,8 @@ const ChipGroup = ({
       >
         {label}
       </span>
-      <div className="flex flex-wrap gap-2">
+      {/* 열 수와 간격만 정하면 폭은 그리드가 나눠 준다 (모바일·태블릿 3열, 데스크톱 4열) */}
+      <div className="grid grid-cols-3 gap-2 md:gap-5 lg:grid-cols-4 lg:gap-2">
         {options.map((option) => (
           <Chip
             key={option}

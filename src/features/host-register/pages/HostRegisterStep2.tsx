@@ -137,24 +137,32 @@ export const HostRegisterStep2 = () => {
     form.bankbookImage !== null;
 
   return (
-    <div className="mx-auto flex w-full max-w-[826px] flex-col gap-8 px-4 py-6">
-      {/* 페이지 제목 (가운데) */}
-      <h1 className="text-text-primary text-center text-[32px] font-bold">
+    // 여백·폭 규격은 HostRegisterStep1과 동일 (본문 328/535/644).
+    // 두 화면이 한 흐름이라 폭이 다르면 [다음으로]를 누르는 순간 본문이 튄다.
+    <div className="mx-auto flex w-full max-w-[535px] flex-col pt-0 pb-14 md:pt-[102px] md:pb-[78px] lg:max-w-[644px]">
+      {/* 페이지 제목 (가운데) — 모바일 28 / md 이상 32 */}
+      <h1 className="text-text-primary text-center text-[28px] font-bold md:text-[32px]">
         호스트 등록
       </h1>
 
-      {/* 진행바 — 1 = 두 번째 단계(계좌 정보) */}
-      <StepIndicator
-        steps={HOST_STEPS}
-        currentStep={1}
-        spacing="compact"
-      />
+      {/* 진행바 — 1 = 두 번째 단계(계좌 정보).
+          StepIndicator에 className prop이 없어 div로 감싸 간격을 준다.
+          컴포넌트 안에 py-3(12)이 이미 있어 피그마 36 = mt-6(24) + 12.
+          모바일은 20 = mt-2(8) + 12 */}
+      <div className="mt-2 md:mt-6">
+        <StepIndicator
+          steps={HOST_STEPS}
+          currentStep={1}
+          spacing="compact"
+        />
+      </div>
 
-      {/* 섹션: 정산 계좌 정보 */}
-      <div className="flex flex-col gap-6">
-        {/* 섹션 제목 + 안내문 */}
-        <div className="border-border flex flex-col gap-1 border-b pb-6">
-          <h2 className="text-text-primary text-[28px] font-bold">
+      {/* 섹션: 정산 계좌 정보 — 피그마 80 = mt-17(68) + 진행바 아래 py-3(12).
+          모바일은 58 = mt-[46px] + 12 */}
+      <div className="mt-[46px] flex flex-col md:mt-17">
+        {/* 섹션 제목 + 안내문 — 제목은 모바일 24 / md 이상 28 */}
+        <div className="border-border flex flex-col gap-1 border-b pb-8">
+          <h2 className="text-text-primary text-[24px] font-bold md:text-[28px]">
             정산 계좌 정보
           </h2>
           <p className="text-text-tertiary text-base font-medium">
@@ -162,103 +170,116 @@ export const HostRegisterStep2 = () => {
           </p>
         </div>
 
-        {/* 통장 사본 (파일 첨부) */}
-        <FileUploadRow
-          label="통장 사본"
-          placeholder="통장 사본 파일을 첨부해주세요"
-          hint="* JPG, PNG, PDF 최대 10MB"
-          file={form.bankbookImage}
-          onFileChange={(file) => setValues({ bankbookImage: file })}
-        />
-
-        {/* 은행 (공통 select) */}
-
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="bank"
-            className="text-text-primary text-[22px] font-bold"
-          >
-            은행
-          </label>
-          <Select
-            id="bank"
-            options={BANK_OPTIONS.map((bank) => ({ value: bank, label: bank }))}
-            value={form.bankName}
-            onChange={(e) => setValues({ bankName: e.target.value })}
-            placeholder="은행을 선택해주세요"
+        {/* 입력 필드 묶음 — 구분선 아래 28(mt-7), 필드 사이 48(gap-12).
+            두 값이 달라 섹션 gap 하나로는 못 만들어 래퍼를 따로 둔다 */}
+        <div className="mt-7 flex flex-col gap-12">
+          {/* 통장 사본 (파일 첨부) */}
+          <FileUploadRow
+            label="통장 사본"
+            placeholder="통장 사본 파일을 첨부해주세요"
+            hint="* JPG, PNG, PDF 최대 10MB"
+            file={form.bankbookImage}
+            onFileChange={(file) => setValues({ bankbookImage: file })}
           />
-        </div>
 
-        {/* 정산 입금 계좌 번호 */}
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="account-number"
-            className="text-text-primary text-[22px] font-bold"
-          >
-            정산 입금 계좌 번호
-          </label>
-          <Input
-            id="account-number"
-            placeholder="- 없이 숫자만 입력"
-            value={form.accountNumber}
-            onChange={(e) =>
-              setValues({ accountNumber: sanitizeNumber(e.target.value) })
-            }
-          />
-        </div>
+          {/* 은행 (공통 select) */}
 
-        {/* 예금주 — 서버 HostRegisterReq.accountHolder가 20자 제한 */}
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="account-holder"
-            className="text-text-primary text-[22px] font-bold"
-          >
-            예금주
-          </label>
-          <Input
-            id="account-holder"
-            placeholder="예금주 이름을 입력해주세요"
-            value={form.accountHolder}
-            onChange={(e) => setValues({ accountHolder: e.target.value })}
-            maxLength={20}
-          />
-          <div className="flex items-start justify-between gap-2">
-            <span className="text-text-secondary text-left text-base font-medium">
-              * 사업자 등록증(대표자명)과 일치해야 합니다.
-            </span>
-            <span className="text-text-secondary shrink-0 text-right text-base font-medium">
-              {form.accountHolder.length}/20
-            </span>
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="bank"
+              className="text-text-primary text-[22px] font-bold"
+            >
+              은행
+            </label>
+            <Select
+              id="bank"
+              options={BANK_OPTIONS.map((bank) => ({
+                value: bank,
+                label: bank,
+              }))}
+              value={form.bankName}
+              onChange={(bankName) => setValues({ bankName })}
+              placeholder="은행을 선택해주세요"
+            />
+          </div>
+
+          {/* 정산 입금 계좌 번호 */}
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="account-number"
+              className="text-text-primary text-[22px] font-bold"
+            >
+              정산 입금 계좌 번호
+            </label>
+            <Input
+              id="account-number"
+              placeholder="- 없이 숫자만 입력"
+              value={form.accountNumber}
+              onChange={(e) =>
+                setValues({ accountNumber: sanitizeNumber(e.target.value) })
+              }
+            />
+          </div>
+
+          {/* 예금주 — 서버 HostRegisterReq.accountHolder가 20자 제한 */}
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="account-holder"
+              className="text-text-primary text-[22px] font-bold"
+            >
+              예금주
+            </label>
+            <Input
+              id="account-holder"
+              placeholder="예금주 이름을 입력해주세요"
+              value={form.accountHolder}
+              onChange={(e) => setValues({ accountHolder: e.target.value })}
+              maxLength={20}
+            />
+            <div className="flex items-start justify-between gap-2">
+              {/* 360에서 이 문구가 옆 카운터(0/20)와 한 줄을 나눠 쓰면 자리가 280밖에 안 나와
+                  16px으로는 마지막 글자 하나가 다음 줄로 넘어간다. 모바일만 14px로 줄여 한 줄에 담는다 */}
+              <span className="text-text-secondary text-left text-sm font-medium md:text-base">
+                * 사업자 등록증(대표자명)과 일치해야 합니다.
+              </span>
+              <span className="text-text-secondary shrink-0 text-right text-base font-medium">
+                {form.accountHolder.length}/20
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {submitError && (
-        <span
-          role="alert"
-          className="text-danger self-end text-base font-bold"
-        >
-          {submitError}
-        </span>
-      )}
+      {/* 오류 문구 + 버튼을 한 묶음으로 감싼다 — 문구가 떴다 사라져도
+          섹션 아래 간격이 항상 고정된다 (모바일 56 / md 이상 80) */}
+      <div className="mt-14 flex flex-col items-end gap-2 md:mt-20">
+        {submitError && (
+          <span
+            role="alert"
+            className="text-danger text-base font-bold"
+          >
+            {submitError}
+          </span>
+        )}
 
-      {/* 이전 / 다음으로 버튼 (우측 정렬) */}
-      <div className="flex justify-end gap-2">
-        <Button
-          variant="secondary"
-          size="nav"
-          onClick={() => navigate("/host/host-register/step1")}
-        >
-          이전
-        </Button>
-        <Button
-          variant="primary"
-          size="nav"
-          disabled={!isValid || isSubmitting}
-          onClick={handleSubmit}
-        >
-          {isSubmitting ? "등록 중..." : "다음으로"}
-        </Button>
+        {/* 이전 / 다음으로 버튼 (우측 정렬) — 버튼 사이 모바일 16 / md 이상 8 */}
+        <div className="flex gap-4 md:gap-2">
+          <Button
+            variant="secondary"
+            size="nav"
+            onClick={() => navigate("/host/host-register/step1")}
+          >
+            이전
+          </Button>
+          <Button
+            variant="primary"
+            size="nav"
+            disabled={!isValid || isSubmitting}
+            onClick={handleSubmit}
+          >
+            {isSubmitting ? "등록 중..." : "다음으로"}
+          </Button>
+        </div>
       </div>
     </div>
   );
