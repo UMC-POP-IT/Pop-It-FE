@@ -129,13 +129,15 @@ export const SpaceDetailPage = () => {
   }
 
   return (
-    <div className="mx-auto flex w-[1200px] flex-col gap-5">
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-4 md:px-6 lg:px-0">
       <ExploreDetailGallery
         space={space}
         onImageClick={(index) => setGalleryIndex(index)}
       />
 
-      <div className="flex w-full items-start gap-[23px]">
+      {/* Desktop(lg, 1024~): 정보 좌측 + 예약 위젯 우측 사이드 컬럼
+          Tablet/Mobile(~1023): 예약 위젯이 정보 아래로 내려와 풀폭으로 스택 (Figma 반응형 스펙, 이슈 #256) */}
+      <div className="flex w-full flex-col items-start gap-10 lg:flex-row lg:gap-[23px]">
         <ExploreDetailInfo
           space={space}
           variant={isMine ? "host" : "guest"}

@@ -6,12 +6,10 @@ import type { Space } from "@/types";
 import { useNavigate } from "react-router-dom";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
 import { useCardCarousel } from "@/features/guest-explore/hooks/useCardCarousel";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import { useWishStore } from "@/store/wishStore";
 import { getWishList, wishedSpace } from "@/features/guest-explore/api/spaces_api";
 import { normalizeKeywords } from "@/shared/utils/keyword";
-
-// SpaceCard 4개 단위로 스크롤
-const CARDS_PER_SCROLL = 4;
 
 const WISH_PAGE_SIZE = 12;
 
@@ -49,6 +47,18 @@ export const WishedSpace = () => {
   const [retryKey, setRetryKey] = useState(0);
   const { handleWishToggle } = useWishGuard();
   const navigate = useNavigate();
+
+  // 모바일(360~767px)은 2개, 태블릿(768~1023px)은 3개, 데스크톱(1024px~)은 4개씩 보여준다(아래 카드 너비와 동일한 기준).
+  // CARDS_PER_SCROLL과 cardWidthClass가 항상 같은 값(isTablet/isDesktop)으로 계산돼야, 모바일/태블릿에서
+  // 터치로 스크롤한 뒤 데스크톱으로 돌아와도 scrollLeft가 새 카드 너비 기준으로 리셋되어 카드가 어긋나지 않는다.
+  const isTablet = useMediaQuery("(min-width: 768px)");
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const CARDS_PER_SCROLL = isDesktop ? 4 : isTablet ? 3 : 2;
+  const cardWidthClass = isDesktop
+    ? "w-[calc((100%-3*1rem)/4)]"
+    : isTablet
+      ? "w-[calc((100%-2*1rem)/3)]"
+      : "w-[calc(50%-0.5rem)]";
 
   const { scrollRef, canScrollPrev, canScrollNext, imageCenter, scrollByCard } =
     useCardCarousel(CARDS_PER_SCROLL, [wishedSpaces.length, status]);
@@ -218,16 +228,18 @@ export const WishedSpace = () => {
 
         {status === "success" && (
           <div className="relative">
-              {canScrollPrev && imageCenter !== null && <ScrollButton direction="prev" topOffset={imageCenter} onClick={() => scrollByCard(-1)} />}
-              {/* overflow-x-hidden은 휠/트랙패드/드래그 스크롤을 의도적으로 차단하기 위함 (화살표 버튼의 scrollBy만 허용) */}
+              {canScrollPrev && imageCenter !== null && <ScrollButton direction="prev" topOffset={imageCenter} onClick={() => scrollByCard(-1)} className="max-[1024px]:hidden" />}
+              {/* overflow-x-hidden은 휠/트랙패드/드래그 스크롤을 의도적으로 차단하기 위함 (화살표 버튼의 scrollBy만 허용).
+                  단, 1024px 이하(태블릿/모바일, 화살표 버튼이 숨는 구간과 동일)는 버튼 대신 터치 스크롤을 허용하고,
+                  snap으로 스와이프를 멈췄을 때 카드가 어중간하게 걸치지 않고 한 장 단위로 딱 맞게 정렬되게 한다. */}
               <div
               ref={scrollRef}
-              className="flex gap-4 overflow-x-hidden scroll-smooth"
+              className="flex gap-4 overflow-x-hidden scroll-smooth max-[1024px]:overflow-x-auto max-[1024px]:snap-x max-[1024px]:snap-mandatory max-[1024px]:[scrollbar-width:none] max-[1024px]:[-ms-overflow-style:none] max-[1024px]:[&::-webkit-scrollbar]:hidden"
               >
               {(wishedSpaces.length > 0) ? wishedSpaces.map((space) => (
                   <div
                   key={space.spaceId}
-                  className="w-[calc(50%-0.5rem)] flex-none sm:w-[calc((100%-2*1rem)/3)] lg:w-[calc((100%-3*1rem)/4)]"
+                  className={`${cardWidthClass} flex-none max-[1024px]:snap-start`}
                   >
                   <SpaceCard
                       space={toCard(space)}
@@ -240,7 +252,7 @@ export const WishedSpace = () => {
                   </div>
               )) : <WishedSpaceEmptyState />}
               </div>
-              {canScrollNext && imageCenter !== null && <ScrollButton direction="next" topOffset={imageCenter} onClick={() => scrollByCard(1)} />}
+              {canScrollNext && imageCenter !== null && <ScrollButton direction="next" topOffset={imageCenter} onClick={() => scrollByCard(1)} className="max-[1024px]:hidden" />}
           </div>
         )}
     </section>
