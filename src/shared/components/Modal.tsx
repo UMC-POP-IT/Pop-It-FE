@@ -52,7 +52,7 @@ const Modal = ({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="relative z-10 flex w-[590px] flex-col items-center gap-10 rounded-xl bg-white py-8"
+        className="relative z-10 flex w-[calc(100%-32px)] max-w-[590px] flex-col items-center gap-10 rounded-xl bg-white px-4 py-8"
       >
         <div className="flex flex-col items-center gap-5">
           {/* 체크 아이콘 (Figma 기준: icon_check_big_sized) */}
@@ -98,12 +98,12 @@ const Modal = ({
             </button>
           )
         ) : (
-          <div className="flex items-center gap-5">
+          <div className="flex w-full flex-col items-center gap-3 min-[400px]:w-auto min-[400px]:flex-row min-[400px]:gap-5">
             {onCancel && (
               <button
                 onClick={onCancel}
                 disabled={confirmDisabled}
-                className="bg-surface-blue text-text-primary hover:bg-primary-light h-14 w-[184px] rounded-lg text-lg font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                className="bg-surface-blue text-text-primary hover:bg-primary-light h-14 w-full rounded-lg text-lg font-medium disabled:cursor-not-allowed disabled:opacity-50 min-[400px]:w-[clamp(150px,_113.04px_+_9.239vw,_184px)]"
               >
                 {cancelLabel}
               </button>
@@ -112,7 +112,7 @@ const Modal = ({
               <button
                 onClick={onConfirm}
                 disabled={confirmDisabled}
-                className="bg-primary-hover hover:bg-primary h-14 w-[184px] rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="bg-primary-hover hover:bg-primary h-14 w-full rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 min-[400px]:w-[clamp(150px,_113.04px_+_9.239vw,_184px)]"
               >
                 {confirmLabel}
               </button>

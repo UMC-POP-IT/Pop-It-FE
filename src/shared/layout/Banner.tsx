@@ -33,7 +33,7 @@ const slides: BannerSlide[] = [
   },
 ];
 
-const AUTOPLAY_INTERVAL_MS = 40000;
+const AUTOPLAY_INTERVAL_MS = 10000;
 const SWIPE_THRESHOLD_PX = 50;
 /**
  * !showImage(검색 결과 화면)일 때 배너 상단에 주는 여백(예전엔 pt-8 클래스로만

@@ -6,6 +6,29 @@ import MyReservationListEmptyState from "@/features/guest-explore/components/MyR
 
 const TAB_STATUSES = ["예약 예정", "승인 완료", "계약 완료", "사용 중", "지난 예약"];
 
+// TODO: 임시 목데이터 (퇴실 거절 UI 확인용) - 확인 끝나면 제거할 것
+const MOCK_CHECKOUT_REJECTED_RESERVATION: Reservation = {
+  reservationId: -999,
+  status: "USAGE_COMPLETED",
+  statusDescription: "이용 완료",
+  startDate: "2026-06-23",
+  endDate: "2026-06-23",
+  usagePurpose: "임시 목데이터 (퇴실 거절 확인용)",
+  totalPrice: 25000000,
+  isPhotoVerified: true,
+  checkoutRejected: true,
+  space: {
+    spaceId: -999,
+    buildingName: "신사 어반빌딩",
+    address: "서울 강남구 테헤란로 152",
+    thumbnailUrl: "",
+  },
+  guest: {
+    userId: -999,
+    nickname: "테스트",
+  },
+};
+
 // TAB_STATUSES와 순서를 맞춘 탭별 매칭 상태값
 // 계약(서명)·결제 중 하나라도 안 끝난 상태(APPROVED, CONTRACT_COMPLETED - 결제 전/취소/실패)는
 // "승인 완료" 탭으로, 계약·결제가 모두 끝난 상태(PAYMENT_COMPLETED)만 "계약 완료" 탭으로 묶는다.
@@ -23,7 +46,8 @@ export const MyReservationList = () => {
 
   useEffect(() => {
     GetReservations()
-      .then((data) => setReservationList(data?.reservations ?? []))
+      // TODO: 목데이터 추가 부분 - 퇴실 거절 UI 확인 끝나면 MOCK_CHECKOUT_REJECTED_RESERVATION 제거하고 원복할 것
+      .then((data) => setReservationList([...(data?.reservations ?? []), MOCK_CHECKOUT_REJECTED_RESERVATION]))
       .catch((error) => console.error("게스트 - 나의 예약 내역 조회 실패", error));
   }, []);
 
@@ -41,12 +65,13 @@ export const MyReservationList = () => {
   return (
     <section className="flex flex-col gap-4 mt-20">
       <h2 className="text-text-primary text-2xl font-bold">내 예약 내역</h2>
-      <span className="text-text-secondary text-sm">예정 • 진행 중 • 지난 예약을 한 곳에서 관리해 보세요!</span>
+      <span className="text-text-secondary text-sm max-[1024px]:mb-[28px]">예정 • 진행 중 • 지난 예약을 한 곳에서 관리해 보세요!</span>
 
       <Tab
         tabs={TAB_STATUSES.map((status, i) => ({ label: status, count: grouped[i].length }))}
         activeIndex={activeIndex}
         onChange={setActiveIndex}
+        scrollOnMobile
       />
 
       <div className="flex flex-col">
