@@ -36,10 +36,10 @@ const sizeStyles: Record<ButtonSize, string> = {
   sm: "h-10 px-6 text-base font-bold rounded-lg",
   md: "h-12 px-4 text-base font-bold rounded-lg",
   lg: "h-14 w-full text-lg font-medium rounded-lg",
-  // 하단 내비게이션 버튼 (이전/다음으로) — 피그마 184×56, 18px/700
-  nav: "h-14 w-[184px] text-lg font-bold rounded-lg",
-  // 입력창 옆에 붙는 인라인 버튼 (주소 찾기) — 피그마 184×56, 20px/700
-  field: "h-14 w-[184px] text-xl font-bold rounded-lg",
+  // 하단 내비게이션 버튼 (이전/다음으로) — 피그마 데스크톱·태블릿 184×56, 모바일 156×56, 18px/700
+  nav: "h-14 w-[156px] md:w-[184px] text-lg font-bold rounded-lg",
+  // 입력창 옆에 붙는 인라인 버튼 (주소 찾기) — 데스크톱·태블릿 184×56, 모바일 156×56, 20px/700
+  field: "h-14 w-[156px] md:w-[184px] text-xl font-bold rounded-lg",
 };
 
 const Button = ({
