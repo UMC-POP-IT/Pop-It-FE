@@ -43,27 +43,43 @@ export const CurationModal = ({
     >
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
-      <div className="relative aria-hidden z-10 h-7/8 w-3/4 overflow-hidden bg-tag-bg shadow-xl">
-        <div
-          className="absolute top-6 left-1/2 z-20 -translate-x-1/2 rounded-3xl bg-white py-2 px-3"
-          key={property.id}
-        >
-          <span>
-            {buildingName} | {area}m²
-          </span>
+      <div className="relative z-10 flex h-full w-full flex-col overflow-hidden bg-tag-bg shadow-xl md:h-7/8 md:w-3/4">
+        {/* 모바일(360~767) 전체화면 상단 바 - 뒤로가기 */}
+        <div className="flex h-14 shrink-0 items-center bg-white px-4 md:hidden">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="뒤로가기"
+            className="flex h-9 w-9 items-center justify-center"
+          >
+            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
         </div>
 
-        <Button
-          className="!h-11 !w-11 !rounded-full bg-blue-500 absolute top-0 right-0 text-white flex items-center justify-center mt-6 mr-6 z-20"
-          onClick={onClose}
-        >
-          <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
-            <line x1="1" y1="1" x2="23" y2="23" />
-            <line x1="23" y1="1" x2="1" y2="23" />
-          </svg>
-        </Button>
+        <div className="relative flex-1 overflow-hidden">
+          <div
+            className="absolute top-6 left-1/2 z-20 -translate-x-1/2 rounded-3xl bg-white py-2 px-3"
+            key={property.id}
+          >
+            <span className="text-[clamp(12px,_8.47px_+_0.98vw,_16px)] whitespace-nowrap">
+              {buildingName} | {area}m²
+            </span>
+          </div>
 
-        <CurationViewer property={property} />
+          <Button
+            className="!h-11 !w-11 !rounded-full bg-blue-500 absolute top-0 right-0 text-white mt-6 mr-6 z-20 hidden md:flex"
+            onClick={onClose}
+          >
+            <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
+              <line x1="1" y1="1" x2="23" y2="23" />
+              <line x1="23" y1="1" x2="1" y2="23" />
+            </svg>
+          </Button>
+
+          <CurationViewer property={property} />
+        </div>
       </div>
     </div>
   );

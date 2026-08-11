@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Button from "@/shared/components/Button";
 import Modal from "@/shared/components/Modal";
 import { GetPaymentInfo, GetPaymentInfoResponse, GetPresignedURL, Reservation, Status, SubmitCheckOutPhoto, UploadFileToPresignedURL } from "../api/my_reservation_api";
 import PaymentModal from "@/features/guest-explore/components/contract/PaymentModal";
 import ContractModal from "@/features/guest-explore/components/contract/ContractModal";
 import PhotoVerificationModal from "@/features/guest-explore/components/PhotoVerificationModal";
 import RejectedPhotoModal from "@/features/guest-explore/components/RejectedPhotoModal";
+import { ReservationCardButtons } from "@/features/guest-explore/components/ReservationCardButtons";
 import { formatDate } from "@/shared/utils/date";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 
 interface ReservationCardProps {
   reservation: Reservation;
@@ -115,6 +116,8 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
 
   const navigate = useNavigate();
 
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+
   const handleCancelReservation = async () => {
     if (isCancelling) return;
     try {
@@ -188,9 +191,9 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
 
   return (
     <div className="border-divider flex items-start justify-between gap-7 border-b py-5 last:border-none">
-      <div className="flex items-start gap-7">
-        {/* 이미지 */}
-        <div className="bg-thumbnail-bg h-[190px] w-[190px] flex-shrink-0 overflow-hidden">
+      <div className="flex gap-7">
+        {/* 이미지 — 360~767px(모바일)은 태블릿(277) 배치를 유지한 채 767에서 277로 자연스럽게 수렴, 768~1023px(태블릿) 277 고정, 1024px 이상 190*190 고정 */}
+        <div className="bg-thumbnail-bg h-[clamp(140px,_19px_+_33.6vw,_277px)] w-[clamp(140px,_19px_+_33.6vw,_277px)] flex-shrink-0 overflow-hidden min-[1024px]:h-[190px] min-[1024px]:w-[190px]">
           <img
             src={reservation.space.thumbnailUrl}
             alt={reservation.space.buildingName}
@@ -198,71 +201,58 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
           />
         </div>
 
-        {/* 텍스트 */}
-        <div className="flex h-[190px] flex-col items-start justify-between">
+        {/* 텍스트 — min-h(고정 h 아님): 좁은 화면에서 줄바꿈 등으로 내용이 길어져도 박스가 함께 늘어나 아래 카드를 침범하지 않는다 */}
+        <div className="flex min-h-[clamp(140px,_19px_+_33.6vw,_277px)] flex-col items-start justify-start gap-1 min-[1024px]:min-h-[190px] min-[1024px]:justify-between">
           <div className="flex flex-col items-start gap-2">
-            <span className="text-primary text-base font-bold">{label}</span>
-            <div className="flex flex-col items-start gap-1">
-              <p className="text-xl font-bold text-black">{reservation.space.buildingName}</p>
-              <p className="text-text-primary text-base font-medium">
+            <span className="text-primary text-[clamp(13px,_10.35px_+_0.735vw,_16px)] font-bold">{label}</span>
+            <div className="flex flex-col items-start min-[1024px]:gap-1 max-[1024px]:gap-5">
+              <p className="text-[clamp(17px,_14.35px_+_0.735vw,_20px)] font-bold text-black">{reservation.space.buildingName}</p>
+              <p className="text-text-primary text-[clamp(13px,_10.35px_+_0.735vw,_16px)] font-medium">
                 {formatDate(reservation.startDate)} ~ {formatDate(reservation.endDate)}
               </p>
             </div>
           </div>
-          <p className="text-text-primary text-lg font-medium">
+          <p className="text-text-primary text-[clamp(15px,_12.35px_+_0.735vw,_18px)] font-medium">
             총 금액: <span className="font-bold">{reservation.totalPrice.toLocaleString()}</span>원
           </p>
+          {!isDesktop && <div className="mt-auto w-full">
+            <ReservationCardButtons
+              spaceId={reservation.space.spaceId}
+              isDone={isDone}
+              needsPhotoVerification={needsPhotoVerification}
+              isPhotoRejected={isPhotoRejected}
+              isAwaitingHostApproval={isAwaitingHostApproval}
+              showCancel={showCancel}
+              showContract={showContract}
+              isPaymentInfoError={isPaymentInfoError}
+              paymentInfo={paymentInfo}
+              onSpaceDetail={() => navigate(`/spaces/${reservation.space.spaceId}`)}
+              onPhotoVerify={() => setIsPhotoModalOpen(true)}
+              onShowRejectedPhoto={() => setIsRejectedPhotoModalOpen(true)}
+              onCancelReservation={() => setIsCancelModalOpen(true)}
+              onSignPayment={() => setisPaymentModalOpen(true)}
+            />
+          </div>}
         </div>
       </div>
 
-      {/* 버튼 */}
-      <div className="flex h-[190px] flex-shrink-0 flex-col items-end justify-end gap-2">
-        {needsPhotoVerification && (
-          isPhotoRejected ?
-            <span className="self-start text-left text-red-400 text-sm whitespace-pre-wrap">{"호스트가 퇴실 승인을\n거절했습니다 다시 인증해주세요"}</span> :
-            <span className="self-end text-primary text-sm">사진 인증이 필요합니다 (필수)</span>
-        )}
-        {showContract && isPaymentInfoError && (
-          <span className="self-end text-red-400 text-sm">결제 정보를 불러오지 못했습니다</span>
-        )}
-        <div className="flex items-center gap-1">
-          {isDone &&
-            (needsPhotoVerification ? (
-              <>
-                <Button variant="primary" size="sm" onClick={() => setIsPhotoModalOpen(true)}>
-                  사진 인증
-                </Button>
-                {isPhotoRejected && (
-                  <Button variant="secondary" size="sm" onClick={() => setIsRejectedPhotoModalOpen(true)}>
-                    거절된 사진
-                  </Button>
-                )}
-              </>
-            ) : (
-              <Button variant="secondary" size="sm" disabled>
-                {isAwaitingHostApproval ? "호스트 승인 대기중..." : "인증 완료"}
-              </Button>
-            ))}
-          <Button variant="secondary" size="sm" onClick={() => navigate(`/spaces/${reservation.space.spaceId}`)}>
-            공간 상세
-          </Button>
-          {showCancel && (
-            <Button variant="cancel" size="sm" onClick={() => setIsCancelModalOpen(true)}>
-              예약 취소
-            </Button>
-          )}
-          {showContract && (
-            <Button
-              variant="primary"
-              size="sm"
-              disabled={!paymentInfo}
-              onClick={() => setisPaymentModalOpen(true)}
-            >
-              계약 하기
-            </Button>
-          )}
-        </div>
-      </div>
+      {/* 데스크톱일 때 버튼 위치 — 이미지+텍스트 줄 오른쪽에 별도 칼럼 */}
+      {isDesktop && <ReservationCardButtons
+        spaceId={reservation.space.spaceId}
+        isDone={isDone}
+        needsPhotoVerification={needsPhotoVerification}
+        isPhotoRejected={isPhotoRejected}
+        isAwaitingHostApproval={isAwaitingHostApproval}
+        showCancel={showCancel}
+        showContract={showContract}
+        isPaymentInfoError={isPaymentInfoError}
+        paymentInfo={paymentInfo}
+        onSpaceDetail={() => navigate(`/spaces/${reservation.space.spaceId}`)}
+        onPhotoVerify={() => setIsPhotoModalOpen(true)}
+        onShowRejectedPhoto={() => setIsRejectedPhotoModalOpen(true)}
+        onCancelReservation={() => setIsCancelModalOpen(true)}
+        onSignPayment={() => setisPaymentModalOpen(true)}
+      />}
 
       {/* Reservation Cancel Modal */}
       <Modal
