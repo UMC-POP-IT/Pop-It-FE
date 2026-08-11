@@ -31,9 +31,9 @@ const RejectedPhotoModal = ({ isOpen, reservationId, onClose }: RejectedPhotoMod
     setIsRejected(false);
 
     GetSubmitCheckoutPhotos(reservationId)
-      .then(({ photoUrls, checkoutRejected }) => {
+      .then(({ imageUrls, checkoutRejected }) => {
         if (ignore) return;
-        setPhotoUrls(photoUrls);
+        setPhotoUrls(imageUrls);
         setIsRejected(checkoutRejected);
       })
       .catch((error) => {

@@ -29,13 +29,22 @@ const PhotoGalleryModal = ({
   onClose,
 }: PhotoGalleryModalProps) => {
   const [photoIndex, setPhotoIndex] = useState(0);
+  // 로드에 실패한 사진 URL을 기억해뒀다가, 같은 URL을 다시 그릴 때는 깨진 이미지 아이콘 대신
+  // 안내 문구를 보여준다. 인덱스가 아니라 URL 기준으로 저장해 photos 배열이 바뀌어도 안전하다.
+  const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
   const dialogRef = useDialogA11y<HTMLDivElement>({ isOpen, onClose });
 
   useEffect(() => {
-    if (isOpen) setPhotoIndex(initialIndex);
+    if (isOpen) {
+      setPhotoIndex(initialIndex);
+      setFailedUrls(new Set());
+    }
   }, [isOpen, initialIndex]);
 
   if (!isOpen) return null;
+
+  const currentPhoto = photos[photoIndex];
+  const currentPhotoFailed = !!currentPhoto && failedUrls.has(currentPhoto);
 
   return (
     <div
@@ -48,7 +57,7 @@ const PhotoGalleryModal = ({
         aria-modal="true"
         aria-label="사진 갤러리"
         tabIndex={-1}
-        className="relative h-[420px] w-full max-w-[340px] overflow-hidden bg-[#fafafa] md:h-[520px] md:max-w-[700px] lg:max-w-[900px] max-h-[calc(100dvh-2rem)]"
+        className="relative h-[420px] w-full max-w-[340px] overflow-hidden bg-[#fafafa] max-h-[calc(100dvh-2rem)] md:h-[520px] md:max-w-[700px] lg:max-w-[900px]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 닫기 버튼 */}
@@ -62,15 +71,28 @@ const PhotoGalleryModal = ({
 
         {isLoading ? (
           <div className="flex h-full w-full items-center justify-center">
-            <span className="text-text-primary text-lg font-medium">사진 불러오는 중...</span>
+            <span className="text-text-primary text-lg font-medium">
+              사진 불러오는 중...
+            </span>
           </div>
         ) : photos.length > 0 ? (
           <>
-            <img
-              src={photos[photoIndex]}
-              alt={`사진 ${photoIndex + 1}`}
-              className="h-full w-full object-cover"
-            />
+            {currentPhotoFailed ? (
+              <div className="flex h-full w-full items-center justify-center bg-[#D8D8D8]">
+                <span className="text-text-primary text-lg font-medium">
+                  이미지를 불러올 수 없습니다
+                </span>
+              </div>
+            ) : (
+              <img
+                src={currentPhoto}
+                alt={`사진 ${photoIndex + 1}`}
+                className="h-full w-full object-cover"
+                onError={() =>
+                  setFailedUrls((prev) => new Set(prev).add(currentPhoto))
+                }
+              />
+            )}
             <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-[rgba(18,18,18,0.2)] px-[18px] py-1 text-lg font-bold text-white md:bottom-8 lg:bottom-10">
               {photoIndex + 1} / {photos.length}
             </span>
@@ -95,7 +117,9 @@ const PhotoGalleryModal = ({
           </>
         ) : (
           <div className="flex h-full w-full items-center justify-center">
-            <span className="text-text-primary text-lg font-medium">{emptyMessage}</span>
+            <span className="text-text-primary text-lg font-medium">
+              {emptyMessage}
+            </span>
           </div>
         )}
       </div>

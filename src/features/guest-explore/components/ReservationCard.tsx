@@ -20,6 +20,7 @@ interface CardMeta {
   showContract: boolean;
   needsPhotoVerification: boolean;
   isPhotoRejected: boolean;
+  isAwaitingHostApproval: boolean;
   isDone: boolean;
 }
 
@@ -38,16 +39,22 @@ export const isUsing = (start: string, end: string): boolean => {
 
 const getCardMeta = (r: Reservation): CardMeta => {
   if (r.status === "USAGE_COMPLETED" || r.status === "CHECKOUT_COMPLETED") {
-      // isPhotoVerified(퇴실 사진 인증 완료 여부)가 true이고 checkoutRejected(호스트의 퇴실 거절 여부)가
-      // false인 경우에만 "퇴실 완료"로 간주. 둘 중 하나라도 아니면(미인증 또는 거절) "이용 완료" +
-      // 사진 인증 UI를 함께 노출한다.
-      const isCheckoutApproved = r.isPhotoVerified && !r.checkoutRejected;
+      // 호스트가 퇴실 사진을 승인하는 순간 status가 CHECKOUT_COMPLETED로 확정되므로,
+      // checkoutRejected(과거 거절 이력)와 무관하게 status만으로 "퇴실 완료" 여부를 판단한다.
+      const isCheckoutApproved = r.status === "CHECKOUT_COMPLETED";
+      // 게스트가 퇴실 사진을 이미 제출했지만(isPhotoVerified) 거절되지도 않은 채
+      // 호스트의 승인만 기다리고 있는 상태
+      const isAwaitingHostApproval = !isCheckoutApproved && r.isPhotoVerified && !r.checkoutRejected;
       return {
         label: isCheckoutApproved ? "퇴실 완료" : "이용 완료",
         showCancel: false,
         showContract: false,
-        needsPhotoVerification: !isCheckoutApproved,
+        needsPhotoVerification: !isCheckoutApproved && !isAwaitingHostApproval,
+        // status와 무관하게 서버 값을 그대로 담는 raw 필드. 현재는 아래 needsPhotoVerification이
+        // isCheckoutApproved일 때 항상 false라 화면에 영향이 없지만, 이 필드를 gating 없이
+        // 재사용하면 승인된 예약에서도 거절 UI가 뜨는 버그가 재발할 수 있으니 주의.
         isPhotoRejected: r.checkoutRejected,
+        isAwaitingHostApproval,
         isDone: true
       };
   }
@@ -59,27 +66,19 @@ const getCardMeta = (r: Reservation): CardMeta => {
       showContract: false,
       needsPhotoVerification: false,
       isPhotoRejected: false,
+      isAwaitingHostApproval: false,
       isDone: false
     };
 
-  // 계약(서명)은 끝났지만 결제가 아직 안 됐거나 실패한 상태
-  if (r.status === "CONTRACT_COMPLETED")
-    return {
-      label: "결제 대기",
-      showCancel: false,
-      showContract: false,
-      needsPhotoVerification: false,
-      isPhotoRejected: false,
-      isDone: false
-    };
-
-  if (r.status === "APPROVED")
+  // 승인은 됐지만 계약(서명)·결제 중 하나라도 안 끝난 상태 (결제 취소/실패 후 재시도 포함)
+  if (r.status === "APPROVED" || r.status === "CONTRACT_COMPLETED")
     return {
       label: "승인 완료",
       showCancel: true,
       showContract: true,
       needsPhotoVerification: false,
       isPhotoRejected: false,
+      isAwaitingHostApproval: false,
       isDone: false
     };
 
@@ -89,6 +88,7 @@ const getCardMeta = (r: Reservation): CardMeta => {
     showContract: false,
     needsPhotoVerification: false,
     isPhotoRejected: false,
+    isAwaitingHostApproval: false,
     isDone: false
   };
 };
@@ -102,14 +102,15 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   const [agreedToGuide, setAgreedToGuide] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false); // 퇴실 사진 인증 창 open 여부
   const [isRejectedPhotoModalOpen, setIsRejectedPhotoModalOpen] = useState(false); // 거절된 퇴실 사진 확인 창 open 여부
-  const [isPhotoVerifiedDone, setIsPhotoVerifiedDone] = useState(false); // 사진 인증 완료 여부
+  const [isPhotoSubmitted, setIsPhotoSubmitted] = useState(false); // 이번 세션에서 사진 제출 완료(재조회 전까지 호스트 승인 대기로 표시) 여부
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false); // 사진 업로드 진행 중 여부
   const [paymentInfo, setPaymentInfo] = useState<GetPaymentInfoResponse | null>(null); // 결제 정보
   const [isPaymentInfoError, setIsPaymentInfoError] = useState(false); // 결제 정보 조회 실패 여부
 
-  const label = isPhotoVerifiedDone ? "퇴실 완료" : cardMeta.label;
-  const needsPhotoVerification = cardMeta.needsPhotoVerification && !isPhotoVerifiedDone;
-  const isPhotoRejected = cardMeta.isPhotoRejected && !isPhotoVerifiedDone;
+  const label = cardMeta.label;
+  const needsPhotoVerification = cardMeta.needsPhotoVerification && !isPhotoSubmitted;
+  const isPhotoRejected = cardMeta.isPhotoRejected && !isPhotoSubmitted;
+  const isAwaitingHostApproval = cardMeta.isAwaitingHostApproval || isPhotoSubmitted;
   const { showCancel, showContract, isDone } = cardMeta;
 
   const navigate = useNavigate();
@@ -141,11 +142,11 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
       await Promise.all(uploads.map(({ presignedUrl }, index) => UploadFileToPresignedURL(presignedUrl, files[index])));
 
       await SubmitCheckOutPhoto(reservation.reservationId, {
-        photoUrls: uploads.map(({ fileUrl }) => fileUrl),
+        imageUrls: uploads.map(({ fileUrl }) => fileUrl),
       });
 
       setIsPhotoModalOpen(false);
-      setIsPhotoVerifiedDone(true);
+      setIsPhotoSubmitted(true);
     } catch (error) {
       console.error(error);
       alert("사진 업로드에 실패했습니다. 잠시 후 다시 시도해주세요.");
@@ -164,7 +165,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
     let ignore = false;
 
     const loadPaymentInfo = async (status: Status) => {
-      if (status !== "APPROVED") return;
+      if (status !== "APPROVED" && status !== "CONTRACT_COMPLETED") return;
       setIsPaymentInfoError(false);
       try {
         const data = await GetPaymentInfo(reservation.reservationId);
@@ -239,7 +240,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
               </>
             ) : (
               <Button variant="secondary" size="sm" disabled>
-                인증 완료
+                {isAwaitingHostApproval ? "호스트 승인 대기중..." : "인증 완료"}
               </Button>
             ))}
           <Button variant="secondary" size="sm" onClick={() => navigate(`/spaces/${reservation.space.spaceId}`)}>
@@ -301,6 +302,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
       {/* Photo Verification Modal */}
       <PhotoVerificationModal
         isOpen={isPhotoModalOpen}
+        isSubmitting={isUploadingPhotos}
         onClose={() => setIsPhotoModalOpen(false)}
         onComplete={handlePhotoVerificationComplete}
       />

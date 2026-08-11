@@ -235,6 +235,7 @@ export const WishedSpace = () => {
                       categoryTag={space.spaceCategory}
                       onWishToggle={() => handleUnwish(space.spaceId)}
                       onClick={() => navigate(`/spaces/${space.spaceId}`)}
+                      hoverEffect="dim"
                   />
                   </div>
               )) : <WishedSpaceEmptyState />}
