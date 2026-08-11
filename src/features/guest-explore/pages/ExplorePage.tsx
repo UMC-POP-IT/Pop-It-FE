@@ -119,6 +119,7 @@ export const ExplorePage = () => {
   const resetScrollSearchBar = useScrollSearchBarStore((s) => s.reset);
 
   const handleSearch = (filters: ExploreSearchFilters) => {
+    setHasResults(false);
     const next = new URLSearchParams();
     next.set(SEARCH_FLAG_PARAM, "1");
     if (filters.keyword) next.set("keyword", filters.keyword);
@@ -126,7 +127,6 @@ export const ExplorePage = () => {
     if (filters.district) next.set("district", filters.district);
     if (filters.dateRange.start) next.set(DATE_START_PARAM, formatDateParam(filters.dateRange.start));
     if (filters.dateRange.end) next.set(DATE_END_PARAM, formatDateParam(filters.dateRange.end));
-    setHasResults(false);
     // 아직 결과 화면이 아니었다면(처음 검색) 새 히스토리 항목을 쌓아 뒤로가기로
     // 검색 전 화면에 돌아갈 수 있게 하고, 이미 결과 화면이면(조건만 바꿔 재검색)
     // 히스토리를 계속 쌓지 않도록 현재 항목을 교체한다.
