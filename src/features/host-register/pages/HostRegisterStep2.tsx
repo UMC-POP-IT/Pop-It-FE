@@ -22,6 +22,8 @@ export const HostRegisterStep2 = () => {
   const form = useHostRegisterStore((s) => s.form);
   const setValues = useHostRegisterStore((s) => s.setValues);
   const setHostStatus = useAuthStore((s) => s.setHostStatus);
+  // 완료 화면 1회 통과권. 가드가 이 값을 보고 완료 화면을 열어준다
+  const setJustRegistered = useHostRegisterStore((s) => s.setJustRegistered);
   const [isSubmitting, setIsSubmitting] = useState(false); // 제출 중 (중복 클릭 방지)
   const [submitError, setSubmitError] = useState(""); // 실패 사유
 
@@ -70,6 +72,7 @@ export const HostRegisterStep2 = () => {
       await refreshRole();
 
       setHostStatus("registered");
+      setJustRegistered(true);
       navigate("/host/host-register/complete");
     } catch (error) {
       const status = (error as { status?: number }).status;
@@ -103,8 +106,11 @@ export const HostRegisterStep2 = () => {
         }
 
         if (host) {
-          setHostStatus("registered");
+          // 상태를 먼저 바꾸면 await 동안 화면이 아직 step2라, 가드가 등록 완료를 감지해
+          // /host/spaces로 보내버린다. 재발급을 끝낸 뒤 상태 변경과 이동을 한 번에 한다
           await refreshRole(); // 이 브라우저 토큰의 role이 낡았을 수 있다
+          setHostStatus("registered");
+          setJustRegistered(true);
           navigate("/host/host-register/complete");
           return;
         }

@@ -5,9 +5,7 @@ import { ScrollButton } from "./ScrollButton";
 import { useNavigate } from "react-router-dom";
 import { getRealTimeRecommend } from "../api/spaces_api";
 import { useCardCarousel } from "@/features/guest-explore/hooks/useCardCarousel";
-
-// SpaceCard 3개 단위로 스크롤
-const CARDS_PER_SCROLL = 3;
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 
 const RealTimeRecommendSpace = () => {
   const [spaces, setSpaces] = useState<recommendSpace[]>([]);
@@ -16,8 +14,18 @@ const RealTimeRecommendSpace = () => {
 
   const navigate = useNavigate();
 
+  // 768~1023px(태블릿)과 360~767px(모바일)은 둘 다 2개씩, 1024px 이상(데스크톱)만 3개씩 보여준다.
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+
+  const CARDS_PER_SCROLL = isDesktop ? 3 : 2;
+
   const { scrollRef, canScrollPrev, canScrollNext, imageCenter, scrollByCard } =
     useCardCarousel(CARDS_PER_SCROLL, [spaces.length, isLoading]);
+
+  // 카드 실제 표시 너비를 CARDS_PER_SCROLL과 동일한 기준(useMediaQuery)으로 계산해,
+  // 화면에 보이는 카드 개수와 화살표 스크롤 단위가 항상 일치하도록 한다.
+  const cardWidthClass =
+    CARDS_PER_SCROLL === 2 ? "w-[calc(50%-0.5rem)]" : "w-[calc((100%-2*1rem)/3)]";
 
   useEffect(() => {
     let isMounted = true;
@@ -45,15 +53,17 @@ const RealTimeRecommendSpace = () => {
 
   return (
     <section className="flex flex-col gap-4 mt-20">
-      <h2 className="text-text-primary text-2xl font-bold">실시간 추천 공간</h2>
+      <h2 className="text-text-primary text-[clamp(19px,_14.59px_+_1.225vw,_24px)] font-bold">실시간 추천 공간</h2>
 
       <div className="relative">
-        {canScrollPrev && imageCenter !== null && <ScrollButton direction="prev" topOffset={imageCenter} onClick={() => scrollByCard(-1)} />}
+        {canScrollPrev && imageCenter !== null && <ScrollButton direction="prev" topOffset={imageCenter} onClick={() => scrollByCard(-1)} className="max-[1024px]:hidden" />}
 
-        {/* overflow-x-hidden은 휠/트랙패드/드래그 스크롤을 의도적으로 차단하기 위함 (화살표 버튼의 scrollBy만 허용) */}
+        {/* overflow-x-hidden은 휠/트랙패드/드래그 스크롤을 의도적으로 차단하기 위함 (화살표 버튼의 scrollBy만 허용).
+            단, 1024px 이하(태블릿/모바일, 화살표 버튼이 숨는 구간과 동일)는 버튼 대신 터치 스크롤을 허용하고,
+            snap으로 스와이프를 멈췄을 때 카드가 어중간하게 걸치지 않고 한 장 단위로 딱 맞게 정렬되게 한다. */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-hidden scroll-smooth"
+          className="flex gap-4 overflow-x-hidden scroll-smooth max-[1024px]:overflow-x-auto max-[1024px]:snap-x max-[1024px]:snap-mandatory max-[1024px]:[scrollbar-width:none] max-[1024px]:[-ms-overflow-style:none] max-[1024px]:[&::-webkit-scrollbar]:hidden"
         >
           {isLoading ? (
             <p role="status" aria-live="polite" className="text-text-secondary text-sm">
@@ -67,9 +77,7 @@ const RealTimeRecommendSpace = () => {
             spaces.map((space) => (
               <div
                 key={space.spaceId}
-                // 데스크톱 3개 → 태블릿(md~lg 미만) 2개 → 그 외(모바일)는 아직 별도 대응 전이라
-                // 기존 3개 폭을 그대로 유지한다(#260 - 태블릿 우선 대응, 모바일은 후속 작업).
-                className="w-[calc((100%-2*1rem)/3)] flex-none md:w-[calc(50%-0.5rem)] lg:w-[calc((100%-2*1rem)/3)]"
+                className={`${cardWidthClass} flex-none max-[1024px]:snap-start`}
               >
                 <RealTimeBanner
                   space={space}
@@ -79,7 +87,7 @@ const RealTimeRecommendSpace = () => {
             ))
           )}
         </div>
-        {canScrollNext && imageCenter !== null && <ScrollButton direction="next" topOffset={imageCenter} onClick={() => scrollByCard(1)} />}
+        {canScrollNext && imageCenter !== null && <ScrollButton direction="next" topOffset={imageCenter} onClick={() => scrollByCard(1)} className="max-[1024px]:hidden" />}
       </div>
     </section>
   );

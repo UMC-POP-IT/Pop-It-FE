@@ -30,15 +30,15 @@ const PaymentModal = ({
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden={true} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="relative z-10 flex w-[420px] flex-col gap-4 rounded-2xl bg-white p-6 shadow-xl"
+        className="relative z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-[420px] flex-col gap-4 overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
       >
         <h3 id={titleId} className="text-text-primary text-lg font-bold">결제 예정</h3>
 

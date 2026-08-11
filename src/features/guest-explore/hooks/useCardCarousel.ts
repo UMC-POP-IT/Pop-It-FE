@@ -55,6 +55,17 @@ export const useCardCarousel = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
+  // cardsPerScroll이 바뀐다는 건 화면 폭 구간(예: 모바일 2개 ↔ 데스크톱 4개)이 바뀌어 카드 너비 자체가
+  // 달라졌다는 뜻이다. 모바일/태블릿에서 터치로 스크롤해 둔 scrollLeft(px)는 이전 카드 너비 기준이라
+  // 새 레이아웃에서는 아무 의미가 없어져 카드가 어중간하게 걸쳐 보이므로, 매번 처음(0)으로 되돌린다.
+  useLayoutEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    container.scrollLeft = 0;
+    updateScrollButtons();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardsPerScroll]);
+
   const scrollByCard = (direction: 1 | -1) => {
     const container = scrollRef.current;
     if (!container) return;

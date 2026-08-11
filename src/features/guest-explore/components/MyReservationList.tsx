@@ -41,12 +41,13 @@ export const MyReservationList = () => {
   return (
     <section className="flex flex-col gap-4 mt-20">
       <h2 className="text-text-primary text-2xl font-bold">내 예약 내역</h2>
-      <span className="text-text-secondary text-sm">예정 • 진행 중 • 지난 예약을 한 곳에서 관리해 보세요!</span>
+      <span className="text-text-secondary text-sm max-[1024px]:mb-[28px]">예정 • 진행 중 • 지난 예약을 한 곳에서 관리해 보세요!</span>
 
       <Tab
         tabs={TAB_STATUSES.map((status, i) => ({ label: status, count: grouped[i].length }))}
         activeIndex={activeIndex}
         onChange={setActiveIndex}
+        scrollOnMobile
       />
 
       <div className="flex flex-col">
