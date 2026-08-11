@@ -82,10 +82,10 @@ export const RegisterStep1 = () => {
             <span className="text-text-primary text-[22px] font-bold">
               건물 유형
             </span>
-            {/* 칩 배치 — 모바일은 3열 그리드로 폭을 나눠 갖고(각 104), md 이상은 고정폭 줄바꿈.
-                모바일에서 flex-wrap을 쓰면 Chip의 flex-1(basis 0) 때문에 6개가 한 줄에 다 눌려 들어간다.
-                간격: 모바일 8 · 태블릿 20(165×3+20×2=535) · 데스크톱 8 */}
-            <div className="grid grid-cols-3 gap-2 md:flex md:flex-wrap md:gap-5 lg:gap-2">
+            {/* 칩 배치 — 열 수와 간격만 정하면 폭은 그리드가 나눠 준다.
+                모바일·태블릿 3열, 데스크톱 4열 (건물 유형 6개 = 4 + 2).
+                간격: 모바일 8(→104) · 태블릿 20(→165) · 데스크톱 8(→155) */}
+            <div className="grid grid-cols-3 gap-2 md:gap-5 lg:grid-cols-4 lg:gap-2">
               {BUILDING_TYPES.map((type) => (
                 <Chip
                   key={type}
