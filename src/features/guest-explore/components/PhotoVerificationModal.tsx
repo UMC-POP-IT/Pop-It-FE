@@ -4,6 +4,7 @@ import cloudIcon from "@/assets/icons/logo_cloud.svg";
 
 interface PhotoVerificationModalProps {
   isOpen: boolean;
+  isSubmitting: boolean;
   onClose: () => void;
   onComplete: (files: File[]) => void;
 }
@@ -14,7 +15,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 const formatFileSize = (bytes: number) => `${Math.round(bytes / (1024 * 1024))}MB`;
 
-const PhotoVerificationModal = ({ isOpen, onClose, onComplete }: PhotoVerificationModalProps) => {
+const PhotoVerificationModal = ({ isOpen, isSubmitting, onClose, onComplete }: PhotoVerificationModalProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -141,8 +142,8 @@ const PhotoVerificationModal = ({ isOpen, onClose, onComplete }: PhotoVerificati
           </div>
 
           <div className="flex justify-end">
-            <Button variant="primary" size="md" disabled={files.length < MIN_PHOTOS} onClick={handleComplete} className="h-[56px] w-[184px]">
-              완료
+            <Button variant="primary" size="md" disabled={files.length < MIN_PHOTOS || isSubmitting} onClick={handleComplete} className="h-[56px] w-[184px]">
+              {isSubmitting ? "업로드 중..." : "완료"}
             </Button>
           </div>
         </div>

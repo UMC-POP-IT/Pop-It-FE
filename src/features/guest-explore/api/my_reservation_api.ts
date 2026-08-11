@@ -37,7 +37,7 @@ export interface CancelReservationResponse {
 }
 
 export interface SubmitCheckOutPhotoRequest {
-    photoUrls: string[];
+    imageUrls: string[];
 }
 
 export interface SubmitCheckOutPhotoResponse {
@@ -61,7 +61,7 @@ export interface GetEachResStateCountsResponse {
 
 export interface GetSubmitCheckoutPhotosResponse {
     checkoutRejected: boolean;
-    photoUrls: string[];
+    imageUrls: string[];
 }
 
 export interface GetCheckOutApprovalResponse {
@@ -243,7 +243,7 @@ export const GetEachResStateCounts = (reservationId: number) =>
 
 // 게스트 - 퇴실 증빙 사진 조회 ~ DONE
 export const GetSubmitCheckoutPhotos = (reservationId: number) =>
-    apiFetch<GetSubmitCheckoutPhotosResponse>(`/api/v1/reservations/${reservationId}/checkout-photos`);
+    apiFetch<GetSubmitCheckoutPhotosResponse>(`/api/v1/reservations/${reservationId}/checkout-images/me`);
 
 // 호스트/게스트 공통 - 퇴실 승인 여부 조회 ~ 얘도 필요 없을 듯
 export const GetCheckOutApproval = (reservationId: number) =>
