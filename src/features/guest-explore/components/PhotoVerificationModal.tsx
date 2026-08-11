@@ -1,5 +1,6 @@
-import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
+import { useId, useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import Button from "@/shared/components/Button";
+import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 import cloudIcon from "@/assets/icons/logo_cloud.svg";
 
 interface PhotoVerificationModalProps {
@@ -17,9 +18,8 @@ const formatFileSize = (bytes: number) => `${Math.round(bytes / (1024 * 1024))}M
 
 const PhotoVerificationModal = ({ isOpen, isSubmitting, onClose, onComplete }: PhotoVerificationModalProps) => {
   const [files, setFiles] = useState<File[]>([]);
+  const titleId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  if (!isOpen) return null;
 
   const addFiles = (newFiles: File[]) => {
     if (newFiles.length === 0) return;
@@ -51,24 +51,30 @@ const PhotoVerificationModal = ({ isOpen, isSubmitting, onClose, onComplete }: P
     setFiles([]);
     onClose();
   };
+  const dialogRef = useDialogA11y<HTMLDivElement>({ isOpen, onClose: handleClose });
 
   const handleComplete = () => {
     onComplete(files);
     setFiles([]);
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={handleClose} aria-hidden={true} />
       <div
+        ref={dialogRef}
         className="relative z-10 flex max-h-[85vh] w-full max-w-[590px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
         role="dialog"
         aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
       >
         <div className="flex flex-col gap-4 overflow-y-auto p-6">
           <div className="flex items-start justify-between">
             <div className="flex flex-col gap-1">
-              <h3 className="text-text-primary text-xl font-bold">퇴실 사진 인증</h3>
+              <h3 id={titleId} className="text-text-primary text-xl font-bold">퇴실 사진 인증</h3>
               <span className="text-text-secondary text-sm">
                 퇴실 상태 확인을 위해 최소 {MIN_PHOTOS}장 이상의 사진을 등록해주세요
               </span>
