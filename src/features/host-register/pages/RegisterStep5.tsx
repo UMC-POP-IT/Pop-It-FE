@@ -32,6 +32,10 @@ export const RegisterStep5 = () => {
   const form = useRegisterStore((s) => s.form);
   const setValues = useRegisterStore((s) => s.setValues);
   const reset = useRegisterStore((s) => s.reset);
+  // 서버가 이미 받아들인 등록/수정인지. 성공 모달을 닫기 전 뒤로가기로 빠져나갔다가
+  // 돌아와 다시 제출하는 것을 막는다 (같은 공간이 두 번 만들어진다)
+  const isSpaceSubmitted = useRegisterStore((s) => s.isSpaceSubmitted);
+  const setSpaceSubmitted = useRegisterStore((s) => s.setSpaceSubmitted);
 
   /**
    * 최종 제출: 사진 업로드 → 서버 형식 변환 → 등록(또는 수정)
@@ -71,6 +75,7 @@ export const RegisterStep5 = () => {
         await createSpace(request);
       }
 
+      setSpaceSubmitted(true); // 여기서부터 재제출 금지 (reset() 전까지 유지)
       setModal("success"); // 여기까지 왔으면 서버가 받아들인 것
     } catch (error) {
       // 에러 객체 전체를 찍으면 요청 정보가 노출될 수 있어 메시지만 남긴다
@@ -314,7 +319,7 @@ export const RegisterStep5 = () => {
           <Button
             variant="primary"
             size="nav"
-            disabled={form.photoList.length < 3}
+            disabled={form.photoList.length < 3 || isSpaceSubmitted}
             onClick={() => setModal("confirm")}
           >
             완료

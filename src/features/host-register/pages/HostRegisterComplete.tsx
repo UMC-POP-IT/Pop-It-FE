@@ -16,14 +16,19 @@ export const HostRegisterComplete = () => {
     if (isLeaving) return;
     setIsLeaving(true);
     setError("");
-    reset();
 
     // 모드 전환·서버 동기화·이동을 훅이 처리한다.
     // 등록 여부 조회에 실패하면 이동하지 않으므로 버튼을 다시 열어준다.
     if ((await switchToHost()) === "unknown") {
       setError("호스트 정보를 확인하지 못했습니다. 잠시 후 다시 시도해주세요");
       setIsLeaving(false);
+      return;
     }
+
+    // 폼 비우기는 이동이 끝난 뒤에 한다. reset()이 isJustRegistered까지 끄기 때문에
+    // 먼저 호출하면 아직 이 화면에 있는 동안 가드가 /host/spaces로 바꿔버리고,
+    // 곧이어 훅이 같은 곳으로 또 이동해 히스토리에 같은 칸이 두 번 쌓인다.
+    reset();
   };
 
   return (
