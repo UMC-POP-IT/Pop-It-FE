@@ -41,7 +41,7 @@ const Modal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/40"
         onClick={confirmDisabled ? undefined : onCancel}
@@ -52,7 +52,7 @@ const Modal = ({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="relative z-10 flex w-[calc(100%-32px)] max-w-[590px] flex-col items-center gap-10 rounded-xl bg-white px-4 py-8"
+        className="relative z-10 flex w-full max-w-[328px] flex-col items-center gap-10 overflow-y-auto rounded-xl bg-white p-5 max-h-[calc(100dvh-2rem)] md:max-w-[590px] md:p-0 md:py-8"
       >
         <div className="flex flex-col items-center gap-5">
           {/* 체크 아이콘 (Figma 기준: icon_check_big_sized) */}
