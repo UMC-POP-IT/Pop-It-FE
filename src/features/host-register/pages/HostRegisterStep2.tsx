@@ -231,7 +231,9 @@ export const HostRegisterStep2 = () => {
               maxLength={20}
             />
             <div className="flex items-start justify-between gap-2">
-              <span className="text-text-secondary text-left text-base font-medium">
+              {/* 360에서 이 문구가 옆 카운터(0/20)와 한 줄을 나눠 쓰면 자리가 280밖에 안 나와
+                  16px으로는 마지막 글자 하나가 다음 줄로 넘어간다. 모바일만 14px로 줄여 한 줄에 담는다 */}
+              <span className="text-text-secondary text-left text-sm font-medium md:text-base">
                 * 사업자 등록증(대표자명)과 일치해야 합니다.
               </span>
               <span className="text-text-secondary shrink-0 text-right text-base font-medium">
