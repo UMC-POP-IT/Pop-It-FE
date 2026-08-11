@@ -306,11 +306,12 @@ export const DateRangePicker = ({
     // 데스크톱 피그마 card_calendar_X5: W 448 = px-3.5(14)×2 + 60px×7.
     // lg 미만(바텀시트)은 달이 하나뿐이라 시트 폭을 그대로 쓴다 (모바일 328 × 그리드 230).
     // 헤더↔요일 간격 28 = gap-3(12) + 헤더 mb-4(16)
-    <div className="flex w-full shrink-0 flex-col gap-3 lg:w-[448px] lg:px-3.5 lg:py-5">
+    <div className="flex w-full shrink-0 flex-col gap-3 md:w-[308px] md:px-3.5 md:py-8 lg:w-[448px] lg:py-5">
       {/* 월 헤더 — 라벨은 카드 정중앙.
           갈 수 없는 방향의 화살표는 아예 렌더링하지 않되(게스트 예약 달력과 동일),
           w-8 자리는 그대로 비워둬 월 라벨이 한쪽으로 밀리지 않게 한다 */}
-      <div className="mb-4 flex items-center justify-center gap-1">
+      {/* 헤더↔요일줄 = 이 mb + 카드 gap-3(12). 모바일·데스크톱 28, 태블릿 12 */}
+      <div className="mb-4 flex items-center justify-center gap-1 md:mb-0 lg:mb-4">
         <div className="flex h-8 w-8 items-center justify-center">
           {arrow === "prev" && !isPrevMonthDisabled && (
             <button
@@ -324,7 +325,7 @@ export const DateRangePicker = ({
           )}
         </div>
         {/* 피그마 20px/700 #121212 */}
-        <span className="text-text-primary text-xl font-bold">
+        <span className="text-text-primary text-xl font-bold md:text-base lg:text-xl">
           {base.getFullYear()}.{String(base.getMonth() + 1).padStart(2, "0")}
         </span>
         <div className="flex h-8 w-8 items-center justify-center">
@@ -345,7 +346,7 @@ export const DateRangePicker = ({
               type="button"
               onClick={goNext}
               aria-label="다음 달"
-              className="text-text-primary flex h-8 w-8 items-center justify-center text-xl lg:hidden"
+              className="text-text-primary flex h-8 w-8 items-center justify-center text-xl md:hidden"
             >
               ›
             </button>
@@ -357,7 +358,7 @@ export const DateRangePicker = ({
         {WEEKDAYS.map((day) => (
           <span
             key={day}
-            className="text-text-secondary flex h-9 w-full items-center justify-center text-sm font-medium"
+            className="text-text-secondary flex h-9 w-full items-center justify-center text-sm font-medium md:text-xs lg:text-sm"
           >
             {day}
           </span>
@@ -370,7 +371,7 @@ export const DateRangePicker = ({
             return (
               <div
                 key={`empty-${i}`}
-                className="h-[46px]"
+                className="h-[46px] md:h-9 lg:h-[46px]"
               />
             );
           const isToday = isSameDay(date, todayStart);
@@ -390,7 +391,7 @@ export const DateRangePicker = ({
               aria-label={`${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`}
               aria-pressed={isSelected}
               onClick={() => handleSelectDate(date)}
-              className={`relative box-border flex h-[46px] w-full items-center justify-center border-0 p-0 text-base font-bold disabled:cursor-not-allowed ${getDayClassName(date)}`}
+              className={`relative box-border flex h-[46px] w-full items-center justify-center border-0 p-0 text-base font-bold disabled:cursor-not-allowed md:h-9 md:text-sm lg:h-[46px] lg:text-base ${getDayClassName(date)}`}
             >
               {renderDayNumber(date)}
             </button>
@@ -419,7 +420,7 @@ export const DateRangePicker = ({
           <div
             key={field.label}
             // 모바일 필드 묶음 96 = 라벨 28 + gap 12 + 입력칸 56
-            className="flex flex-col gap-3 lg:gap-2"
+            className="flex flex-col gap-3 md:gap-2"
           >
             {/* 같은 페이지의 다른 하위 필드 라벨(전용면적 등)과 동일한 계층 */}
             <span className="text-text-tertiary text-xl font-bold">
@@ -466,7 +467,7 @@ export const DateRangePicker = ({
         <>
           {/* 딤 — 바텀시트일 때만. 데스크톱 팝업은 화면을 덮지 않는다 */}
           <div
-            className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/40 md:hidden"
             onClick={() => {
               if (startDate && endDate)
                 onConfirm(toYmd(startDate), toYmd(endDate));
@@ -490,7 +491,7 @@ export const DateRangePicker = ({
               transform: dragY ? `translateY(${dragY}px)` : undefined,
               transition: isDragging ? "none" : "transform 200ms ease-out",
             }}
-            className="border-border fixed inset-x-0 bottom-0 z-50 rounded-t-[20px] border bg-white px-4 pt-1 pb-4 shadow-lg lg:absolute lg:inset-x-auto lg:bottom-auto lg:left-1/2 lg:z-10 lg:mt-2 lg:w-[896px] lg:-translate-x-1/2 lg:overflow-hidden lg:rounded-lg lg:p-0"
+            className="border-border fixed inset-x-0 bottom-0 z-50 rounded-t-[20px] border bg-white px-4 pt-1 pb-4 shadow-lg md:absolute md:inset-x-auto md:bottom-auto md:left-1/2 md:z-10 md:mt-2 md:w-[616px] md:-translate-x-1/2 md:overflow-hidden md:rounded-lg md:p-0 lg:w-[896px]"
           >
             {/* 손잡이 바 40×4 — 끌어내려 닫는다. 데스크톱 팝업엔 없다.
                 py-2로 손가락이 닿는 범위를 바보다 위아래 8씩 넓히고, 시트 pt-1(4)과 합쳐
@@ -502,7 +503,7 @@ export const DateRangePicker = ({
               onPointerMove={handleDragMove}
               onPointerUp={handleDragEnd}
               onPointerCancel={handleDragEnd}
-              className="mb-1 flex cursor-grab touch-none justify-center py-2 active:cursor-grabbing lg:hidden"
+              className="mb-1 flex cursor-grab touch-none justify-center py-2 active:cursor-grabbing md:hidden"
             >
               <div className="bg-divider h-1 w-10 rounded-full" />
             </div>
@@ -510,7 +511,7 @@ export const DateRangePicker = ({
             {/* 달 카드 — lg 미만은 1개월, 데스크톱은 2개월 나란히 */}
             <div className="flex">
               {renderMonth(viewDate, "prev")}
-              <div className="hidden lg:block">
+              <div className="hidden md:block">
                 {renderMonth(nextMonth, "next")}
               </div>
             </div>
@@ -520,7 +521,7 @@ export const DateRangePicker = ({
             {dateError && (
               <p
                 role="alert"
-                className="text-danger text-sm font-medium lg:px-5"
+                className="text-danger text-sm font-medium md:px-4 lg:px-5"
               >
                 {dateError}
               </p>
@@ -528,16 +529,16 @@ export const DateRangePicker = ({
 
             {/* 하단 — lg 미만: [초기화] [확인] 우측 정렬, 그리드에서 40 아래.
                 데스크톱: 왼쪽에 선택 범위 텍스트 + 오른쪽 [확인], padding 20 (기존 그대로) */}
-            <div className="mt-10 flex items-center justify-end gap-5 lg:mt-0 lg:justify-between lg:p-5">
+            <div className="mt-10 flex items-center justify-end gap-5 md:mt-0 md:justify-between md:p-4 lg:p-5">
               {/* 보조 정보라 작고 회색으로 — 확인 버튼이 시선을 먼저 받게 한다 */}
-              <span className="text-text-secondary hidden text-base font-medium lg:inline">
+              <span className="text-text-secondary hidden text-sm font-medium md:inline lg:text-base">
                 {fieldText(startDate, "시작일")} ~{" "}
                 {fieldText(endDate, "종료일")}
               </span>
               <button
                 type="button"
                 onClick={handleReset}
-                className="text-text-secondary hover:text-text-primary shrink-0 text-lg font-bold lg:hidden"
+                className="text-text-secondary hover:text-text-primary shrink-0 text-lg font-bold md:hidden"
               >
                 초기화
               </button>
@@ -545,7 +546,7 @@ export const DateRangePicker = ({
                 type="button"
                 disabled={!(startDate && endDate)}
                 onClick={handleConfirm}
-                className="bg-primary-hover flex h-[52px] w-[94px] shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white disabled:opacity-40"
+                className="bg-primary-hover flex h-[52px] w-[94px] shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white disabled:opacity-40 md:h-12 md:w-20 md:text-base lg:h-[52px] lg:w-[94px] lg:text-lg"
               >
                 확인
               </button>
