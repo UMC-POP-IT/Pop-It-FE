@@ -44,6 +44,9 @@ export const HostReservationPage = () => {
   // 예약 거절
   const [rejectTargetId, setRejectTargetId] = useState<number | null>(null);
 
+  // 예약 승인 확인 모달
+  const [approveConfirmTargetId, setApproveConfirmTargetId] = useState<number | null>(null);
+
   // 예약 승인 → 계약 모달
   const [approveTargetId, setApproveTargetId] = useState<number | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -132,12 +135,19 @@ export const HostReservationPage = () => {
   const [checkoutApproveTargetId, setCheckoutApproveTargetId] = useState<number | null>(null);
   const [checkoutRejectTargetId, setCheckoutRejectTargetId] = useState<number | null>(null);
 
+  const approveConfirmTarget = reservations.find((r) => r.reservationId === approveConfirmTargetId);
   const rejectTarget = reservations.find((r) => r.reservationId === rejectTargetId);
   const checkoutApproveTarget = reservations.find((r) => r.reservationId === checkoutApproveTargetId);
   const checkoutRejectTarget = reservations.find((r) => r.reservationId === checkoutRejectTargetId);
 
   const handleApproveClick = (id: number) => {
-    setApproveTargetId(id);
+    setApproveConfirmTargetId(id);
+  };
+
+  const handleApproveConfirm = () => {
+    if (approveConfirmTargetId === null) return;
+    setApproveTargetId(approveConfirmTargetId);
+    setApproveConfirmTargetId(null);
     setAgreedToGuide(false);
     setApproveError(false);
     setIsPaymentModalOpen(true);
@@ -245,7 +255,7 @@ export const HostReservationPage = () => {
       </div>
 
       <div className="flex flex-col gap-5">
-        <Tab tabs={tabs} activeIndex={activeTab} onChange={setActiveTab} hideCountOnMobile />
+        <Tab tabs={tabs} activeIndex={activeTab} onChange={setActiveTab} scrollable />
 
         {isLoading ? (
           <div className="bg-tag-bg flex h-[224px] w-full items-center justify-center rounded-xl">
@@ -286,11 +296,22 @@ export const HostReservationPage = () => {
         )}
       </div>
 
+      {/* 예약 승인 확인 모달 */}
+      <Modal
+        isOpen={approveConfirmTargetId !== null}
+        title={`${approveConfirmTarget?.guest.nickname ?? ""}님을\n승인하시겠습니까?`}
+        description="승인 시 게스트가 계약이 가능한 상태가 됩니다"
+        confirmLabel="승인하기"
+        cancelLabel="돌아가기"
+        onConfirm={handleApproveConfirm}
+        onCancel={() => setApproveConfirmTargetId(null)}
+      />
+
       {/* 예약 거절 모달 */}
       <Modal
         isOpen={rejectTargetId !== null}
         title={`${rejectTarget?.guest.nickname ?? ""}님을\n예약 거절하시겠습니까?`}
-        description="예약을 거절하면 승인대기 목록에서 삭제됩니다"
+        description={`예약 거절을 누를 시 ${rejectTarget?.guest.nickname ?? ""}님과의 계약이 종료됩니다`}
         confirmLabel="예약 거절"
         cancelLabel="돌아가기"
         onConfirm={handleReject}
@@ -311,7 +332,7 @@ export const HostReservationPage = () => {
       {/* 퇴실 거부 모달 */}
       <Modal
         isOpen={checkoutRejectTargetId !== null}
-        title={`${checkoutRejectTarget?.guest.nickname ?? ""}님의 퇴실 인증을\n거절하시겠습니까?`}
+        title={`${checkoutRejectTarget?.guest.nickname ?? ""}님의 퇴실 인증을 거절하시겠습니까?`}
         description={`거절 시 게스트에게 알림이 발송되며,\n재인증 전까지 보증금 환불이 보류됩니다`}
         confirmLabel="거절하기"
         cancelLabel="돌아가기"
