@@ -117,7 +117,7 @@ export const MySpacePage = () => {
     <div className="flex flex-col gap-5 pt-[48px]">
       {/* 페이지 헤더 — 모바일은 폭 부족하면 버튼이 아래로 줄바꿈 */}
       <div className="flex flex-wrap items-start justify-between gap-y-5">
-        <div className="flex flex-col gap-1">
+        <div className="flex min-w-[230px] flex-1 flex-col gap-1">
           <h1 className="text-text-primary text-[16px] font-bold md:text-[28px]">내 공간</h1>
           <p className="text-text-tertiary text-xs font-medium md:text-lg">
             내가 등록한 공간을 한곳에서 모아보세요

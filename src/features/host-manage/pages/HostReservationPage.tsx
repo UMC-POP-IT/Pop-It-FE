@@ -94,7 +94,7 @@ export const HostReservationPage = () => {
 
   const matchesTab = (r: ApiHostReservation, status: ReservationStatus) => {
     const effective = computeEffectiveStatus(r);
-    if (status === "CHECKOUT_COMPLETED") return effective === "USAGE_COMPLETED" || effective === "CHECKOUT_COMPLETED";
+    if (status === "CHECKOUT_COMPLETED") return effective === "USAGE_COMPLETED";
     if (status === "APPROVED") return effective === "APPROVED" || effective === "CONTRACT_COMPLETED";
     if (status === "CONTRACT_COMPLETED") return effective === "PAYMENT_COMPLETED";
     return effective === status;
