@@ -40,14 +40,17 @@ const FileUploadRow = ({
   return (
     <div className="flex flex-col gap-2">
       <span className="text-text-primary text-[22px] font-bold">{label}</span>
-      {/* 피그마: 표시 영역 590 + gap 20 + 버튼 184 = 본문 794 (주소 찾기 행과 동일) */}
-      <div className="flex gap-5">
+      {/* 데스크톱(1024): 표시 영역 440 + gap 20 + 버튼 184 = 본문 644 (주소 찾기 행과 동일).
+          모바일: 버튼이 아래로 내려가 오른쪽에 붙고 간격은 12 */}
+      <div className="flex flex-col gap-3 md:flex-row md:gap-5">
         {/* 선택된 파일명 표시 영역 — 높이·여백·글자는 공통 Input과 맞춘다 */}
         {/* min-w-0 + truncate: 파일명은 길이 제한이 없다. 이게 없으면 flex 항목이
             내용 크기 아래로 줄지 않아 옆의 파일 찾기 버튼을 밀어내거나 행을 넘친다 */}
         <div
           title={file ? file.name : undefined}
-          className={`border-divider bg-tag-bg flex h-14 min-w-0 flex-1 items-center truncate rounded-lg border px-5 text-lg font-medium ${file ? "text-text-primary" : "text-text-disabled"}`}
+          // 모바일(flex-col)에서는 flex-1을 쓰면 안 된다 — 주축이 세로로 바뀌어
+          // flex-basis:0%가 h-14(56)를 덮어써 칸이 납작해진다. 폭은 w-full로 채운다
+          className={`border-divider bg-tag-bg flex h-14 w-full min-w-0 items-center truncate rounded-lg border px-5 text-lg font-medium md:w-auto md:flex-1 ${file ? "text-text-primary" : "text-text-disabled"}`}
         >
           {file ? file.name : placeholder}
         </div>
@@ -56,7 +59,13 @@ const FileUploadRow = ({
             대신 Button의 variant="black" + size="field"와 같은 값을 직접 맞춰 둔다 */}
         <label
           aria-label={`${label} 파일 찾기`}
-          className="bg-text-primary flex h-14 w-[184px] shrink-0 cursor-pointer items-center justify-center rounded-lg text-xl font-bold whitespace-nowrap text-white transition-colors hover:bg-gray-800"
+          // 모바일 156 / 데스크톱 184 — Button size="nav"과 같은 규격.
+          // self-end: 세로로 내려올 때 오른쪽 끝에 붙인다 (시안)
+          // focus-within: 포커스를 받는 건 아래 sr-only input이라 label에는 :focus가 걸리지 않는다.
+          // 그래서 Tab으로 여기 왔을 때 화면상 아무 변화가 없어 키보드 사용자가 위치를 잃는다.
+          // 자식이 포커스를 가지면 부모에 걸리는 focus-within으로 링을 그린다.
+          // ring-offset: 버튼 배경이 진한 검정이라 링이 배경에 묻히지 않게 흰 여백을 한 겹 둔다
+          className="bg-text-primary focus-within:ring-primary flex h-14 w-[156px] shrink-0 cursor-pointer items-center justify-center self-end rounded-lg text-xl font-bold whitespace-nowrap text-white transition-colors focus-within:ring-2 focus-within:ring-offset-2 hover:bg-gray-800 md:w-[184px] md:self-auto"
         >
           파일 찾기
           <input
@@ -68,15 +77,17 @@ const FileUploadRow = ({
         </label>
       </div>
       {/* 검사 실패 시에만 새 요소로 나타나야 스크린 리더가 읽어준다 */}
+      {/* 모바일은 버튼 아래 오른쪽에 붙는다 — 위 gap-2(8)에 mt-1(4)을 더해 피그마 12를 만든다.
+          md 이상은 왼쪽 정렬에 간격 8 그대로 */}
       {error ? (
         <span
           role="alert"
-          className="text-danger text-right text-base font-bold"
+          className="text-danger mt-1 text-right text-base font-bold md:mt-0 md:text-left"
         >
           {error}
         </span>
       ) : (
-        <span className="text-text-secondary text-right text-base font-medium">
+        <span className="text-text-secondary mt-1 text-right text-base font-medium md:mt-0 md:text-left">
           {hint}
         </span>
       )}

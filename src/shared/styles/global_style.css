@@ -16,6 +16,7 @@
   --color-primary-hover: #3783f7; /* Blue/blue-400 | 버튼 hover 상태 */
   --color-primary-light: #e6f0fe; /* Blue/blue-50  | 연한 파란 배경, 선택된 탭 하이라이트 */
   --color-primary-100: #b2cffc; /* Blue/blue-100 | 편의시설 칩 아이콘 배경색 */
+  --color-primary-300: #5897f8; /* Blue/blue-300 | 선택된 과세자 카드의 설명 텍스트 */
 
   /* ────────────────────────────────
      배경
@@ -108,4 +109,21 @@
 ::view-transition-old(search-bar),
 ::view-transition-new(search-bar) {
   animation-duration: 320ms;
+}
+
+/* 공간 목록 로딩(무한스크롤로 다음 페이지를 불러오는 동안) 스파클 애니메이션.
+   피그마(node 5299:32782)에 정적 스냅샷만 있고 실제 프로토타입 모션은
+   정의돼 있지 않아서, blue-100→blue-400 색상 단계를 별이 순서대로 밝아지는
+   좌→우 웨이브로 직접 구현했다(LoadingSparkles.tsx가 별마다 이 애니메이션에
+   서로 다른 animation-delay를 줘서 웨이브처럼 보이게 한다). */
+@keyframes sparkle-shimmer {
+  0%,
+  100% {
+    color: var(--color-primary-100);
+    transform: scale(0.85);
+  }
+  50% {
+    color: var(--color-primary-hover);
+    transform: scale(1.08);
+  }
 }

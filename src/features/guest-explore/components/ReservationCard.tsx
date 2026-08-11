@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Button from "@/shared/components/Button";
 import Modal from "@/shared/components/Modal";
 import { GetPaymentInfo, GetPaymentInfoResponse, GetPresignedURL, Reservation, Status, SubmitCheckOutPhoto, UploadFileToPresignedURL } from "../api/my_reservation_api";
 import PaymentModal from "@/features/guest-explore/components/contract/PaymentModal";
 import ContractModal from "@/features/guest-explore/components/contract/ContractModal";
 import PhotoVerificationModal from "@/features/guest-explore/components/PhotoVerificationModal";
 import RejectedPhotoModal from "@/features/guest-explore/components/RejectedPhotoModal";
+import { ReservationCardButtons } from "@/features/guest-explore/components/ReservationCardButtons";
 import { formatDate } from "@/shared/utils/date";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 
 interface ReservationCardProps {
   reservation: Reservation;
@@ -20,6 +21,7 @@ interface CardMeta {
   showContract: boolean;
   needsPhotoVerification: boolean;
   isPhotoRejected: boolean;
+  isAwaitingHostApproval: boolean;
   isDone: boolean;
 }
 
@@ -38,16 +40,22 @@ export const isUsing = (start: string, end: string): boolean => {
 
 const getCardMeta = (r: Reservation): CardMeta => {
   if (r.status === "USAGE_COMPLETED" || r.status === "CHECKOUT_COMPLETED") {
-      // isPhotoVerified(퇴실 사진 인증 완료 여부)가 true이고 checkoutRejected(호스트의 퇴실 거절 여부)가
-      // false인 경우에만 "퇴실 완료"로 간주. 둘 중 하나라도 아니면(미인증 또는 거절) "이용 완료" +
-      // 사진 인증 UI를 함께 노출한다.
-      const isCheckoutApproved = r.isPhotoVerified && !r.checkoutRejected;
+      // 호스트가 퇴실 사진을 승인하는 순간 status가 CHECKOUT_COMPLETED로 확정되므로,
+      // checkoutRejected(과거 거절 이력)와 무관하게 status만으로 "퇴실 완료" 여부를 판단한다.
+      const isCheckoutApproved = r.status === "CHECKOUT_COMPLETED";
+      // 게스트가 퇴실 사진을 이미 제출했지만(isPhotoVerified) 거절되지도 않은 채
+      // 호스트의 승인만 기다리고 있는 상태
+      const isAwaitingHostApproval = !isCheckoutApproved && r.isPhotoVerified && !r.checkoutRejected;
       return {
         label: isCheckoutApproved ? "퇴실 완료" : "이용 완료",
         showCancel: false,
         showContract: false,
-        needsPhotoVerification: !isCheckoutApproved,
+        needsPhotoVerification: !isCheckoutApproved && !isAwaitingHostApproval,
+        // status와 무관하게 서버 값을 그대로 담는 raw 필드. 현재는 아래 needsPhotoVerification이
+        // isCheckoutApproved일 때 항상 false라 화면에 영향이 없지만, 이 필드를 gating 없이
+        // 재사용하면 승인된 예약에서도 거절 UI가 뜨는 버그가 재발할 수 있으니 주의.
         isPhotoRejected: r.checkoutRejected,
+        isAwaitingHostApproval,
         isDone: true
       };
   }
@@ -59,27 +67,19 @@ const getCardMeta = (r: Reservation): CardMeta => {
       showContract: false,
       needsPhotoVerification: false,
       isPhotoRejected: false,
+      isAwaitingHostApproval: false,
       isDone: false
     };
 
-  // 계약(서명)은 끝났지만 결제가 아직 안 됐거나 실패한 상태
-  if (r.status === "CONTRACT_COMPLETED")
-    return {
-      label: "결제 대기",
-      showCancel: false,
-      showContract: false,
-      needsPhotoVerification: false,
-      isPhotoRejected: false,
-      isDone: false
-    };
-
-  if (r.status === "APPROVED")
+  // 승인은 됐지만 계약(서명)·결제 중 하나라도 안 끝난 상태 (결제 취소/실패 후 재시도 포함)
+  if (r.status === "APPROVED" || r.status === "CONTRACT_COMPLETED")
     return {
       label: "승인 완료",
       showCancel: true,
       showContract: true,
       needsPhotoVerification: false,
       isPhotoRejected: false,
+      isAwaitingHostApproval: false,
       isDone: false
     };
 
@@ -89,6 +89,7 @@ const getCardMeta = (r: Reservation): CardMeta => {
     showContract: false,
     needsPhotoVerification: false,
     isPhotoRejected: false,
+    isAwaitingHostApproval: false,
     isDone: false
   };
 };
@@ -102,17 +103,20 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   const [agreedToGuide, setAgreedToGuide] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false); // 퇴실 사진 인증 창 open 여부
   const [isRejectedPhotoModalOpen, setIsRejectedPhotoModalOpen] = useState(false); // 거절된 퇴실 사진 확인 창 open 여부
-  const [isPhotoVerifiedDone, setIsPhotoVerifiedDone] = useState(false); // 사진 인증 완료 여부
+  const [isPhotoSubmitted, setIsPhotoSubmitted] = useState(false); // 이번 세션에서 사진 제출 완료(재조회 전까지 호스트 승인 대기로 표시) 여부
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false); // 사진 업로드 진행 중 여부
   const [paymentInfo, setPaymentInfo] = useState<GetPaymentInfoResponse | null>(null); // 결제 정보
   const [isPaymentInfoError, setIsPaymentInfoError] = useState(false); // 결제 정보 조회 실패 여부
 
-  const label = isPhotoVerifiedDone ? "퇴실 완료" : cardMeta.label;
-  const needsPhotoVerification = cardMeta.needsPhotoVerification && !isPhotoVerifiedDone;
-  const isPhotoRejected = cardMeta.isPhotoRejected && !isPhotoVerifiedDone;
+  const label = cardMeta.label;
+  const needsPhotoVerification = cardMeta.needsPhotoVerification && !isPhotoSubmitted;
+  const isPhotoRejected = cardMeta.isPhotoRejected && !isPhotoSubmitted;
+  const isAwaitingHostApproval = cardMeta.isAwaitingHostApproval || isPhotoSubmitted;
   const { showCancel, showContract, isDone } = cardMeta;
 
   const navigate = useNavigate();
+
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const handleCancelReservation = async () => {
     if (isCancelling) return;
@@ -141,11 +145,11 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
       await Promise.all(uploads.map(({ presignedUrl }, index) => UploadFileToPresignedURL(presignedUrl, files[index])));
 
       await SubmitCheckOutPhoto(reservation.reservationId, {
-        photoUrls: uploads.map(({ fileUrl }) => fileUrl),
+        imageUrls: uploads.map(({ fileUrl }) => fileUrl),
       });
 
       setIsPhotoModalOpen(false);
-      setIsPhotoVerifiedDone(true);
+      setIsPhotoSubmitted(true);
     } catch (error) {
       console.error(error);
       alert("사진 업로드에 실패했습니다. 잠시 후 다시 시도해주세요.");
@@ -164,7 +168,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
     let ignore = false;
 
     const loadPaymentInfo = async (status: Status) => {
-      if (status !== "APPROVED") return;
+      if (status !== "APPROVED" && status !== "CONTRACT_COMPLETED") return;
       setIsPaymentInfoError(false);
       try {
         const data = await GetPaymentInfo(reservation.reservationId);
@@ -187,9 +191,9 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
 
   return (
     <div className="border-divider flex items-start justify-between gap-7 border-b py-5 last:border-none">
-      <div className="flex items-start gap-7">
-        {/* 이미지 */}
-        <div className="bg-thumbnail-bg h-[190px] w-[190px] flex-shrink-0 overflow-hidden">
+      <div className="flex gap-7">
+        {/* 이미지 — 360~767px(모바일)은 태블릿(277) 배치를 유지한 채 767에서 277로 자연스럽게 수렴, 768~1023px(태블릿) 277 고정, 1024px 이상 190*190 고정 */}
+        <div className="bg-thumbnail-bg h-[clamp(140px,_19px_+_33.6vw,_277px)] w-[clamp(140px,_19px_+_33.6vw,_277px)] flex-shrink-0 overflow-hidden min-[1024px]:h-[190px] min-[1024px]:w-[190px]">
           <img
             src={reservation.space.thumbnailUrl}
             alt={reservation.space.buildingName}
@@ -197,71 +201,58 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
           />
         </div>
 
-        {/* 텍스트 */}
-        <div className="flex h-[190px] flex-col items-start justify-between">
+        {/* 텍스트 — min-h(고정 h 아님): 좁은 화면에서 줄바꿈 등으로 내용이 길어져도 박스가 함께 늘어나 아래 카드를 침범하지 않는다 */}
+        <div className="flex min-h-[clamp(140px,_19px_+_33.6vw,_277px)] flex-col items-start justify-start gap-1 min-[1024px]:min-h-[190px] min-[1024px]:justify-between">
           <div className="flex flex-col items-start gap-2">
-            <span className="text-primary text-base font-bold">{label}</span>
-            <div className="flex flex-col items-start gap-1">
-              <p className="text-xl font-bold text-black">{reservation.space.buildingName}</p>
-              <p className="text-text-primary text-base font-medium">
+            <span className="text-primary text-[clamp(13px,_10.35px_+_0.735vw,_16px)] font-bold">{label}</span>
+            <div className="flex flex-col items-start min-[1024px]:gap-1 max-[1024px]:gap-5">
+              <p className="text-[clamp(17px,_14.35px_+_0.735vw,_20px)] font-bold text-black">{reservation.space.buildingName}</p>
+              <p className="text-text-primary text-[clamp(13px,_10.35px_+_0.735vw,_16px)] font-medium">
                 {formatDate(reservation.startDate)} ~ {formatDate(reservation.endDate)}
               </p>
             </div>
           </div>
-          <p className="text-text-primary text-lg font-medium">
+          <p className="text-text-primary text-[clamp(15px,_12.35px_+_0.735vw,_18px)] font-medium">
             총 금액: <span className="font-bold">{reservation.totalPrice.toLocaleString()}</span>원
           </p>
+          {!isDesktop && <div className="mt-auto w-full">
+            <ReservationCardButtons
+              spaceId={reservation.space.spaceId}
+              isDone={isDone}
+              needsPhotoVerification={needsPhotoVerification}
+              isPhotoRejected={isPhotoRejected}
+              isAwaitingHostApproval={isAwaitingHostApproval}
+              showCancel={showCancel}
+              showContract={showContract}
+              isPaymentInfoError={isPaymentInfoError}
+              paymentInfo={paymentInfo}
+              onSpaceDetail={() => navigate(`/spaces/${reservation.space.spaceId}`)}
+              onPhotoVerify={() => setIsPhotoModalOpen(true)}
+              onShowRejectedPhoto={() => setIsRejectedPhotoModalOpen(true)}
+              onCancelReservation={() => setIsCancelModalOpen(true)}
+              onSignPayment={() => setisPaymentModalOpen(true)}
+            />
+          </div>}
         </div>
       </div>
 
-      {/* 버튼 */}
-      <div className="flex h-[190px] flex-shrink-0 flex-col items-end justify-end gap-2">
-        {needsPhotoVerification && (
-          isPhotoRejected ?
-            <span className="self-start text-left text-red-400 text-sm whitespace-pre-wrap">{"호스트가 퇴실 승인을\n거절했습니다 다시 인증해주세요"}</span> :
-            <span className="self-end text-primary text-sm">사진 인증이 필요합니다 (필수)</span>
-        )}
-        {showContract && isPaymentInfoError && (
-          <span className="self-end text-red-400 text-sm">결제 정보를 불러오지 못했습니다</span>
-        )}
-        <div className="flex items-center gap-1">
-          {isDone &&
-            (needsPhotoVerification ? (
-              <>
-                <Button variant="primary" size="sm" onClick={() => setIsPhotoModalOpen(true)}>
-                  사진 인증
-                </Button>
-                {isPhotoRejected && (
-                  <Button variant="secondary" size="sm" onClick={() => setIsRejectedPhotoModalOpen(true)}>
-                    거절된 사진
-                  </Button>
-                )}
-              </>
-            ) : (
-              <Button variant="secondary" size="sm" disabled>
-                인증 완료
-              </Button>
-            ))}
-          <Button variant="secondary" size="sm" onClick={() => navigate(`/spaces/${reservation.space.spaceId}`)}>
-            공간 상세
-          </Button>
-          {showCancel && (
-            <Button variant="cancel" size="sm" onClick={() => setIsCancelModalOpen(true)}>
-              예약 취소
-            </Button>
-          )}
-          {showContract && (
-            <Button
-              variant="primary"
-              size="sm"
-              disabled={!paymentInfo}
-              onClick={() => setisPaymentModalOpen(true)}
-            >
-              계약 하기
-            </Button>
-          )}
-        </div>
-      </div>
+      {/* 데스크톱일 때 버튼 위치 — 이미지+텍스트 줄 오른쪽에 별도 칼럼 */}
+      {isDesktop && <ReservationCardButtons
+        spaceId={reservation.space.spaceId}
+        isDone={isDone}
+        needsPhotoVerification={needsPhotoVerification}
+        isPhotoRejected={isPhotoRejected}
+        isAwaitingHostApproval={isAwaitingHostApproval}
+        showCancel={showCancel}
+        showContract={showContract}
+        isPaymentInfoError={isPaymentInfoError}
+        paymentInfo={paymentInfo}
+        onSpaceDetail={() => navigate(`/spaces/${reservation.space.spaceId}`)}
+        onPhotoVerify={() => setIsPhotoModalOpen(true)}
+        onShowRejectedPhoto={() => setIsRejectedPhotoModalOpen(true)}
+        onCancelReservation={() => setIsCancelModalOpen(true)}
+        onSignPayment={() => setisPaymentModalOpen(true)}
+      />}
 
       {/* Reservation Cancel Modal */}
       <Modal
@@ -301,6 +292,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
       {/* Photo Verification Modal */}
       <PhotoVerificationModal
         isOpen={isPhotoModalOpen}
+        isSubmitting={isUploadingPhotos}
         onClose={() => setIsPhotoModalOpen(false)}
         onComplete={handlePhotoVerificationComplete}
       />

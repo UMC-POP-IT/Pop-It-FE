@@ -20,14 +20,13 @@ interface ReservationActionResult {
 }
 
 interface CheckoutPhotosResult {
-  photoUrls: string[];
+  imageUrls: string[];
 }
 
 interface IdentityVerificationResult {
   isVerified: boolean;
   verifiedAt: string | null;
 }
-
 
 export async function fetchUnavailableDates(spaceId: number): Promise<{ startDate: string; endDate: string }[]> {
   const result = await apiFetch<{ unavailableDates: { startDate: string; endDate: string }[] }>(
@@ -87,9 +86,9 @@ export async function fetchCheckoutPhotos(
   reservationId: number,
 ): Promise<string[]> {
   const result = await apiFetch<CheckoutPhotosResult>(
-    `/api/v1/reservations/${reservationId}/checkout-images/me`,
+    `/api/v1/reservations/${reservationId}/checkout-images`,
   );
-  return result.photoUrls ?? [];
+  return result.imageUrls ?? [];
 }
 
 export async function fetchMySpaces(params?: {
@@ -101,7 +100,7 @@ export async function fetchMySpaces(params?: {
   if (params?.size != null) query.set("size", String(params.size));
   const qs = query.toString();
   return apiFetch<MySpacesResult>(
-    `/api/v1/spaces/my${qs ? `?${qs}` : ""}`,
+    `/api/v1/spaces/me${qs ? `?${qs}` : ""}`,
   );
 }
 
@@ -115,7 +114,6 @@ export async function verifyIdentity(identityVerificationId: string): Promise<Id
 export async function fetchIdentityVerificationStatus(): Promise<IdentityVerificationResult> {
   return apiFetch("/api/v1/users/me/verifications");
 }
-
 
 export async function deleteSpace(spaceId: number): Promise<void> {
   await apiFetch(`/api/v1/spaces/${spaceId}`, { method: "DELETE" });

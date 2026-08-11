@@ -7,12 +7,12 @@ import MyReservationListEmptyState from "@/features/guest-explore/components/MyR
 const TAB_STATUSES = ["예약 예정", "승인 완료", "계약 완료", "사용 중", "지난 예약"];
 
 // TAB_STATUSES와 순서를 맞춘 탭별 매칭 상태값
-// "계약 완료" 탭은 계약 서명만 끝난 상태(CONTRACT_COMPLETED, 결제 전/실패)와
-// 결제까지 끝난 상태(PAYMENT_COMPLETED)를 함께 묶고, 카드 라벨에서 세부 상태를 구분해 보여준다.
+// 계약(서명)·결제 중 하나라도 안 끝난 상태(APPROVED, CONTRACT_COMPLETED - 결제 전/취소/실패)는
+// "승인 완료" 탭으로, 계약·결제가 모두 끝난 상태(PAYMENT_COMPLETED)만 "계약 완료" 탭으로 묶는다.
 const TAB_STATUS_MAP: Status[][] = [
   ["PENDING_APPROVAL"],
-  ["APPROVED"],
-  ["CONTRACT_COMPLETED", "PAYMENT_COMPLETED"],
+  ["APPROVED", "CONTRACT_COMPLETED"],
+  ["PAYMENT_COMPLETED"],
   ["IN_USE"],
   ["USAGE_COMPLETED", "CHECKOUT_COMPLETED"],
 ];
@@ -41,12 +41,13 @@ export const MyReservationList = () => {
   return (
     <section className="flex flex-col gap-4 mt-20">
       <h2 className="text-text-primary text-2xl font-bold">내 예약 내역</h2>
-      <span className="text-text-secondary text-sm">예정 • 진행 중 • 지난 예약을 한 곳에서 관리해 보세요!</span>
+      <span className="text-text-secondary text-sm max-[1024px]:mb-[28px]">예정 • 진행 중 • 지난 예약을 한 곳에서 관리해 보세요!</span>
 
       <Tab
         tabs={TAB_STATUSES.map((status, i) => ({ label: status, count: grouped[i].length }))}
         activeIndex={activeIndex}
         onChange={setActiveIndex}
+        scrollOnMobile
       />
 
       <div className="flex flex-col">

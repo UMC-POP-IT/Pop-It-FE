@@ -1,7 +1,13 @@
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import {
+  Outlet,
+  useNavigate,
+  useLocation,
+  useNavigationType,
+} from "react-router-dom";
 import { useEffect, useState } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
+import MobileBottomNav from "./MobileBottomNav";
 import Modal from "@/shared/components/Modal";
 import { LoginModal } from "@/shared/components/LoginModal";
 import { useAuthStore } from "@/store/authStore";
@@ -20,6 +26,7 @@ import { TOSS_PENDING_PAYMENT_KEY, clearTossPaymentCache } from "@/features/gues
 const SessionBootstrap = () => {
   const login = useAuthStore((s) => s.login);
   const setSessionReady = useAuthStore((s) => s.setSessionReady);
+  const refreshHostStatus = useAuthStore((s) => s.refreshHostStatus);
 
   useEffect(() => {
     if (!localStorage.getItem("access_token")) {
@@ -27,9 +34,18 @@ const SessionBootstrap = () => {
       return;
     }
     getCurrentUser()
-      .then((user) => {
+      .then(async (user) => {
         const isHostPath = window.location.pathname.startsWith("/host");
         login({ ...user, currentMode: isHostPath ? "HOST" : "GUEST" });
+        // hostStatus는 새로고침하면 unknown으로 돌아간다. 세션을 복원한 김에 채워두면
+        // 호스트 등록 가드가 이미 등록한 계정을 막을 수 있고, 헤더 모드 전환도 따로 조회하지 않는다.
+        //
+        // 결과를 기다린 뒤에 setSessionReady()가 돌아야 한다. 기다리지 않으면 가드가
+        // unknown인 채로 판단해 이미 등록한 호스트에게 등록 화면이 잠깐 보였다 사라진다.
+        // 이 대기가 늦추는 것은 isSessionReady를 보는 HostGuard(/host/* 경로)뿐이고,
+        // 헤더·게스트 화면은 위 login()으로 이미 복원돼 있다.
+        // 실패해도 store가 unknown으로 되돌리고 삼키므로 로그인 복원 흐름은 막지 않는다.
+        await refreshHostStatus();
       })
       .catch(() => {
         // accessToken/refreshToken 모두 만료 등 복원 실패 → 남은 토큰 정리
@@ -39,7 +55,7 @@ const SessionBootstrap = () => {
       .finally(() => {
         setSessionReady();
       });
-  }, [login, setSessionReady]);
+  }, [login, setSessionReady, refreshHostStatus]);
 
   return null;
 };
@@ -208,7 +224,7 @@ const TossPaymentResultHandler = () => {
           setResult({
             success: true,
             title: "계약 작성 및 입금이 완료되었습니다",
-            description: "계약일부터 바로 이용을 시작하실 수 있습니다",
+            description: "계약일로부터 바로 이용을 시작하실 수 있습니다",
           });
         })
         .catch((error) => {
@@ -235,7 +251,7 @@ const TossPaymentResultHandler = () => {
       isOpen={!!result}
       title={result?.title ?? ""}
       description={result?.description}
-      iconVariant={result?.success ? "check" : "warning"}
+      iconVariant={result?.success ? undefined : "warning"}
       singleButton
       confirmLabel="확인"
       onConfirm={() => setResult(null)}
@@ -258,19 +274,46 @@ const RouteModeSync = () => {
   return null;
 };
 
+// SPA 라우팅은 브라우저 기본 페이지 이동과 달리 스크롤 위치를 그대로 유지한다.
+// 검색 결과 화면에서 스크롤을 내려 헤더의 pill이 뜬 상태로 로고/nav 등을 눌러
+// 다른 페이지로 이동하면, 이동한 페이지도 스크롤이 내려간 채로 보이던 문제.
+//
+// pathname만 보면 안 되는 이유: "/"와 "/explore" 둘 다 ExplorePage를 그대로
+// 렌더링하고, 게스트 메인 로고·"공간탐색" NavLink도 목적지가 "/"라서 - 검색
+// 결과 화면(예: "/?keyword=...")에서 그 버튼을 눌러 빈 "/"로 돌아가도
+// pathname("/")은 그대로라 안 바뀐다. 대신 실제 이동 방식(navigationType)으로
+// 구분한다: 로고/nav 클릭 같은 실제 페이지 이동은 PUSH, ExplorePage가 필터
+// 바뀔 때 URL만 갱신하는 setSearchParams는 REPLACE를 쓰므로(스크롤 유지가
+// 자연스러움) 대상에서 제외하고, 뒤로/앞으로가기(POP)도 브라우저 기본 스크롤
+// 복원을 존중해 건드리지 않는다.
+const ScrollToTopOnNavigate = () => {
+  const location = useLocation();
+  const navigationType = useNavigationType();
+
+  useEffect(() => {
+    if (navigationType === "PUSH") {
+      window.scrollTo(0, 0);
+    }
+  }, [location.key, navigationType]);
+
+  return null;
+};
+
 export const MainLayout = () => (
   // overflow-x-clip: Banner의 -mx-[50vw] w-screen full-bleed가 스크롤바 너비만큼
   // 뷰포트를 넘겨 가로 스크롤을 유발하므로, 뷰포트 폭인 이 루트에서 그 여분만 잘라낸다.
   <div className="bg-bg flex min-h-screen flex-col overflow-x-clip">
     <Header />
-    <main className="mx-auto w-full max-w-screen-xl flex-1 px-6 py-8">
+    <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-8 md:px-6">
       <Outlet />
     </main>
     <Footer />
+    <MobileBottomNav />
     <LoginModal />
     <SessionBootstrap />
     <PendingActionExecutor />
     <RouteModeSync />
+    <ScrollToTopOnNavigate />
     <OAuthCallbackHandler />
     <TossPaymentResultHandler />
   </div>

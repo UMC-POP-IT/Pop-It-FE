@@ -41,7 +41,7 @@ const Modal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/40"
         onClick={confirmDisabled ? undefined : onCancel}
@@ -52,7 +52,7 @@ const Modal = ({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="relative z-10 flex w-[590px] flex-col items-center gap-10 rounded-xl bg-white py-8"
+        className="relative z-10 flex w-full max-w-[328px] flex-col items-center gap-10 overflow-y-auto rounded-xl bg-white p-5 max-h-[calc(100dvh-2rem)] md:max-w-[590px] md:p-0 md:py-8"
       >
         <div className="flex flex-col items-center gap-5">
           {/* 체크 아이콘 (Figma 기준: icon_check_big_sized) */}
@@ -74,13 +74,13 @@ const Modal = ({
           <div className="flex flex-col items-center gap-2 text-center">
             <h3
               id={titleId}
-              className="text-text-primary text-[22px] font-bold whitespace-pre-line"
+              className="text-text-primary text-[22px] font-bold whitespace-pre-line break-keep"
             >
               {title}
             </h3>
 
             {description && (
-              <p className="text-text-tertiary text-base font-medium whitespace-pre-line">
+              <p className="text-text-tertiary text-base font-medium whitespace-pre-line break-keep">
                 {description}
               </p>
             )}
@@ -92,18 +92,18 @@ const Modal = ({
             <button
               onClick={onConfirm}
               disabled={confirmDisabled}
-              className="bg-primary-hover hover:bg-primary h-14 w-[184px] rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="bg-primary-hover hover:bg-primary h-14 w-[clamp(172px,_161.41px_+_2.941vw,_184px)] rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {confirmLabel}
             </button>
           )
         ) : (
-          <div className="flex items-center gap-5">
+          <div className="flex w-full flex-row items-center gap-4 md:w-auto md:gap-5">
             {onCancel && (
               <button
                 onClick={onCancel}
                 disabled={confirmDisabled}
-                className="bg-surface-blue text-text-primary hover:bg-primary-light h-14 w-[184px] rounded-lg text-lg font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                className="bg-surface-blue text-text-primary hover:bg-primary-light h-14 flex-1 rounded-lg text-lg font-medium disabled:cursor-not-allowed disabled:opacity-50 md:w-[184px] md:flex-none"
               >
                 {cancelLabel}
               </button>
@@ -112,7 +112,7 @@ const Modal = ({
               <button
                 onClick={onConfirm}
                 disabled={confirmDisabled}
-                className="bg-primary-hover hover:bg-primary h-14 w-[184px] rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="bg-primary-hover hover:bg-primary h-14 flex-1 rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 md:w-[184px] md:flex-none"
               >
                 {confirmLabel}
               </button>

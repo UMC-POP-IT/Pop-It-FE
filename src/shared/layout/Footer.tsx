@@ -10,14 +10,14 @@ const FOOTER_LINKS = [
 ];
 
 const Footer = () => (
-  <footer className="bg-bg-footer mt-20 min-h-[302px] w-full">
-    <div className="mx-auto flex max-w-screen-xl items-start justify-between gap-8 px-30 py-15">
+  <footer className="bg-bg-footer mt-20 min-h-[302px] w-full pb-[70px] md:pb-0">
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-start gap-5 px-4 py-15 md:flex-row md:justify-between md:gap-8 md:px-6">
       <div className="flex flex-col gap-5">
         <p className="text-text-tag text-sm font-medium">주식회사 팝잇</p>
         <div className="text-text-tag flex flex-col gap-1 text-xs tracking-[-0.1px] leading-[1.5]">
-          <p>대표 : OOO | 사업자등록번호 : 000-00-00000 | 통신판매업 신고</p>
-          <p>번호 : 2026-서울OO-0000 | 주소 : 서울특별시 OO구 OO로 00, 0층</p>
-          <p>이메일 : contact@pop-it.kr | 고객센터 : 0000-0000</p>
+          <p>대표 : 홍태경 | 사업자등록번호 : 612-87-59302 | 통신판매업 신고번호 : 2026-서울마포-0815</p>
+          <p>주소 : 서울특별시 마포구 와우산로 482, 4층</p>
+          <p>이메일 : contact@pop-it.kr | 고객센터 : 070-7542-9180</p>
           <p>운영시간 : 평일 10:00 ~ 18:00, 주말 및 공휴일 휴무</p>
         </div>
         <div className="flex flex-col gap-1">
@@ -49,7 +49,7 @@ const Footer = () => (
         </p>
       </div>
 
-      <div className="flex-shrink-0">
+      <div className="order-first flex-shrink-0 min-[768px]:order-none">
         <Logo variant="footer" />
       </div>
     </div>

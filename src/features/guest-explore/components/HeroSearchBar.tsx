@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import FilterDropdown from "@/features/guest-explore/components/FilterDropdown";
 import DateRangeCalendar, { type DateRange } from "@/shared/components/DateRangeCalendar";
+import BottomSheet from "@/shared/components/BottomSheet";
 import { useOutsideClick } from "@/shared/hooks/useOutsideClick";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";
 import type { ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
 import {
@@ -45,8 +47,11 @@ const formatDateRangeLabel = (range: DateRange) => {
 // 세그먼트 트리거 공통 스타일: 라벨(작게) + 값(굵게) 2줄. 열려있는 세그먼트는
 // 옅은 파란 배경(bg-primary-light)으로 강조한다. 바깥 pill의 border/구분선은
 // HeroSearchBar 래퍼가 담당한다.
+// 모바일(360~767): 피그마 스펙상 세그먼트 안쪽 여백이 훨씬 좁다(px-[10px] 안팎) -
+// 데스크톱/태블릿 px-8 py-4를 그대로 쓰면 3등분된 328px 폭 안에서 라벨+값이
+// 줄바꿈되거나 넘친다. md(768) 미만에서만 좁은 여백을 쓰고 그 이상은 기존 그대로.
 const segmentTriggerClassName = (isOpen: boolean) =>
-  `flex h-full w-full cursor-pointer flex-col items-start justify-center gap-1.5 px-8 py-4 text-left transition-colors ${
+  `flex h-full w-full min-w-0 cursor-pointer flex-col items-start justify-center gap-1 overflow-hidden px-5 py-2.5 text-left transition-colors md:gap-1.5 md:px-8 md:py-4 ${
     isOpen ? "bg-primary-light" : ""
   }`;
 
@@ -56,14 +61,18 @@ const SegmentDivider = () => (
   <span aria-hidden="true" className="h-12 w-px shrink-0 self-center bg-[#c5c5c5]" />
 );
 
-// 피그마 고정폭(공간유형 227 / 날짜 215 / 지역 215)과 동일하게 맞춘다.
-// 날짜 드롭다운 패널을 검색바 왼쪽 라인에 맞추려면(아래 CALENDAR_LEFT_OFFSET_PX)
-// 이 폭이 실제 렌더 폭과 항상 같아야 하므로 min-w가 아니라 고정 w로 둔다.
+// 피그마 데스크톱(lg, 1024↑) 고정폭(공간유형 227 / 날짜 215 / 지역 215)과 동일하게
+// 맞춘다. 날짜 드롭다운 패널을 검색바 왼쪽 라인에 맞추려면(아래 CALENDAR_LEFT_OFFSET_PX)
+// 이 폭이 실제 렌더 폭과 항상 같아야 하므로 lg에서는 min-w가 아니라 고정 w로 둔다.
+// lg 미만(태블릿 768~1023 등)은 Figma 스펙대로 3세그먼트를 한 줄에서 flex-1로 균등
+// 배분하고, 검색어 입력은 그 아래 별도 줄(둘째 pill)로 내려간다(HeroSearchBar 본문 참고).
+// lg에서만 실제로 쓰인다 - 날짜/지역 세그먼트 폭(215px)은 Tailwind 클래스
+// (lg:w-[215px])로 직접 박아뒀다(JIT가 정적으로 스캔할 수 있게); 공간유형 폭만
+// CALENDAR_LEFT_OFFSET_PX 계산에 JS 값으로도 필요해서 상수로 남겨둔다.
 const CATEGORY_SEGMENT_WIDTH_PX = 227;
-const DATE_SEGMENT_WIDTH_PX = 215;
-const DISTRICT_SEGMENT_WIDTH_PX = 215;
 // 날짜 세그먼트 자신의 왼쪽 기준으로 -공간유형폭만큼 당겨서, 패널의 왼쪽 끝이
 // 검색바 전체의 왼쪽 끝(공간 유형 라벨 시작 지점)과 정확히 맞도록 한다.
+// lg 고정폭 레이아웃에서만 유효한 값이라 lg 미만에서는 쓰지 않는다(아래 참고).
 const CALENDAR_LEFT_OFFSET_PX = -CATEGORY_SEGMENT_WIDTH_PX;
 
 interface SegmentTriggerContentProps {
@@ -73,10 +82,11 @@ interface SegmentTriggerContentProps {
   labelClassName: string;
 }
 
+// 피그마 모바일 스펙: 라벨 12px / 값 14px (태블릿 이상은 기존 18px/20px 유지).
 const SegmentTriggerContent = ({ label, value, labelClassName }: SegmentTriggerContentProps) => (
   <>
-    <span className={`text-[18px] leading-[1.4] ${labelClassName}`}>{label}</span>
-    <span className="text-text-primary text-[20px] leading-[1.4] font-bold">{value}</span>
+    <span className={`block max-w-full truncate text-[12px] leading-[1.4] md:text-[18px] ${labelClassName}`}>{label}</span>
+    <span className="text-text-primary block max-w-full truncate text-[14px] leading-[1.4] font-bold md:text-[20px]">{value}</span>
   </>
 );
 
@@ -148,7 +158,19 @@ const HeroSearchBar = ({
   const [isDateOpen, setIsDateOpen] = useState(false);
   const dateContainerRef = useRef<HTMLDivElement>(null);
 
-  useOutsideClick(dateContainerRef, () => setIsDateOpen(false), isDateOpen);
+  // 모바일(360~767)에서는 캘린더가 BottomSheet(portal, document.body 자식)로
+  // 뜨기 때문에 dateContainerRef 바깥으로 취급돼 useOutsideClick이 시트 안
+  // 클릭까지 "바깥 클릭"으로 오인해 mousedown 시점에 먼저 닫아버린다(그러면
+  // 그 뒤에 오는 click 이벤트가 이미 사라진 옵션 버튼을 못 찾아 선택 자체가
+  // 씹힌다) - 모바일에서는 이 훅을 끄고 BottomSheet 자체의 백드롭/Escape 닫기만 쓴다.
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  useOutsideClick(dateContainerRef, () => setIsDateOpen(false), isDateOpen && !isMobile);
+
+  // lg(1024) 이상에서만 기존 데스크톱 고정폭 한 줄 레이아웃을 쓴다. 그 미만(태블릿
+  // 768~1023 포함)에서는 CALENDAR_LEFT_OFFSET_PX 트릭이 더 이상 유효하지 않아
+  // (공간유형 세그먼트가 더 이상 고정폭이 아니므로) 날짜 패널을 그냥 날짜 세그먼트
+  // 왼쪽 끝에 맞춘다.
+  const isWideDesktop = useMediaQuery("(min-width: 1024px)");
 
   const markSearched = useSearchHistoryStore((s) => s.markSearched);
 
@@ -196,6 +218,56 @@ const HeroSearchBar = ({
     });
   };
 
+  // 검색어 입력 + 검색 버튼. 데스크톱(lg)에서는 아래 pill 안에 그대로 이어붙는
+  // 4번째 세그먼트라 자체 배경/테두리가 없고, 태블릿에서는 독자적인 pill(Box B)
+  // 안에 들어가므로 두 군데에서 그대로 재사용한다(중복 작성 방지).
+  const keywordContent = (
+    <>
+      <div className="flex flex-1 flex-col justify-center gap-1.5 px-5 py-2 md:px-8 md:py-4 lg:px-5">
+        {/* 피그마 모바일 스펙(node 5299:35318)에는 이 "검색어" 라벨이 화면에
+            보이지 않고 placeholder만 한 줄로 보인다 - 다만 접근성상 label 자체를
+            없애면 스크린 리더 사용자가 인풋의 용도를 알 수 없으므로, DOM에서
+            지우는 대신 시각적으로만 숨긴다(sr-only). md(768) 이상은 기존처럼 노출. */}
+        <label
+          htmlFor="hero-search-keyword"
+          className={`max-md:sr-only text-[18px] leading-[1.4] ${labelClassName}`}
+        >
+          검색어
+        </label>
+        <input
+          id="hero-search-keyword"
+          type="text"
+          value={keywordInput}
+          onChange={(e) => setKeywordInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSubmit();
+          }}
+          maxLength={MAX_KEYWORD_LENGTH}
+          placeholder="공간 · 지역 세부 검색"
+          className="text-text-primary placeholder:text-text-placeholder w-full text-[16px] leading-[1.4] font-medium outline-none md:text-[20px]"
+        />
+      </div>
+      {/* 피그마 스펙: 데스크톱/태블릿 68 Hug × 68 Hug, 모바일은 36 Hug(p-[6px] +
+          아이콘 24px) - 아이콘도 같은 비율(24/68≈34)로 함께 줄인다. */}
+      <button
+        type="button"
+        aria-label="검색"
+        onClick={handleSubmit}
+        className="bg-primary-hover flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-white md:size-[68px]"
+      >
+        <svg
+          className="size-6 md:h-[34px] md:w-[34px]"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+          <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </button>
+    </>
+  );
+
   return (
     // overflow-x-auto를 이 바깥에 씌우는 버전은 되돌렸다 - overflow-x를
     // visible이 아닌 값으로 두면 브라우저가 overflow-y도 자동으로 clip 처리해
@@ -212,123 +284,146 @@ const HeroSearchBar = ({
     // ExploreSpace 카드 그리드(z-index 없음, 문서 순서상 나중 엘리먼트)가 오히려
     // 드롭다운 위로 그려지는 버그가 생겼다. 명시적으로 z-index를 줘서 이 박스
     // 전체(드롭다운 포함)가 항상 카드 그리드보다 위에 그려지도록 고정한다.
-    <div
-      style={morphStyle}
-      className={`relative z-10 flex items-stretch rounded-full bg-white ${outerBorderClassName}`}
-    >
-      <div className="flex shrink-0 items-stretch" style={{ width: CATEGORY_SEGMENT_WIDTH_PX }}>
-        <FilterDropdown
-          ariaLabel="공간 용도 필터"
-          options={CATEGORY_OPTIONS}
-          value={category}
-          onChange={setCategory}
-          // 맨 왼쪽 세그먼트라 열렸을 때 배경(bg-primary-light)이 pill의 둥근
-          // 왼쪽 모서리 밖으로 각지게 삐져나오지 않도록 그때만 왼쪽을 둥글린다.
-          triggerClassName={(isOpen) =>
-            `${segmentTriggerClassName(isOpen)} ${isOpen ? "rounded-l-full" : ""}`
-          }
-          renderTrigger={({ selected }) => (
+    // isWideDesktop(lg, 1024↑): 4세그먼트(공간유형/날짜/지역/검색어)가 전부 "같은
+    // border-primary-hover/border-text-secondary 테두리를 공유하는 하나의 pill"
+    // 안에 나란히 들어간다 - 예전엔 이걸 "Box A(3세그먼트) + Box B(검색어)를 각각
+    // rounded-full로 만든 뒤 맞닿는 쪽 테두리/모서리만 lg:border-*-0·lg:rounded-*-none로
+    // 지워서 시각적으로 이어붙이는" 방식으로 구현했었는데, 서로 다른 두 엘리먼트의
+    // 테두리를 각자 그린 뒤 픽셀 단위로 맞춰 붙이는 방식이라 데스크톱 폭(예: 1163px)에
+    // 따라 Box B가 lg:flex-1로 갖는 폭이 정수 픽셀로 딱 떨어지지 않을 때 두 테두리가
+    // 반 픽셀 정도 어긋나 이음매가 잘린 것처럼 보이는 렌더링 버그가 있었다
+    // (지역↔검색어 사이 테두리가 끊겨 보인다는 리포트). 그래서 데스크톱에서는 아예
+    // 테두리를 공유하는 하나의 div만 쓰도록 되돌리고(이음매 자체가 없음), 태블릿
+    // (1024 미만)에서만 기존처럼 독립된 두 pill(Box A: 필터 3종 / Box B: 검색어)을
+    // gap-3로 세로로 쌓는 구조를 쓴다.
+    <div style={morphStyle} className="relative z-10 flex flex-col items-stretch gap-2 md:gap-3">
+      <div className={`flex items-stretch rounded-full bg-white ${outerBorderClassName}`}>
+        <div className="flex flex-1 min-w-[33%] items-stretch lg:min-w-0 lg:w-[227px] lg:flex-none">
+          <FilterDropdown
+            ariaLabel="공간 용도 필터"
+            options={CATEGORY_OPTIONS}
+            value={category}
+            onChange={setCategory}
+            // 맨 왼쪽 세그먼트라 열렸을 때 배경(bg-primary-light)이 pill의 둥근
+            // 왼쪽 모서리 밖으로 각지게 삐져나오지 않도록 그때만 왼쪽을 둥글린다.
+            triggerClassName={(isOpen) =>
+              `${segmentTriggerClassName(isOpen)} ${isOpen ? "rounded-l-full" : ""}`
+            }
+            renderTrigger={({ selected }) => (
+              <SegmentTriggerContent
+                label="공간 유형"
+                value={selected?.label ?? "전체"}
+                labelClassName={labelClassName}
+              />
+            )}
+          />
+        </div>
+
+        <SegmentDivider />
+
+        <div
+          className="relative flex flex-1 min-w-[33%] items-stretch lg:min-w-0 lg:w-[215px] lg:flex-none"
+          ref={dateContainerRef}
+        >
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            aria-expanded={isDateOpen}
+            onClick={() => setIsDateOpen((prev) => !prev)}
+            className={segmentTriggerClassName(isDateOpen)}
+          >
             <SegmentTriggerContent
-              label="공간 유형"
-              value={selected?.label ?? "전체"}
+              label="날짜"
+              value={formatDateRangeLabel(dateRange)}
               labelClassName={labelClassName}
             />
+          </button>
+          {/* 모바일(360~767): 피그마 스펙대로 날짜 세그먼트를 탭하면 캘린더가
+              화면 하단에서 바텀시트로 올라온다(다른 두 필터와 동일 패턴).
+              BottomSheet가 role="dialog"/포커스 트랩/Escape 닫기를 이미
+              제공하므로 데스크톱처럼 별도 dialog 래퍼를 씌우지 않는다. */}
+          {isDateOpen && isMobile && (
+            <BottomSheet
+              isOpen={isDateOpen}
+              onClose={() => setIsDateOpen(false)}
+              ariaLabel="날짜 범위 선택"
+            >
+              <DateRangeCalendar
+                value={dateRange}
+                onChange={setDateRange}
+                onConfirm={() => setIsDateOpen(false)}
+                onReset={() => setDateRange({ start: null, end: null })}
+              />
+            </BottomSheet>
           )}
-        />
-      </div>
+          {isDateOpen && !isMobile && (
+            <div
+              role="dialog"
+              aria-label="날짜 범위 선택"
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setIsDateOpen(false);
+              }}
+              className="absolute top-full z-20 mt-2"
+              // lg 미만은 공간유형 세그먼트가 더 이상 고정폭이 아니라서
+              // CALENDAR_LEFT_OFFSET_PX로 맞출 기준점이 없다 - 날짜 세그먼트
+              // 자신의 왼쪽 끝(left: 0)에 그냥 맞춘다.
+              style={{ left: isWideDesktop ? CALENDAR_LEFT_OFFSET_PX : 0 }}
+            >
+              <DateRangeCalendar
+                value={dateRange}
+                onChange={setDateRange}
+                onConfirm={() => setIsDateOpen(false)}
+                onReset={() => setDateRange({ start: null, end: null })}
+              />
+            </div>
+          )}
+        </div>
 
-      <SegmentDivider />
+        <SegmentDivider />
 
-      <div
-        className="relative flex shrink-0 items-stretch"
-        style={{ width: DATE_SEGMENT_WIDTH_PX }}
-        ref={dateContainerRef}
-      >
-        <button
-          type="button"
-          aria-haspopup="dialog"
-          aria-expanded={isDateOpen}
-          onClick={() => setIsDateOpen((prev) => !prev)}
-          className={segmentTriggerClassName(isDateOpen)}
-        >
-          <SegmentTriggerContent
-            label="날짜"
-            value={formatDateRangeLabel(dateRange)}
-            labelClassName={labelClassName}
+        <div className="flex flex-1 min-w-[33%] items-stretch lg:min-w-0 lg:w-[215px] lg:flex-none">
+          <FilterDropdown
+            ariaLabel="지역(구) 필터"
+            options={DISTRICT_OPTIONS}
+            value={district}
+            onChange={setDistrict}
+            maxVisibleOptions={DISTRICT_MAX_VISIBLE_OPTIONS}
+            // 태블릿 두 줄 레이아웃에서는 Box A(3세그먼트 pill)의 맨 오른쪽
+            // 세그먼트가 지역이라, 열렸을 때 배경(bg-primary-light)이 pill의
+            // 둥근 오른쪽 모서리 밖으로 각지게 삐져나온다 - 공간유형(맨 왼쪽)에
+            // 이미 적용된 것과 같은 방식으로 그때만 오른쪽을 둥글린다. 데스크톱
+            // (isWideDesktop)에서는 지역이 더 이상 pill의 맨 오른쪽 세그먼트가
+            // 아니라(뒤에 검색어가 이어짐) 항상 각진 상태를 유지해야 한다.
+            triggerClassName={(isOpen) =>
+              `${segmentTriggerClassName(isOpen)} ${isOpen && !isWideDesktop ? "rounded-r-full" : ""}`
+            }
+            renderTrigger={({ selected }) => (
+              <SegmentTriggerContent
+                label="지역"
+                value={selected?.label ?? "서울 전체"}
+                labelClassName={labelClassName}
+              />
+            )}
           />
-        </button>
-        {isDateOpen && (
-          <div
-            role="dialog"
-            aria-label="날짜 범위 선택"
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setIsDateOpen(false);
-            }}
-            className="absolute top-full z-20 mt-2"
-            style={{ left: CALENDAR_LEFT_OFFSET_PX }}
-          >
-            <DateRangeCalendar
-              value={dateRange}
-              onChange={setDateRange}
-              onConfirm={() => setIsDateOpen(false)}
-              onReset={() => setDateRange({ start: null, end: null })}
-            />
-          </div>
+        </div>
+
+        {isWideDesktop && (
+          <>
+            <SegmentDivider />
+            <div className="flex flex-1 items-center gap-2.5 pr-3">{keywordContent}</div>
+          </>
         )}
       </div>
 
-      <SegmentDivider />
-
-      <div className="flex shrink-0 items-stretch" style={{ width: DISTRICT_SEGMENT_WIDTH_PX }}>
-        <FilterDropdown
-          ariaLabel="지역(구) 필터"
-          options={DISTRICT_OPTIONS}
-          value={district}
-          onChange={setDistrict}
-          maxVisibleOptions={DISTRICT_MAX_VISIBLE_OPTIONS}
-          triggerClassName={segmentTriggerClassName}
-          renderTrigger={({ selected }) => (
-            <SegmentTriggerContent
-              label="지역"
-              value={selected?.label ?? "서울 전체"}
-              labelClassName={labelClassName}
-            />
-          )}
-        />
-      </div>
-
-      <SegmentDivider />
-
-      <div className="flex flex-1 items-center gap-2.5 pr-3">
-        <div className="flex flex-1 flex-col justify-center gap-1.5 px-5 py-4">
-          <label htmlFor="hero-search-keyword" className={`text-[18px] leading-[1.4] ${labelClassName}`}>
-            검색어
-          </label>
-          <input
-            id="hero-search-keyword"
-            type="text"
-            value={keywordInput}
-            onChange={(e) => setKeywordInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSubmit();
-            }}
-            maxLength={MAX_KEYWORD_LENGTH}
-            placeholder="공간 · 지역 세부 검색"
-            className="text-text-primary placeholder:text-text-placeholder w-full text-[20px] leading-[1.4] font-medium outline-none"
-          />
-        </div>
-        <button
-          type="button"
-          aria-label="검색"
-          onClick={handleSubmit}
-          className="bg-primary-hover flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-full text-white"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-            <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
-      </div>
+      {!isWideDesktop && (
+        <>
+          <div
+            className={`flex items-center gap-2.5 rounded-full bg-white py-2.5 pr-3 md:py-0 ${outerBorderClassName}`}
+          >
+            {keywordContent}
+          </div>
+        </>
+      )}
     </div>
   );
 };

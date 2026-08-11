@@ -8,7 +8,7 @@ export const ErrorPage = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-6">
-      <div className="flex flex-col items-center gap-10 md:flex-row md:gap-20">
+      <div className="flex flex-col items-center gap-10 md:flex-row md:gap-10">
         {/* Figma 원본 이미지 크기(279x273) 그대로 사용, 좁은 화면에서는 비율 유지하며 축소 */}
         <div className="shrink-0">
           <img
@@ -24,9 +24,10 @@ export const ErrorPage = () => {
           <div className="flex flex-col items-center gap-5 md:items-start">
             <Logo variant="error" />
             <div className="flex flex-col items-center gap-2 md:items-start">
-              <h1 className="text-text-primary text-[32px] font-bold">일시적인 오류가 발생했습니다.</h1>
+              <h1 className="text-text-primary text-[20px] font-bold whitespace-nowrap md:text-[32px]">일시적인 오류가 발생했습니다.</h1>
               <p className="text-text-tertiary text-xl font-medium">
-                잠시 후 다시 시도하거나 이전 페이지로 돌아가 주세요.
+                잠시 후 다시 시도하거나
+                <br className="md:hidden" /> 이전 페이지로 돌아가 주세요.
               </p>
             </div>
           </div>

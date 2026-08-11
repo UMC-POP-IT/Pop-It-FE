@@ -13,17 +13,21 @@ const StepIndicator = ({
   const isCompact = spacing === "compact";
 
   return (
+    // fill 모드의 좌우 여백(px-10)은 모바일에서 뺀다 — 360 폭에 5단계가 들어가야 해서
+    // 40씩 잡아먹으면 원과 라벨이 겹친다
     <div
-      className={`flex w-full items-start py-3 ${isCompact ? "justify-center" : "px-10"}`}
+      className={`flex w-full items-start py-3 ${isCompact ? "justify-center" : "px-5 md:px-10"}`}
     >
       {steps.map((step, i) => (
         <div
           key={i}
           className={`flex items-start ${isCompact ? "" : "flex-1 last:flex-none"}`}
         >
+          {/* 원 지름: 모바일 36 / md 이상 56. 원 안 숫자는 22 / 32 (피그마 title_b22).
+              원↔라벨 간격 20은 3단 공통 */}
           <div className="flex flex-shrink-0 flex-col items-center gap-5">
             <div
-              className={`flex size-[56px] items-center justify-center rounded-full text-[32px] font-bold transition-colors ${
+              className={`flex size-9 items-center justify-center rounded-full text-[22px] font-bold transition-colors md:size-14 md:text-[32px] ${
                 i < currentStep
                   ? "border-primary text-primary border-4"
                   : i === currentStep
@@ -50,8 +54,9 @@ const StepIndicator = ({
                 i + 1
               )}
             </div>
+            {/* 라벨: 모바일 caption_b12(12/700) / md 이상 16 */}
             <span
-              className={`text-center text-base font-bold whitespace-nowrap ${
+              className={`text-center text-xs font-bold whitespace-nowrap md:text-base ${
                 i < currentStep || i === currentStep
                   ? "text-text-primary"
                   : "text-text-tertiary"
@@ -62,12 +67,15 @@ const StepIndicator = ({
           </div>
           {i < steps.length - 1 && (
             <div
-              className={`mt-6 flex items-center justify-center gap-2 ${isCompact ? "w-16" : "flex-1"}`}
+              // 점을 원의 세로 한가운데에 맞춘다 — 원 반지름 − 점 반지름.
+              // 모바일 36/2 − 4/2 = 16, md 이상 56/2 − 8/2 = 24
+              className={`mt-4 flex items-center justify-center gap-2 md:mt-6 ${isCompact ? "w-16" : "flex-1"}`}
             >
               {[0, 1].map((dot) => (
                 <div
                   key={dot}
-                  className={`size-2 rounded-full ${i < currentStep ? "bg-primary" : "bg-divider"}`}
+                  // 연결 점: 모바일 4 / md 이상 8
+                  className={`size-1 rounded-full md:size-2 ${i < currentStep ? "bg-primary" : "bg-divider"}`}
                 />
               ))}
             </div>

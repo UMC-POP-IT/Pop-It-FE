@@ -48,7 +48,8 @@ const diffDays = (a: Date, b: Date) =>
 // 달력 그리드(calendarDays)도 전부 로컬 Y/M/D 기준으로 만들어지므로,
 // 날짜 비교는 항상 이 함수를 거친 값끼리만 수행해야 시각(time-of-day) 차이로 인한
 // 하루 어긋남을 막을 수 있다.
-const toDateOnly = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+const toDateOnly = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
 // 서버가 내려주는 "YYYY-MM-DD" 문자열은 시간대 정보가 없는 순수 날짜다.
 // new Date(str)로 직접 파싱하면 ISO 8601로 인식되어 UTC 자정으로 해석되고,
@@ -63,9 +64,16 @@ const parseDateString = (str: string) => {
 // 예약 가능 기간: 시작일 기준 최대 3개월 (host-register/DateRangePicker의 계약 한도와 동일한 기준을 사용)
 const MAX_RESERVATION_MONTHS = 3;
 
-// 어떤 날짜에 개월 수를 더한 로컬 자정 Date (호스트 계약 한도 계산과 동일한 방식)
-const addMonths = (date: Date, months: number) =>
-  new Date(date.getFullYear(), date.getMonth() + months, date.getDate());
+// 어떤 날짜에 개월 수를 더한 로컬 자정 Date (호스트 계약 한도 계산과 동일한 방식).
+// 대상 월에 같은 '일'이 없으면 그 달의 마지막 날로 자른다.
+// (new Date(y, m+3, 30)처럼 없는 날짜를 넣으면 JS가 조용히 다음 달로 넘긴다.
+//  11/30 시작이 "2/30" -> 3/2 가 되면서 이틀이 더 허용되던 버그, #222)
+const addMonths = (date: Date, months: number) => {
+  const year = date.getFullYear();
+  const month = date.getMonth() + months;
+  const lastDay = new Date(year, month + 1, 0).getDate(); // 다음 달 0일 = 대상 월 마지막 날
+  return new Date(year, month, Math.min(date.getDate(), lastDay));
+};
 
 const ExploreReservationCard = ({
   spaceId,
@@ -89,13 +97,15 @@ const ExploreReservationCard = ({
   });
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-  const [unavailablePeriods, setUnavailablePeriods] = useState<UnavailablePeriod[]>([]);
+  const [unavailablePeriods, setUnavailablePeriods] = useState<
+    UnavailablePeriod[]
+  >([]);
   // 예약 불가 날짜 조회 상태. unavailablePeriods와 분리해서 관리한다 —
   // 조회가 끝나기 전에는 unavailablePeriods가 빈 배열이라 "예약 가능"과 구분이 안 되므로,
   // 로딩/실패 중에는 이 상태를 기준으로 날짜 선택 자체를 전부 막는다.
-  const [availabilityStatus, setAvailabilityStatus] = useState<"loading" | "success" | "error">(
-    "loading",
-  );
+  const [availabilityStatus, setAvailabilityStatus] = useState<
+    "loading" | "success" | "error"
+  >("loading");
   const [availabilityRetryToken, setAvailabilityRetryToken] = useState(0);
 
   // 이 공간에 이미 선점(승인대기~진행 중)된 예약 기간을 받아와 달력에서 선택하지 못하게 막는다.
@@ -132,9 +142,8 @@ const ExploreReservationCard = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
-  const [reservationResult, setReservationResult] = useState<CreateReservationResponse | null>(
-    null,
-  );
+  const [reservationResult, setReservationResult] =
+    useState<CreateReservationResponse | null>(null);
 
   const calendarDays = useMemo(() => {
     const year = viewDate.getFullYear();
@@ -158,11 +167,25 @@ const ExploreReservationCard = ({
   // (이동할 수 없는 방향의 화살표 버튼은 아예 렌더링하지 않는다.)
   // 두 날짜를 각자의 "월 1일"로 정규화한 뒤 비교해, 자정을 넘겨 페이지가 계속 열려있는
   // 등의 이유로 viewDate가 오늘이 속한 달보다 과거가 되어버린 경우까지 안전하게 막는다.
-  const currentMonthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
-  const hostMinMonthStart = new Date(hostMinDate.getFullYear(), hostMinDate.getMonth(), 1);
+  const currentMonthStart = new Date(
+    todayStart.getFullYear(),
+    todayStart.getMonth(),
+    1,
+  );
+  const hostMinMonthStart = new Date(
+    hostMinDate.getFullYear(),
+    hostMinDate.getMonth(),
+    1,
+  );
   const navMinMonthStart =
-    hostMinMonthStart > currentMonthStart ? hostMinMonthStart : currentMonthStart;
-  const viewedMonthStart = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+    hostMinMonthStart > currentMonthStart
+      ? hostMinMonthStart
+      : currentMonthStart;
+  const viewedMonthStart = new Date(
+    viewDate.getFullYear(),
+    viewDate.getMonth(),
+    1,
+  );
   const isPrevMonthDisabled = viewedMonthStart <= navMinMonthStart;
   const isNextMonthDisabled =
     viewDate.getFullYear() === maxSelectableDate.getFullYear() &&
@@ -200,8 +223,14 @@ const ExploreReservationCard = ({
   const isDateDisabled = (date: Date) => {
     if (availabilityStatus !== "success") return true;
     const target = toDateOnly(date);
-    if (target < todayStart || target < hostMinDate || target > hostMaxDate) return true;
-    if (startDate && !endDate && target > addMonths(startDate, MAX_RESERVATION_MONTHS)) return true;
+    if (target < todayStart || target < hostMinDate || target > hostMaxDate)
+      return true;
+    if (
+      startDate &&
+      !endDate &&
+      target > addMonths(startDate, MAX_RESERVATION_MONTHS)
+    )
+      return true;
     return isDateBooked(target);
   };
 
@@ -222,7 +251,10 @@ const ExploreReservationCard = ({
     }
     // 달력에 함께 보이는 다른 달의 회색 날짜는 현재 보고 있는 달이 아니므로
     // (이전/다음 달로 넘겨야 정상적으로 선택 가능) 클릭해도 선택되지 않게 막는다.
-    if (date.getMonth() !== viewDate.getMonth() || date.getFullYear() !== viewDate.getFullYear()) {
+    if (
+      date.getMonth() !== viewDate.getMonth() ||
+      date.getFullYear() !== viewDate.getFullYear()
+    ) {
       return;
     }
     if (isDateDisabled(date)) return;
@@ -255,7 +287,9 @@ const ExploreReservationCard = ({
   const totalPrice = totalDays * dayCost;
 
   const periodLabel: string | undefined =
-    startDate && endDate ? `${formatDate(startDate)} ~ ${formatDate(endDate)}` : undefined;
+    startDate && endDate
+      ? `${formatDate(startDate)} ~ ${formatDate(endDate)}`
+      : undefined;
 
   const handleOpenRequestModal = () => {
     if (!(startDate && endDate)) return;
@@ -283,7 +317,9 @@ const ExploreReservationCard = ({
       setIsCompleteModalOpen(true);
     } catch (error) {
       setSubmitError(
-        error instanceof Error ? error.message : "예약 요청에 실패했어요. 잠시 후 다시 시도해주세요.",
+        error instanceof Error
+          ? error.message
+          : "예약 요청에 실패했어요. 잠시 후 다시 시도해주세요.",
       );
     } finally {
       setIsSubmitting(false);
@@ -328,7 +364,8 @@ const ExploreReservationCard = ({
   // 시작일 또는 종료일(하루만 선택한 경우 포함)인 날짜의 숫자에 꽉 찬 원 강조를 준다.
   const isSelectedEndpoint = (date: Date) => {
     if (startDate && !endDate) return isSameDay(date, startDate);
-    if (startDate && endDate) return isSameDay(date, startDate) || isSameDay(date, endDate);
+    if (startDate && endDate)
+      return isSameDay(date, startDate) || isSameDay(date, endDate);
     return false;
   };
 
@@ -372,7 +409,7 @@ const ExploreReservationCard = ({
     if (isToday && !disabled) {
       // 오늘 날짜 표시 (선택 가능): 옅은 파란 테두리 원
       return (
-        <span className="border-primary-100 relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border text-text-primary">
+        <span className="border-primary-100 text-text-primary relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border">
           {day}
         </span>
       );
@@ -393,7 +430,7 @@ const ExploreReservationCard = ({
   };
 
   return (
-    <div className="flex w-[488px] shrink-0 items-center rounded-xl bg-[#F6FAFF] p-5">
+    <div className="flex w-full max-w-[488px] shrink-0 items-center rounded-xl bg-[#F6FAFF] p-5">
       <div className="flex w-full flex-col gap-6">
         <div className="border-primary flex w-fit items-center justify-center border-b py-1">
           <h3 className="text-text-primary text-xl font-bold">예약하기</h3>
@@ -401,7 +438,10 @@ const ExploreReservationCard = ({
 
         {availabilityStatus === "error" && (
           <div className="bg-tag-bg flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3">
-            <span role="alert" className="text-text-secondary text-sm">
+            <span
+              role="alert"
+              className="text-text-secondary text-sm"
+            >
               예약 가능 여부를 불러오지 못했어요. 날짜 선택이 제한됩니다.
             </span>
             <button
@@ -518,7 +558,9 @@ const ExploreReservationCard = ({
             <button
               type="button"
               onClick={handleOpenRequestModal}
-              disabled={!(startDate && endDate) || availabilityStatus !== "success"}
+              disabled={
+                !(startDate && endDate) || availabilityStatus !== "success"
+              }
               className="bg-primary-hover flex h-[52px] flex-1 items-center justify-center rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
               예약 요청하기

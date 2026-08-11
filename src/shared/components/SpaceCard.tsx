@@ -13,7 +13,7 @@ interface SpaceCardProps {
   /**
    * 카드 hover 효과. 기본값 "lift"는 기존 카드 살짝 떠오름+그림자(입체감) 효과이고,
    * "dim"은 실시간 추천 공간 카드와 동일하게 이미지만 어둡게 흐려지는 효과다.
-   * 공간 탐색 섹션 카드만 "dim"을 쓰고, 나머지(AI 맞춤형/찜한 공간)는 기존 "lift"를 유지한다.
+   * 현재 모든 SpaceCard가 "dim"을 쓴다.
    */
   hoverEffect?: "lift" | "dim";
 }
@@ -29,7 +29,7 @@ const SpaceCard = ({
 }: SpaceCardProps) => (
   <div
     onClick={onClick}
-    className={`border-border group cursor-pointer overflow-hidden border border-transparent bg-white transition-all duration-300 ease-out ${
+    className={`border-border group w-full cursor-pointer overflow-hidden border border-transparent bg-white transition-all duration-300 ease-out ${
       hoverEffect === "dim" ? "" : "hover:-translate-y-1 hover:shadow-xl"
     }`}
     role="button"
@@ -49,7 +49,13 @@ const SpaceCard = ({
           }`}
         />
       ) : (
-        <div className="bg-bg h-full w-full" />
+        <div
+          className={`bg-bg h-full w-full ${
+            hoverEffect === "dim"
+              ? "transition-[filter] duration-500 group-hover:brightness-75"
+              : ""
+          }`}
+        />
       )}
       <button
         className="absolute top-2 right-2"
@@ -65,7 +71,7 @@ const SpaceCard = ({
         </span>
       </button>
       {categoryTag && (
-        <div className="absolute right-2 bottom-2">
+        <div className="absolute right-2 bottom-2 left-2 flex justify-end">
           <Badge variant="category" label={mapSpaceCategoryTag(categoryTag)} />
         </div>
       )}
@@ -74,19 +80,26 @@ const SpaceCard = ({
     {/* 텍스트 */}
     <div className="mx-1 flex flex-col gap-1.5 py-3">
       {matchReason ? ( // AI 추천 이유가 있으면(AI 맞춤형 공간) Badge+하트, 없으면(찜한 공간) 이름+하트 나란히
+        // 360~767px(모바일)에서는 Badge가 사진 밑 영역을 전부 차지하고, 하트는 이름과 같은 줄 우측으로 이동한다 (768px 이상은 기존 배치 그대로)
         <>
           <div className="flex items-center justify-between gap-2">
             <Badge
               variant="highlight"
               label={matchReason}
+              className="w-full text-center md:w-auto"
             />
-            <span className="text-text-secondary flex shrink-0 items-center gap-0.5 text-xs">
+            <span className="text-text-secondary hidden shrink-0 items-center gap-0.5 text-xs md:flex">
               ♡ {space.heartCount}
             </span>
           </div>
-          <span className="text-text-primary truncate text-sm font-semibold">
-            {space.name}
-          </span>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-text-primary truncate text-sm font-semibold">
+              {space.name}
+            </span>
+            <span className="text-text-secondary flex shrink-0 items-center gap-0.5 text-xs md:hidden">
+              ♡ {space.heartCount}
+            </span>
+          </div>
         </>
       ) : (
         <div className="flex items-center justify-between gap-2">

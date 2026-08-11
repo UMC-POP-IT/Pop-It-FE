@@ -6,10 +6,8 @@ import RealTimeRecommendSpace from "@/features/guest-explore/components/RealTime
 import Banner, { RESULTS_MODE_TOP_OFFSET_PX } from "@/shared/layout/Banner";
 import { HEADER_HEIGHT_PX } from "@/shared/layout/Header";
 import HeroSearchBar from "@/features/guest-explore/components/HeroSearchBar";
-import { useSearchHistoryStore } from "@/store/searchHistoryStore";
 import { useScrollSearchBarStore, type ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
 import { withSearchBarTransition } from "@/shared/utils/viewTransition";
-import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import {
   SPACE_CATEGORY_OPTIONS,
   SEOUL_DISTRICTS,
@@ -97,8 +95,6 @@ export const ExplorePage = () => {
   const searchFilters = filtersFromSearchParams(searchParams);
   const { keyword, spaceCategory, district, dateRange } = searchFilters;
 
-  const hasSearched = useSearchHistoryStore((state) => state.hasSearched);
-
   // 검색 결과 화면에서 스크롤을 내리면 검색바가 헤더의 축소된 pill로 바뀌고,
   // pill을 클릭하면 헤더 바로 아래에 원래 검색바가 오버레이로 다시 펼쳐진다
   // (에어비앤비 참고). hasActiveSearch가 아닐 때(검색 전 브라우징 화면)는
@@ -109,19 +105,13 @@ export const ExplorePage = () => {
   // 모핑 기능을 켠다 - "조건에 맞는 공간이 없어요" 빈 결과 화면에서는 이 기능
   // 자체가 필요 없다(ExploreSpace가 결과 유무를 알려준다).
   const [hasResults, setHasResults] = useState(false);
-  // Header.tsx의 축소 pill은 좁은 화면에 넣을 공간이 없어 `hidden md:flex`로
-  // md(768px) 미만에서 아예 숨긴다. 그런데 검색바를 md 미만에서도 접기만 하면
-  // 큰 검색바도 사라지고(pill은 안 보이니) 되돌릴 방법이 없어져서 스크롤을
-  // 맨 위로 올리기 전까진 검색 조건에 다시 접근할 수 없는 함정이 생긴다(코드래빗
-  // 리뷰 지적). 그래서 이 축소 기능 자체를 Tailwind md 브레이크포인트와 맞춰
-  // 데스크톱에서만 켠다 - 모바일에서는 검색바가 항상 원래 자리에 그대로 있다.
-  const isDesktop = useMediaQuery("(min-width: 768px)");
   const [summary, setSummary] = useState<ScrollSearchBarSummary | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const setScrollSearchBarState = useScrollSearchBarStore((s) => s.setState);
   const resetScrollSearchBar = useScrollSearchBarStore((s) => s.reset);
 
   const handleSearch = (filters: ExploreSearchFilters) => {
+    setHasResults(false);
     const next = new URLSearchParams();
     next.set(SEARCH_FLAG_PARAM, "1");
     if (filters.keyword) next.set("keyword", filters.keyword);
@@ -140,14 +130,19 @@ export const ExplorePage = () => {
   const handleResetFilters = () => {
     const next = new URLSearchParams();
     next.set(SEARCH_FLAG_PARAM, "1"); // 결과 화면 자체는 유지하고 필터만 비운다
+    setHasResults(false);
     setSearchParams(next, { replace: true });
   };
+
+  useEffect(() => {
+    if (!hasActiveSearch) setHasResults(false);
+  }, [hasActiveSearch]);
 
   // 검색바가 원래 있던 자리(페이지 맨 위, sentinel)가 헤더 뒤로 넘어가면
   // "스크롤됨"으로 표시한다. rootMargin으로 헤더 높이만큼 보정해서, 실제로
   // 헤더 뒤에 가려지는 시점과 최대한 맞춘다.
   useEffect(() => {
-    if (!hasActiveSearch || !hasResults || !isDesktop) {
+    if (!hasActiveSearch || !hasResults) {
       setIsScrolledPastBar(false);
       return;
     }
@@ -164,7 +159,7 @@ export const ExplorePage = () => {
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [hasActiveSearch, hasResults, isDesktop]);
+  }, [hasActiveSearch, hasResults]);
 
   // 스크롤을 다시 올려 원래 검색바가 보이게 되면, 열려있던 오버레이도 접는다.
   useEffect(() => {
@@ -205,7 +200,7 @@ export const ExplorePage = () => {
   useEffect(() => resetScrollSearchBar, [resetScrollSearchBar]);
 
   const searchBarPosition =
-    hasActiveSearch && hasResults && isDesktop && isScrolledPastBar
+    hasActiveSearch && hasResults && isScrolledPastBar
       ? isOverlayOpen
         ? "pinned-open"
         : "pinned-hidden"
@@ -264,15 +259,38 @@ export const ExplorePage = () => {
       )}
 
       {/* 검색을 실행하기 전(브라우징 모드)에만 AI 맞춤형/실시간 추천을 보여준다.
-          AI 맞춤형 공간은 그중에서도 검색 기록이 있을 때만(hasSearched). */}
-      {!hasActiveSearch && hasSearched && <AiRecommendSpace />}
+          AiRecommendSpace는 신규 유저 여부(hasActivityHistory, 서버 응답)를
+          이미 자체적으로 확인해서 트래킹 이력이 없으면 스스로 null을 렌더한다
+          (컴포넌트 내부 참고). 이 로컬 hasSearched(브라우저별 localStorage)로
+          한 번 더 감싸면 두 기준이 어긋날 때 - 예: 다른 기기/세션에서 이미
+          검색한 이력이 있는 유저라 서버는 hasActivityHistory=true를 내려줘도
+          이 브라우저에 저장된 hasSearched가 false면 - 정상적으로 노출돼야 할
+          AI 맞춤형 섹션이 조용히 숨어버리는 문제가 있어 제거했다(코드리뷰
+          지적). RealTimeRecommendSpace는 그런 자체 게이팅이 없어 여기 조건이
+          유일한 노출 기준이므로 그대로 둔다. */}
+      {!hasActiveSearch && <AiRecommendSpace />}
       {!hasActiveSearch && <RealTimeRecommendSpace />}
-      <ExploreSpace
-        filters={searchFilters}
-        onResetFilters={handleResetFilters}
-        resultsMode={hasActiveSearch}
-        onHasResultsChange={(next) => withSearchBarTransition(() => setHasResults(next))}
-      />
+      {/* 게스트 메인페이지 첫화면(검색 실행 전)에서는 "공간 탐색" 섹션을 노출하지
+          않는다 - 검색을 실제로 실행한 뒤(hasActiveSearch)의 결과 화면에서만
+          같은 컴포넌트를 검색 결과 그리드로 사용한다(#248).
+          마운트/언마운트를 반복하면서 페이지·목록 상태가 초기화되는 것 아니냐는
+          리뷰가 있었는데, ExploreSpace 내부의 filterKey가 이미 resultsMode를
+          포함하고 있어(컴포넌트 참고) 브라우징↔결과 모드 전환은 마운트 여부와
+          무관하게 항상 페이지/목록을 리셋하도록 설계돼 있다 - 즉 언마운트가
+          추가로 잃는 상태가 없고, 안 보이는 목록을 계속 백그라운드에서
+          불러오지 않아도 되는 지금 방식이 더 낫다고 판단해 유지한다. */}
+      {hasActiveSearch && (
+        <ExploreSpace
+          filters={searchFilters}
+          onResetFilters={handleResetFilters}
+          resultsMode={hasActiveSearch}
+          // ExploreSpace는 hasActiveSearch일 때만 마운트되므로, 이 콜백도
+          // 검색 결과 화면에서만 호출된다 - 검색 결과 유무에 따라 검색바가
+          // pinned⇄inline으로 실제 자리를 옮길 때만 트랜지션이 걸리고, 화면
+          // 밖(브라우징 모드)에서 조용히 트랜지션이 발생하는 경우는 없다.
+          onHasResultsChange={(next) => withSearchBarTransition(() => setHasResults(next))}
+        />
+      )}
     </div>
   );
 };

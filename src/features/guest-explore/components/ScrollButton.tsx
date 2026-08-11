@@ -6,6 +6,7 @@ export const ScrollButton = ({
   topOffset,
   onClick,
   label,
+  className,
 }: {
   direction: "prev" | "next";
   /** 카드 이미지 영역 세로 중앙까지의 픽셀 거리 */
@@ -13,6 +14,8 @@ export const ScrollButton = ({
   onClick: () => void;
   /** 스크린리더용 문구. 생략하면 공간 캐러셀 기본값 */
   label?: string;
+  /** 특정 구간에서 버튼을 숨기는 등 추가 반응형 클래스 */
+  className?: string;
 }) => {
   return (
     <button
@@ -22,7 +25,7 @@ export const ScrollButton = ({
       style={{ top: topOffset }}
       className={`border-border absolute ${
         direction === "prev" ? "-left-4" : "-right-4"
-      } z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[12px] border bg-white shadow-md cursor-pointer`}
+      } z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[12px] border bg-white shadow-md cursor-pointer ${className ?? ""}`}
     >
       <img
         src={direction === "prev" ? arrowLeft : arrowRight}
