@@ -42,6 +42,14 @@ export const HostReservationCard = ({
 }: HostReservationCardProps) => {
   const { status, startDate, endDate, totalPrice, usagePurpose, guest, space, isPhotoVerified } = reservation;
   const displayStatus = effectiveStatus ?? status;
+  const isPendingApproval = displayStatus === "PENDING_APPROVAL";
+  const isActiveBeforeCheckout =
+    displayStatus === "APPROVED" ||
+    displayStatus === "CONTRACT_COMPLETED" ||
+    displayStatus === "PAYMENT_COMPLETED" ||
+    displayStatus === "IN_USE";
+  const isUsageCompleted = displayStatus === "USAGE_COMPLETED";
+  const isCheckoutCompleted = displayStatus === "CHECKOUT_COMPLETED";
 
   return (
     <div>
@@ -107,7 +115,7 @@ export const HostReservationCard = ({
 
         {/* 버튼 — 고정폭(모바일 104px, 태블릿+ 108px), 글씨는 항상 한 줄(whitespace-nowrap) */}
         <div className="flex min-h-[84px] w-full flex-shrink-0 flex-col items-start justify-end gap-2 min-[1024px]:h-[190px] min-[1024px]:min-h-0 min-[1024px]:w-auto min-[1024px]:items-end min-[1024px]:justify-end">
-          {status === "PENDING_APPROVAL" && (
+          {isPendingApproval && (
             <div className="flex w-full flex-wrap items-center gap-1 md:w-auto">
               <button
                 onClick={onDetail}
@@ -130,7 +138,7 @@ export const HostReservationCard = ({
             </div>
           )}
 
-          {(status === "APPROVED" || status === "CONTRACT_COMPLETED" || status === "PAYMENT_COMPLETED" || status === "IN_USE") && (
+          {isActiveBeforeCheckout && (
             <button
               onClick={onDetail}
               className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 w-[104px] rounded-lg px-6 py-1.5 text-base font-bold whitespace-nowrap md:w-auto"
@@ -139,7 +147,7 @@ export const HostReservationCard = ({
             </button>
           )}
 
-          {status === "USAGE_COMPLETED" && isPhotoVerified && (
+          {isUsageCompleted && isPhotoVerified && (
             <div className="flex w-full flex-wrap items-center gap-2 md:w-auto md:gap-1">
               <button
                 onClick={onDetail}
@@ -168,7 +176,7 @@ export const HostReservationCard = ({
             </div>
           )}
 
-          {status === "USAGE_COMPLETED" && !isPhotoVerified && (
+          {isUsageCompleted && !isPhotoVerified && (
             <div className="flex w-full flex-col items-start gap-2 min-[1024px]:items-end">
               <span className="w-full text-left text-base font-medium text-[#0564f5] min-[1024px]:text-right">
                 퇴실 사진이 아직 등록되지 않았습니다.
@@ -187,6 +195,23 @@ export const HostReservationCard = ({
                   퇴실 사진 보기
                 </button>
               </div>
+            </div>
+          )}
+
+          {isCheckoutCompleted && (
+            <div className="flex w-full flex-wrap items-center gap-2 md:w-auto md:gap-1">
+              <button
+                onClick={onDetail}
+                className="hover:bg-primary-light h-10 w-[104px] rounded-lg bg-[#f0f6fe] px-6 py-1.5 text-base font-bold whitespace-nowrap text-[#121212] md:w-auto"
+              >
+                공간 상세
+              </button>
+              <button
+                onClick={onPhotoView}
+                className="hover:bg-primary-light flex h-10 w-[104px] items-center justify-center rounded-lg bg-[#f0f6fe] px-2 py-1.5 text-center text-base font-bold whitespace-nowrap text-[#121212] md:w-auto md:px-6"
+              >
+                퇴실 사진 보기
+              </button>
             </div>
           )}
         </div>

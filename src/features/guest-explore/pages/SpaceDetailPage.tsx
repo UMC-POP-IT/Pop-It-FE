@@ -9,6 +9,7 @@ import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDet
 import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetailInfo";
 import ExploreReservationCard from "@/features/guest-explore/components/ExploreReservationCard";
 import Button from "@/shared/components/Button";
+import PhotoGalleryModal from "@/shared/components/PhotoGalleryModal";
 import { useWishStore } from "@/store/wishStore";
 import { useAuthStore } from "@/store/authStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
@@ -28,6 +29,8 @@ export const SpaceDetailPage = () => {
   const [space, setSpace] = useState<ExploreSpaceDetail | null>(null);
   const [isMine, setIsMine] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  // null이면 뷰어 닫힘, 숫자면 해당 인덱스부터 확대 뷰어 열림
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
 
   const id = Number(spaceId);
 
@@ -127,7 +130,10 @@ export const SpaceDetailPage = () => {
 
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-4 md:px-6 lg:px-0">
-      <ExploreDetailGallery space={space} />
+      <ExploreDetailGallery
+        space={space}
+        onImageClick={(index) => setGalleryIndex(index)}
+      />
 
       {/* Desktop(lg, 1024~): 정보 좌측 + 예약 위젯 우측 사이드 컬럼
           Tablet/Mobile(~1023): 예약 위젯이 정보 아래로 내려와 풀폭으로 스택 (Figma 반응형 스펙, 이슈 #256) */}
@@ -149,6 +155,13 @@ export const SpaceDetailPage = () => {
           />
         )}
       </div>
+
+      <PhotoGalleryModal
+        isOpen={galleryIndex !== null}
+        photos={space.imageUrls}
+        initialIndex={galleryIndex ?? 0}
+        onClose={() => setGalleryIndex(null)}
+      />
     </div>
   );
 };

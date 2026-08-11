@@ -3,6 +3,7 @@ import type { ExploreSpaceDetail } from "@/features/guest-explore/api/mock_space
 import { getPropertyByCategory } from "@/features/guest-explore/api/mock_3dcuration";
 import SpaceLocationMapModal from "@/features/guest-explore/components/SpaceLocationMapModal";
 import CurationModal from "@/features/guest-explore/components/curation/CurationModal";
+import businessLicenseInfoIcon from "@/assets/icons/icon_business_license_info.svg";
 
 interface ExploreDetailInfoProps {
   space: ExploreSpaceDetail;
@@ -225,7 +226,12 @@ const ExploreDetailInfo = ({
         {/* 영업허가 안내 */}
         <div className="bg-tag-bg flex w-full flex-col gap-3 rounded-lg px-7 py-6">
           <div className="flex items-center gap-2">
-            <span className="text-base leading-none">⚠️</span>
+            <img
+              src={businessLicenseInfoIcon}
+              alt=""
+              aria-hidden="true"
+              className="h-5 w-5 shrink-0"
+            />
             <span className="text-text-primary text-base font-bold">
               영업허가 안내
             </span>
