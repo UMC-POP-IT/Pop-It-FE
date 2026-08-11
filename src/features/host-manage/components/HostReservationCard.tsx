@@ -130,7 +130,7 @@ export const HostReservationCard = ({
             </div>
           )}
 
-          {(status === "APPROVED" || status === "CONTRACT_COMPLETED" || status === "PAYMENT_COMPLETED" || status === "IN_USE") && (
+          {(status === "APPROVED" || status === "CONTRACT_COMPLETED" || status === "PAYMENT_COMPLETED" || status === "IN_USE" || status === "CHECKOUT_COMPLETED") && (
             <button
               onClick={onDetail}
               className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 w-[104px] rounded-lg px-6 py-1.5 text-base font-bold whitespace-nowrap md:w-auto"
