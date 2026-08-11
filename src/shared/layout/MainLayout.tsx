@@ -214,7 +214,7 @@ const TossPaymentResultHandler = () => {
           setResult({
             success: true,
             title: "계약 작성 및 입금이 완료되었습니다",
-            description: "계약일부터 바로 이용을 시작하실 수 있습니다",
+            description: "계약일로부터 바로 이용을 시작하실 수 있습니다",
           });
         })
         .catch((error) => {
@@ -241,7 +241,7 @@ const TossPaymentResultHandler = () => {
       isOpen={!!result}
       title={result?.title ?? ""}
       description={result?.description}
-      iconVariant={result?.success ? "check" : "warning"}
+      iconVariant={result?.success ? undefined : "warning"}
       singleButton
       confirmLabel="확인"
       onConfirm={() => setResult(null)}

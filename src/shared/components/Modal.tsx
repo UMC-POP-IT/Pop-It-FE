@@ -92,7 +92,7 @@ const Modal = ({
             <button
               onClick={onConfirm}
               disabled={confirmDisabled}
-              className="bg-primary-hover hover:bg-primary h-14 w-[184px] rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="bg-primary-hover hover:bg-primary h-14 w-[clamp(172px,_161.41px_+_2.941vw,_184px)] rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {confirmLabel}
             </button>

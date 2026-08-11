@@ -203,13 +203,6 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
             <div className={innerWrapperClassName}>{children}</div>
           </div>
         )}
-        <div
-          aria-atomic="true"
-          aria-live="polite"
-          className={`absolute right-10 bottom-6 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white md:right-16 ${showImage ? "" : "hidden"}`}
-        >
-          {current + 1} / {total}
-        </div>
       </div>
     </div>
   );

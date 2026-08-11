@@ -1,5 +1,6 @@
 import Button from "@/shared/components/Button";
 import { GetPaymentInfoResponse } from "../api/my_reservation_api";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 
 // 360~767px(모바일)에서 767px(태블릿) 크기 배치를 유지한 채 버튼이 자연스럽게 줄어들다가 768px부터는 Button의 기본 sm 크기(h-10/px-6/text-base)로 수렴한다.
 // 대부분의 라벨은 짧아서 767 느낌(16px에 가깝게)을 최대한 유지할 수 있는 여유 있는 하한(13px/8px)을 쓴다 -
@@ -11,6 +12,11 @@ const FLUID_BUTTON_CLASS =
 // 이 라벨일 때만 훨씬 낮은 하한(9px/0px)을 써서 줄바꿈 없이 들어가는 한도 내 최댓값으로 역산한 값이다 - 임의로 줄이지 말 것.
 const FLUID_BUTTON_CLASS_LONG =
   "!h-[clamp(36px,_32.47px_+_0.98vw,_40px)] !px-[clamp(0px,_-21.17px_+_5.882vw,_24px)] !text-[clamp(9px,_2.83px_+_1.716vw,_16px)] whitespace-nowrap";
+
+// 모바일 전용 "승인 대기중..." 라벨은 위 FLUID_BUTTON_CLASS_LONG이 대응하는 "호스트 승인 대기중..."보다 짧아서
+// 같은 78px 폭에서도 줄바꿈 없이 더 큰 글자를 담을 수 있다. 하한을 9px -> 12px로 올린 값.
+const FLUID_BUTTON_CLASS_MOBILE_LONG =
+  "!h-[clamp(36px,_32.47px_+_0.98vw,_40px)] !px-[clamp(0px,_-21.17px_+_5.882vw,_24px)] !text-[clamp(12px,_8.46px_+_0.983vw,_16px)] whitespace-nowrap";
 
 interface ReservationCardActionsProps {
   spaceId: number;
@@ -44,6 +50,8 @@ export const ReservationCardButtons = ({
   onCancelReservation,
   onSignPayment,
 }: ReservationCardActionsProps) => {
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
   return (
     <div className="flex w-full flex-shrink-0 flex-col items-start justify-end gap-2 min-[1024px]:h-[190px] min-[1024px]:w-auto min-[1024px]:items-end">
       {needsPhotoVerification &&
@@ -71,10 +79,16 @@ export const ReservationCardButtons = ({
             <Button
               variant="secondary"
               size="sm"
-              className={isAwaitingHostApproval ? FLUID_BUTTON_CLASS_LONG : FLUID_BUTTON_CLASS}
+              className={
+                isAwaitingHostApproval ?
+                  isMobile ?
+                    FLUID_BUTTON_CLASS_MOBILE_LONG
+                  : FLUID_BUTTON_CLASS_LONG
+                : FLUID_BUTTON_CLASS
+              }
               disabled
             >
-              {isAwaitingHostApproval ? "호스트 승인 대기중..." : "인증 완료"}
+              {isAwaitingHostApproval ? ( isMobile ? "승인 대기중..." : "호스트 승인 대기중...") : "인증 완료"}
             </Button>
           ))}
         <Button variant="secondary" size="sm" className={FLUID_BUTTON_CLASS} onClick={onSpaceDetail}>
