@@ -19,10 +19,10 @@ interface HostRegisterGuardProps {
  * 여기서 Navigate replace로 되돌리면 방문한 등록 화면이 히스토리에서 덮어써져
  * 뒤로가기를 반복해도 다시 등록 화면에 도달하지 못한다.
  *
- * hostStatus가 "unknown"이면 막지 않는다. 새로고침하면 unknown으로 돌아가는데
- * 앱 시작 시 등록 여부를 조회하는 곳이 없어(호출처는 useHostModeSwitch 하나) 흔한 값이고,
- * 여기서 서버에 물으면 진입할 때마다 로딩 화면이 끼어든다.
- * unknown으로 통과해 재제출한 경우는 HostRegisterStep2의 409 분기가 완료 화면으로 보내준다.
+ * hostStatus가 "unknown"이면 막지 않는다. 등록 여부를 모르는 상태에서 미등록으로 단정하면
+ * 이미 등록한 호스트를 등록 화면에 가둘 수 있어서다. 새로고침 직후의 unknown은
+ * MainLayout의 SessionBootstrap이 세션 복원과 함께 조회를 끝낸 뒤 isSessionReady를 켜므로
+ * 이 가드가 판단할 때는 이미 채워져 있다.
  */
 export const HostRegisterGuard = ({
   allowJustRegistered = false,
@@ -30,11 +30,22 @@ export const HostRegisterGuard = ({
   const hostStatus = useAuthStore((s) => s.hostStatus);
   const isJustRegistered = useHostRegisterStore((s) => s.isJustRegistered);
 
-  // 완료 화면은 등록 직후 1회만 열어준다.
-  // hostStatus는 등록 직후와 한참 뒤 뒤로가기 때 똑같이 "registered"라 이 둘을 구분하지 못한다.
-  const isAllowed = allowJustRegistered && isJustRegistered;
+  // 완료 화면은 통과권만 본다.
+  // hostStatus는 등록 직후와 한참 뒤 뒤로가기 때 똑같이 "registered"라 이 둘을 구분하지 못하고,
+  // hostStatus를 조건에 끼우면 아직 등록하지 않은 계정이 주소를 직접 입력해 완료 화면을 볼 수 있다.
+  if (allowJustRegistered) {
+    if (isJustRegistered) return <Outlet />;
+    return (
+      <Navigate
+        to={
+          hostStatus === "registered" ? "/host/spaces" : "/host/host-register"
+        }
+        replace
+      />
+    );
+  }
 
-  if (hostStatus === "registered" && !isAllowed) {
+  if (hostStatus === "registered") {
     return (
       <Navigate
         to="/host/spaces"

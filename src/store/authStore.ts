@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { User } from "@/types";
 import { getMyHost } from "@/shared/utils/oauth";
 import { useWishStore } from "@/store/wishStore";
+import { useRegisterStore, useHostRegisterStore } from "@/store/registerStore";
 
 type Mode = "GUEST" | "HOST";
 
@@ -49,7 +50,7 @@ interface AuthState {
 
 // accessToken / refreshToken은 store에 두지 않고 localStorage에만 저장한다.
 // API 호출은 src/shared/utils/apiClient.ts의 apiFetch가 localStorage에서 직접 읽는다.
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   mode: "GUEST",
   isLoginModalOpen: false,
@@ -61,16 +62,23 @@ export const useAuthStore = create<AuthState>((set) => ({
   setHostStatus: (hostStatus) => set({ hostStatus }),
 
   refreshHostStatus: async () => {
+    // 요청을 보낸 시점의 사용자. 응답을 기다리는 사이 로그아웃하거나 계정이 바뀌면
+    // 이전 계정의 조회 결과가 지금 로그인한 사용자의 상태로 기록된다
+    // (A가 호스트라면 뒤이어 로그인한 B가 등록 화면에 들어가지 못한다).
+    const requestedUser = get().user;
+    const isSameSession = () => get().user === requestedUser;
+
     try {
       const host = await getMyHost();
       const status: HostStatus = host ? "registered" : "unregistered";
+      if (!isSameSession()) return "unknown";
       set({ hostStatus: status });
       return status;
     } catch (error) {
       // 네트워크 오류·인증 만료 등. 미등록으로 단정할 수 없으므로 unknown으로 되돌린다.
       // (set 없이 return만 하면 store에 이전 값이 남아 반환값과 어긋난다)
       console.error("호스트 상태 조회 실패:", error);
-      set({ hostStatus: "unknown" });
+      if (isSameSession()) set({ hostStatus: "unknown" });
       return "unknown";
     }
   },
@@ -88,6 +96,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   setPendingAction: (action) => set({ pendingAction: action }),
   logout: () => {
     useWishStore.getState().reset();
+    // 등록 폼은 전역 store라 로그아웃해도 남는다. 사업자등록번호·계좌번호 같은 입력값과
+    // 완료 화면 통과권(isJustRegistered)이 다음 로그인 사용자에게 그대로 보이지 않도록 비운다
+    useRegisterStore.getState().reset();
+    useHostRegisterStore.getState().reset();
     set({
       user: null,
       mode: "GUEST",

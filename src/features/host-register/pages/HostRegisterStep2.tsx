@@ -106,9 +106,11 @@ export const HostRegisterStep2 = () => {
         }
 
         if (host) {
+          // 상태를 먼저 바꾸면 await 동안 화면이 아직 step2라, 가드가 등록 완료를 감지해
+          // /host/spaces로 보내버린다. 재발급을 끝낸 뒤 상태 변경과 이동을 한 번에 한다
+          await refreshRole(); // 이 브라우저 토큰의 role이 낡았을 수 있다
           setHostStatus("registered");
           setJustRegistered(true);
-          await refreshRole(); // 이 브라우저 토큰의 role이 낡았을 수 있다
           navigate("/host/host-register/complete");
           return;
         }

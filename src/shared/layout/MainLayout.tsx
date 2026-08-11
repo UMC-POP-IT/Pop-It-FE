@@ -34,13 +34,18 @@ const SessionBootstrap = () => {
       return;
     }
     getCurrentUser()
-      .then((user) => {
+      .then(async (user) => {
         const isHostPath = window.location.pathname.startsWith("/host");
         login({ ...user, currentMode: isHostPath ? "HOST" : "GUEST" });
-        // hostStatus는 새로고침하면 unknown으로 돌아간다. 세션을 복원한 김에 한 번 채워두면
+        // hostStatus는 새로고침하면 unknown으로 돌아간다. 세션을 복원한 김에 채워두면
         // 호스트 등록 가드가 이미 등록한 계정을 막을 수 있고, 헤더 모드 전환도 따로 조회하지 않는다.
+        //
+        // 결과를 기다린 뒤에 setSessionReady()가 돌아야 한다. 기다리지 않으면 가드가
+        // unknown인 채로 판단해 이미 등록한 호스트에게 등록 화면이 잠깐 보였다 사라진다.
+        // 이 대기가 늦추는 것은 isSessionReady를 보는 HostGuard(/host/* 경로)뿐이고,
+        // 헤더·게스트 화면은 위 login()으로 이미 복원돼 있다.
         // 실패해도 store가 unknown으로 되돌리고 삼키므로 로그인 복원 흐름은 막지 않는다.
-        void refreshHostStatus();
+        await refreshHostStatus();
       })
       .catch(() => {
         // accessToken/refreshToken 모두 만료 등 복원 실패 → 남은 토큰 정리
