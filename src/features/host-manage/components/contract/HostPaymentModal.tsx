@@ -75,7 +75,7 @@ const HostPaymentModal = ({
         <div className="bg-secure-payment-bg flex gap-2 rounded-lg p-3">
           <div className="flex flex-col gap-1">
             <span className="text-primary text-sm font-medium">입금 안내</span>
-            <p className="text-text-secondary text-xs">
+            <p className="text-text-secondary text-xs break-keep">
               이용 완료된 건에 대한 정산은 영업일 기준 3~7일 소요됩니다. 주말 및 공휴일은 입금 기간에서
               제외되며, 정산 내역은 문자로 자동 발송됩니다. 문자를 받지 못하셨을 경우 호스트 센터로
               문의해주세요.
@@ -83,7 +83,7 @@ const HostPaymentModal = ({
           </div>
         </div>
 
-        <label className="text-text-secondary flex items-start gap-2 text-xs">
+        <label className="text-text-secondary flex items-start gap-2 text-xs break-keep">
           <input
             type="checkbox"
             className="border-[#808080] checked:bg-primary mt-0.5 h-4 w-4 shrink-0 appearance-none rounded-full border"

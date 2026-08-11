@@ -15,7 +15,7 @@ interface HostReservationCardProps {
 const STATUS_LABEL: Record<ReservationStatus, string> = {
   PENDING_APPROVAL: "승인 대기",
   APPROVED: "계약 대기",
-  CONTRACT_COMPLETED: "결제 대기",
+  CONTRACT_COMPLETED: "계약 대기",
   PAYMENT_COMPLETED: "계약 완료",
   IN_USE: "사용 중",
   USAGE_COMPLETED: "사용 완료",
@@ -74,11 +74,12 @@ export const HostReservationCard = ({
         </div>
       </div>
 
-      {/* 공간 정보 — 모바일·태블릿은 이미지+텍스트 위, 버튼 아래(세로) / 데스크탑(1024~)만 한 줄(가로) */}
-      <div className="border-divider flex flex-col gap-5 border-b py-5 min-[1024px]:flex-row min-[1024px]:items-end min-[1024px]:justify-between min-[1024px]:gap-7">
+      {/* 공간 정보 — 이미지+텍스트 위, 버튼 아래(세로) 고정. 사진 하단~버튼 상단 40px 고정 간격
+          (Figma 실측: 태블릿 5584:60218 = 20(이미지 wrapper 하단 패딩)+20(gap), 모바일 5584:65807 동일 구조로 재확인) */}
+      <div className="border-divider flex flex-col gap-10 border-b py-5">
         <div className="flex items-start gap-3 md:gap-7">
           {/* 이미지 — 모바일 150px(정사각), 태블릿 148px, 데스크탑 190px */}
-          <div className="bg-thumbnail-bg aspect-square w-[150px] flex-shrink-0 overflow-hidden md:aspect-auto md:h-[190px] md:w-[190px] min-[768px]:max-[1023px]:h-[148px] min-[768px]:max-[1023px]:w-[148px]">
+          <div className="bg-thumbnail-bg aspect-square w-[150px] flex-shrink-0 overflow-hidden min-[768px]:max-[1023px]:aspect-auto min-[768px]:max-[1023px]:h-[148px] min-[768px]:max-[1023px]:w-[148px] min-[1024px]:aspect-auto min-[1024px]:h-[190px] min-[1024px]:w-[190px]">
             {space.thumbnailUrl && (
               <img
                 src={space.thumbnailUrl}
