@@ -48,7 +48,7 @@ const AddressSearchModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* 딤 배경 (클릭 시 닫기) */}
       <div
         className="absolute inset-0 bg-black/40"
@@ -62,7 +62,7 @@ const AddressSearchModal = ({
         role="dialog"
         aria-modal="true"
         aria-label="주소 검색"
-        className="relative z-10 w-[500px] overflow-hidden rounded-lg bg-white"
+        className="relative z-10 w-full max-w-[500px] overflow-hidden rounded-lg bg-white"
       >
         {/* 닫기 버튼 */}
         <button

@@ -1,6 +1,7 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import Logo from "@/shared/components/Logo";
+import iconProfileMobile from "@/assets/icons/icon_profile_mobile.svg";
 import { useAuthStore } from "@/store/authStore";
 import { logoutApi, switchMode } from "@/shared/utils/oauth";
 import { useHostModeSwitch } from "@/shared/hooks/useHostModeSwitch";
@@ -281,7 +282,7 @@ const Header = () => {
         )}
 
         {/* 우측: 모드전환 + 프로필 (gap-[20px]) */}
-        <div className="ml-auto flex items-center gap-5 md:max-lg:-mr-[32px]">
+        <div className="ml-auto flex items-center gap-4 md:max-lg:-mr-[32px] md:gap-5">
           {/* 모드 전환 버튼 — 게스트 모드 나의 예약 탭에서는 숨김 */}
           {!hideModeToggle && (
             <>
@@ -309,7 +310,7 @@ const Header = () => {
                   />
                 </svg>
               </button>
-              {/* 모바일: 텍스트만 있는 작은 pill (Figma 모바일 헤더 — nav/로그인/프로필 없음) */}
+              {/* 모바일: 텍스트만 있는 작은 pill (Figma 5664:56229 모바일 헤더) */}
               <button
                 onClick={handleModeToggle}
                 className="bg-primary-light text-text-primary flex items-center rounded px-[8px] py-[6px] text-xs font-medium transition-colors md:hidden"
@@ -319,12 +320,9 @@ const Header = () => {
             </>
           )}
 
-          {/* 로그인 상태에 따라 분기 — 모바일에서는 Figma에 없어서 숨김 */}
+          {/* 로그인 상태에 따라 분기 */}
           {user ? (
-            <div
-              className="relative hidden md:flex md:items-center"
-              ref={profileMenuRef}
-            >
+            <div className="relative flex items-center" ref={profileMenuRef}>
               <button
                 ref={profileButtonRef}
                 onClick={() => setIsProfileMenuOpen((prev) => !prev)}
@@ -333,7 +331,10 @@ const Header = () => {
                 aria-controls="profile-menu"
                 className="text-text-primary flex h-[74px] w-auto items-center justify-center gap-3 py-[14px] text-base md:max-lg:w-[164px] xl:w-[164px]"
               >
-                <div className="bg-primary-light flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full p-[8px]">
+                {/* 모바일: 프로필 아이콘만 (Figma 5664:56229) */}
+                <img src={iconProfileMobile} alt="" className="h-7 w-7 md:hidden" />
+                {/* 태블릿/데스크탑: 아이콘 + 이름 */}
+                <div className="bg-primary-light hidden h-9 w-9 flex-shrink-0 items-center justify-center rounded-full p-[8px] md:flex">
                   <svg
                     width="20"
                     height="20"
@@ -375,10 +376,10 @@ const Header = () => {
               )}
             </div>
           ) : (
-            <div className="hidden h-[74px] w-auto items-center justify-center md:flex md:w-[164px]">
+            <div className="flex h-[74px] w-auto items-center justify-center md:w-[164px]">
               <button
                 onClick={() => openLoginModal()}
-                className="flex h-[40px] w-full items-center justify-center rounded-[8px] border border-[#3783f7] bg-white px-[24px] py-[6px] text-base leading-[1.4] font-bold text-[#0564f5] whitespace-nowrap"
+                className="flex h-auto w-full items-center justify-center rounded border border-[#3783f7] bg-white px-[8px] py-[6px] text-xs leading-[1.4] font-bold text-[#0564f5] whitespace-nowrap md:h-[40px] md:rounded-[8px] md:px-[24px] md:text-base"
               >
                 로그인/회원가입
               </button>
