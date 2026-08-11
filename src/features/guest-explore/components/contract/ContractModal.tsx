@@ -3,7 +3,8 @@ import SignatureBoard, { type SignatureBoardRef } from "./SignatureBoard";
 import { formatDate } from "@/shared/utils/date";
 import TossPayments from "./TossPayments";
 import Authentication from "./Authentication";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 
 interface ContractModalProps {
   isOpen: boolean;
@@ -15,16 +16,25 @@ interface ContractModalProps {
 const ContractModal = ({ isOpen, reservation, paymentInfo, onClose }: ContractModalProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSigned, setIsSigned] = useState(false);
+  const titleId = useId();
   const signatureBoardRef = useRef<SignatureBoardRef>(null);
+  const dialogRef = useDialogA11y<HTMLDivElement>({ isOpen, onClose });
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden={true} />
-      <div className="relative z-10 flex max-h-[85vh] w-full max-w-[590px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl" role="dialog" aria-modal="true">
+      <div
+        ref={dialogRef}
+        className="relative z-10 flex max-h-[85vh] w-full max-w-[590px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+      >
         <div className="flex flex-col gap-4 overflow-y-auto p-6">
-          <h3 className="text-text-primary text-xl font-bold">단기 임대차 계약서</h3>
+          <h3 id={titleId} className="text-text-primary text-xl font-bold">단기 임대차 계약서</h3>
           <span className="text-text-secondary">
             {`임대인(이하 "호스트")과 임차인(이하 "게스트")은 공간 중개 플랫폼 '팝잇'을 통하여 다음과 같이 단기 공간 임대차 계약을 체결하며, 본 계약서에 기재된 임대 조건에 상호 합의합니다.`}
           </span>
