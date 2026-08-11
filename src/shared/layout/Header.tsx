@@ -61,6 +61,9 @@ const Header = () => {
   const pillMorphStyle: MorphTransitionStyle | undefined = isScrollBarVisible
     ? { viewTransitionName: SEARCH_BAR_VIEW_TRANSITION_NAME }
     : undefined;
+  // 축소 검색바 pill이 실제로 보이는 동안에만 우측 액션(모드 전환/프로필)을 숨긴다.
+  // pill을 눌러 원래 검색바를 펼친 상태에서는 pill이 사라지므로 액션도 다시 접근 가능해야 한다.
+  const hideHeaderActions = Boolean(scrollBarSummary) && isScrollBarVisible;
   const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
   const [modeError, setModeError] = useState(""); // 모드 전환 실패 사유
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -141,12 +144,12 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-40 w-full bg-white drop-shadow-[0px_4px_5px_rgba(0,0,0,0.12)]">
       {/* 피그마: 전체 px-[40px], 좌측 gap-[32px](로고↔nav), 우측 gap-[20px] */}
-      <div className="relative flex h-[74px] w-full items-center px-4 md:px-10 xl:px-24">
+      <div className="relative flex h-[74px] w-full items-center px-4 md:px-10 lg:px-24">
         {/* 좌측: 로고 + nav (gap-[32px]) */}
         <div className="flex items-center gap-8">
           <NavLink
             to={mode === "HOST" ? "/host/spaces" : "/"}
-            className="flex h-[74px] w-auto flex-shrink-0 items-center justify-center xl:w-[180px]"
+            className="flex h-[74px] w-auto flex-shrink-0 items-center justify-center lg:w-[180px]"
           >
             <Logo variant="header" />
           </NavLink>
@@ -229,19 +232,11 @@ const Header = () => {
           </nav>
         </div>
 
-        {/* 검색 결과 화면 전용: 스크롤을 내리면 헤더 정중앙에 축소된 검색바 pill이
-            나타난다. 클릭하면 헤더 바로 아래에 원래 검색바가 오버레이로 펼쳐진다
-            (Banner의 searchBarPosition="pinned-open"). 좁은 화면에서는 넣을
-            공간이 부족해 숨긴다.
-            좌/우 그룹(로고+nav, 모드전환+프로필)의 너비가 서로 달라서 그 사이의
-            남는 공간만 flex-1로 채우면 헤더 전체 기준으로는 중앙에서 벗어난다.
-            그래서 이 wrapper는 일반 flex 흐름에서 빼고 부모(relative)를 기준으로
-            absolute + inset-x-0 + justify-center로 항상 헤더 정중앙에 오게 한다.
-            wrapper는 pointer-events-none으로 두고, 실제 버튼만 pointer-events-auto로
-            켜서 숨겨진 상태에서도 다른 영역(nav, 프로필 등) 클릭을 막지 않는다. */}
-        {scrollBarSummary && (
+        {/* 검색 결과 화면 전용: 스크롤을 내리면 우측 액션 자리의 축소 검색바 pill이
+            나타난다. 클릭하면 헤더 바로 아래에 원래 검색바가 오버레이로 펼쳐진다. */}
+        {scrollBarSummary && isScrollBarVisible && (
           <div
-            className={`pointer-events-none absolute inset-x-0 top-1/2 hidden -translate-y-1/2 justify-center md:flex ${
+            className={`pointer-events-none ml-auto flex min-w-0 justify-end ${
               isScrollBarVisible ? "" : "opacity-0"
             }`}
           >
@@ -252,37 +247,35 @@ const Header = () => {
               aria-label="검색 조건 펼치기"
               disabled={!isScrollBarVisible}
               style={pillMorphStyle}
-              className={`border-divider pointer-events-auto flex items-center gap-3 rounded-full border bg-white py-2 pr-2 pl-5 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] ${
+              className={`border-divider pointer-events-auto flex max-w-[calc(100vw-104px)] items-center gap-1 rounded-full border bg-white px-2.5 py-2 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] md:max-w-[420px] md:gap-3 md:px-5 lg:max-w-[520px] ${
                 isScrollBarVisible ? "cursor-pointer" : "cursor-default"
               }`}
             >
-              <span className="text-text-primary text-sm font-bold whitespace-nowrap">
+              <span className="text-text-primary min-w-0 truncate text-[10px] font-medium whitespace-nowrap md:text-sm md:font-bold">
                 {scrollBarSummary.categoryLabel}
               </span>
-              <span aria-hidden="true" className="bg-divider h-4 w-px shrink-0" />
-              <span className="text-text-primary text-sm font-bold whitespace-nowrap">
+              <span aria-hidden="true" className="bg-divider h-3 w-px shrink-0 md:h-4" />
+              <span className="text-text-primary min-w-0 truncate text-[10px] font-medium whitespace-nowrap md:text-sm md:font-bold">
                 {scrollBarSummary.dateLabel}
               </span>
-              <span aria-hidden="true" className="bg-divider h-4 w-px shrink-0" />
-              <span className="text-text-primary text-sm font-bold whitespace-nowrap">
+              <span aria-hidden="true" className="bg-divider h-3 w-px shrink-0 md:h-4" />
+              <span className="text-text-primary min-w-0 truncate text-[10px] font-medium whitespace-nowrap md:text-sm md:font-bold">
                 {scrollBarSummary.districtLabel}
               </span>
-              <span aria-hidden="true" className="bg-divider h-4 w-px shrink-0" />
-              <span className="text-text-secondary max-w-[120px] truncate text-sm">
+              <span aria-hidden="true" className="bg-divider h-3 w-px shrink-0 md:h-4" />
+              <span className="text-text-secondary min-w-0 max-w-[64px] shrink truncate text-[10px] whitespace-nowrap md:max-w-[120px] md:text-sm">
                 {scrollBarSummary.keywordLabel}
-              </span>
-              <span className="bg-primary-hover flex size-8 shrink-0 items-center justify-center rounded-full text-white">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-                  <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
               </span>
             </button>
           </div>
         )}
 
         {/* 우측: 모드전환 + 프로필 (gap-[20px]) */}
-        <div className="ml-auto flex items-center gap-4 md:max-lg:-mr-[32px] md:gap-5">
+        <div
+          className={`ml-auto flex items-center gap-4 md:max-lg:-mr-[32px] md:gap-5 ${
+            hideHeaderActions ? "hidden" : ""
+          }`}
+        >
           {/* 모드 전환 버튼 — 게스트 모드 나의 예약 탭에서는 숨김 */}
           {!hideModeToggle && (
             <>
@@ -330,7 +323,7 @@ const Header = () => {
                 aria-expanded={isProfileMenuOpen}
                 aria-controls="profile-menu"
                 aria-label={`${user.nickname} 프로필 메뉴`}
-                className="text-text-primary flex h-[74px] w-auto items-center justify-center gap-3 py-[14px] text-base md:max-lg:w-[164px] xl:w-[164px]"
+                className="text-text-primary flex h-[74px] w-auto items-center justify-center gap-3 py-[14px] text-base md:max-lg:w-[164px] lg:w-[164px]"
               >
                 {/* 모바일: 프로필 아이콘만 (Figma 5664:56229) */}
                 <img src={iconProfileMobile} alt="" className="h-7 w-7 md:hidden" />

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -55,21 +56,30 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
 
+  // Figma 태블릿(768~1023) 스펙: 2개월 나란히 보이던 캘린더가 1개월만 노출된다
+  // (840px짜리 2개월 다이얼로그는 768px 뷰포트에서 애초에 다 들어가지도 않는다).
+  // lg(1024) 미만이면 1개월, 그 이상이면 기존과 동일하게 2개월을 보여준다.
+  const isTwoMonthView = useMediaQuery("(min-width: 1024px)");
+  const isMobileCalendar = useMediaQuery("(max-width: 767px)");
+
   const secondViewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
+  // 실제로 화면에 보이는 달 중 가장 오른쪽(=가장 미래) 달. 2개월 뷰에서는 secondViewDate,
+  // 1개월 뷰에서는 viewDate 자신이다 - "다음 달로 더 못 넘어가는" 기준을 여기에 맞춘다.
+  const rightmostViewDate = isTwoMonthView ? secondViewDate : viewDate;
 
   // 오늘이 속한 달보다 과거로는 이동할 수 없다(ExploreReservationCard와 동일한 규칙).
-  // 왼쪽 달이 이동 불가한 상태면 "이전 달" 화살표 자체를 렌더링하지 않는다.
+  // 가장 왼쪽(=viewDate) 달이 이동 불가한 상태면 "이전 달" 화살표 자체를 렌더링하지 않는다.
   const currentMonthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
   const viewedMonthStart = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
   const isPrevMonthDisabled = viewedMonthStart <= currentMonthStart;
 
   // 오늘로부터 90일 이후의 달로는 이동할 수 없다(공간상세 예약 캘린더와 동일한 규칙).
-  // 오른쪽(다음) 달이 이미 그 상한 달이면 "다음 달" 화살표를 렌더링하지 않는다.
+  // 가장 오른쪽(미래) 달이 이미 그 상한 달이면 "다음 달" 화살표를 렌더링하지 않는다.
   const maxSelectableDate = new Date(todayStart);
   maxSelectableDate.setDate(maxSelectableDate.getDate() + 90);
   const isNextMonthDisabled =
-    secondViewDate.getFullYear() === maxSelectableDate.getFullYear() &&
-    secondViewDate.getMonth() === maxSelectableDate.getMonth();
+    rightmostViewDate.getFullYear() === maxSelectableDate.getFullYear() &&
+    rightmostViewDate.getMonth() === maxSelectableDate.getMonth();
 
   const handleSelectDate = (date: Date) => {
     if (date < todayStart || date > maxSelectableDate) return;
@@ -154,23 +164,26 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
     return day;
   };
 
-  const renderMonth = (monthDate: Date, edge: "left" | "right") => {
+  const renderMonth = (
+    monthDate: Date,
+    { showPrevArrow, showNextArrow }: { showPrevArrow: boolean; showNextArrow: boolean },
+  ) => {
     const cells = getMonthCells(monthDate.getFullYear(), monthDate.getMonth());
 
     return (
-      <div className="flex w-[420px] flex-col items-center gap-7 px-3.5 py-5">
+      <div className="flex w-full flex-col items-center gap-7 px-3.5 py-5">
         <div className="flex w-full items-center justify-center gap-3">
           {/* 화살표 유무와 상관없이 "YYYY.MM" 라벨 위치가 고정되도록, 이동 불가
               방향이어도 자리(w-8)는 항상 비워둔다(ExploreReservationCard와 동일). */}
           <div className="flex h-8 w-8 items-center justify-center">
-            {edge === "left" && !isPrevMonthDisabled && (
+            {showPrevArrow && !isPrevMonthDisabled && (
               <button
                 type="button"
                 aria-label="이전 달"
                 onClick={() =>
                   setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
                 }
-                className="text-text-primary hover:bg-primary-light active:bg-primary-light flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors"
+                className="text-text-primary hover:bg-primary-light active:bg-primary-light focus-visible:ring-primary flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 ‹
               </button>
@@ -180,14 +193,14 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
             {monthDate.getFullYear()}.{String(monthDate.getMonth() + 1).padStart(2, "0")}
           </span>
           <div className="flex h-8 w-8 items-center justify-center">
-            {edge === "right" && !isNextMonthDisabled && (
+            {showNextArrow && !isNextMonthDisabled && (
               <button
                 type="button"
                 aria-label="다음 달"
                 onClick={() =>
                   setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
                 }
-                className="text-text-primary hover:bg-primary-light active:bg-primary-light flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors"
+                className="text-text-primary hover:bg-primary-light active:bg-primary-light focus-visible:ring-primary flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 ›
               </button>
@@ -195,19 +208,19 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center">
+        <div className="flex w-full flex-col items-center gap-3">
+          <div className="grid w-full grid-cols-7">
             {WEEKDAYS.map((day) => (
               <span
                 key={day}
-                className="text-text-primary flex w-[60px] items-center justify-center py-2 text-sm"
+                className="text-text-primary flex min-w-0 items-center justify-center py-2 text-sm"
               >
                 {day}
               </span>
             ))}
           </div>
 
-          <div className="grid grid-cols-7">
+          <div className="grid w-full grid-cols-7">
             {cells.map((date, index) =>
               date ? (
                 <button
@@ -216,12 +229,12 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
                   onClick={() => handleSelectDate(date)}
                   disabled={isDateDisabled(date)}
                   aria-pressed={isSelectedEndpoint(date)}
-                  className={`relative box-border flex h-[46px] w-[60px] cursor-pointer items-center justify-center border-0 p-0 text-base font-bold disabled:cursor-not-allowed ${getDayClassName(date)}`}
+                  className={`focus-visible:ring-primary relative box-border flex h-[46px] min-w-0 cursor-pointer items-center justify-center border-0 p-0 text-base font-bold focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed ${getDayClassName(date)}`}
                 >
                   {renderDayNumber(date)}
                 </button>
               ) : (
-                <span key={`blank-${index}`} className="h-[46px] w-[60px]" aria-hidden="true" />
+                <span key={`blank-${index}`} className="h-[46px] min-w-0" aria-hidden="true" />
               ),
             )}
           </div>
@@ -232,21 +245,31 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
 
   return (
     <div
-      role="dialog"
-      aria-label="날짜 범위 선택"
+      role={isMobileCalendar ? undefined : "dialog"}
+      aria-label={isMobileCalendar ? undefined : "날짜 범위 선택"}
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           e.stopPropagation();
           onConfirm();
         }
       }}
-      className="border-divider flex flex-col items-start rounded-xl border-2 bg-white shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]"
+      className={`mx-auto flex w-full shrink-0 flex-col items-center bg-white ${
+        isMobileCalendar
+          ? "h-auto"
+          : "border-divider h-[520px] w-[420px] max-w-[calc(100vw-24px)] rounded-xl border-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]"
+      }`}
     >
       <div className="flex items-center rounded-xl">
-        {renderMonth(viewDate, "left")}
-        {renderMonth(secondViewDate, "right")}
+        {isTwoMonthView ? (
+          <>
+            {renderMonth(viewDate, { showPrevArrow: true, showNextArrow: false })}
+            {renderMonth(secondViewDate, { showPrevArrow: false, showNextArrow: true })}
+          </>
+        ) : (
+          renderMonth(viewDate, { showPrevArrow: true, showNextArrow: true })
+        )}
       </div>
-      <div className="flex w-full items-center justify-end gap-5 p-5">
+      <div className="flex w-full items-center justify-end gap-5 p-5 max-md:pt-2">
         <button
           type="button"
           onClick={handleReset}

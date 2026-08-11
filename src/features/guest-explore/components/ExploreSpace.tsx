@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SpaceCard from "@/shared/components/SpaceCard";
+import LoadingSparkles from "@/shared/components/LoadingSparkles";
 import ExplorePagination from "./ExplorePagination";
 import ExploreSpaceMap from "./ExploreSpaceMap";
 import ExploreSpaceEmptyState from "./ExploreSpaceEmptyState";
@@ -279,8 +280,8 @@ const ExploreSpace = ({
   };
 
   return (
-    <section className="mt-14 w-full">
-      <div className={`mb-6 flex items-center ${resultsMode ? "justify-end" : "justify-between"}`}>
+    <section className="mt-6 w-full md:mt-14">
+      <div className={`mb-4 flex items-center md:mb-6 ${resultsMode ? "justify-end" : "justify-between"}`}>
         {!resultsMode && <h2 className="text-text-primary text-2xl font-bold">공간 탐색</h2>}
 
         <button
@@ -323,11 +324,11 @@ const ExploreSpace = ({
         </button>
       </div>
 
+      {/* 최초 로딩도 무한스크롤 "더 불러오는 중" 상태(LoadingSparkles)와 같은
+          디자인을 쓴다 - 문구만 다르다(피그마 스펙 문장 부호까지 맞춰 마침표 포함). */}
       {status === "loading" && (
         <div className="bg-tag-bg mt-6 flex h-[400px] w-full items-center justify-center rounded-xl">
-          <p className="text-text-primary text-xl font-medium">
-            공간을 불러오는 중이에요
-          </p>
+          <LoadingSparkles label="공간을 불러오는 중이에요." />
         </div>
       )}
 
@@ -365,7 +366,7 @@ const ExploreSpace = ({
       {status === "success" && !isMapView && spaces.length > 0 && (
         <>
           <div
-            className={`mt-6 grid grid-cols-4 gap-x-6 gap-y-10 transition-opacity ${
+            className={`mt-4 grid grid-cols-1 gap-x-6 gap-y-8 transition-opacity md:mt-6 md:grid-cols-2 md:gap-y-10 lg:grid-cols-4 ${
               isRefetching ? "pointer-events-none opacity-50" : ""
             }`}
           >
@@ -386,10 +387,12 @@ const ExploreSpace = ({
             <>
               {/* IntersectionObserver가 관찰하는 빈 sentinel - 화면에 보이면 다음 페이지를 이어붙인다 */}
               <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
+              {/* 피그마 스펙(node 5299:32782) - 별 5개가 웨이브로 밝아지는 애니메이션 +
+                  "새로운 공간을 불러오고 있습니다." 문구(LoadingSparkles 참고). */}
               {isLoadingMore && (
-                <p className="text-text-secondary py-8 text-center text-sm">
-                  더 불러오는 중이에요
-                </p>
+                <div className="py-8">
+                  <LoadingSparkles />
+                </div>
               )}
               {hasLoadMoreError && (
                 <div className="flex flex-col items-center gap-2 py-8">
