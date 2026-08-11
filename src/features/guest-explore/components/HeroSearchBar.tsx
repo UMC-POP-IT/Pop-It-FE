@@ -417,7 +417,6 @@ const HeroSearchBar = ({
 
       {!isWideDesktop && (
         <>
-          <span aria-hidden="true" className="bg-divider mx-5 h-px md:hidden" />
           {/* 모바일에서 이 박스(검색어 줄)에 세로 패딩이 하나도 없다 보니, 라벨을
               숨긴 뒤로 내용이 한 줄만 남아 위 필터 박스(2줄, py-2.5)보다 눈에 띄게
               낮아 보였다(사용자 리포트: "두줄짜리 검색창 크기가 위 검색창처럼
