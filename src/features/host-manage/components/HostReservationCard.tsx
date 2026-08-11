@@ -130,7 +130,7 @@ export const HostReservationCard = ({
             </div>
           )}
 
-          {(status === "APPROVED" || status === "CONTRACT_COMPLETED" || status === "PAYMENT_COMPLETED" || status === "IN_USE" || status === "CHECKOUT_COMPLETED") && (
+          {(status === "APPROVED" || status === "CONTRACT_COMPLETED" || status === "PAYMENT_COMPLETED" || status === "IN_USE" || status === "CHECKOUT_COMPLETED") && displayStatus !== "USAGE_COMPLETED" && (
             <button
               onClick={onDetail}
               className="bg-surface-blue text-text-primary hover:bg-primary-light h-10 w-[104px] rounded-lg px-6 py-1.5 text-base font-bold whitespace-nowrap md:w-auto"
@@ -139,7 +139,7 @@ export const HostReservationCard = ({
             </button>
           )}
 
-          {status === "USAGE_COMPLETED" && isPhotoVerified && (
+          {(status === "USAGE_COMPLETED" || displayStatus === "USAGE_COMPLETED") && isPhotoVerified && (
             <div className="flex w-full flex-wrap items-center gap-2 md:w-auto md:gap-1">
               <button
                 onClick={onDetail}
@@ -168,7 +168,7 @@ export const HostReservationCard = ({
             </div>
           )}
 
-          {status === "USAGE_COMPLETED" && !isPhotoVerified && (
+          {(status === "USAGE_COMPLETED" || displayStatus === "USAGE_COMPLETED") && !isPhotoVerified && (
             <div className="flex w-full flex-col items-start gap-2 min-[1024px]:items-end">
               <span className="w-full text-left text-base font-medium text-[#0564f5] min-[1024px]:text-right">
                 퇴실 사진이 아직 등록되지 않았습니다.
