@@ -288,7 +288,7 @@ const Header = () => {
                 {scrollBarSummary.districtLabel}
               </span>
               <span aria-hidden="true" className="bg-divider h-3 w-px shrink-0 md:h-4" />
-              <span className="text-text-secondary shrink-0 text-[10px] whitespace-nowrap md:max-w-[120px] md:shrink md:truncate md:text-sm">
+              <span className="text-text-secondary min-w-0 max-w-[64px] shrink truncate text-[10px] whitespace-nowrap md:max-w-[120px] md:text-sm">
                 {scrollBarSummary.keywordLabel}
               </span>
               <span className="bg-primary-hover hidden size-8 shrink-0 items-center justify-center rounded-full text-white md:flex">
