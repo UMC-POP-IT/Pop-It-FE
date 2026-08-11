@@ -146,7 +146,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
 
     if (isSelectedEndpoint(date)) {
       return (
-        <span className="bg-primary relative z-10 flex aspect-square h-full shrink-0 items-center justify-center rounded-full text-white">
+        <span className="bg-primary relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full text-white">
           {day}
         </span>
       );
@@ -156,7 +156,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
     }
     if (isSameDay(date, todayStart)) {
       return (
-        <span className="border-primary-100 relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border text-text-primary">
+        <span className="border-primary-100 relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full border text-text-primary">
           {day}
         </span>
       );
@@ -211,10 +211,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
         <div className="flex w-full flex-col items-center gap-3">
           <div className="grid w-full grid-cols-7">
             {WEEKDAYS.map((day) => (
-              <span
-                key={day}
-                className="text-text-primary flex min-w-0 items-center justify-center py-2 text-sm"
-              >
+              <span key={day} className="text-text-primary flex min-w-0 items-center justify-center py-2 text-sm">
                 {day}
               </span>
             ))}
@@ -231,7 +228,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
                   aria-pressed={isSelectedEndpoint(date)}
                   className={`focus-visible:ring-primary relative box-border flex h-[46px] min-w-0 cursor-pointer items-center justify-center border-0 p-0 text-base font-bold focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed ${getDayClassName(date)}`}
                 >
-                  {renderDayNumber(date)}
+                  <span className="flex size-11 items-center justify-center rounded-full">{renderDayNumber(date)}</span>
                 </button>
               ) : (
                 <span key={`blank-${index}`} className="h-[46px] min-w-0" aria-hidden="true" />
