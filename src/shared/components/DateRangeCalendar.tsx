@@ -182,7 +182,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
                 onClick={() =>
                   setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
                 }
-                className="text-text-primary hover:bg-primary-light active:bg-primary-light flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors focus:outline-none"
+                className="text-text-primary hover:bg-primary-light active:bg-primary-light focus-visible:ring-primary flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 ‹
               </button>
@@ -199,7 +199,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
                 onClick={() =>
                   setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
                 }
-                className="text-text-primary hover:bg-primary-light active:bg-primary-light flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors focus:outline-none"
+                className="text-text-primary hover:bg-primary-light active:bg-primary-light focus-visible:ring-primary flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
               >
                 ›
               </button>
@@ -228,7 +228,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
                   onClick={() => handleSelectDate(date)}
                   disabled={isDateDisabled(date)}
                   aria-pressed={isSelectedEndpoint(date)}
-                  className={`relative box-border flex h-[46px] w-[52px] cursor-pointer items-center justify-center border-0 p-0 text-base font-bold focus:outline-none disabled:cursor-not-allowed md:w-[60px] ${getDayClassName(date)}`}
+                  className={`focus-visible:ring-primary relative box-border flex h-[46px] w-[52px] cursor-pointer items-center justify-center border-0 p-0 text-base font-bold focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed md:w-[60px] ${getDayClassName(date)}`}
                 >
                   {renderDayNumber(date)}
                 </button>

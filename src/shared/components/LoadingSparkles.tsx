@@ -61,10 +61,11 @@ const LoadingSparkles = ({
             height={size}
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="text-primary-100 absolute"
+            className="absolute"
             style={{
               left,
               top,
+              color: "var(--color-primary-100)",
               animation: "sparkle-shimmer 1.6s ease-in-out infinite",
               animationDelay: `${index * ANIMATION_DELAY_STEP_S}s`,
             }}

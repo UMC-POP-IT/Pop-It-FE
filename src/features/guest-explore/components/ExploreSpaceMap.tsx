@@ -70,7 +70,7 @@ const ExploreSpaceMap = ({
   };
 
   return (
-    <div className="relative mt-4 h-[560px] w-full overflow-hidden rounded-lg max-md:h-[520px] md:mt-6">
+    <div className="relative mt-4 h-[560px] w-full overflow-hidden rounded-lg max-md:h-[clamp(360px,calc(100dvh-220px),520px)] md:mt-6">
       {isLoaded ? (
         <KakaoMap
           center={center}

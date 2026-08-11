@@ -416,18 +416,21 @@ const HeroSearchBar = ({
       </div>
 
       {!isWideDesktop && (
-        // 모바일에서 이 박스(검색어 줄)에 세로 패딩이 하나도 없다 보니, 라벨을
-        // 숨긴 뒤로 내용이 한 줄만 남아 위 필터 박스(2줄, py-2.5)보다 눈에 띄게
-        // 낮아 보였다(사용자 리포트: "두줄짜리 검색창 크기가 위 검색창처럼
-        // 돼야지"). 피그마도 이 박스는 안쪽 입력 padding(py-[8px]) 위에 바깥
-        // 래퍼 자체에도 p-[9px]를 한 번 더 둬서(내용이 1줄이라도) 위 필터
-        // 박스와 높이를 맞춘다 - md 이상(태블릿/데스크톱)은 라벨이 그대로
-        // 보여 이미 두 박스 높이가 맞았으므로 세로 패딩을 추가하지 않는다.
-        <div
-          className={`flex items-center gap-2.5 rounded-full bg-white py-2.5 pr-3 md:py-0 ${outerBorderClassName}`}
-        >
-          {keywordContent}
-        </div>
+        <>
+          <span aria-hidden="true" className="bg-divider mx-5 h-px md:hidden" />
+          {/* 모바일에서 이 박스(검색어 줄)에 세로 패딩이 하나도 없다 보니, 라벨을
+              숨긴 뒤로 내용이 한 줄만 남아 위 필터 박스(2줄, py-2.5)보다 눈에 띄게
+              낮아 보였다(사용자 리포트: "두줄짜리 검색창 크기가 위 검색창처럼
+              돼야지"). 피그마도 이 박스는 안쪽 입력 padding(py-[8px]) 위에 바깥
+              래퍼 자체에도 p-[9px]를 한 번 더 둬서(내용이 1줄이라도) 위 필터
+              박스와 높이를 맞춘다 - md 이상(태블릿/데스크톱)은 라벨이 그대로
+              보여 이미 두 박스 높이가 맞았으므로 세로 패딩을 추가하지 않는다. */}
+          <div
+            className={`flex items-center gap-2.5 rounded-full bg-white py-2.5 pr-3 md:py-0 ${outerBorderClassName}`}
+          >
+            {keywordContent}
+          </div>
+        </>
       )}
     </div>
   );
