@@ -1,6 +1,8 @@
+import { useId } from "react";
 import Button from "@/shared/components/Button";
 import type { GetPaymentInfoResponse, Reservation } from "@/features/guest-explore/api/my_reservation_api";
 import { formatDate } from "@/shared/utils/date";
+import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 import shieldCheckIcon from "@/features/guest-explore/icons/shield-check.svg";
 
 interface PaymentModalProps {
@@ -22,6 +24,8 @@ const PaymentModal = ({
   onSignContract,
   paymentInfo
 }: PaymentModalProps) => {
+  const titleId = useId();
+  const dialogRef = useDialogA11y<HTMLDivElement>({ isOpen, onClose });
 
   if (!isOpen) return null;
   
