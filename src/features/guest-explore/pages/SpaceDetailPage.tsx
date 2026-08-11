@@ -60,7 +60,10 @@ export const SpaceDetailPage = () => {
       } catch (error) {
         if (ignore) return;
 
-        const httpStatus = error instanceof Error ? (error as { status?: number }).status : undefined;
+        const httpStatus =
+          error instanceof Error
+            ? (error as { status?: number }).status
+            : undefined;
         if (httpStatus === 404) {
           setStatus("notfound");
         } else {
@@ -94,7 +97,11 @@ export const SpaceDetailPage = () => {
         <p className="text-text-primary text-xl font-medium">
           공간 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.
         </p>
-        <Button variant="outline" size="sm" onClick={() => setRetryKey((k) => k + 1)}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setRetryKey((k) => k + 1)}
+        >
           다시 시도
         </Button>
       </div>
@@ -107,7 +114,11 @@ export const SpaceDetailPage = () => {
         <p className="text-text-primary text-xl font-medium">
           공간 정보를 찾을 수 없어요.
         </p>
-        <Button variant="outline" size="sm" onClick={() => navigate("/explore")}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate("/explore")}
+        >
           공간 탐색으로 돌아가기
         </Button>
       </div>
@@ -115,10 +126,12 @@ export const SpaceDetailPage = () => {
   }
 
   return (
-    <div className="mx-auto flex w-[1200px] flex-col gap-5">
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-4 md:px-6 lg:px-0">
       <ExploreDetailGallery space={space} />
 
-      <div className="flex w-full items-start gap-[23px]">
+      {/* Desktop(lg, 1024~): 정보 좌측 + 예약 위젯 우측 사이드 컬럼
+          Tablet/Mobile(~1023): 예약 위젯이 정보 아래로 내려와 풀폭으로 스택 (Figma 반응형 스펙, 이슈 #256) */}
+      <div className="flex w-full flex-col items-start gap-10 lg:flex-row lg:gap-[23px]">
         <ExploreDetailInfo
           space={space}
           variant={isMine ? "host" : "guest"}
