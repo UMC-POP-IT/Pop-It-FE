@@ -26,6 +26,7 @@ import { TOSS_PENDING_PAYMENT_KEY, clearTossPaymentCache } from "@/features/gues
 const SessionBootstrap = () => {
   const login = useAuthStore((s) => s.login);
   const setSessionReady = useAuthStore((s) => s.setSessionReady);
+  const refreshHostStatus = useAuthStore((s) => s.refreshHostStatus);
 
   useEffect(() => {
     if (!localStorage.getItem("access_token")) {
@@ -36,6 +37,10 @@ const SessionBootstrap = () => {
       .then((user) => {
         const isHostPath = window.location.pathname.startsWith("/host");
         login({ ...user, currentMode: isHostPath ? "HOST" : "GUEST" });
+        // hostStatus는 새로고침하면 unknown으로 돌아간다. 세션을 복원한 김에 한 번 채워두면
+        // 호스트 등록 가드가 이미 등록한 계정을 막을 수 있고, 헤더 모드 전환도 따로 조회하지 않는다.
+        // 실패해도 store가 unknown으로 되돌리고 삼키므로 로그인 복원 흐름은 막지 않는다.
+        void refreshHostStatus();
       })
       .catch(() => {
         // accessToken/refreshToken 모두 만료 등 복원 실패 → 남은 토큰 정리
@@ -45,7 +50,7 @@ const SessionBootstrap = () => {
       .finally(() => {
         setSessionReady();
       });
-  }, [login, setSessionReady]);
+  }, [login, setSessionReady, refreshHostStatus]);
 
   return null;
 };
