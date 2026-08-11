@@ -9,6 +9,7 @@ import ExploreDetailGallery from "@/features/guest-explore/components/ExploreDet
 import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetailInfo";
 import ExploreReservationCard from "@/features/guest-explore/components/ExploreReservationCard";
 import Button from "@/shared/components/Button";
+import PhotoGalleryModal from "@/shared/components/PhotoGalleryModal";
 import { useWishStore } from "@/store/wishStore";
 import { useAuthStore } from "@/store/authStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
@@ -28,6 +29,8 @@ export const SpaceDetailPage = () => {
   const [space, setSpace] = useState<ExploreSpaceDetail | null>(null);
   const [isMine, setIsMine] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  // null이면 뷰어 닫힘, 숫자면 해당 인덱스부터 확대 뷰어 열림
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
 
   const id = Number(spaceId);
 
@@ -60,7 +63,10 @@ export const SpaceDetailPage = () => {
       } catch (error) {
         if (ignore) return;
 
-        const httpStatus = error instanceof Error ? (error as { status?: number }).status : undefined;
+        const httpStatus =
+          error instanceof Error
+            ? (error as { status?: number }).status
+            : undefined;
         if (httpStatus === 404) {
           setStatus("notfound");
         } else {
@@ -94,7 +100,11 @@ export const SpaceDetailPage = () => {
         <p className="text-text-primary text-xl font-medium">
           공간 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.
         </p>
-        <Button variant="outline" size="sm" onClick={() => setRetryKey((k) => k + 1)}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setRetryKey((k) => k + 1)}
+        >
           다시 시도
         </Button>
       </div>
@@ -107,7 +117,11 @@ export const SpaceDetailPage = () => {
         <p className="text-text-primary text-xl font-medium">
           공간 정보를 찾을 수 없어요.
         </p>
-        <Button variant="outline" size="sm" onClick={() => navigate("/explore")}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate("/explore")}
+        >
           공간 탐색으로 돌아가기
         </Button>
       </div>
@@ -116,7 +130,10 @@ export const SpaceDetailPage = () => {
 
   return (
     <div className="mx-auto flex w-[1200px] flex-col gap-5">
-      <ExploreDetailGallery space={space} />
+      <ExploreDetailGallery
+        space={space}
+        onImageClick={(index) => setGalleryIndex(index)}
+      />
 
       <div className="flex w-full items-start gap-[23px]">
         <ExploreDetailInfo
@@ -136,6 +153,13 @@ export const SpaceDetailPage = () => {
           />
         )}
       </div>
+
+      <PhotoGalleryModal
+        isOpen={galleryIndex !== null}
+        photos={space.imageUrls}
+        initialIndex={galleryIndex ?? 0}
+        onClose={() => setGalleryIndex(null)}
+      />
     </div>
   );
 };
