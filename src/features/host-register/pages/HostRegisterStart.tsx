@@ -38,95 +38,126 @@ export const HostRegisterStart = () => {
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    // 카드 바깥 여백 — 모바일 16 / 태블릿 24
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6">
       {/* 딤 배경 */}
       <div className="absolute inset-0 bg-black/40" />
 
-      {/* 모달 카드 — 피그마(1000 x 620 · 패딩 100/80 · gap 80 · radius 12)를 0.9로 줄인 값.
-          1000이 화면에서 너무 커서 여백과 이미지만 축소하고 폰트는 디자인 토큰 값 그대로 둔다.
-          높이는 고정하지 않는다 — 오른쪽 컬럼 내용이 정한다.
-
-          lg 미만에서 여백·gap을 줄이고 이미지를 숨기는 이유:
-          이미지 306 + gap 64 + 오른쪽 컬럼 최소폭 224(StepIndicator w-fit) = 594,
-          여기에 px-20(160)과 바깥 p-4(32)를 더하면 뷰포트 786px 미만에서 오른쪽 컬럼이
-          카드 밖으로 밀린다. fixed라 가로 스크롤도 안 생겨서 [등록 시작하기]와 X 닫기에
-          아예 도달할 수 없게 된다. md(768)로 잡으면 768~785 구간이 18px 모자라 lg로 둔다 */}
+      {/* 모달 카드 — 3단이 배치까지 다르다.
+            모바일 : 세로 1단, 전부 가운데 정렬, 버튼은 카드 폭 전체
+            태블릿 : 좌우 2단 + 버튼만 카드 바닥 전체 폭
+            데스크톱: 좌우 2단 + 버튼이 오른쪽 컬럼 안에 184폭 (기존 그대로)
+          폭·패딩: 모바일 max 360 / p 20 · 태블릿 854 / 60·80 · 데스크톱 900 / 64·80.
+          모바일 폭은 뷰포트 360에서 바깥 p-4(16×2)를 빼 328이 되고, 392 이상에서 360으로 멈춘다.
+          높이는 고정하지 않는다 — 내용이 정한다 */}
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="relative z-10 flex w-full max-w-[900px] items-stretch gap-8 rounded-xl bg-white px-8 py-16 shadow-xl lg:gap-16 lg:px-20"
+        className="relative z-10 flex w-full max-w-[360px] flex-col rounded-xl bg-white p-5 shadow-xl md:max-w-[88%] md:px-20 md:py-[60px] lg:max-w-[900px] lg:py-16"
       >
-        {/* 왼쪽: 대표 이미지 — 피그마 340의 0.9 (내용폭 740 - gap 64 - 오른쪽 370).
-            높이는 self-stretch로 오른쪽 컬럼에 맞추고, object-contain이 세로 가운데로 그린다.
-            장식 이미지(alt="")라 좁은 화면에서 숨겨도 잃는 정보가 없다 */}
-        <div className="hidden w-[306px] shrink-0 self-stretch overflow-hidden rounded-lg lg:block">
+        {/* X 닫기 — 모바일·태블릿은 카드 오른쪽 위.
+            (공통 X 컴포넌트가 없어 LoginModal과 동일하게 raw button을 쓴다) */}
+        <button
+          type="button"
+          aria-label="닫기"
+          onClick={handleClose}
+          className="text-text-secondary hover:text-text-primary self-end lg:hidden"
+        >
           <img
-            src={hostRegisterIllustration}
+            src={iconClose}
             alt=""
-            className="h-full w-full object-contain"
+            className="h-8 w-8"
           />
+        </button>
+
+        {/* 2단 영역 — 모바일에서만 세로로 쌓인다. 태블릿 gap 60 / 데스크톱 64 */}
+        <div className="flex flex-col items-center md:flex-row md:items-stretch md:gap-[60px] lg:gap-16">
+          {/* 대표 이미지 — 모바일 200×270.588 · 태블릿 240×324.706.
+              데스크톱만 높이를 self-stretch로 오른쪽 컬럼에 맞추고 폭 306을 쓴다 */}
+          <div className="h-[270.588px] w-[200px] shrink-0 overflow-hidden rounded-lg md:h-[324.706px] md:w-[240px] lg:h-auto lg:w-[306px] lg:self-stretch">
+            <img
+              src={hostRegisterIllustration}
+              alt=""
+              className="h-full w-full object-contain"
+            />
+          </div>
+
+          {/* 오른쪽 컬럼 (모바일에서는 이미지 아래).
+              모바일 이미지↔로고 16, md 이상은 가로 배치라 0.
+              폭은 flex-1 — 피그마도 Fill(flex: 1 0 0) */}
+          <div className="mt-4 flex flex-1 flex-col items-center md:mt-0 md:items-start">
+            {/* 데스크톱 전용 X — 이 자리에 있어야 왼쪽 이미지가 X 높이까지 늘어난다.
+                카드 레벨로 빼면 이미지 상단이 32px 내려가 기존 데스크톱 모양이 바뀐다 */}
+            <button
+              type="button"
+              aria-label="닫기"
+              onClick={handleClose}
+              className="text-text-secondary hover:text-text-primary hidden self-end lg:block"
+            >
+              <img
+                src={iconClose}
+                alt=""
+                className="h-8 w-8"
+              />
+            </button>
+
+            {/* error variant가 피그마 로고 크기(108 x 20.8)와 정확히 같다.
+                이름은 오류 페이지용이지만 크기 맞는 기존 variant를 쓴다 (공통 컴포넌트 수정 회피) */}
+            <Logo variant="error" />
+
+            {/* 로고↔제목 20 (3단 공통) · 제목↔안내문 모바일 12 / 태블릿 8 / 데스크톱 4 */}
+            <div className="mt-5 flex w-full flex-col gap-3 text-center md:gap-2 md:text-left lg:gap-1">
+              {/* aria-labelledby로 다이얼로그 이름이 되는 제목 */}
+              <h1
+                id={titleId}
+                className="text-text-primary text-[32px] leading-[1.4] font-bold"
+              >
+                호스트 등록
+              </h1>
+              {/* 피그마 Grey/grey-600 (#747474) = text-tertiary. secondary는 #808080이라 다른 색이다 */}
+              <p className="text-text-tertiary text-xl leading-[1.4] font-medium">
+                안전한 거래를 위해 호스트 등록을 마친 후 팝잇을 이용해주세요
+              </p>
+            </div>
+
+            {/* 진행바 — 아직 시작 전이라 두 단계 모두 비활성(currentStep=-1).
+                StepIndicator는 폭 전체를 쓰고 정렬이 내부에 하드코딩돼 있어 밖에서 못 덮는다.
+                w-fit으로 폭을 내용만큼 좁히면 내부 가운데정렬이 무효가 되어 왼쪽에 붙고,
+                모바일에서는 부모의 items-center가 그 덩어리를 가운데로 보낸다.
+                안내문과의 간격은 컴포넌트 안 py-3(12)을 빼고 준다 (모바일 28 / 태블릿 40) */}
+            <div className="mt-4 w-fit md:mt-7 lg:mt-10">
+              <StepIndicator
+                steps={HOST_STEPS}
+                currentStep={-1}
+                spacing="compact"
+              />
+            </div>
+
+            {/* 데스크톱 전용 버튼 — 오른쪽 컬럼 안, 184폭 (기존 그대로).
+                Button 자체가 display:flex라 여기서 hidden을 주면 충돌한다. div로 감싸 껐다 켠다 */}
+            <div className="mt-8 hidden lg:block">
+              <Button
+                variant="primary"
+                size="nav"
+                onClick={() => navigate("/host/host-register/step1")}
+              >
+                등록 시작하기
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {/* 오른쪽: 닫기 + 안내 + 진행바 + 시작 버튼.
-            피그마 세로 간격이 항목마다 달라(0 / 20 / 40 / auto) 부모 gap 대신 각자 margin으로 준다.
-            폭은 flex-1 — 피그마도 Fill(flex: 1 0 0)이라 남는 370을 먹는다.
-            높이 고정을 뺐다. 폰트를 안 줄여서 내용(약 428)이 피그마 460의 0.9(414)보다 커진다 */}
-        <div className="flex flex-1 flex-col items-start">
-          {/* X 닫기 (공통 X 컴포넌트 없어 LoginModal과 동일하게 raw button 사용).
-              items-start를 self-end로 뒤집는다 — 피그마에서 X만 오른쪽이다 */}
-          <button
-            type="button"
-            aria-label="닫기"
-            onClick={handleClose}
-            className="text-text-secondary hover:text-text-primary self-end text-xl"
-          >
-            <img
-              src={iconClose}
-              alt=""
-              className="h-8 w-8"
-            />
-          </button>
-
-          {/* error variant가 피그마 로고 크기(108 x 20.8)와 정확히 같다.
-              이름은 오류 페이지용이지만 크기 맞는 기존 variant를 쓴다 (공통 컴포넌트 수정 회피) */}
-          <Logo variant="error" />
-
-          {/* 카피 폭이 피그마 380 = 오른쪽 컬럼 전체 폭이라 w-full로 둔다 (두 줄로 접힘) */}
-          <div className="mt-5 flex w-full flex-col gap-1">
-            {/* aria-labelledby로 다이얼로그 이름이 되는 제목 */}
-            <h1
-              id={titleId}
-              className="text-text-primary text-[32px] leading-[1.4] font-bold"
-            >
-              호스트 등록
-            </h1>
-            {/* 피그마 Grey/grey-600 (#747474) = text-tertiary. secondary는 #808080이라 다른 색이다 */}
-            <p className="text-text-tertiary text-xl leading-[1.4] font-medium">
-              안전한 거래를 위해 호스트 등록을 마친 후 팝잇을 이용해주세요
-            </p>
-          </div>
-
-          {/* 진행바 — 아직 시작 전이라 두 단계 모두 비활성(currentStep=-1).
-              StepIndicator는 폭 전체를 쓰고 정렬이 내부에 하드코딩돼 있어 밖에서 못 덮는다.
-              w-fit으로 폭을 내용(224px)만큼 좁히면 내부 가운데정렬이 무효가 되어 왼쪽에 붙는다 */}
-          <div className="mt-10 w-fit">
-            <StepIndicator
-              steps={HOST_STEPS}
-              currentStep={-1}
-              spacing="compact"
-            />
-          </div>
-
-          {/* 등록 시작하기 → step1(사업자 정보)로 이동.
-              피그마 간격은 auto(바닥 붙임)지만 높이를 안 고정해서 남는 세로 공간이 없고 mt-auto가 0이 된다.
-              그러면 진행바에 거의 붙어버려서 고정값 32px로 대체했다 */}
+        {/* 모바일·태블릿 전용 버튼 — 카드 폭 전체, 높이 56.
+            2단 영역 바깥이라 태블릿에서 이미지·오른쪽 컬럼 아래를 가로질러 깔린다.
+            w-full!의 !는 size="nav"가 가진 w-[156px]/md:w-[184px]를 이기기 위한 것 */}
+        <div className="mt-7 w-full md:mt-10 lg:hidden">
           <Button
             variant="primary"
             size="nav"
-            className="mt-8"
+            className="w-full!"
             onClick={() => navigate("/host/host-register/step1")}
           >
             등록 시작하기
