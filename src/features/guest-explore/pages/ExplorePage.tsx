@@ -126,6 +126,7 @@ export const ExplorePage = () => {
     if (filters.district) next.set("district", filters.district);
     if (filters.dateRange.start) next.set(DATE_START_PARAM, formatDateParam(filters.dateRange.start));
     if (filters.dateRange.end) next.set(DATE_END_PARAM, formatDateParam(filters.dateRange.end));
+    setHasResults(false);
     // 아직 결과 화면이 아니었다면(처음 검색) 새 히스토리 항목을 쌓아 뒤로가기로
     // 검색 전 화면에 돌아갈 수 있게 하고, 이미 결과 화면이면(조건만 바꿔 재검색)
     // 히스토리를 계속 쌓지 않도록 현재 항목을 교체한다.
@@ -137,8 +138,13 @@ export const ExplorePage = () => {
   const handleResetFilters = () => {
     const next = new URLSearchParams();
     next.set(SEARCH_FLAG_PARAM, "1"); // 결과 화면 자체는 유지하고 필터만 비운다
+    setHasResults(false);
     setSearchParams(next, { replace: true });
   };
+
+  useEffect(() => {
+    if (!hasActiveSearch) setHasResults(false);
+  }, [hasActiveSearch]);
 
   // 검색바가 원래 있던 자리(페이지 맨 위, sentinel)가 헤더 뒤로 넘어가면
   // "스크롤됨"으로 표시한다. rootMargin으로 헤더 높이만큼 보정해서, 실제로
