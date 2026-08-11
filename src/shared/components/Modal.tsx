@@ -98,12 +98,12 @@ const Modal = ({
             </button>
           )
         ) : (
-          <div className="flex w-full flex-col items-center gap-3 min-[400px]:w-auto min-[400px]:flex-row min-[400px]:gap-5">
+          <div className="flex w-full flex-row items-center gap-4 md:w-auto md:gap-5">
             {onCancel && (
               <button
                 onClick={onCancel}
                 disabled={confirmDisabled}
-                className="bg-surface-blue text-text-primary hover:bg-primary-light h-14 w-full rounded-lg text-lg font-medium disabled:cursor-not-allowed disabled:opacity-50 min-[400px]:w-[clamp(150px,_113.04px_+_9.239vw,_184px)]"
+                className="bg-surface-blue text-text-primary hover:bg-primary-light h-14 flex-1 rounded-lg text-lg font-medium disabled:cursor-not-allowed disabled:opacity-50 md:w-[184px] md:flex-none"
               >
                 {cancelLabel}
               </button>
@@ -112,7 +112,7 @@ const Modal = ({
               <button
                 onClick={onConfirm}
                 disabled={confirmDisabled}
-                className="bg-primary-hover hover:bg-primary h-14 w-full rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 min-[400px]:w-[clamp(150px,_113.04px_+_9.239vw,_184px)]"
+                className="bg-primary-hover hover:bg-primary h-14 flex-1 rounded-lg text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 md:w-[184px] md:flex-none"
               >
                 {confirmLabel}
               </button>
