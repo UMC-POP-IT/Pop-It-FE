@@ -57,15 +57,19 @@ export const HostReservationPage = () => {
 
 
   // 모바일 포트원 redirect 복귀 시 URL 파라미터로 본인인증 확정 처리
+  // 성공한 경우에만 파라미터를 제거해야 실패 시 페이지 재진입으로 재시도할 수 있다
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const identityVerificationId = params.get("identityVerificationId");
     if (!identityVerificationId) return;
-    verifyIdentity(identityVerificationId).catch(() => {});
-    params.delete("identityVerificationId");
-    params.delete("identityVerificationTxId");
-    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
-    window.history.replaceState(null, "", newUrl);
+    verifyIdentity(identityVerificationId).then(() => {
+      params.delete("identityVerificationId");
+      params.delete("identityVerificationTxId");
+      const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+      window.history.replaceState(null, "", newUrl);
+    }).catch((err) => {
+      console.error("[HostReservationPage] 본인인증 처리 실패:", err);
+    });
   }, []);
 
   const loadReservations = useCallback(async () => {
@@ -110,7 +114,7 @@ export const HostReservationPage = () => {
 
   const matchesTab = (r: ApiHostReservation, status: ReservationStatus) => {
     const effective = computeEffectiveStatus(r);
-    if (status === "CHECKOUT_COMPLETED") return effective === "USAGE_COMPLETED";
+    if (status === "CHECKOUT_COMPLETED") return effective === "USAGE_COMPLETED" || effective === "CHECKOUT_COMPLETED";
     if (status === "APPROVED") return effective === "APPROVED" || effective === "CONTRACT_COMPLETED";
     if (status === "CONTRACT_COMPLETED") return effective === "PAYMENT_COMPLETED";
     return effective === status;
@@ -173,7 +177,8 @@ export const HostReservationPage = () => {
   const closeContractModal = () => {
     setIsContractModalOpen(false);
     setApproveTargetId(null);
-    // 서명 없이 닫은 경우 재조회하지 않음 (서버는 APPROVED지만 로컬 상태 유지)
+    // 서명 없이 닫아도 서버는 이미 APPROVED로 전환됐으므로 목록을 재조회해 로컬 상태를 동기화한다
+    loadReservations();
   };
 
   const completeContractModal = () => {

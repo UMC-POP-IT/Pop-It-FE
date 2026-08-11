@@ -1,8 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useId } from "react";
 import type { ApiHostReservation } from "@/types";
 import Authentication from "@/features/guest-explore/components/contract/Authentication";
 import SignatureBoard, { type SignatureBoardRef } from "@/features/guest-explore/components/contract/SignatureBoard";
 import { formatHostDate, getDurationDays } from "@/features/host-manage/utils/dateUtils";
+import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 import {
   GetPresignedURL,
   UploadFileToPresignedURL,
@@ -34,6 +35,11 @@ const HostContractModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
   const signatureBoardRef = useRef<SignatureBoardRef>(null);
+  const titleId = useId();
+  const dialogRef = useDialogA11y<HTMLDivElement>({
+    isOpen,
+    onClose: isSubmitting ? undefined : onClose,
+  });
 
   const handleComplete = async () => {
     const signatureBlob = await signatureBoardRef.current?.getSignatureBlob();
@@ -67,13 +73,16 @@ const HostContractModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={isSubmitting ? undefined : onClose} aria-hidden={true} />
       <div
+        ref={dialogRef}
         className="relative z-10 flex max-h-[85vh] w-full max-w-[328px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl md:max-w-[590px] lg:max-w-[680px]"
         role="dialog"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         aria-modal="true"
       >
         <div className="flex flex-col gap-10 overflow-y-auto p-5 md:p-8">
           <div className="flex flex-col gap-2">
-            <h3 className="text-[22px] font-bold break-keep text-[#121212]">단기 임대차 계약서</h3>
+            <h3 id={titleId} className="text-[22px] font-bold break-keep text-[#121212]">단기 임대차 계약서</h3>
             <span className="text-[18px] font-medium break-keep text-[#747474]">
               {`임대인(이하 "호스트")과 임차인(이하 "게스트")은 공간 중개 플랫폼 '팝잇'을 통하여 다음과 같이 단기 공간 임대차 계약을 체결하며, 본 계약서에 기재된 임대 조건에 상호 합의합니다.`}
             </span>

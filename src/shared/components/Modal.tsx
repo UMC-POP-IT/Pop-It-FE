@@ -52,7 +52,7 @@ const Modal = ({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="relative z-10 flex w-full max-w-[328px] flex-col items-center gap-10 rounded-xl bg-white p-5 md:max-w-[590px] md:p-0 md:py-8"
+        className="relative z-10 flex w-full max-w-[328px] flex-col items-center gap-10 overflow-y-auto rounded-xl bg-white p-5 max-h-[calc(100dvh-2rem)] md:max-w-[590px] md:p-0 md:py-8"
       >
         <div className="flex flex-col items-center gap-5">
           {/* 체크 아이콘 (Figma 기준: icon_check_big_sized) */}

@@ -329,6 +329,7 @@ const Header = () => {
                 aria-haspopup="menu"
                 aria-expanded={isProfileMenuOpen}
                 aria-controls="profile-menu"
+                aria-label={`${user.nickname} 프로필 메뉴`}
                 className="text-text-primary flex h-[74px] w-auto items-center justify-center gap-3 py-[14px] text-base md:max-lg:w-[164px] xl:w-[164px]"
               >
                 {/* 모바일: 프로필 아이콘만 (Figma 5664:56229) */}
