@@ -15,7 +15,7 @@ interface HostReservationCardProps {
 const STATUS_LABEL: Record<ReservationStatus, string> = {
   PENDING_APPROVAL: "승인 대기",
   APPROVED: "계약 대기",
-  CONTRACT_COMPLETED: "결제 대기",
+  CONTRACT_COMPLETED: "계약 대기",
   PAYMENT_COMPLETED: "계약 완료",
   IN_USE: "사용 중",
   USAGE_COMPLETED: "사용 완료",
