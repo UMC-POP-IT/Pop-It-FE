@@ -48,7 +48,7 @@ const PhotoGalleryModal = ({
         aria-modal="true"
         aria-label="사진 갤러리"
         tabIndex={-1}
-        className="relative h-[420px] w-full max-w-[340px] overflow-hidden bg-[#fafafa] md:h-[520px] md:max-w-[700px] lg:max-w-[900px]"
+        className="relative h-[420px] w-full max-w-[340px] overflow-hidden bg-[#fafafa] md:h-[520px] md:max-w-[700px] lg:max-w-[900px] max-h-[calc(100dvh-2rem)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 닫기 버튼 */}
