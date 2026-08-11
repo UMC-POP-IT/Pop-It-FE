@@ -102,15 +102,16 @@ export const RegisterStep2 = () => {
 
               {/* 금액 (일 단가만 입력 — 주/월 가격은 상세 페이지에서 계산) */}
               <div className="flex flex-col gap-1">
-                {/* 시안 라벨은 "금액" — 화면에 안 보이는 aria-label에만 뜻을 덧붙인다
-                    (접근성 규칙상 보이는 글자가 접근 이름에 포함돼야 한다) */}
+                {/* 시안 라벨은 "금액"이지만 일부러 "1일 대여료"로 둔다.
+                    주/월 가격은 상세 페이지에서 이 값으로 계산하므로 여기 입력하는 게
+                    '하루치'라는 걸 라벨에서 알려줘야 한다. 시안 수정 요청함 */}
                 <label className="text-text-tertiary text-xl font-bold">
-                  금액
+                  1일 대여료
                 </label>
                 <div className="relative">
                   <Input
                     type="number"
-                    aria-label="금액 (1일 대여료)"
+                    aria-label="1일 대여료"
                     value={form.priceDay}
                     onChange={(e) =>
                       setValues({
