@@ -67,7 +67,9 @@ const RealTimeRecommendSpace = () => {
             spaces.map((space) => (
               <div
                 key={space.spaceId}
-                className="w-[calc((100%-2*1rem)/3)] flex-none"
+                // 데스크톱 3개 → 태블릿(md~lg 미만) 2개 → 그 외(모바일)는 아직 별도 대응 전이라
+                // 기존 3개 폭을 그대로 유지한다(#260 - 태블릿 우선 대응, 모바일은 후속 작업).
+                className="w-[calc((100%-2*1rem)/3)] flex-none md:w-[calc(50%-0.5rem)] lg:w-[calc((100%-2*1rem)/3)]"
               >
                 <RealTimeBanner
                   space={space}

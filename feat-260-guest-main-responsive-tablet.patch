@@ -1,0 +1,379 @@
+From 3587668a870a5859e092356cb588bcfd68a6f5f3 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 11 Aug 2026 13:08:10 +0000
+Subject: [PATCH] =?UTF-8?q?feat:=20=EA=B2=8C=EC=8A=A4=ED=8A=B8=20=EB=A9=94?=
+ =?UTF-8?q?=EC=9D=B8=ED=8E=98=EC=9D=B4=EC=A7=80=20=ED=83=9C=EB=B8=94?=
+ =?UTF-8?q?=EB=A6=BF(768~1023)=20=EB=B0=98=EC=9D=91=ED=98=95=20=EB=8C=80?=
+ =?UTF-8?q?=EC=9D=91=20(#260)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- HeroSearchBar: lg(1024) 미만에서 검색바를 "공간유형/날짜/지역" 3세그먼트
+  pill + "검색어" pill 두 줄로 분리(Figma 태블릿 스펙). lg 이상은 기존
+  한 줄 고정폭 레이아웃 그대로 유지.
+- DateRangeCalendar: lg 미만에서 2개월 대신 1개월만 노출하도록 변경.
+  이전/다음 달 이동 가능 여부 판단 기준을 "실제로 보이는 가장 오른쪽
+  달"로 일반화해 1개월/2개월 모드 모두에서 동작하도록 함.
+- RealTimeRecommendSpace: 카드 개수를 태블릿(md~lg 미만) 구간에서만
+  3개→2개로 조정(Figma 스펙). AI 맞춤형 공간은 기존 sm 브레이크포인트가
+  이미 태블릿 3개 요구사항과 일치해 별도 수정 불필요.
+
+Playwright로 768px(태블릿)/1280px(데스크톱) 렌더링 및 날짜 드롭다운
+동작을 확인함 - 데스크톱 레이아웃 회귀 없음.
+
+모바일(360~767) 대응은 별도 후속 작업.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01MUftQFks362u5DP1xftVFj
+---
+ .../components/HeroSearchBar.tsx              | 186 ++++++++++--------
+ .../components/RealTimeRecommendSpace.tsx     |   4 +-
+ src/shared/components/DateRangeCalendar.tsx   |  36 +++-
+ 3 files changed, 138 insertions(+), 88 deletions(-)
+
+diff --git a/src/features/guest-explore/components/HeroSearchBar.tsx b/src/features/guest-explore/components/HeroSearchBar.tsx
+index 3c948e1..19e60ad 100644
+--- a/src/features/guest-explore/components/HeroSearchBar.tsx
++++ b/src/features/guest-explore/components/HeroSearchBar.tsx
+@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
+ import FilterDropdown from "@/features/guest-explore/components/FilterDropdown";
+ import DateRangeCalendar, { type DateRange } from "@/shared/components/DateRangeCalendar";
+ import { useOutsideClick } from "@/shared/hooks/useOutsideClick";
++import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
+ import { useSearchHistoryStore } from "@/store/searchHistoryStore";
+ import type { ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
+ import {
+@@ -56,14 +57,18 @@ const SegmentDivider = () => (
+   <span aria-hidden="true" className="h-12 w-px shrink-0 self-center bg-[#c5c5c5]" />
+ );
+ 
+-// 피그마 고정폭(공간유형 227 / 날짜 215 / 지역 215)과 동일하게 맞춘다.
+-// 날짜 드롭다운 패널을 검색바 왼쪽 라인에 맞추려면(아래 CALENDAR_LEFT_OFFSET_PX)
+-// 이 폭이 실제 렌더 폭과 항상 같아야 하므로 min-w가 아니라 고정 w로 둔다.
++// 피그마 데스크톱(lg, 1024↑) 고정폭(공간유형 227 / 날짜 215 / 지역 215)과 동일하게
++// 맞춘다. 날짜 드롭다운 패널을 검색바 왼쪽 라인에 맞추려면(아래 CALENDAR_LEFT_OFFSET_PX)
++// 이 폭이 실제 렌더 폭과 항상 같아야 하므로 lg에서는 min-w가 아니라 고정 w로 둔다.
++// lg 미만(태블릿 768~1023 등)은 Figma 스펙대로 3세그먼트를 한 줄에서 flex-1로 균등
++// 배분하고, 검색어 입력은 그 아래 별도 줄(둘째 pill)로 내려간다(HeroSearchBar 본문 참고).
++// lg에서만 실제로 쓰인다 - 날짜/지역 세그먼트 폭(215px)은 Tailwind 클래스
++// (lg:w-[215px])로 직접 박아뒀다(JIT가 정적으로 스캔할 수 있게); 공간유형 폭만
++// CALENDAR_LEFT_OFFSET_PX 계산에 JS 값으로도 필요해서 상수로 남겨둔다.
+ const CATEGORY_SEGMENT_WIDTH_PX = 227;
+-const DATE_SEGMENT_WIDTH_PX = 215;
+-const DISTRICT_SEGMENT_WIDTH_PX = 215;
+ // 날짜 세그먼트 자신의 왼쪽 기준으로 -공간유형폭만큼 당겨서, 패널의 왼쪽 끝이
+ // 검색바 전체의 왼쪽 끝(공간 유형 라벨 시작 지점)과 정확히 맞도록 한다.
++// lg 고정폭 레이아웃에서만 유효한 값이라 lg 미만에서는 쓰지 않는다(아래 참고).
+ const CALENDAR_LEFT_OFFSET_PX = -CATEGORY_SEGMENT_WIDTH_PX;
+ 
+ interface SegmentTriggerContentProps {
+@@ -150,6 +155,12 @@ const HeroSearchBar = ({
+ 
+   useOutsideClick(dateContainerRef, () => setIsDateOpen(false), isDateOpen);
+ 
++  // lg(1024) 이상에서만 기존 데스크톱 고정폭 한 줄 레이아웃을 쓴다. 그 미만(태블릿
++  // 768~1023 포함)에서는 CALENDAR_LEFT_OFFSET_PX 트릭이 더 이상 유효하지 않아
++  // (공간유형 세그먼트가 더 이상 고정폭이 아니므로) 날짜 패널을 그냥 날짜 세그먼트
++  // 왼쪽 끝에 맞춘다.
++  const isWideDesktop = useMediaQuery("(min-width: 1024px)");
++
+   const markSearched = useSearchHistoryStore((s) => s.markSearched);
+ 
+   useEffect(() => {
+@@ -212,94 +223,113 @@ const HeroSearchBar = ({
+     // ExploreSpace 카드 그리드(z-index 없음, 문서 순서상 나중 엘리먼트)가 오히려
+     // 드롭다운 위로 그려지는 버그가 생겼다. 명시적으로 z-index를 줘서 이 박스
+     // 전체(드롭다운 포함)가 항상 카드 그리드보다 위에 그려지도록 고정한다.
++    // lg(1024) 이상: 기존처럼 4세그먼트(공간유형/날짜/지역/검색어)가 고정폭 한 줄
++    // pill 안에 나란히 들어간다. lg 미만(태블릿 768~1023 포함, Figma 스펙): 같은
++    // 내용을 "3세그먼트 pill" + "검색어 pill" 두 줄로 나눈다 - Box A(필터 3종)와
++    // Box B(검색어)를 각각 독립된 rounded-full 박스로 두고 세로 gap-3으로 쌓다가,
++    // lg에서는 Box A의 오른쪽 border/radius, Box B의 왼쪽 border/radius를 지우고
++    // 그 사이에 SegmentDivider와 동일한 선 하나만 남겨서 다시 하나의 pill처럼
++    // 이어붙인다(줄 수만 바뀌고 나머지 DOM 구조는 그대로라 뷰 트랜지션 대상인
++    // 바깥 wrapper도 그대로 유지된다).
+     <div
+       style={morphStyle}
+-      className={`relative z-10 flex items-stretch rounded-full bg-white ${outerBorderClassName}`}
++      className="relative z-10 flex flex-col items-stretch gap-3 lg:flex-row lg:gap-0"
+     >
+-      <div className="flex shrink-0 items-stretch" style={{ width: CATEGORY_SEGMENT_WIDTH_PX }}>
+-        <FilterDropdown
+-          ariaLabel="공간 용도 필터"
+-          options={CATEGORY_OPTIONS}
+-          value={category}
+-          onChange={setCategory}
+-          // 맨 왼쪽 세그먼트라 열렸을 때 배경(bg-primary-light)이 pill의 둥근
+-          // 왼쪽 모서리 밖으로 각지게 삐져나오지 않도록 그때만 왼쪽을 둥글린다.
+-          triggerClassName={(isOpen) =>
+-            `${segmentTriggerClassName(isOpen)} ${isOpen ? "rounded-l-full" : ""}`
+-          }
+-          renderTrigger={({ selected }) => (
+-            <SegmentTriggerContent
+-              label="공간 유형"
+-              value={selected?.label ?? "전체"}
+-              labelClassName={labelClassName}
+-            />
+-          )}
+-        />
+-      </div>
+-
+-      <SegmentDivider />
+-
+       <div
+-        className="relative flex shrink-0 items-stretch"
+-        style={{ width: DATE_SEGMENT_WIDTH_PX }}
+-        ref={dateContainerRef}
++        className={`flex items-stretch rounded-full bg-white ${outerBorderClassName} lg:rounded-r-none lg:border-r-0`}
+       >
+-        <button
+-          type="button"
+-          aria-haspopup="dialog"
+-          aria-expanded={isDateOpen}
+-          onClick={() => setIsDateOpen((prev) => !prev)}
+-          className={segmentTriggerClassName(isDateOpen)}
+-        >
+-          <SegmentTriggerContent
+-            label="날짜"
+-            value={formatDateRangeLabel(dateRange)}
+-            labelClassName={labelClassName}
++        <div className="flex flex-1 min-w-[33%] items-stretch lg:min-w-0 lg:w-[227px] lg:flex-none">
++          <FilterDropdown
++            ariaLabel="공간 용도 필터"
++            options={CATEGORY_OPTIONS}
++            value={category}
++            onChange={setCategory}
++            // 맨 왼쪽 세그먼트라 열렸을 때 배경(bg-primary-light)이 pill의 둥근
++            // 왼쪽 모서리 밖으로 각지게 삐져나오지 않도록 그때만 왼쪽을 둥글린다.
++            triggerClassName={(isOpen) =>
++              `${segmentTriggerClassName(isOpen)} ${isOpen ? "rounded-l-full" : ""}`
++            }
++            renderTrigger={({ selected }) => (
++              <SegmentTriggerContent
++                label="공간 유형"
++                value={selected?.label ?? "전체"}
++                labelClassName={labelClassName}
++              />
++            )}
+           />
+-        </button>
+-        {isDateOpen && (
+-          <div
+-            role="dialog"
+-            aria-label="날짜 범위 선택"
+-            onKeyDown={(e) => {
+-              if (e.key === "Escape") setIsDateOpen(false);
+-            }}
+-            className="absolute top-full z-20 mt-2"
+-            style={{ left: CALENDAR_LEFT_OFFSET_PX }}
+-          >
+-            <DateRangeCalendar
+-              value={dateRange}
+-              onChange={setDateRange}
+-              onConfirm={() => setIsDateOpen(false)}
+-              onReset={() => setDateRange({ start: null, end: null })}
+-            />
+-          </div>
+-        )}
+-      </div>
++        </div>
+ 
+-      <SegmentDivider />
++        <SegmentDivider />
+ 
+-      <div className="flex shrink-0 items-stretch" style={{ width: DISTRICT_SEGMENT_WIDTH_PX }}>
+-        <FilterDropdown
+-          ariaLabel="지역(구) 필터"
+-          options={DISTRICT_OPTIONS}
+-          value={district}
+-          onChange={setDistrict}
+-          maxVisibleOptions={DISTRICT_MAX_VISIBLE_OPTIONS}
+-          triggerClassName={segmentTriggerClassName}
+-          renderTrigger={({ selected }) => (
++        <div
++          className="relative flex flex-1 min-w-[33%] items-stretch lg:min-w-0 lg:w-[215px] lg:flex-none"
++          ref={dateContainerRef}
++        >
++          <button
++            type="button"
++            aria-haspopup="dialog"
++            aria-expanded={isDateOpen}
++            onClick={() => setIsDateOpen((prev) => !prev)}
++            className={segmentTriggerClassName(isDateOpen)}
++          >
+             <SegmentTriggerContent
+-              label="지역"
+-              value={selected?.label ?? "서울 전체"}
++              label="날짜"
++              value={formatDateRangeLabel(dateRange)}
+               labelClassName={labelClassName}
+             />
++          </button>
++          {isDateOpen && (
++            <div
++              role="dialog"
++              aria-label="날짜 범위 선택"
++              onKeyDown={(e) => {
++                if (e.key === "Escape") setIsDateOpen(false);
++              }}
++              className="absolute top-full z-20 mt-2"
++              // lg 미만은 공간유형 세그먼트가 더 이상 고정폭이 아니라서
++              // CALENDAR_LEFT_OFFSET_PX로 맞출 기준점이 없다 - 날짜 세그먼트
++              // 자신의 왼쪽 끝(left: 0)에 그냥 맞춘다.
++              style={{ left: isWideDesktop ? CALENDAR_LEFT_OFFSET_PX : 0 }}
++            >
++              <DateRangeCalendar
++                value={dateRange}
++                onChange={setDateRange}
++                onConfirm={() => setIsDateOpen(false)}
++                onReset={() => setDateRange({ start: null, end: null })}
++              />
++            </div>
+           )}
+-        />
++        </div>
++
++        <SegmentDivider />
++
++        <div className="flex flex-1 min-w-[33%] items-stretch lg:min-w-0 lg:w-[215px] lg:flex-none">
++          <FilterDropdown
++            ariaLabel="지역(구) 필터"
++            options={DISTRICT_OPTIONS}
++            value={district}
++            onChange={setDistrict}
++            maxVisibleOptions={DISTRICT_MAX_VISIBLE_OPTIONS}
++            triggerClassName={segmentTriggerClassName}
++            renderTrigger={({ selected }) => (
++              <SegmentTriggerContent
++                label="지역"
++                value={selected?.label ?? "서울 전체"}
++                labelClassName={labelClassName}
++              />
++            )}
++          />
++        </div>
+       </div>
+ 
+-      <SegmentDivider />
++      {/* lg에서만 두 박스 사이에 다른 세그먼트 구분선과 동일한 선을 하나 더
++          그려서, Box A/B의 맞닿은 테두리가 지워진 자리를 대신 채운다(위 주석
++          참고). lg 미만에서는 두 박스가 gap-3로 떨어져 있어 필요 없다. */}
++      <span aria-hidden="true" className="hidden h-12 w-px shrink-0 self-center bg-[#c5c5c5] lg:block" />
+ 
+-      <div className="flex flex-1 items-center gap-2.5 pr-3">
++      <div
++        className={`flex items-center gap-2.5 rounded-full bg-white pr-3 ${outerBorderClassName} lg:flex-1 lg:rounded-l-none lg:border-l-0`}
++      >
+         <div className="flex flex-1 flex-col justify-center gap-1.5 px-5 py-4">
+           <label htmlFor="hero-search-keyword" className={`text-[18px] leading-[1.4] ${labelClassName}`}>
+             검색어
+diff --git a/src/features/guest-explore/components/RealTimeRecommendSpace.tsx b/src/features/guest-explore/components/RealTimeRecommendSpace.tsx
+index e5293ac..8e11497 100644
+--- a/src/features/guest-explore/components/RealTimeRecommendSpace.tsx
++++ b/src/features/guest-explore/components/RealTimeRecommendSpace.tsx
+@@ -67,7 +67,9 @@ const RealTimeRecommendSpace = () => {
+             spaces.map((space) => (
+               <div
+                 key={space.spaceId}
+-                className="w-[calc((100%-2*1rem)/3)] flex-none"
++                // 데스크톱 3개 → 태블릿(md~lg 미만) 2개 → 그 외(모바일)는 아직 별도 대응 전이라
++                // 기존 3개 폭을 그대로 유지한다(#260 - 태블릿 우선 대응, 모바일은 후속 작업).
++                className="w-[calc((100%-2*1rem)/3)] flex-none md:w-[calc(50%-0.5rem)] lg:w-[calc((100%-2*1rem)/3)]"
+               >
+                 <RealTimeBanner
+                   space={space}
+diff --git a/src/shared/components/DateRangeCalendar.tsx b/src/shared/components/DateRangeCalendar.tsx
+index 82864a6..033f2c5 100644
+--- a/src/shared/components/DateRangeCalendar.tsx
++++ b/src/shared/components/DateRangeCalendar.tsx
+@@ -1,4 +1,5 @@
+ import { useState } from "react";
++import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
+ 
+ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+ 
+@@ -55,21 +56,29 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
+     return new Date(now.getFullYear(), now.getMonth(), 1);
+   });
+ 
++  // Figma 태블릿(768~1023) 스펙: 2개월 나란히 보이던 캘린더가 1개월만 노출된다
++  // (840px짜리 2개월 다이얼로그는 768px 뷰포트에서 애초에 다 들어가지도 않는다).
++  // lg(1024) 미만이면 1개월, 그 이상이면 기존과 동일하게 2개월을 보여준다.
++  const isTwoMonthView = useMediaQuery("(min-width: 1024px)");
++
+   const secondViewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
++  // 실제로 화면에 보이는 달 중 가장 오른쪽(=가장 미래) 달. 2개월 뷰에서는 secondViewDate,
++  // 1개월 뷰에서는 viewDate 자신이다 - "다음 달로 더 못 넘어가는" 기준을 여기에 맞춘다.
++  const rightmostViewDate = isTwoMonthView ? secondViewDate : viewDate;
+ 
+   // 오늘이 속한 달보다 과거로는 이동할 수 없다(ExploreReservationCard와 동일한 규칙).
+-  // 왼쪽 달이 이동 불가한 상태면 "이전 달" 화살표 자체를 렌더링하지 않는다.
++  // 가장 왼쪽(=viewDate) 달이 이동 불가한 상태면 "이전 달" 화살표 자체를 렌더링하지 않는다.
+   const currentMonthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+   const viewedMonthStart = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+   const isPrevMonthDisabled = viewedMonthStart <= currentMonthStart;
+ 
+   // 오늘로부터 90일 이후의 달로는 이동할 수 없다(공간상세 예약 캘린더와 동일한 규칙).
+-  // 오른쪽(다음) 달이 이미 그 상한 달이면 "다음 달" 화살표를 렌더링하지 않는다.
++  // 가장 오른쪽(미래) 달이 이미 그 상한 달이면 "다음 달" 화살표를 렌더링하지 않는다.
+   const maxSelectableDate = new Date(todayStart);
+   maxSelectableDate.setDate(maxSelectableDate.getDate() + 90);
+   const isNextMonthDisabled =
+-    secondViewDate.getFullYear() === maxSelectableDate.getFullYear() &&
+-    secondViewDate.getMonth() === maxSelectableDate.getMonth();
++    rightmostViewDate.getFullYear() === maxSelectableDate.getFullYear() &&
++    rightmostViewDate.getMonth() === maxSelectableDate.getMonth();
+ 
+   const handleSelectDate = (date: Date) => {
+     if (date < todayStart || date > maxSelectableDate) return;
+@@ -154,7 +163,10 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
+     return day;
+   };
+ 
+-  const renderMonth = (monthDate: Date, edge: "left" | "right") => {
++  const renderMonth = (
++    monthDate: Date,
++    { showPrevArrow, showNextArrow }: { showPrevArrow: boolean; showNextArrow: boolean },
++  ) => {
+     const cells = getMonthCells(monthDate.getFullYear(), monthDate.getMonth());
+ 
+     return (
+@@ -163,7 +175,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
+           {/* 화살표 유무와 상관없이 "YYYY.MM" 라벨 위치가 고정되도록, 이동 불가
+               방향이어도 자리(w-8)는 항상 비워둔다(ExploreReservationCard와 동일). */}
+           <div className="flex h-8 w-8 items-center justify-center">
+-            {edge === "left" && !isPrevMonthDisabled && (
++            {showPrevArrow && !isPrevMonthDisabled && (
+               <button
+                 type="button"
+                 aria-label="이전 달"
+@@ -180,7 +192,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
+             {monthDate.getFullYear()}.{String(monthDate.getMonth() + 1).padStart(2, "0")}
+           </span>
+           <div className="flex h-8 w-8 items-center justify-center">
+-            {edge === "right" && !isNextMonthDisabled && (
++            {showNextArrow && !isNextMonthDisabled && (
+               <button
+                 type="button"
+                 aria-label="다음 달"
+@@ -243,8 +255,14 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
+       className="border-divider flex flex-col items-start rounded-xl border-2 bg-white shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]"
+     >
+       <div className="flex items-center rounded-xl">
+-        {renderMonth(viewDate, "left")}
+-        {renderMonth(secondViewDate, "right")}
++        {isTwoMonthView ? (
++          <>
++            {renderMonth(viewDate, { showPrevArrow: true, showNextArrow: false })}
++            {renderMonth(secondViewDate, { showPrevArrow: false, showNextArrow: true })}
++          </>
++        ) : (
++          renderMonth(viewDate, { showPrevArrow: true, showNextArrow: true })
++        )}
+       </div>
+       <div className="flex w-full items-center justify-end gap-5 p-5">
+         <button
+-- 
+2.43.0
+

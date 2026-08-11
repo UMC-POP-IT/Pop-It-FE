@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -55,21 +56,29 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
 
+  // Figma 태블릿(768~1023) 스펙: 2개월 나란히 보이던 캘린더가 1개월만 노출된다
+  // (840px짜리 2개월 다이얼로그는 768px 뷰포트에서 애초에 다 들어가지도 않는다).
+  // lg(1024) 미만이면 1개월, 그 이상이면 기존과 동일하게 2개월을 보여준다.
+  const isTwoMonthView = useMediaQuery("(min-width: 1024px)");
+
   const secondViewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
+  // 실제로 화면에 보이는 달 중 가장 오른쪽(=가장 미래) 달. 2개월 뷰에서는 secondViewDate,
+  // 1개월 뷰에서는 viewDate 자신이다 - "다음 달로 더 못 넘어가는" 기준을 여기에 맞춘다.
+  const rightmostViewDate = isTwoMonthView ? secondViewDate : viewDate;
 
   // 오늘이 속한 달보다 과거로는 이동할 수 없다(ExploreReservationCard와 동일한 규칙).
-  // 왼쪽 달이 이동 불가한 상태면 "이전 달" 화살표 자체를 렌더링하지 않는다.
+  // 가장 왼쪽(=viewDate) 달이 이동 불가한 상태면 "이전 달" 화살표 자체를 렌더링하지 않는다.
   const currentMonthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
   const viewedMonthStart = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
   const isPrevMonthDisabled = viewedMonthStart <= currentMonthStart;
 
   // 오늘로부터 90일 이후의 달로는 이동할 수 없다(공간상세 예약 캘린더와 동일한 규칙).
-  // 오른쪽(다음) 달이 이미 그 상한 달이면 "다음 달" 화살표를 렌더링하지 않는다.
+  // 가장 오른쪽(미래) 달이 이미 그 상한 달이면 "다음 달" 화살표를 렌더링하지 않는다.
   const maxSelectableDate = new Date(todayStart);
   maxSelectableDate.setDate(maxSelectableDate.getDate() + 90);
   const isNextMonthDisabled =
-    secondViewDate.getFullYear() === maxSelectableDate.getFullYear() &&
-    secondViewDate.getMonth() === maxSelectableDate.getMonth();
+    rightmostViewDate.getFullYear() === maxSelectableDate.getFullYear() &&
+    rightmostViewDate.getMonth() === maxSelectableDate.getMonth();
 
   const handleSelectDate = (date: Date) => {
     if (date < todayStart || date > maxSelectableDate) return;
@@ -154,7 +163,10 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
     return day;
   };
 
-  const renderMonth = (monthDate: Date, edge: "left" | "right") => {
+  const renderMonth = (
+    monthDate: Date,
+    { showPrevArrow, showNextArrow }: { showPrevArrow: boolean; showNextArrow: boolean },
+  ) => {
     const cells = getMonthCells(monthDate.getFullYear(), monthDate.getMonth());
 
     return (
@@ -163,7 +175,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
           {/* 화살표 유무와 상관없이 "YYYY.MM" 라벨 위치가 고정되도록, 이동 불가
               방향이어도 자리(w-8)는 항상 비워둔다(ExploreReservationCard와 동일). */}
           <div className="flex h-8 w-8 items-center justify-center">
-            {edge === "left" && !isPrevMonthDisabled && (
+            {showPrevArrow && !isPrevMonthDisabled && (
               <button
                 type="button"
                 aria-label="이전 달"
@@ -180,7 +192,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
             {monthDate.getFullYear()}.{String(monthDate.getMonth() + 1).padStart(2, "0")}
           </span>
           <div className="flex h-8 w-8 items-center justify-center">
-            {edge === "right" && !isNextMonthDisabled && (
+            {showNextArrow && !isNextMonthDisabled && (
               <button
                 type="button"
                 aria-label="다음 달"
@@ -243,8 +255,14 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
       className="border-divider flex flex-col items-start rounded-xl border-2 bg-white shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]"
     >
       <div className="flex items-center rounded-xl">
-        {renderMonth(viewDate, "left")}
-        {renderMonth(secondViewDate, "right")}
+        {isTwoMonthView ? (
+          <>
+            {renderMonth(viewDate, { showPrevArrow: true, showNextArrow: false })}
+            {renderMonth(secondViewDate, { showPrevArrow: false, showNextArrow: true })}
+          </>
+        ) : (
+          renderMonth(viewDate, { showPrevArrow: true, showNextArrow: true })
+        )}
       </div>
       <div className="flex w-full items-center justify-end gap-5 p-5">
         <button

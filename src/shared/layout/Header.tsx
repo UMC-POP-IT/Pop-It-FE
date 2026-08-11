@@ -60,6 +60,17 @@ const Header = () => {
   const pillMorphStyle: MorphTransitionStyle | undefined = isScrollBarVisible
     ? { viewTransitionName: SEARCH_BAR_VIEW_TRANSITION_NAME }
     : undefined;
+  // 태블릿(md~xl 미만) 전용: 헤더 정중앙에 뜨는 축소 검색바 pill은 좌우 그룹
+  // 너비와 무관하게 항상 헤더 정가운데에 오도록 absolute + justify-center로
+  // 배치돼 있다(위 pillMorphStyle 주석 참고) - 화면이 아주 넓을 때(xl, 1280↑)는
+  // 여유가 충분해 문제가 없지만, 그보다 좁으면(1024~1279 같은 좁은 데스크톱
+  // 폭 포함) pill 콘텐츠 폭 + nav/우측 버튼 폭을 합치면 실제로 겹칠 수 있다
+  // (1163px 등에서 재현됨 - lg만 기준으로 나눴던 첫 시도가 이 좁은 데스크톱
+  // 폭을 놓쳤었다). pill이 실제로 보이는 동안(isScrollBarVisible)만 xl 미만
+  // 전체 구간에서 우측 버튼 그룹을 통째로 숨기고, pill이 사라지면(스크롤을
+  // 올려 큰 검색바로 돌아가거나 pill을 눌러 오버레이를 펼치면) 다시 원래
+  // 자리(우측)에 그대로 나타나게 한다 - xl 이상은 그대로 항상 노출.
+  const hidePillOverlappingActionsOnTablet = Boolean(scrollBarSummary) && isScrollBarVisible;
   const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
   const [modeError, setModeError] = useState(""); // 모드 전환 실패 사유
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -234,13 +245,23 @@ const Header = () => {
             공간이 부족해 숨긴다.
             좌/우 그룹(로고+nav, 모드전환+프로필)의 너비가 서로 달라서 그 사이의
             남는 공간만 flex-1로 채우면 헤더 전체 기준으로는 중앙에서 벗어난다.
-            그래서 이 wrapper는 일반 flex 흐름에서 빼고 부모(relative)를 기준으로
-            absolute + inset-x-0 + justify-center로 항상 헤더 정중앙에 오게 한다.
+            그래서 아주 넓은 화면(xl, 1280↑)에서는 이 wrapper를 일반 flex
+            흐름에서 빼고 부모(relative)를 기준으로 absolute + inset-x-0 +
+            justify-center로 항상 헤더 정중앙에 오게 한다.
+            그보다 좁으면(md~xl 미만 - 1024~1279 같은 좁은 데스크톱 폭도 포함)
+            이 전체-폭 기준 중앙 정렬을 그대로 쓰면 pill이 왼쪽 nav(공간탐색/
+            나의예약)와 겹쳐 보이는 문제가 있었다(1163px 등에서 재현 - 처음엔
+            lg만 기준으로 나눴다가 이 좁은 데스크톱 폭을 놓쳤었다) - 그 구간
+            에서는 대신 absolute를 relative로 바꿔서 일반 flex 흐름에 그대로
+            끼워 넣는다(같은 행의 다른 두 형제 사이에서 flex-1로 남는 공간만
+            차지) - 이러면 nav 폭과 무관하게 자동으로 nav 다음부터 시작해
+            겹치지 않고, 오른쪽 그룹은 pill이 보이는 동안 통째로 숨기므로
+            (hidePillOverlappingActionsOnTablet) 남는 공간을 그대로 다 쓸 수 있다.
             wrapper는 pointer-events-none으로 두고, 실제 버튼만 pointer-events-auto로
             켜서 숨겨진 상태에서도 다른 영역(nav, 프로필 등) 클릭을 막지 않는다. */}
         {scrollBarSummary && (
           <div
-            className={`pointer-events-none absolute inset-x-0 top-1/2 hidden -translate-y-1/2 justify-center md:flex ${
+            className={`pointer-events-none absolute inset-x-0 top-1/2 hidden -translate-y-1/2 justify-center md:flex md:max-xl:relative md:max-xl:inset-x-auto md:max-xl:top-auto md:max-xl:min-w-0 md:max-xl:flex-1 md:max-xl:translate-y-0 ${
               isScrollBarVisible ? "" : "opacity-0"
             }`}
           >
@@ -281,7 +302,11 @@ const Header = () => {
         )}
 
         {/* 우측: 모드전환 + 프로필 (gap-[20px]) */}
-        <div className="ml-auto flex items-center gap-5 md:max-lg:-mr-[32px]">
+        <div
+          className={`ml-auto flex items-center gap-5 md:max-lg:-mr-[32px] ${
+            hidePillOverlappingActionsOnTablet ? "md:max-xl:hidden" : ""
+          }`}
+        >
           {/* 모드 전환 버튼 — 게스트 모드 나의 예약 탭에서는 숨김 */}
           {!hideModeToggle && (
             <>
