@@ -260,7 +260,7 @@ export const HostReservationPage = () => {
       </div>
 
       <div className="flex flex-col gap-5">
-        <Tab tabs={tabs} activeIndex={activeTab} onChange={setActiveTab} scrollable />
+        <Tab tabs={tabs} activeIndex={activeTab} onChange={setActiveTab} scrollOnMobile />
 
         {isLoading ? (
           <div className="bg-tag-bg flex h-[224px] w-full items-center justify-center rounded-xl">
