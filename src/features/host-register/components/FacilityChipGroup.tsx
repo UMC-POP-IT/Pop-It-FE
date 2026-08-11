@@ -34,7 +34,9 @@ const FacilityChipGroup = ({
       >
         {label}
       </span>
-      <div className="flex flex-wrap gap-2">
+      {/* 모바일은 3열 그리드(각 104), md 이상은 고정폭 줄바꿈.
+          Chip이 모바일에서 flex-1(basis 0)이라 flex-wrap이면 한 줄에 다 눌려 들어간다 */}
+      <div className="grid grid-cols-3 gap-2 md:flex md:flex-wrap md:gap-5 lg:gap-2">
         {items.map((item) => (
           <Chip
             key={item.facilityId}

@@ -377,10 +377,11 @@ export const DateRangePicker = ({
               }}
               className="border-divider flex h-14 items-center gap-2 rounded-lg border bg-white px-5"
             >
+              {/* 모바일은 아이콘을 빼고 날짜 글자만 둔다 (시안) */}
               <img
                 src={calendarIcon}
                 alt=""
-                className="h-8 w-8"
+                className="hidden h-8 w-8 md:block"
               />
 
               {/* 피그마: 미선택 #808080 18px/500, 선택 후 #121212 18px/700 (둘 다 line-height 140%) */}
