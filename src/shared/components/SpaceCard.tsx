@@ -13,7 +13,7 @@ interface SpaceCardProps {
   /**
    * 카드 hover 효과. 기본값 "lift"는 기존 카드 살짝 떠오름+그림자(입체감) 효과이고,
    * "dim"은 실시간 추천 공간 카드와 동일하게 이미지만 어둡게 흐려지는 효과다.
-   * 공간 탐색 섹션 카드만 "dim"을 쓰고, 나머지(AI 맞춤형/찜한 공간)는 기존 "lift"를 유지한다.
+   * 현재 모든 SpaceCard가 "dim"을 쓴다.
    */
   hoverEffect?: "lift" | "dim";
 }
@@ -49,7 +49,13 @@ const SpaceCard = ({
           }`}
         />
       ) : (
-        <div className="bg-bg h-full w-full" />
+        <div
+          className={`bg-bg h-full w-full ${
+            hoverEffect === "dim"
+              ? "transition-[filter] duration-500 group-hover:brightness-75"
+              : ""
+          }`}
+        />
       )}
       <button
         className="absolute top-2 right-2"

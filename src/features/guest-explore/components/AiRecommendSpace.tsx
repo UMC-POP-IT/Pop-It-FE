@@ -142,6 +142,7 @@ const AiRecommendSpace = () => {
                 isWished={isWished}
                 onWishToggle={() => handleCardWishToggle(space.id)}
                 onClick={() => navigate(`/spaces/${space.id}`)}
+                hoverEffect="dim"
               />
             </div>
           ))}
