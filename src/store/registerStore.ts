@@ -43,8 +43,15 @@ interface RegisterState {
   form: SpaceRegisterForm;
   isEdit: boolean;
   editSpaceId: number | null; // 수정 중인 공간 id (등록 모드면 null)
+  /**
+   * 이번 등록/수정을 서버가 이미 받아들였는지.
+   * 성공 모달의 [확인]을 누르기 전에는 reset()이 돌지 않아 폼이 그대로 남는다.
+   * 그 사이 뒤로가기로 빠져나가 다시 제출하면 같은 공간이 한 번 더 만들어진다.
+   */
+  isSpaceSubmitted: boolean;
   setValues: (values: Partial<SpaceRegisterForm>) => void;
   setEdit: (isEdit: boolean, spaceId?: number | null) => void;
+  setSpaceSubmitted: (isSpaceSubmitted: boolean) => void;
   reset: () => void;
 }
 
@@ -78,12 +85,20 @@ export const useRegisterStore = create<RegisterState>((set) => ({
   form: initialForm,
   isEdit: false,
   editSpaceId: null,
+  isSpaceSubmitted: false,
   // 넘어온 값만 기존 form에 덮어씀 (나머지는 그대로)
   setValues: (values) =>
     set((state) => ({ form: { ...state.form, ...values } })),
   setEdit: (isEdit, spaceId = null) => set({ isEdit, editSpaceId: spaceId }),
+  setSpaceSubmitted: (isSpaceSubmitted) => set({ isSpaceSubmitted }),
   // 전부 초기화 (등록 완료 후 / 새 공간 등록 진입 시)
-  reset: () => set({ form: initialForm, isEdit: false, editSpaceId: null }),
+  reset: () =>
+    set({
+      form: initialForm,
+      isEdit: false,
+      editSpaceId: null,
+      isSpaceSubmitted: false,
+    }),
 }));
 
 // ─────────────────────────────────────────────

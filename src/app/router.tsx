@@ -30,6 +30,7 @@ import { HostRegisterStep1 } from "@/features/host-register/pages/HostRegisterSt
 import { HostRegisterStep2 } from "@/features/host-register/pages/HostRegisterStep2";
 import { HostRegisterComplete } from "@/features/host-register/pages/HostRegisterComplete";
 import { HostRegisterGuard } from "@/features/host-register/components/HostRegisterGuard";
+import { SpaceRegisterGuard } from "@/features/host-register/components/SpaceRegisterGuard";
 
 // 4번 팀원 (챈 - 내공간관리/예약관리/로그인)
 import { MySpacePage } from "@/features/host-manage/pages/MySpacePage";
@@ -94,10 +95,17 @@ export const router = createBrowserRouter([
             element: <HostGuard />,
             children: [
               // 3번 팀원 - 공간등록
-              { path: "/host/register", element: <RegisterStep1 /> },
-              { path: "/host/register/step2", element: <RegisterStep2 /> },
-              { path: "/host/register/step3", element: <RegisterStep3 /> },
-              { path: "/host/register/step4", element: <RegisterStep4 /> },
+              // 제출이 끝난 폼으로 뒤로가기해 재제출(공간 중복 생성)하는 것을 막는다.
+              // step5는 성공 모달을 띄우는 화면이라 제외하고, 버튼 잠금으로 따로 막는다
+              {
+                element: <SpaceRegisterGuard />,
+                children: [
+                  { path: "/host/register", element: <RegisterStep1 /> },
+                  { path: "/host/register/step2", element: <RegisterStep2 /> },
+                  { path: "/host/register/step3", element: <RegisterStep3 /> },
+                  { path: "/host/register/step4", element: <RegisterStep4 /> },
+                ],
+              },
               { path: "/host/register/step5", element: <RegisterStep5 /> },
 
               //공간수정
