@@ -108,7 +108,13 @@ export const DateRangePicker = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setIsOpen(false);
-        // 끌던 중에 Esc를 누르면 내려간 위치가 남아, 다시 열 때 시트가 삐뚤게 뜬다
+        // 끄는 도중에 Esc를 누르면 pointerup이 오기 전에 시트가 닫혀 handleDragEnd가
+        // 아예 실행되지 않는다. 거기서 하던 정리를 여기서도 해줘야 한다 —
+        // 안 하면 내려간 위치(dragY)가 남아 다시 열 때 시트가 삐뚤게 뜨고,
+        // isDragging이 true로 굳어 transition이 꺼진 채 툭 나타난다.
+        dragStartRef.current = null;
+        dragYRef.current = 0;
+        setIsDragging(false);
         setDragY(0);
         triggerRef.current?.focus(); // 팝업이 사라지기 전에 포커스를 트리거로 되돌림
       }
