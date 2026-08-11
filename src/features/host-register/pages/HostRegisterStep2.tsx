@@ -192,7 +192,7 @@ export const HostRegisterStep2 = () => {
                 label: bank,
               }))}
               value={form.bankName}
-              onChange={(e) => setValues({ bankName: e.target.value })}
+              onChange={(bankName) => setValues({ bankName })}
               placeholder="은행을 선택해주세요"
             />
           </div>
