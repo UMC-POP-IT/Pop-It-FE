@@ -280,8 +280,8 @@ const ExploreSpace = ({
   };
 
   return (
-    <section className="mt-14 w-full">
-      <div className={`mb-6 flex items-center ${resultsMode ? "justify-end" : "justify-between"}`}>
+    <section className="mt-6 w-full md:mt-14">
+      <div className={`mb-4 flex items-center md:mb-6 ${resultsMode ? "justify-end" : "justify-between"}`}>
         {!resultsMode && <h2 className="text-text-primary text-2xl font-bold">공간 탐색</h2>}
 
         <button
@@ -366,7 +366,7 @@ const ExploreSpace = ({
       {status === "success" && !isMapView && spaces.length > 0 && (
         <>
           <div
-            className={`mt-6 grid grid-cols-4 gap-x-6 gap-y-10 transition-opacity ${
+            className={`mt-4 grid grid-cols-1 gap-x-6 gap-y-8 transition-opacity sm:grid-cols-2 md:mt-6 md:gap-y-10 lg:grid-cols-4 ${
               isRefetching ? "pointer-events-none opacity-50" : ""
             }`}
           >

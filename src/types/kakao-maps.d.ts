@@ -22,6 +22,7 @@ declare global {
       constructor(container: HTMLElement, options: MapOptions);
       setCenter(latlng: LatLng): void;
       getCenter(): LatLng;
+      panBy(dx: number, dy: number): void;
       setLevel(level: number): void;
       relayout(): void;
     }

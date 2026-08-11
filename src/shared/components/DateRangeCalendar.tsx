@@ -170,7 +170,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
     const cells = getMonthCells(monthDate.getFullYear(), monthDate.getMonth());
 
     return (
-      <div className="flex w-[420px] flex-col items-center gap-7 px-3.5 py-5">
+      <div className="flex w-full flex-col items-center gap-7 px-3.5 py-5">
         <div className="flex w-full items-center justify-center gap-3">
           {/* 화살표 유무와 상관없이 "YYYY.MM" 라벨 위치가 고정되도록, 이동 불가
               방향이어도 자리(w-8)는 항상 비워둔다(ExploreReservationCard와 동일). */}
@@ -182,7 +182,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
                 onClick={() =>
                   setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
                 }
-                className="text-text-primary hover:bg-primary-light active:bg-primary-light flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors"
+                className="text-text-primary hover:bg-primary-light active:bg-primary-light flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors focus:outline-none"
               >
                 ‹
               </button>
@@ -199,7 +199,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
                 onClick={() =>
                   setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
                 }
-                className="text-text-primary hover:bg-primary-light active:bg-primary-light flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors"
+                className="text-text-primary hover:bg-primary-light active:bg-primary-light flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors focus:outline-none"
               >
                 ›
               </button>
@@ -207,12 +207,12 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center">
+        <div className="flex w-full flex-col items-center gap-3">
+          <div className="grid grid-cols-7">
             {WEEKDAYS.map((day) => (
               <span
                 key={day}
-                className="text-text-primary flex w-[60px] items-center justify-center py-2 text-sm"
+                className="text-text-primary flex w-[52px] items-center justify-center py-2 text-sm md:w-[60px]"
               >
                 {day}
               </span>
@@ -228,12 +228,12 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
                   onClick={() => handleSelectDate(date)}
                   disabled={isDateDisabled(date)}
                   aria-pressed={isSelectedEndpoint(date)}
-                  className={`relative box-border flex h-[46px] w-[60px] cursor-pointer items-center justify-center border-0 p-0 text-base font-bold disabled:cursor-not-allowed ${getDayClassName(date)}`}
+                  className={`relative box-border flex h-[46px] w-[52px] cursor-pointer items-center justify-center border-0 p-0 text-base font-bold focus:outline-none disabled:cursor-not-allowed md:w-[60px] ${getDayClassName(date)}`}
                 >
                   {renderDayNumber(date)}
                 </button>
               ) : (
-                <span key={`blank-${index}`} className="h-[46px] w-[60px]" aria-hidden="true" />
+                <span key={`blank-${index}`} className="h-[46px] w-[52px] md:w-[60px]" aria-hidden="true" />
               ),
             )}
           </div>
@@ -252,7 +252,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
           onConfirm();
         }
       }}
-      className="border-divider flex flex-col items-start rounded-xl border-2 bg-white shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]"
+      className="border-divider mx-auto flex h-[520px] w-[420px] max-w-[calc(100vw-24px)] shrink-0 flex-col items-center rounded-xl border-2 bg-white shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]"
     >
       <div className="flex items-center rounded-xl">
         {isTwoMonthView ? (

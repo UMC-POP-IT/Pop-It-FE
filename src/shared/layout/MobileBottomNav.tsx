@@ -1,5 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
+import { logoutApi } from "@/shared/utils/oauth";
 
 // <img src="*.svg">로 불러오면 currentColor가 페이지 CSS를 상속받지 못해 active/inactive
 // 색 전환이 안 먹는다 - fill="currentColor"가 실제로 동작하도록 SVG를 인라인으로 그린다.
@@ -29,11 +31,27 @@ const ReservationIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const MyPageIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" className={className} aria-hidden="true">
+    <path
+      d="M22 10.6693C22 7.35556 19.3137 4.66927 16 4.66927C12.6863 4.66927 10 7.35556 10 10.6693C10 13.983 12.6863 16.6693 16 16.6693C19.3137 16.6693 22 13.983 22 10.6693ZM23.3333 10.6693C23.3333 14.7194 20.0501 18.0026 16 18.0026C11.9499 18.0026 8.66667 14.7194 8.66667 10.6693C8.66667 6.61918 11.9499 3.33594 16 3.33594C20.0501 3.33594 23.3333 6.61918 23.3333 10.6693Z"
+      fill="currentColor"
+    />
+    <path
+      d="M16 20.6693C19.0504 20.6693 21.8439 21.4402 23.8958 22.7227C25.9385 23.9993 27.3333 25.8489 27.3333 28.0026C27.3333 28.3708 27.0349 28.6693 26.6667 28.6693H5.33333C4.96514 28.6693 4.66667 28.3708 4.66667 28.0026C4.66667 25.8489 6.06156 23.9993 8.10417 22.7227C10.1562 21.4402 12.9496 20.6693 16 20.6693ZM16 22.0026C13.1596 22.0026 10.6198 22.7239 8.8112 23.8542C7.25923 24.8241 6.31008 26.0479 6.0651 27.3359H25.9349C25.6899 26.0479 24.7408 24.8241 23.1888 23.8542C21.3803 22.7239 18.8405 22.0026 16 22.0026Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
 // 모바일(~767) 전용 하단 탭바 — Figma: 이 폭에서는 헤더 nav가 숨겨지는 대신 하단에 붙는다
 const MobileBottomNav = () => {
-  const { user, mode, openLoginModal } = useAuthStore();
+  const { user, mode, openLoginModal, logout } = useAuthStore();
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
 
   const exploreTo = mode === "HOST" ? "/host/spaces" : "/";
   const reservationTo = mode === "HOST" ? "/host/reservations" : "/reservations";
@@ -42,6 +60,33 @@ const MobileBottomNav = () => {
 
   const isExploreActive = pathname === exploreTo || pathname.startsWith(exploreTo + "/");
   const isReservationActive = pathname === reservationTo || pathname.startsWith(reservationTo + "/");
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        profileMenuRef.current &&
+        event.target instanceof Node &&
+        !profileMenuRef.current.contains(event.target)
+      ) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isProfileMenuOpen]);
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsProfileMenuOpen(false);
+        profileButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isProfileMenuOpen]);
 
   const handleExploreClick = () => {
     navigate(exploreTo);
@@ -55,6 +100,23 @@ const MobileBottomNav = () => {
     }
     navigate(reservationTo);
     window.scrollTo({ top: 0 });
+  };
+
+  const handleMyPageClick = () => {
+    if (!user) {
+      openLoginModal();
+      return;
+    }
+    setIsProfileMenuOpen((prev) => !prev);
+  };
+
+  const handleLogout = () => {
+    setIsProfileMenuOpen(false);
+    logout();
+    navigate("/");
+    logoutApi().catch((err) =>
+      console.error("[MobileBottomNav] 로그아웃 서버 요청 실패:", err),
+    );
   };
 
   return (
@@ -89,6 +151,43 @@ const MobileBottomNav = () => {
           {reservationLabel}
         </span>
       </button>
+      <div className="relative flex flex-1 justify-center" ref={profileMenuRef}>
+        {isProfileMenuOpen && user && (
+          <div
+            id="mobile-profile-menu"
+            role="menu"
+            className="absolute right-1/2 bottom-[64px] z-10 flex translate-x-1/2 flex-col overflow-hidden rounded-[8px] border border-[#f2f2f2] bg-white px-[6px] py-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]"
+          >
+            <button
+              role="menuitem"
+              onClick={handleLogout}
+              className="text-text-primary rounded-[4px] px-8 py-2 text-center text-base font-bold whitespace-nowrap hover:bg-[#f2f2f2]"
+            >
+              로그아웃
+            </button>
+          </div>
+        )}
+        <button
+          ref={profileButtonRef}
+          type="button"
+          onClick={handleMyPageClick}
+          aria-haspopup={user ? "menu" : undefined}
+          aria-expanded={user ? isProfileMenuOpen : undefined}
+          aria-controls={user ? "mobile-profile-menu" : undefined}
+          className={`flex w-full flex-col items-center gap-0.5 rounded-[999px] py-[4px] ${
+            isProfileMenuOpen ? "bg-primary-light text-primary" : "text-[#999999]"
+          }`}
+        >
+          <MyPageIcon className="size-8" />
+          <span
+            className={`text-[10px] tracking-[-0.1px] ${
+              isProfileMenuOpen ? "font-bold" : "font-medium"
+            }`}
+          >
+            마이페이지
+          </span>
+        </button>
+      </div>
     </nav>
   );
 };

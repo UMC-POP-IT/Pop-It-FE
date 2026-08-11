@@ -60,7 +60,7 @@ const Header = () => {
   const pillMorphStyle: MorphTransitionStyle | undefined = isScrollBarVisible
     ? { viewTransitionName: SEARCH_BAR_VIEW_TRANSITION_NAME }
     : undefined;
-  // 태블릿(md~xl 미만) 전용: 헤더 정중앙에 뜨는 축소 검색바 pill은 좌우 그룹
+  // 모바일/태블릿(md~xl 미만): 헤더에 뜨는 축소 검색바 pill은 좌우 그룹
   // 너비와 무관하게 항상 헤더 정가운데에 오도록 absolute + justify-center로
   // 배치돼 있다(위 pillMorphStyle 주석 참고) - 화면이 아주 넓을 때(xl, 1280↑)는
   // 여유가 충분해 문제가 없지만, 그보다 좁으면(1024~1279 같은 좁은 데스크톱
@@ -70,7 +70,7 @@ const Header = () => {
   // 전체 구간에서 우측 버튼 그룹을 통째로 숨기고, pill이 사라지면(스크롤을
   // 올려 큰 검색바로 돌아가거나 pill을 눌러 오버레이를 펼치면) 다시 원래
   // 자리(우측)에 그대로 나타나게 한다 - xl 이상은 그대로 항상 노출.
-  const hidePillOverlappingActionsOnTablet = Boolean(scrollBarSummary) && isScrollBarVisible;
+  const hidePillOverlappingActions = Boolean(scrollBarSummary) && isScrollBarVisible;
   const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
   const [modeError, setModeError] = useState(""); // 모드 전환 실패 사유
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -241,8 +241,8 @@ const Header = () => {
 
         {/* 검색 결과 화면 전용: 스크롤을 내리면 헤더 정중앙에 축소된 검색바 pill이
             나타난다. 클릭하면 헤더 바로 아래에 원래 검색바가 오버레이로 펼쳐진다
-            (Banner의 searchBarPosition="pinned-open"). 좁은 화면에서는 넣을
-            공간이 부족해 숨긴다.
+            (Banner의 searchBarPosition="pinned-open"). 모바일에서는 우측
+            호스트 전환 버튼 자리에 짧은 pill 형태로 보여준다.
             좌/우 그룹(로고+nav, 모드전환+프로필)의 너비가 서로 달라서 그 사이의
             남는 공간만 flex-1로 채우면 헤더 전체 기준으로는 중앙에서 벗어난다.
             그래서 아주 넓은 화면(xl, 1280↑)에서는 이 wrapper를 일반 flex
@@ -256,12 +256,12 @@ const Header = () => {
             끼워 넣는다(같은 행의 다른 두 형제 사이에서 flex-1로 남는 공간만
             차지) - 이러면 nav 폭과 무관하게 자동으로 nav 다음부터 시작해
             겹치지 않고, 오른쪽 그룹은 pill이 보이는 동안 통째로 숨기므로
-            (hidePillOverlappingActionsOnTablet) 남는 공간을 그대로 다 쓸 수 있다.
+            (hidePillOverlappingActions) 남는 공간을 그대로 다 쓸 수 있다.
             wrapper는 pointer-events-none으로 두고, 실제 버튼만 pointer-events-auto로
             켜서 숨겨진 상태에서도 다른 영역(nav, 프로필 등) 클릭을 막지 않는다. */}
         {scrollBarSummary && (
           <div
-            className={`pointer-events-none absolute inset-x-0 top-1/2 hidden -translate-y-1/2 justify-center md:flex md:max-xl:relative md:max-xl:inset-x-auto md:max-xl:top-auto md:max-xl:min-w-0 md:max-xl:flex-1 md:max-xl:translate-y-0 ${
+            className={`pointer-events-none absolute top-1/2 right-3 left-[92px] flex -translate-y-1/2 justify-end md:inset-x-0 md:justify-center md:max-xl:relative md:max-xl:inset-x-auto md:max-xl:top-auto md:max-xl:min-w-0 md:max-xl:flex-1 md:max-xl:translate-y-0 ${
               isScrollBarVisible ? "" : "opacity-0"
             }`}
           >
@@ -272,26 +272,26 @@ const Header = () => {
               aria-label="검색 조건 펼치기"
               disabled={!isScrollBarVisible}
               style={pillMorphStyle}
-              className={`border-divider pointer-events-auto flex items-center gap-3 rounded-full border bg-white py-2 pr-2 pl-5 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] ${
+              className={`border-divider pointer-events-auto flex max-w-full items-center gap-1.5 rounded-full border bg-white px-2.5 py-2 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] md:gap-3 md:py-2 md:pr-2 md:pl-5 ${
                 isScrollBarVisible ? "cursor-pointer" : "cursor-default"
               }`}
             >
-              <span className="text-text-primary text-sm font-bold whitespace-nowrap">
+              <span className="text-text-primary text-[10px] font-medium whitespace-nowrap md:text-sm md:font-bold">
                 {scrollBarSummary.categoryLabel}
               </span>
-              <span aria-hidden="true" className="bg-divider h-4 w-px shrink-0" />
-              <span className="text-text-primary text-sm font-bold whitespace-nowrap">
+              <span aria-hidden="true" className="bg-divider h-3 w-px shrink-0 md:h-4" />
+              <span className="text-text-primary text-[10px] font-medium whitespace-nowrap md:text-sm md:font-bold">
                 {scrollBarSummary.dateLabel}
               </span>
-              <span aria-hidden="true" className="bg-divider h-4 w-px shrink-0" />
-              <span className="text-text-primary text-sm font-bold whitespace-nowrap">
+              <span aria-hidden="true" className="bg-divider h-3 w-px shrink-0 md:h-4" />
+              <span className="text-text-primary text-[10px] font-medium whitespace-nowrap md:text-sm md:font-bold">
                 {scrollBarSummary.districtLabel}
               </span>
-              <span aria-hidden="true" className="bg-divider h-4 w-px shrink-0" />
-              <span className="text-text-secondary max-w-[120px] truncate text-sm">
+              <span aria-hidden="true" className="bg-divider h-3 w-px shrink-0 md:h-4" />
+              <span className="text-text-secondary shrink-0 text-[10px] whitespace-nowrap md:max-w-[120px] md:shrink md:truncate md:text-sm">
                 {scrollBarSummary.keywordLabel}
               </span>
-              <span className="bg-primary-hover flex size-8 shrink-0 items-center justify-center rounded-full text-white">
+              <span className="bg-primary-hover hidden size-8 shrink-0 items-center justify-center rounded-full text-white md:flex">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
                   <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -304,7 +304,7 @@ const Header = () => {
         {/* 우측: 모드전환 + 프로필 (gap-[20px]) */}
         <div
           className={`ml-auto flex items-center gap-5 md:max-lg:-mr-[32px] ${
-            hidePillOverlappingActionsOnTablet ? "md:max-xl:hidden" : ""
+            hidePillOverlappingActions ? "hidden md:max-xl:hidden xl:flex" : ""
           }`}
         >
           {/* 모드 전환 버튼 — 게스트 모드 나의 예약 탭에서는 숨김 */}

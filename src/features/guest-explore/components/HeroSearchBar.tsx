@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import FilterDropdown from "@/features/guest-explore/components/FilterDropdown";
 import DateRangeCalendar, { type DateRange } from "@/shared/components/DateRangeCalendar";
+import BottomSheet from "@/shared/components/BottomSheet";
 import { useOutsideClick } from "@/shared/hooks/useOutsideClick";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";
@@ -46,8 +47,11 @@ const formatDateRangeLabel = (range: DateRange) => {
 // 세그먼트 트리거 공통 스타일: 라벨(작게) + 값(굵게) 2줄. 열려있는 세그먼트는
 // 옅은 파란 배경(bg-primary-light)으로 강조한다. 바깥 pill의 border/구분선은
 // HeroSearchBar 래퍼가 담당한다.
+// 모바일(360~767): 피그마 스펙상 세그먼트 안쪽 여백이 훨씬 좁다(px-[10px] 안팎) -
+// 데스크톱/태블릿 px-8 py-4를 그대로 쓰면 3등분된 328px 폭 안에서 라벨+값이
+// 줄바꿈되거나 넘친다. md(768) 미만에서만 좁은 여백을 쓰고 그 이상은 기존 그대로.
 const segmentTriggerClassName = (isOpen: boolean) =>
-  `flex h-full w-full cursor-pointer flex-col items-start justify-center gap-1.5 px-8 py-4 text-left transition-colors ${
+  `flex h-full w-full cursor-pointer flex-col items-start justify-center gap-1 px-5 py-2.5 text-left transition-colors md:gap-1.5 md:px-8 md:py-4 ${
     isOpen ? "bg-primary-light" : ""
   }`;
 
@@ -78,10 +82,11 @@ interface SegmentTriggerContentProps {
   labelClassName: string;
 }
 
+// 피그마 모바일 스펙: 라벨 12px / 값 14px (태블릿 이상은 기존 18px/20px 유지).
 const SegmentTriggerContent = ({ label, value, labelClassName }: SegmentTriggerContentProps) => (
   <>
-    <span className={`text-[18px] leading-[1.4] ${labelClassName}`}>{label}</span>
-    <span className="text-text-primary text-[20px] leading-[1.4] font-bold">{value}</span>
+    <span className={`text-[12px] leading-[1.4] md:text-[18px] ${labelClassName}`}>{label}</span>
+    <span className="text-text-primary text-[14px] leading-[1.4] font-bold md:text-[20px]">{value}</span>
   </>
 );
 
@@ -153,7 +158,13 @@ const HeroSearchBar = ({
   const [isDateOpen, setIsDateOpen] = useState(false);
   const dateContainerRef = useRef<HTMLDivElement>(null);
 
-  useOutsideClick(dateContainerRef, () => setIsDateOpen(false), isDateOpen);
+  // 모바일(360~767)에서는 캘린더가 BottomSheet(portal, document.body 자식)로
+  // 뜨기 때문에 dateContainerRef 바깥으로 취급돼 useOutsideClick이 시트 안
+  // 클릭까지 "바깥 클릭"으로 오인해 mousedown 시점에 먼저 닫아버린다(그러면
+  // 그 뒤에 오는 click 이벤트가 이미 사라진 옵션 버튼을 못 찾아 선택 자체가
+  // 씹힌다) - 모바일에서는 이 훅을 끄고 BottomSheet 자체의 백드롭/Escape 닫기만 쓴다.
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  useOutsideClick(dateContainerRef, () => setIsDateOpen(false), isDateOpen && !isMobile);
 
   // lg(1024) 이상에서만 기존 데스크톱 고정폭 한 줄 레이아웃을 쓴다. 그 미만(태블릿
   // 768~1023 포함)에서는 CALENDAR_LEFT_OFFSET_PX 트릭이 더 이상 유효하지 않아
@@ -212,8 +223,15 @@ const HeroSearchBar = ({
   // 안에 들어가므로 두 군데에서 그대로 재사용한다(중복 작성 방지).
   const keywordContent = (
     <>
-      <div className="flex flex-1 flex-col justify-center gap-1.5 px-5 py-4">
-        <label htmlFor="hero-search-keyword" className={`text-[18px] leading-[1.4] ${labelClassName}`}>
+      <div className="flex flex-1 flex-col justify-center gap-1.5 px-5 py-2 md:px-8 md:py-4 lg:px-5">
+        {/* 피그마 모바일 스펙(node 5299:35318)에는 이 "검색어" 라벨이 화면에
+            보이지 않고 placeholder만 한 줄로 보인다 - 다만 접근성상 label 자체를
+            없애면 스크린 리더 사용자가 인풋의 용도를 알 수 없으므로, DOM에서
+            지우는 대신 시각적으로만 숨긴다(sr-only). md(768) 이상은 기존처럼 노출. */}
+        <label
+          htmlFor="hero-search-keyword"
+          className={`max-md:sr-only text-[18px] leading-[1.4] ${labelClassName}`}
+        >
           검색어
         </label>
         <input
@@ -226,18 +244,23 @@ const HeroSearchBar = ({
           }}
           maxLength={MAX_KEYWORD_LENGTH}
           placeholder="공간 · 지역 세부 검색"
-          className="text-text-primary placeholder:text-text-placeholder w-full text-[20px] leading-[1.4] font-medium outline-none"
+          className="text-text-primary placeholder:text-text-placeholder w-full text-[16px] leading-[1.4] font-medium outline-none md:text-[20px]"
         />
       </div>
-      {/* 피그마 스펙: 68 Hug × 68 Hug(원래 size-12=48px보다 큼) - 아이콘도
-          컨테이너와 같은 비율(24/48=50%)을 유지하도록 24→34로 함께 키운다. */}
+      {/* 피그마 스펙: 데스크톱/태블릿 68 Hug × 68 Hug, 모바일은 36 Hug(p-[6px] +
+          아이콘 24px) - 아이콘도 같은 비율(24/68≈34)로 함께 줄인다. */}
       <button
         type="button"
         aria-label="검색"
         onClick={handleSubmit}
-        className="bg-primary-hover flex size-[68px] shrink-0 cursor-pointer items-center justify-center rounded-full text-white"
+        className="bg-primary-hover flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-white md:size-[68px]"
       >
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <svg
+          className="size-6 md:h-[34px] md:w-[34px]"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
           <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
           <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
@@ -273,7 +296,7 @@ const HeroSearchBar = ({
     // 테두리를 공유하는 하나의 div만 쓰도록 되돌리고(이음매 자체가 없음), 태블릿
     // (1024 미만)에서만 기존처럼 독립된 두 pill(Box A: 필터 3종 / Box B: 검색어)을
     // gap-3로 세로로 쌓는 구조를 쓴다.
-    <div style={morphStyle} className="relative z-10 flex flex-col items-stretch gap-3">
+    <div style={morphStyle} className="relative z-10 flex flex-col items-stretch gap-2 md:gap-3">
       <div className={`flex items-stretch rounded-full bg-white ${outerBorderClassName}`}>
         <div className="flex flex-1 min-w-[33%] items-stretch lg:min-w-0 lg:w-[227px] lg:flex-none">
           <FilterDropdown
@@ -315,7 +338,25 @@ const HeroSearchBar = ({
               labelClassName={labelClassName}
             />
           </button>
-          {isDateOpen && (
+          {/* 모바일(360~767): 피그마 스펙대로 날짜 세그먼트를 탭하면 캘린더가
+              화면 하단에서 바텀시트로 올라온다(다른 두 필터와 동일 패턴).
+              BottomSheet가 role="dialog"/포커스 트랩/Escape 닫기를 이미
+              제공하므로 데스크톱처럼 별도 dialog 래퍼를 씌우지 않는다. */}
+          {isDateOpen && isMobile && (
+            <BottomSheet
+              isOpen={isDateOpen}
+              onClose={() => setIsDateOpen(false)}
+              ariaLabel="날짜 범위 선택"
+            >
+              <DateRangeCalendar
+                value={dateRange}
+                onChange={setDateRange}
+                onConfirm={() => setIsDateOpen(false)}
+                onReset={() => setDateRange({ start: null, end: null })}
+              />
+            </BottomSheet>
+          )}
+          {isDateOpen && !isMobile && (
             <div
               role="dialog"
               aria-label="날짜 범위 선택"
@@ -375,7 +416,16 @@ const HeroSearchBar = ({
       </div>
 
       {!isWideDesktop && (
-        <div className={`flex items-center gap-2.5 rounded-full bg-white pr-3 ${outerBorderClassName}`}>
+        // 모바일에서 이 박스(검색어 줄)에 세로 패딩이 하나도 없다 보니, 라벨을
+        // 숨긴 뒤로 내용이 한 줄만 남아 위 필터 박스(2줄, py-2.5)보다 눈에 띄게
+        // 낮아 보였다(사용자 리포트: "두줄짜리 검색창 크기가 위 검색창처럼
+        // 돼야지"). 피그마도 이 박스는 안쪽 입력 padding(py-[8px]) 위에 바깥
+        // 래퍼 자체에도 p-[9px]를 한 번 더 둬서(내용이 1줄이라도) 위 필터
+        // 박스와 높이를 맞춘다 - md 이상(태블릿/데스크톱)은 라벨이 그대로
+        // 보여 이미 두 박스 높이가 맞았으므로 세로 패딩을 추가하지 않는다.
+        <div
+          className={`flex items-center gap-2.5 rounded-full bg-white py-2.5 pr-3 md:py-0 ${outerBorderClassName}`}
+        >
           {keywordContent}
         </div>
       )}

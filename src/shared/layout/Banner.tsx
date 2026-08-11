@@ -42,7 +42,7 @@ const SWIPE_THRESHOLD_PX = 50;
  * 있으면 여기가 바뀔 때 sentinel 위치가 조용히 어긋날 수 있어서, 한 곳에서만
  * 정의하고 export한다.
  */
-export const RESULTS_MODE_TOP_OFFSET_PX = 32;
+export const RESULTS_MODE_TOP_OFFSET_PX = 8;
 
 interface BannerProps {
   /** 배너 하단에 얹을 콘텐츠 (예: 게스트 메인의 히어로 검색바). */
@@ -168,8 +168,8 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
     actualPosition === "inline" ? undefined : { top: HEADER_HEIGHT_PX };
   const innerWrapperClassName =
     actualPosition === "inline"
-      ? `w-full max-w-[1200px] ${showImage ? "mt-10 xl:mt-20" : ""}`
-      : "mx-auto w-full max-w-[1200px] px-4 py-4 md:px-10 xl:px-[76px]";
+      ? `w-full max-w-[1200px] ${showImage ? "mt-4 md:mt-10 xl:mt-20" : ""}`
+      : "mx-auto w-full max-w-[1200px] px-4 py-2 md:px-10 md:py-4 xl:px-[76px]";
 
   return (
     <div
@@ -191,7 +191,10 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
         className={`relative mx-auto flex w-full max-w-screen-xl flex-col justify-center px-4 md:px-10 xl:px-[76px] ${showImage ? `h-full ${slide.textClassName}` : ""}`}
       >
         <div className={`flex flex-col gap-4 ${showImage ? "" : "hidden"}`}>
-          <h2 className={`leading-snug font-bold whitespace-pre-line ${hasHero ? "text-3xl md:text-4xl xl:text-[40px] xl:font-extrabold" : "text-2xl md:text-3xl"}`}>
+          {/* 피그마 모바일(360~767) 스펙: 제목 24px(text-2xl) - 이전엔 이 구간도
+              태블릿과 같은 text-3xl(30px)을 그대로 썼는데, 모바일 노드에
+              "(배너 텍스트) 폰트 크기 바뀜" 주석이 따로 붙어있어 별도 크기다. */}
+          <h2 className={`leading-snug font-bold whitespace-pre-line ${hasHero ? "text-2xl md:text-4xl xl:text-[40px] xl:font-extrabold" : "text-2xl md:text-3xl"}`}>
             {slide.title}
           </h2>
           <p className={`opacity-80 ${hasHero ? "text-sm md:text-base xl:text-[20px]" : "text-sm md:text-base"}`}>
