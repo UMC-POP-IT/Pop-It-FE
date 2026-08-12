@@ -16,6 +16,8 @@ import {
   verifyIdentity,
 } from "@/features/host-manage/api/hostApi";
 import type { ApiHostReservation, ReservationStatus } from "@/types";
+import { pollVerificationStatus } from "@/features/guest-explore/utils/verificationPolling";
+import { PENDING_CONTRACT_RESERVATION_KEY } from "@/features/guest-explore/utils/contractSession";
 
 const TAB_STATUS: ReservationStatus[] = [
   "PENDING_APPROVAL",
@@ -55,21 +57,54 @@ export const HostReservationPage = () => {
   const [isApproving, setIsApproving] = useState(false);
   const [approveError, setApproveError] = useState(false);
 
+  // 계약서 모달에서 PASS 인증 중 모바일 리다이렉트로 페이지가 새로고침된 경우,
+  // 돌아왔을 때 다시 열어줘야 할 예약(Authentication이 리다이렉트 전 남겨둔 값)
+  const [autoOpenReservationId, setAutoOpenReservationId] = useState<number | null>(null);
+  const [verificationFailed, setVerificationFailed] = useState(false);
 
-  // 모바일 포트원 redirect 복귀 시 URL 파라미터로 본인인증 확정 처리
-  // 성공한 경우에만 파라미터를 제거해야 실패 시 페이지 재진입으로 재시도할 수 있다
+  // 모바일 포트원 redirect 복귀 시 URL 파라미터로 본인인증을 확정 짓고,
+  // 원래 서명 중이던 예약의 계약서 모달을 다시 열어준다(게스트 MyReservationList와 동일한 패턴).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const identityVerificationId = params.get("identityVerificationId");
     if (!identityVerificationId) return;
-    verifyIdentity(identityVerificationId).then(() => {
+
+    let cancelled = false;
+    const pendingReservationId = sessionStorage.getItem(PENDING_CONTRACT_RESERVATION_KEY);
+
+    const finalizeVerification = async () => {
+      let verified = false;
+      try {
+        const result = await verifyIdentity(identityVerificationId);
+        verified = result.isVerified;
+      } catch (error) {
+        console.error("[HostReservationPage] 본인인증 확정 실패:", error);
+      }
+
+      // PortOne 인증 자체는 성공했지만 서버 반영이 지연됐을 수 있어 재조회로 한 번 더 확인한다.
+      if (!verified) verified = await pollVerificationStatus(() => cancelled);
+      if (cancelled) return;
+
+      if (!verified) {
+        // 서버 반영 지연이 아닌 영구 실패로 판단되는 경우: URL·세션의 식별자는 남겨둬서
+        // 재조회 시(새로고침 등) 다시 시도할 수 있게 하고, 모달은 열지 않은 채 실패만 알린다.
+        setVerificationFailed(true);
+        return;
+      }
+
+      sessionStorage.removeItem(PENDING_CONTRACT_RESERVATION_KEY);
       params.delete("identityVerificationId");
       params.delete("identityVerificationTxId");
       const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
       window.history.replaceState(null, "", newUrl);
-    }).catch((err) => {
-      console.error("[HostReservationPage] 본인인증 처리 실패:", err);
-    });
+      if (pendingReservationId) setAutoOpenReservationId(Number(pendingReservationId));
+    };
+
+    finalizeVerification();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const loadReservations = useCallback(async () => {
@@ -119,6 +154,24 @@ export const HostReservationPage = () => {
     if (status === "CONTRACT_COMPLETED") return effective === "PAYMENT_COMPLETED";
     return effective === status;
   };
+
+  // 재오픈 대상 예약이 로드되면, 이미 승인(approveReservation)까지는 끝난 상태이므로
+  // 승인 확인/입금 안내 모달 없이 계약서 모달만 곧바로 다시 연다.
+  useEffect(() => {
+    if (autoOpenReservationId == null || reservations.length === 0) return;
+    const target = reservations.find((r) => r.reservationId === autoOpenReservationId);
+    setAutoOpenReservationId(null);
+    if (!target) return;
+
+    const effective = computeEffectiveStatus(target);
+    if (effective !== "APPROVED" && effective !== "CONTRACT_COMPLETED") return;
+
+    const tabIndex = TAB_STATUS.findIndex((status) => matchesTab(target, status));
+    if (tabIndex !== -1) setActiveTab(tabIndex);
+    setApproveTargetId(target.reservationId);
+    setIsContractModalOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenReservationId, reservations]);
 
   const getTabCount = (status: ReservationStatus) =>
     reservations.filter((r) => matchesTab(r, status)).length;
@@ -351,6 +404,17 @@ export const HostReservationPage = () => {
         photos={checkoutPhotos}
         isLoading={isPhotosLoading}
         onClose={() => setPhotoViewTarget(null)}
+      />
+
+      {/* 본인인증 확정 실패 모달 (모바일 PASS 리다이렉트 복귀) */}
+      <Modal
+        isOpen={verificationFailed}
+        title="본인인증 확인에 실패했습니다"
+        description={"네트워크 상태를 확인한 후\n계약서 화면에서 다시 시도해주세요"}
+        iconVariant="warning"
+        singleButton
+        confirmLabel="확인"
+        onConfirm={() => setVerificationFailed(false)}
       />
 
       {/* 입금 예정 / 계약서 모달 */}

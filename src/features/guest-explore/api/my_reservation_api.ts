@@ -28,8 +28,13 @@ export interface Reservation {
 export interface GetReservationsResponse {
     reservations: Reservation[];
     hasNext: boolean;
-    nextCursor: number | null;
+    // 서버가 내려주는 커서는 "날짜|id" 형태의 복합 문자열(예: "2026-08-04T10:30:00|42")이라 number가 아니다
+    nextCursor: string | null;
 }
+
+// 예약 목록(GetReservations) TanStack Query 키. 결제 승인 등 목록 갱신이 필요한
+// 다른 화면/컴포넌트에서도 이 키로 invalidateQueries를 호출해야 같은 캐시를 갱신한다.
+export const RESERVATIONS_QUERY_KEY = ["reservations", "me"] as const;
 
 export interface CancelReservationResponse {
     reservationId: number;
@@ -214,10 +219,10 @@ export const createReservation = (request: CreateReservationRequest) =>
         body: JSON.stringify(request),
 });
 
-// 게스트 - 예약 목록 조회 (cursor: 마지막으로 조회한 id, size: 페이지 크기, status: 상태 필터) ~ DONE
-export const GetReservations = (cursor?: number, size?: number, status?: string) => {
+// 게스트 - 예약 목록 조회 (cursor: 이전 응답의 nextCursor, size: 페이지 크기, status: 상태 필터) ~ DONE
+export const GetReservations = (cursor?: string, size?: number, status?: string) => {
     const query = new URLSearchParams();
-    if (cursor != null) query.set("cursor", String(cursor));
+    if (cursor != null) query.set("cursor", cursor);
     if (size != null) query.set("size", String(size));
     if (status) query.set("status", status);
     const qs = query.toString();

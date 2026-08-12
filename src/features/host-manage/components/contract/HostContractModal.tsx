@@ -174,7 +174,7 @@ const HostContractModal = ({
             </div>
           </div>
 
-          <Authentication onIsAuthenticated={setIsAuthenticated} />
+          <Authentication reservationId={reservation.reservationId} onIsAuthenticated={setIsAuthenticated} />
           <SignatureBoard ref={signatureBoardRef} onIsSigned={setIsSigned} />
 
           {submitError && (

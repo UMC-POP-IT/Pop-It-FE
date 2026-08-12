@@ -46,7 +46,9 @@ export const useDialogA11y = <T extends HTMLElement>({
     };
 
     const initialTarget = initialFocusRef?.current ?? getFocusable()[0] ?? dialogRef.current;
-    initialTarget?.focus();
+    // preventScroll: 포커스 대상이 스크롤 영역 아래쪽에 있을 때 브라우저가 자동으로
+    // 그 위치까지 스크롤해버려 대화상자가 맨 위가 아닌 곳부터 보이는 것을 방지한다.
+    initialTarget?.focus({ preventScroll: true });
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {

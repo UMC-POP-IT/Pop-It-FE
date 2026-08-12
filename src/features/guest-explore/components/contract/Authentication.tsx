@@ -2,16 +2,16 @@
 import * as PortOne from "@portone/browser-sdk/v2";
 import passIcon from "@/features/guest-explore/icons/PASS.png";
 import { GetVerificationStatus, RequestVerification } from "@/features/guest-explore/api/my_reservation_api";
-
-const RETRY_INTERVAL_MS = 1500;
-const MAX_RETRIES = 3;
+import { pollVerificationStatus } from "@/features/guest-explore/utils/verificationPolling";
+import { PENDING_CONTRACT_RESERVATION_KEY } from "@/features/guest-explore/utils/contractSession";
 
 interface AuthenticationProps {
+  reservationId: number;
   onVerified?: (identityVerificationId: string) => Promise<void>;
   onIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) => {
+const Authentication = ({ reservationId, onVerified, onIsAuthenticated }: AuthenticationProps) => {
   const [status, setStatus] = useState<"idle" | "checking" | "pending" | "done" | "error">("checking");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // polling 도중 컴포넌트가 언마운트되면 이후 상태/콜백 갱신을 막기 위한 플래그
@@ -52,21 +52,6 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
     };
   }, [onIsAuthenticated]);
 
-  // PortOne 인증 완료 직후 서버 확정 반영이 약간 지연될 수 있어, 실패 시 잠시 뒤 상태를 재조회해 확인한다.
-  const pollVerificationStatus = async (retries = MAX_RETRIES, delayMs = RETRY_INTERVAL_MS): Promise<boolean> => {
-    for (let i = 0; i < retries; i++) {
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-      if (!isMountedRef.current) return false; // 언마운트된 경우 남은 재조회를 중단
-      try {
-        const { isVerified } = await GetVerificationStatus();
-        if (isVerified) return true;
-      } catch {
-        // 재조회 실패는 무시하고 다음 시도로 넘어간다.
-      }
-    }
-    return false;
-  };
-
   const handleVerify = async () => {
     if (status === "pending" || status === "done") return;
     setStatus("pending");
@@ -74,12 +59,40 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
 
     const identityVerificationId = `identity-verification-${crypto.randomUUID()}`;
 
-    const response = await PortOne.requestIdentityVerification({
-      storeId: import.meta.env.VITE_PORTONE_STORE_ID,
-      channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
-      identityVerificationId,
-      redirectUrl: window.location.href,
-    });
+    // 모바일에서는 PASS 인증이 팝업이 아닌 페이지 리다이렉트로 진행되어 이 지점 이후 코드가
+    // 실행되지 못한 채 페이지가 새로고침될 수 있다. 복귀 후 어떤 예약의 계약서 모달을
+    // 다시 열어야 하는지 알 수 있도록 리다이렉트 전에 reservationId를 남겨둔다.
+    sessionStorage.setItem(PENDING_CONTRACT_RESERVATION_KEY, String(reservationId));
+
+    let response;
+    try {
+      response = await PortOne.requestIdentityVerification({
+        storeId: import.meta.env.VITE_PORTONE_STORE_ID,
+        channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
+        identityVerificationId,
+        redirectUrl: window.location.href,
+        bypass: {
+          inicisUnified: {
+            flgFixedUser: "N",
+            directAgency: "PASS"
+          }
+        }
+      });
+    } catch (error) {
+      // 실패를 response.code로 알려주지 않고 프로미스 자체를 reject하는 경우가 있다
+      // (예: 인증창 호출 자체가 막힌 경우). catch 없이 두면 status가 "pending"에 멈추고
+      // pendingContractReservationId도 지워지지 않아 사용자가 재시도할 수 없게 된다.
+      console.error("[Authentication] PortOne 본인인증 호출 실패:", error);
+      sessionStorage.removeItem(PENDING_CONTRACT_RESERVATION_KEY);
+      setStatus("error");
+      setErrorMessage("본인인증 창을 여는 데 실패했습니다. 다시 시도해주세요.");
+      onIsAuthenticated(false);
+      return;
+    }
+
+    // 이 지점에 도달했다는 것은 리다이렉트 없이(팝업/아이프레임 방식) 현재 페이지에서
+    // 프로미스가 그대로 resolve됐다는 뜻이므로, 복귀 처리용 플래그는 더 이상 필요 없다.
+    sessionStorage.removeItem(PENDING_CONTRACT_RESERVATION_KEY);
 
     if (response?.code !== undefined) {
       setStatus("error");
@@ -96,7 +109,7 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
 
       // PortOne 인증 자체는 성공했지만, 서버에 인증 결과가 반영되기까지 약간의 지연이 있을 수 있어
       // 즉시 실패 처리하지 않고 상태를 재조회해 확인한 뒤 최종 실패 여부를 판단한다.
-      const verified = await pollVerificationStatus();
+      const verified = await pollVerificationStatus(() => !isMountedRef.current);
       if (!isMountedRef.current) return; // 언마운트 이후 도착한 응답으로 상태를 갱신하지 않음
       if (!verified) {
         setStatus("error");
