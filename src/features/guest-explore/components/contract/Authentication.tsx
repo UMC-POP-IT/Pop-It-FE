@@ -2,9 +2,7 @@
 import * as PortOne from "@portone/browser-sdk/v2";
 import passIcon from "@/features/guest-explore/icons/PASS.png";
 import { GetVerificationStatus, RequestVerification } from "@/features/guest-explore/api/my_reservation_api";
-
-const RETRY_INTERVAL_MS = 1500;
-const MAX_RETRIES = 3;
+import { pollVerificationStatus } from "@/features/guest-explore/utils/verificationPolling";
 
 interface AuthenticationProps {
   reservationId: number;
@@ -53,21 +51,6 @@ const Authentication = ({ reservationId, onVerified, onIsAuthenticated }: Authen
     };
   }, [onIsAuthenticated]);
 
-  // PortOne 인증 완료 직후 서버 확정 반영이 약간 지연될 수 있어, 실패 시 잠시 뒤 상태를 재조회해 확인한다.
-  const pollVerificationStatus = async (retries = MAX_RETRIES, delayMs = RETRY_INTERVAL_MS): Promise<boolean> => {
-    for (let i = 0; i < retries; i++) {
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-      if (!isMountedRef.current) return false; // 언마운트된 경우 남은 재조회를 중단
-      try {
-        const { isVerified } = await GetVerificationStatus();
-        if (isVerified) return true;
-      } catch {
-        // 재조회 실패는 무시하고 다음 시도로 넘어간다.
-      }
-    }
-    return false;
-  };
-
   const handleVerify = async () => {
     if (status === "pending" || status === "done") return;
     setStatus("pending");
@@ -112,7 +95,7 @@ const Authentication = ({ reservationId, onVerified, onIsAuthenticated }: Authen
 
       // PortOne 인증 자체는 성공했지만, 서버에 인증 결과가 반영되기까지 약간의 지연이 있을 수 있어
       // 즉시 실패 처리하지 않고 상태를 재조회해 확인한 뒤 최종 실패 여부를 판단한다.
-      const verified = await pollVerificationStatus();
+      const verified = await pollVerificationStatus(() => !isMountedRef.current);
       if (!isMountedRef.current) return; // 언마운트 이후 도착한 응답으로 상태를 갱신하지 않음
       if (!verified) {
         setStatus("error");

@@ -3,6 +3,8 @@ import Tab from "@/shared/components/Tab";
 import { CancelReservations, GetReservations, RequestVerification, Reservation, Status } from "../api/my_reservation_api";
 import { ReservationCard } from "@/features/guest-explore/components/ReservationCard";
 import MyReservationListEmptyState from "@/features/guest-explore/components/MyReservationListEmptyState";
+import Modal from "@/shared/components/Modal";
+import { pollVerificationStatus } from "@/features/guest-explore/utils/verificationPolling";
 
 const TAB_STATUSES = ["예약 예정", "승인 완료", "계약 완료", "사용 중", "지난 예약"];
 
@@ -21,6 +23,7 @@ export const MyReservationList = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [reservationList, setReservationList] = useState<Reservation[]>([]);
   const [autoOpenReservationId, setAutoOpenReservationId] = useState<number | null>(null);
+  const [verificationFailed, setVerificationFailed] = useState(false);
 
   useEffect(() => {
     GetReservations()
@@ -36,20 +39,42 @@ export const MyReservationList = () => {
     const identityVerificationId = params.get("identityVerificationId");
     if (!identityVerificationId) return;
 
+    let cancelled = false;
     const pendingReservationId = sessionStorage.getItem("pendingContractReservationId");
 
-    RequestVerification({ identityVerificationId })
-      .catch((error) => {
+    const finalizeVerification = async () => {
+      let verified = false;
+      try {
+        const result = await RequestVerification({ identityVerificationId });
+        verified = result.isVerified;
+      } catch (error) {
         console.error("[MyReservationList] 본인인증 확정 실패:", error);
-      })
-      .finally(() => {
-        sessionStorage.removeItem("pendingContractReservationId");
-        params.delete("identityVerificationId");
-        params.delete("identityVerificationTxId");
-        const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
-        window.history.replaceState(null, "", newUrl);
-        if (pendingReservationId) setAutoOpenReservationId(Number(pendingReservationId));
-      });
+      }
+
+      // PortOne 인증 자체는 성공했지만 서버 반영이 지연됐을 수 있어 재조회로 한 번 더 확인한다.
+      if (!verified) verified = await pollVerificationStatus(() => cancelled);
+      if (cancelled) return;
+
+      if (!verified) {
+        // 서버 반영 지연이 아닌 영구 실패로 판단되는 경우: URL·세션의 식별자는 남겨둬서
+        // 재조회 시(새로고침 등) 다시 시도할 수 있게 하고, 모달은 열지 않은 채 실패만 알린다.
+        setVerificationFailed(true);
+        return;
+      }
+
+      sessionStorage.removeItem("pendingContractReservationId");
+      params.delete("identityVerificationId");
+      params.delete("identityVerificationTxId");
+      const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+      window.history.replaceState(null, "", newUrl);
+      if (pendingReservationId) setAutoOpenReservationId(Number(pendingReservationId));
+    };
+
+    finalizeVerification();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // 재오픈 대상 예약이 속한 탭으로 이동해야 ReservationCard가 렌더링되어 모달을 열 수 있다.
@@ -99,6 +124,16 @@ export const MyReservationList = () => {
           ))
         )}
       </div>
+
+      <Modal
+        isOpen={verificationFailed}
+        title="본인인증 확인에 실패했습니다"
+        description={"네트워크 상태를 확인한 후\n계약서 화면에서 다시 시도해주세요"}
+        iconVariant="warning"
+        singleButton
+        confirmLabel="확인"
+        onConfirm={() => setVerificationFailed(false)}
+      />
     </section>
   );
 };
