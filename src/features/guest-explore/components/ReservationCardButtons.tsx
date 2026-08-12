@@ -1,5 +1,4 @@
 import Button from "@/shared/components/Button";
-import { GetPaymentInfoResponse } from "../api/my_reservation_api";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 
 // 360~767px(모바일)에서 767px(태블릿) 크기 배치를 유지한 채 버튼이 자연스럽게 줄어들다가 768px부터는 Button의 기본 sm 크기(h-10/px-6/text-base)로 수렴한다.
@@ -26,8 +25,6 @@ interface ReservationCardActionsProps {
   isAwaitingHostApproval: boolean;
   showCancel: boolean;
   showContract: boolean;
-  isPaymentInfoError: boolean;
-  paymentInfo: GetPaymentInfoResponse | null;
   onSpaceDetail: () => void;
   onPhotoVerify: () => void;
   onShowRejectedPhoto: () => void;
@@ -42,8 +39,6 @@ export const ReservationCardButtons = ({
   isAwaitingHostApproval,
   showCancel,
   showContract,
-  isPaymentInfoError,
-  paymentInfo,
   onSpaceDetail,
   onPhotoVerify,
   onShowRejectedPhoto,
@@ -59,9 +54,6 @@ export const ReservationCardButtons = ({
           <span className="self-start text-left text-red-400 text-[clamp(12px,_10.24px_+_0.49vw,_14px)] whitespace-pre-wrap">{"호스트가 퇴실 승인을\n거절했습니다 다시 인증해주세요"}</span> :
           <span className="self-start text-primary text-[clamp(12px,_10.24px_+_0.49vw,_14px)] min-[1024px]:self-end">사진 인증이 필요합니다 (필수)</span>
         )}
-      {showContract && isPaymentInfoError && (
-        <span className="self-start text-red-400 text-[clamp(12px,_10.24px_+_0.49vw,_14px)] min-[1024px]:self-end">결제 정보를 불러오지 못했습니다</span>
-      )}
       <div className="grid w-full grid-cols-2 items-center gap-1 [&>*:last-child:nth-child(odd):not(:only-child)]:col-span-2 min-[768px]:flex min-[768px]:w-auto">
         {isDone &&
           (needsPhotoVerification ? (
@@ -100,7 +92,7 @@ export const ReservationCardButtons = ({
           </Button>
         )}
         {showContract && (
-          <Button variant="primary" size="sm" className={FLUID_BUTTON_CLASS} disabled={!paymentInfo} onClick={onSignPayment}>
+          <Button variant="primary" size="sm" className={FLUID_BUTTON_CLASS} onClick={onSignPayment}>
             계약 하기
           </Button>
         )}
