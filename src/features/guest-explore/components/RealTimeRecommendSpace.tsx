@@ -76,14 +76,16 @@ const RealTimeRecommendSpace = () => {
                 <SkeletonBanner />
               </div>
             ))
-          ) : isError ? (
+          ) : isError || spaces.length === 0 ? (
             <div
-              role="alert"
-              aria-live="assertive"
+              role={isError ? "alert" : "status"}
+              aria-live={isError ? "assertive" : "polite"}
               className="bg-tag-bg flex h-64 w-full items-center justify-center"
             >
               <p className="text-text-secondary text-sm">
-                실시간 추천 공간 조회에 실패했습니다
+                {isError
+                  ? "실시간 추천 공간 조회에 실패했습니다"
+                  : "실시간 추천 가능한 공간이 없습니다"}
               </p>
             </div>
           ) : (
