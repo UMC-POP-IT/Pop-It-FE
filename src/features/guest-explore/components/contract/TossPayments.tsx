@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Button from "@/shared/components/Button";
-import { GetPresignedURL, PaymentRequest, SubmitSignature, UploadFileToPresignedURL } from "@/features/guest-explore/api/my_reservation_api";
+import { GetPaymentInfo, GetPresignedURL, PaymentRequest, SubmitSignature, UploadFileToPresignedURL } from "@/features/guest-explore/api/my_reservation_api";
 
 export const TOSS_PENDING_PAYMENT_KEY = "toss_pending_payment";
 
@@ -129,6 +129,22 @@ const TossPayments = ({
       // 이전 시도에서 서명 제출(SubmitSignature)까지는 성공했지만 결제 단계에서 실패한 경우,
       // 서명을 다시 업로드해 중복 계약을 만들지 않고 확보해둔 contractId로 결제 단계부터 재시도한다.
       let contractId = getCachedContractId(reservationId);
+
+      // sessionStorage는 탭에 묶여 있어, 간편결제 앱 전환처럼 탭/컨텍스트가 바뀌는 경로로
+      // 이탈했다 돌아오면 캐시가 사라질 수 있다. 재서명을 시도하기 전에 서버에 이미 완료된
+      // 계약이 있는지 먼저 확인해, 캐시가 없어도 "이미 서명됨" 오류 없이 결제로 이어가게 한다.
+      if (contractId === null) {
+        try {
+          const paymentInfo = await GetPaymentInfo(reservationId);
+          if (paymentInfo.contractStatus === "PENDING_PAYMENT" || paymentInfo.contractStatus === "COMPLETED") {
+            contractId = paymentInfo.contractId;
+            setCachedContractId(reservationId, contractId);
+          }
+        } catch (error) {
+          // 조회 실패는 무시하고 아래에서 평소대로 서명부터 다시 시도한다.
+          console.error("[TossPayments] 기존 계약 조회 실패:", error);
+        }
+      }
 
       if (contractId === null) {
         const signatureBlob = await getSignatureBlob();
