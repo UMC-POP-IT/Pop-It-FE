@@ -8,7 +8,6 @@ import HostPaymentModal from "@/features/host-manage/components/contract/HostPay
 import HostContractModal from "@/features/host-manage/components/contract/HostContractModal";
 import {
   fetchHostReservations,
-  approveReservation,
   rejectReservation,
   approveCheckout,
   rejectCheckout,
@@ -52,7 +51,6 @@ export const HostReservationPage = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [agreedToGuide, setAgreedToGuide] = useState(false);
-  const [isApproving, setIsApproving] = useState(false);
   const [approveError, setApproveError] = useState(false);
 
 
@@ -352,7 +350,7 @@ export const HostReservationPage = () => {
             }}
             agreedToGuide={agreedToGuide}
             onAgreedToGuideChange={setAgreedToGuide}
-            isSubmitting={isApproving}
+            isSubmitting={false}
             submitError={approveError}
             onClose={() => {
               setIsPaymentModalOpen(false);
