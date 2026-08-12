@@ -7,6 +7,9 @@ import DateRangePicker from "@/features/host-register/components/DateRangePicker
 import { STEPS } from "@/features/host-register/api/mock_register";
 import { NO_SPINNER, blockNonNumeric } from "@/shared/utils/numberInput";
 
+/** 서버 pricePerDay가 최소 1원이라 만원 단위 입력은 최소 1만원 */
+const MIN_PRICE_DAY_MANWON = 1;
+
 /** 서버 pricePerDay가 int32(최대 2,147,483,647원)라서 만원 단위 입력은 여기까지 */
 const MAX_PRICE_DAY_MANWON = 214_748;
 
@@ -22,11 +25,15 @@ export const RegisterStep2 = () => {
   //금액: 일 단가 입력됐는지 (주/월 가격은 상세 페이지에서 일 단가로 계산)
   const hasPrice = form.priceDay !== "";
 
-  // 값이 있을 때만 상한 검사 — 빈 칸은 "미입력"이지 "잘못된 값"이 아니다
-  const priceDayError =
-    hasPrice && Number(form.priceDay) > MAX_PRICE_DAY_MANWON
-      ? `1일 대여료는 ${MAX_PRICE_DAY_MANWON.toLocaleString()}만원 이하로 입력해 주세요`
-      : "";
+  // 값이 있을 때만 범위 검사 — 빈 칸은 "미입력"이지 "잘못된 값"이 아니다
+  const priceDayNumber = Number(form.priceDay);
+  const priceDayError = !hasPrice
+    ? ""
+    : !(priceDayNumber >= MIN_PRICE_DAY_MANWON)
+      ? `1일 대여료는 ${MIN_PRICE_DAY_MANWON}만원 이상 입력해 주세요`
+      : priceDayNumber > MAX_PRICE_DAY_MANWON
+        ? `1일 대여료는 ${MAX_PRICE_DAY_MANWON.toLocaleString()}만원 이하로 입력해 주세요`
+        : "";
 
   //기간: 시작일 + 종료일 둘 다 입력됐나
   const hasPeriod = form.startDate !== "" && form.endDate !== "";
