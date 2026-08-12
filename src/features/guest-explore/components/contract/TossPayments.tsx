@@ -136,6 +136,10 @@ const TossPayments = ({
       if (contractId === null) {
         try {
           const paymentInfo = await GetPaymentInfo(reservationId);
+          // COMPLETED(결제까지 끝난 계약)도 포함하는 이유: 결제는 성공했지만 리다이렉트 후
+          // 결과 반영 전에 사용자가 이 화면으로 돌아와 다시 버튼을 누르는 경우가 있을 수 있다.
+          // 이때도 재서명 없이 같은 contractId로 진행해, 서버가 멱등키로 기존 결제 결과를
+          // 반환/재사용하도록 한다.
           if (paymentInfo.contractStatus === "PENDING_PAYMENT" || paymentInfo.contractStatus === "COMPLETED") {
             contractId = paymentInfo.contractId;
             setCachedContractId(reservationId, contractId);

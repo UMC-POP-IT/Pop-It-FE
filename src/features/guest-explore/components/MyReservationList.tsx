@@ -5,6 +5,7 @@ import { ReservationCard } from "@/features/guest-explore/components/Reservation
 import MyReservationListEmptyState from "@/features/guest-explore/components/MyReservationListEmptyState";
 import Modal from "@/shared/components/Modal";
 import { pollVerificationStatus } from "@/features/guest-explore/utils/verificationPolling";
+import { PENDING_CONTRACT_RESERVATION_KEY } from "@/features/guest-explore/utils/contractSession";
 import { useTossPaymentResultStore } from "@/store/tossPaymentResultStore";
 
 const TAB_STATUSES = ["예약 예정", "승인 완료", "계약 완료", "사용 중", "지난 예약"];
@@ -51,7 +52,7 @@ export const MyReservationList = () => {
     if (!identityVerificationId) return;
 
     let cancelled = false;
-    const pendingReservationId = sessionStorage.getItem("pendingContractReservationId");
+    const pendingReservationId = sessionStorage.getItem(PENDING_CONTRACT_RESERVATION_KEY);
 
     const finalizeVerification = async () => {
       let verified = false;
@@ -73,7 +74,7 @@ export const MyReservationList = () => {
         return;
       }
 
-      sessionStorage.removeItem("pendingContractReservationId");
+      sessionStorage.removeItem(PENDING_CONTRACT_RESERVATION_KEY);
       params.delete("identityVerificationId");
       params.delete("identityVerificationTxId");
       const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
