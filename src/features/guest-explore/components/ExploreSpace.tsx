@@ -15,6 +15,7 @@ import {
 import { useWishStore } from "@/store/wishStore";
 import { useAuthStore } from "@/store/authStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
+import { useDelayedLoading } from "@/shared/hooks/useDelayedLoading";
 
 type FetchStatus = "loading" | "success" | "error";
 
@@ -185,7 +186,10 @@ const ExploreSpace = ({
         const freshWishedIds = useWishStore.getState().wishedIds;
         setSpaces((prev) => {
           const base = isLoadMore ? prev : [];
-          return [...base, ...reconcileHeartCounts(summaries, prev, freshWishedIds)];
+          return [
+            ...base,
+            ...reconcileHeartCounts(summaries, prev, freshWishedIds),
+          ];
         });
         setTotalCount(result.totalCount);
         setHasNextPage(result.hasNext);
@@ -221,7 +225,15 @@ const ExploreSpace = ({
       ignore = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyword, spaceCategory, district, currentPage, infinitePage, resultsMode, retryKey]);
+  }, [
+    keyword,
+    spaceCategory,
+    district,
+    currentPage,
+    infinitePage,
+    resultsMode,
+    retryKey,
+  ]);
 
   // 무한스크롤 모드: 그리드 맨 아래 sentinel이 화면에 보이면 다음 페이지를 이어붙인다.
   useEffect(() => {
@@ -246,9 +258,22 @@ const ExploreSpace = ({
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [resultsMode, hasNextPage, isLoadingMore, isRefetching, hasLoadMoreError, status]);
+  }, [
+    resultsMode,
+    hasNextPage,
+    isLoadingMore,
+    isRefetching,
+    hasLoadMoreError,
+    status,
+  ]);
 
   const hasResults = status === "success" && spaces.length > 0;
+
+  // 실제로 짧게 끝나는 요청(대부분의 경우)에는 최초 로딩 화면조차 노출하지
+  // 않는다 - 일반적인 화면 전환에서 로딩 UI가 잠깐 반짝이는 현상을 없앤다
+  // (#275). 무한스크롤 추가 로딩(isLoadingMore)과 배경 재조회(isRefetching)는
+  // 이미 기존 목록을 가리지 않는 별도 UI라 여기 대상이 아니다.
+  const showInitialLoading = useDelayedLoading(status === "loading");
 
   useEffect(() => {
     onHasResultsChange?.(hasResults);
@@ -281,8 +306,12 @@ const ExploreSpace = ({
 
   return (
     <section className="mt-6 w-full md:mt-14">
-      <div className={`mb-4 flex items-center md:mb-6 ${resultsMode ? "justify-end" : "justify-between"}`}>
-        {!resultsMode && <h2 className="text-text-primary text-2xl font-bold">공간 탐색</h2>}
+      <div
+        className={`mb-4 flex items-center md:mb-6 ${resultsMode ? "justify-end" : "justify-between"}`}
+      >
+        {!resultsMode && (
+          <h2 className="text-text-primary text-2xl font-bold">공간 탐색</h2>
+        )}
 
         <button
           type="button"
@@ -300,7 +329,13 @@ const ExploreSpace = ({
               {/* 지도가 열려있을 때는 같은 버튼이 닫기(X) 역할도 겸한다 - 피그마
                   node 5019:73566의 btn_close 스타일(흰 원 배경 + 파란 X)과 동일. */}
               <span className="flex shrink-0 items-center justify-center rounded-full bg-white p-[2px]">
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  aria-hidden="true"
+                >
                   <path
                     d="M5.5 5.5L14.5 14.5M14.5 5.5L5.5 14.5"
                     stroke="#3783F7"
@@ -311,14 +346,22 @@ const ExploreSpace = ({
               </span>
             </>
           ) : (
+            // 켜짐 상태(지도 텍스트 → 닫기 아이콘)와 순서를 통일한다 - 텍스트가
+            // 항상 아이콘보다 먼저 오도록(#275 디자인 QA).
             <>
-              <svg width="20" height="20" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+              <span>지도</span>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 28 28"
+                fill="none"
+                aria-hidden="true"
+              >
                 <path
                   d="M11.5334 5.26611C11.6648 5.23524 11.8043 5.25006 11.9276 5.31169L17.5 8.09733L23.0724 5.31169C23.2531 5.22134 23.4679 5.23069 23.6398 5.33675C23.8118 5.44304 23.9167 5.63133 23.9167 5.8335V20.4168C23.9167 20.6378 23.7919 20.8398 23.5942 20.9386L17.7609 23.8553C17.5967 23.9374 17.4033 23.9374 17.2391 23.8553L11.6667 21.0685L6.09424 23.8553C5.91355 23.9457 5.69877 23.9363 5.52686 23.8302C5.35488 23.724 5.25 23.5357 5.25 23.3335V8.75016C5.25 8.52921 5.3748 8.32717 5.57243 8.22835L11.4058 5.31169L11.5334 5.26611ZM6.41667 9.11019V22.389L11.0833 20.0557V6.77686L6.41667 9.11019ZM12.25 20.0557L16.9167 22.389V9.11019L12.25 6.77686V20.0557ZM18.0833 9.11019V22.389L22.75 20.0557V6.77686L18.0833 9.11019Z"
                   fill="currentColor"
                 />
               </svg>
-              <span>지도</span>
             </>
           )}
         </button>
@@ -326,7 +369,7 @@ const ExploreSpace = ({
 
       {/* 최초 로딩도 무한스크롤 "더 불러오는 중" 상태(LoadingSparkles)와 같은
           디자인을 쓴다 - 문구만 다르다(피그마 스펙 문장 부호까지 맞춰 마침표 포함). */}
-      {status === "loading" && (
+      {status === "loading" && showInitialLoading && (
         <div className="bg-tag-bg mt-6 flex h-[400px] w-full items-center justify-center rounded-xl">
           <LoadingSparkles label="공간을 불러오는 중이에요." />
         </div>
@@ -386,7 +429,11 @@ const ExploreSpace = ({
           {resultsMode ? (
             <>
               {/* IntersectionObserver가 관찰하는 빈 sentinel - 화면에 보이면 다음 페이지를 이어붙인다 */}
-              <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
+              <div
+                ref={sentinelRef}
+                aria-hidden="true"
+                className="h-px w-full"
+              />
               {/* 피그마 스펙(node 5299:32782) - 별 5개가 웨이브로 밝아지는 애니메이션 +
                   "새로운 공간을 불러오고 있습니다." 문구(LoadingSparkles 참고). */}
               {isLoadingMore && (

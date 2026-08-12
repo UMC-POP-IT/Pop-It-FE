@@ -1,5 +1,13 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { useOutsideClick } from "@/shared/hooks/useOutsideClick";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
+import BottomSheet from "@/shared/components/BottomSheet";
 
 export interface FilterDropdownOption<T extends string> {
   value: T;
@@ -21,7 +29,10 @@ interface FilterDropdownProps<T extends string> {
    * 2줄 세그먼트 형태). 지정하지 않으면 기본 pill 트리거(label + Chevron)를 쓴다.
    * 열림/닫힘 상태, 키보드/외부 클릭 처리 등 나머지 동작은 그대로 재사용된다.
    */
-  renderTrigger?: (args: { selected: FilterDropdownOption<T> | undefined; isOpen: boolean }) => ReactNode;
+  renderTrigger?: (args: {
+    selected: FilterDropdownOption<T> | undefined;
+    isOpen: boolean;
+  }) => ReactNode;
   /**
    * 기본 pill 트리거 대신 renderTrigger를 쓸 때 버튼에 적용할 className.
    * 열림 여부에 따라 트리거 스타일을 바꿔야 하면(예: 열렸을 때 배경 강조)
@@ -29,6 +40,14 @@ interface FilterDropdownProps<T extends string> {
    * 노출하지 않으므로, 부모가 직접 조건부 className을 만들 수 없다.
    */
   triggerClassName?: string | ((isOpen: boolean) => string);
+  /**
+   * 값이 바뀔 때마다(같은 값이 다시 와도 매번 새 값이어야 함 - 호출부는 보통
+   * 증가하는 카운터나 Date.now()를 넘긴다) 이 드롭다운을 외부에서 강제로 연다.
+   * 축소된 검색바 pill의 세그먼트를 클릭했을 때, 검색창이 펼쳐짐과 동시에
+   * 해당 드롭다운도 자동으로 열려야 하는 경우에 쓴다(#275) - 그 외에는 항상
+   * undefined로 두고 트리거 클릭으로만 열고 닫는다.
+   */
+  openSignal?: number;
 }
 
 // 옵션 버튼 한 줄의 실제 높이(px) - py-3(24px) + text-lg 기본 줄높이(28px).
@@ -66,6 +85,7 @@ const FilterDropdown = function <T extends string>({
   maxVisibleOptions,
   renderTrigger,
   triggerClassName,
+  openSignal,
 }: FilterDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   // 키보드로 옵션 사이를 이동할 때 현재 포커스가 가 있는 옵션의 인덱스.
@@ -73,8 +93,16 @@ const FilterDropdown = function <T extends string>({
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  // 모바일(360~767): 드롭다운 패널 대신 BottomSheet로 연다(피그마 스펙, #275) -
+  // 날짜 캘린더(HeroSearchBar)에 이미 적용된 패턴과 동일하게 맞춘다.
+  const isMobile = useMediaQuery("(max-width: 767px)");
 
-  useOutsideClick(containerRef, () => setIsOpen(false), isOpen);
+  // 모바일에서는 useOutsideClick을 끈다 - BottomSheet는 document.body에 포탈로
+  // 그려져서 containerRef 바깥으로 취급되므로, 이 훅이 시트 안 클릭까지 "바깥
+  // 클릭"으로 오인해 mousedown 시점에 먼저 닫아버린다(HeroSearchBar의 날짜
+  // 캘린더와 동일한 이유). 모바일에서는 BottomSheet 자체의 백드롭/Escape
+  // 닫기만 쓴다.
+  useOutsideClick(containerRef, () => setIsOpen(false), isOpen && !isMobile);
 
   // value가 options에 없는 경우(현재는 그런 경로가 없지만, 추후 URL
   // 쿼리에서 필터를 복원하는 기능이 붙으면 잘못된 값이 들어올 수 있다)
@@ -96,6 +124,16 @@ const FilterDropdown = function <T extends string>({
     setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
     setIsOpen(true);
   };
+
+  // openSignal이 바뀔 때마다(호출부가 매번 새 값을 넘긴다는 전제) 외부에서
+  // 강제로 연다 - 축소된 검색바 pill의 세그먼트 클릭 → 검색창 확장과 동시에
+  // 이 드롭다운도 자동으로 열리는 흐름(#275)에서만 쓰인다.
+  useEffect(() => {
+    if (openSignal !== undefined) openDropdown();
+    // openDropdown은 options/value가 바뀔 때마다 새로 만들어지는 함수라 deps에
+    // 넣지 않는다 - openSignal이 실제로 바뀔 때만 반응해야 한다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openSignal]);
 
   const closeAndReturnFocus = () => {
     setIsOpen(false);
@@ -136,13 +174,48 @@ const FilterDropdown = function <T extends string>({
     }
   };
 
+  // 데스크톱 패널과 모바일 BottomSheet가 같은 옵션 목록을 그대로 재사용한다
+  // (동작·마크업 중복 방지) - 컨테이너(ul)만 각자 자리에서 다르게 감싼다.
+  const optionButtons = options.map((option, index) => {
+    const isSelected = option.value === value;
+    return (
+      <li
+        key={option.value || "all"}
+        role="none"
+      >
+        <button
+          ref={(el) => {
+            optionRefs.current[index] = el;
+          }}
+          type="button"
+          role="menuitemradio"
+          aria-checked={isSelected}
+          onClick={() => {
+            onChange(option.value);
+            closeAndReturnFocus();
+          }}
+          className={`w-full cursor-pointer rounded-lg px-4 py-3 text-left text-lg whitespace-nowrap transition-colors ${
+            isSelected
+              ? "bg-tag-bg text-text-primary font-bold"
+              : "text-text-primary hover:bg-tag-bg/60"
+          }`}
+        >
+          {option.label}
+        </button>
+      </li>
+    );
+  });
+
   return (
     // h-full w-full: HeroSearchBar처럼 고정폭 부모 안에 넣고 renderTrigger로
     // 트리거를 꽉 채우려는 경우, 이 루트 div가 먼저 부모(고정폭 wrapper) 크기를
     // 그대로 채워야 그 안의 버튼도 w-full/h-full이 실제로 꽉 찬다. 이게 없으면
     // 버튼이 텍스트 내용만큼만 좁게 렌더링되고(예: bg-primary-light가 절반만
     // 채워짐), 나머지는 빈 여백으로 남는다.
-    <div className="relative h-full w-full" ref={containerRef}>
+    <div
+      className="relative h-full w-full"
+      ref={containerRef}
+    >
       <button
         ref={triggerRef}
         type="button"
@@ -155,7 +228,7 @@ const FilterDropdown = function <T extends string>({
             ? typeof triggerClassName === "function"
               ? triggerClassName(isOpen)
               : triggerClassName
-            : `flex cursor-pointer items-center gap-2 rounded-lg bg-tag-bg px-4 py-3 text-lg text-text-primary transition-colors hover:bg-tag-bg/80 focus:ring-primary focus:outline-none focus:ring-2 ${
+            : `bg-tag-bg text-text-primary hover:bg-tag-bg/80 focus:ring-primary flex cursor-pointer items-center gap-2 rounded-lg px-4 py-3 text-lg transition-colors focus:ring-2 focus:outline-none ${
                 isOpen ? "ring-primary ring-2" : ""
               }`
         }
@@ -170,7 +243,7 @@ const FilterDropdown = function <T extends string>({
         )}
       </button>
 
-      {isOpen && (
+      {isOpen && !isMobile && (
         <ul
           role="menu"
           aria-label={ariaLabel}
@@ -185,33 +258,27 @@ const FilterDropdown = function <T extends string>({
               : undefined
           }
         >
-          {options.map((option, index) => {
-            const isSelected = option.value === value;
-            return (
-              <li key={option.value || "all"} role="none">
-                <button
-                  ref={(el) => {
-                    optionRefs.current[index] = el;
-                  }}
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={isSelected}
-                  onClick={() => {
-                    onChange(option.value);
-                    closeAndReturnFocus();
-                  }}
-                  className={`w-full cursor-pointer rounded-lg px-4 py-3 text-left text-lg whitespace-nowrap transition-colors ${
-                    isSelected
-                      ? "bg-tag-bg text-text-primary font-bold"
-                      : "text-text-primary hover:bg-tag-bg/60"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              </li>
-            );
-          })}
+          {optionButtons}
         </ul>
+      )}
+
+      {/* 모바일: 같은 옵션 목록을 화면 하단 BottomSheet로 연다(피그마 스펙, #275) -
+          날짜 캘린더와 동일한 패턴. onClose에서 트리거로 포커스를 되돌린다. */}
+      {isMobile && (
+        <BottomSheet
+          isOpen={isOpen}
+          onClose={closeAndReturnFocus}
+          ariaLabel={ariaLabel}
+        >
+          <ul
+            role="menu"
+            aria-label={ariaLabel}
+            onKeyDown={handleListKeyDown}
+            className="flex flex-col gap-1 px-3 pb-2"
+          >
+            {optionButtons}
+          </ul>
+        </BottomSheet>
       )}
     </div>
   );

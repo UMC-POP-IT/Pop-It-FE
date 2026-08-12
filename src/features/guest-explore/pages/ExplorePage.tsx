@@ -6,7 +6,11 @@ import RealTimeRecommendSpace from "@/features/guest-explore/components/RealTime
 import Banner, { RESULTS_MODE_TOP_OFFSET_PX } from "@/shared/layout/Banner";
 import { HEADER_HEIGHT_PX } from "@/shared/layout/Header";
 import HeroSearchBar from "@/features/guest-explore/components/HeroSearchBar";
-import { useScrollSearchBarStore, type ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
+import {
+  useScrollSearchBarStore,
+  type ScrollSearchBarSummary,
+  type SearchBarSegment,
+} from "@/store/scrollSearchBarStore";
 import { withSearchBarTransition } from "@/shared/utils/viewTransition";
 import {
   SPACE_CATEGORY_OPTIONS,
@@ -59,17 +63,22 @@ const parseDateParam = (value: string | null): Date | null => {
   return date;
 };
 
-const filtersFromSearchParams = (params: URLSearchParams): ExploreSearchFilters => {
+const filtersFromSearchParams = (
+  params: URLSearchParams,
+): ExploreSearchFilters => {
   // URL은 사용자가 직접 편집하거나 오래된 링크를 통해 들어올 수 있어, 실제
   // 존재하는 카테고리/지역 값인지 검증한다. 검증 없이 그냥 캐스팅만 하면 잘못된
   // 값이 그대로 FilterDropdown(라벨을 못 찾아 빈 칸)과 getSpaces 요청(백엔드가
   // 모르는 값)까지 흘러들어간다.
   const rawCategory = params.get("spaceCategory");
   const spaceCategory: SpaceCategory | "" =
-    rawCategory && VALID_SPACE_CATEGORIES.has(rawCategory) ? (rawCategory as SpaceCategory) : "";
+    rawCategory && VALID_SPACE_CATEGORIES.has(rawCategory)
+      ? (rawCategory as SpaceCategory)
+      : "";
 
   const rawDistrict = params.get("district");
-  const district = rawDistrict && VALID_DISTRICTS.has(rawDistrict) ? rawDistrict : "";
+  const district =
+    rawDistrict && VALID_DISTRICTS.has(rawDistrict) ? rawDistrict : "";
 
   const rawKeyword = params.get("keyword")?.trim() ?? "";
 
@@ -106,6 +115,15 @@ export const ExplorePage = () => {
   // 자체가 필요 없다(ExploreSpace가 결과 유무를 알려준다).
   const [hasResults, setHasResults] = useState(false);
   const [summary, setSummary] = useState<ScrollSearchBarSummary | null>(null);
+  // pill의 특정 세그먼트를 클릭했을 때, 검색창이 펼쳐짐과 동시에 그 세그먼트의
+  // 드롭다운/캘린더/검색어 입력도 자동으로 열기 위해 HeroSearchBar에 내려주는
+  // 요청(#275). token은 같은 세그먼트를 다시 클릭해도 매번 새 값이어야 하므로
+  // 클릭마다 증가시킨다(useRef 카운터 - 리렌더를 유발할 필요는 없다).
+  const [autoOpenRequest, setAutoOpenRequest] = useState<{
+    segment?: SearchBarSegment;
+    token: number;
+  } | null>(null);
+  const autoOpenTokenRef = useRef(0);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const setScrollSearchBarState = useScrollSearchBarStore((s) => s.setState);
   const resetScrollSearchBar = useScrollSearchBarStore((s) => s.reset);
@@ -117,8 +135,10 @@ export const ExplorePage = () => {
     if (filters.keyword) next.set("keyword", filters.keyword);
     if (filters.spaceCategory) next.set("spaceCategory", filters.spaceCategory);
     if (filters.district) next.set("district", filters.district);
-    if (filters.dateRange.start) next.set(DATE_START_PARAM, formatDateParam(filters.dateRange.start));
-    if (filters.dateRange.end) next.set(DATE_END_PARAM, formatDateParam(filters.dateRange.end));
+    if (filters.dateRange.start)
+      next.set(DATE_START_PARAM, formatDateParam(filters.dateRange.start));
+    if (filters.dateRange.end)
+      next.set(DATE_END_PARAM, formatDateParam(filters.dateRange.end));
     // 아직 결과 화면이 아니었다면(처음 검색) 새 히스토리 항목을 쌓아 뒤로가기로
     // 검색 전 화면에 돌아갈 수 있게 하고, 이미 결과 화면이면(조건만 바꿔 재검색)
     // 히스토리를 계속 쌓지 않도록 현재 항목을 교체한다.
@@ -192,9 +212,25 @@ export const ExplorePage = () => {
       isVisible: !isOverlayOpen,
       summary,
       // pill을 눌러 펼치는 순간도 모핑 애니메이션이 재생되도록 감싼다.
-      onExpand: () => withSearchBarTransition(() => setIsOverlayOpen(true)),
+      // segment가 있으면(pill의 개별 세그먼트를 클릭한 경우) 검색창이 펼쳐짐과
+      // 동시에 그 세그먼트의 드롭다운/캘린더/검색어 입력도 열도록 요청을
+      // 남긴다(#275) - token은 같은 세그먼트를 다시 클릭해도 매번 새 값이어야
+      // HeroSearchBar의 effect가 재반응한다.
+      onExpand: (segment) =>
+        withSearchBarTransition(() => {
+          setIsOverlayOpen(true);
+          autoOpenTokenRef.current += 1;
+          setAutoOpenRequest({ segment, token: autoOpenTokenRef.current });
+        }),
     });
-  }, [hasActiveSearch, isScrolledPastBar, isOverlayOpen, summary, setScrollSearchBarState, resetScrollSearchBar]);
+  }, [
+    hasActiveSearch,
+    isScrolledPastBar,
+    isOverlayOpen,
+    summary,
+    setScrollSearchBarState,
+    resetScrollSearchBar,
+  ]);
 
   // 페이지를 떠날 때(라우트 이동)도 헤더에 남아있는 pill 상태를 정리한다.
   useEffect(() => resetScrollSearchBar, [resetScrollSearchBar]);
@@ -211,7 +247,11 @@ export const ExplorePage = () => {
   // 다시 펼친 오버레이에서는 첫 메인페이지(hero)와 같은 회색 테두리 디자인을
   // 쓴다 - 헤더가 그대로 이어지는 느낌을 주려면 배너의 기본 검색바와 같은
   // 스타일이어야 한다(피그마 Frame 2147225751).
-  const heroSearchBarVariant = !hasActiveSearch ? "hero" : isScrolledPastBar ? "hero" : "compact";
+  const heroSearchBarVariant = !hasActiveSearch
+    ? "hero"
+    : isScrolledPastBar
+      ? "hero"
+      : "compact";
 
   return (
     <div>
@@ -234,7 +274,10 @@ export const ExplorePage = () => {
           HeroSearchBar 자체는 searchParams.toString()이 바뀔 때만(검색 실행/
           초기화/뒤로가기 등으로 URL이 실제로 바뀔 때만) key가 바뀌어 새로
           마운트되고, 그때마다 URL이 담고 있는 값으로 표시가 다시 맞춰진다. */}
-      <Banner showImage={!hasActiveSearch} searchBarPosition={searchBarPosition}>
+      <Banner
+        showImage={!hasActiveSearch}
+        searchBarPosition={searchBarPosition}
+      >
         <HeroSearchBar
           key={searchParams.toString()}
           onSearch={handleSearch}
@@ -245,6 +288,7 @@ export const ExplorePage = () => {
           initialDateRange={dateRange}
           onSummaryChange={hasActiveSearch ? setSummary : undefined}
           isMorphTarget={searchBarPosition !== "pinned-hidden"}
+          autoOpenRequest={autoOpenRequest}
         />
       </Banner>
 
@@ -288,7 +332,9 @@ export const ExplorePage = () => {
           // 검색 결과 화면에서만 호출된다 - 검색 결과 유무에 따라 검색바가
           // pinned⇄inline으로 실제 자리를 옮길 때만 트랜지션이 걸리고, 화면
           // 밖(브라우징 모드)에서 조용히 트랜지션이 발생하는 경우는 없다.
-          onHasResultsChange={(next) => withSearchBarTransition(() => setHasResults(next))}
+          onHasResultsChange={(next) =>
+            withSearchBarTransition(() => setHasResults(next))
+          }
         />
       )}
     </div>

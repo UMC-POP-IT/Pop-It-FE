@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import FilterDropdown from "@/features/guest-explore/components/FilterDropdown";
-import DateRangeCalendar, { type DateRange } from "@/shared/components/DateRangeCalendar";
+import DateRangeCalendar, {
+  type DateRange,
+} from "@/shared/components/DateRangeCalendar";
 import BottomSheet from "@/shared/components/BottomSheet";
 import { useOutsideClick } from "@/shared/hooks/useOutsideClick";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";
-import type { ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
+import type {
+  ScrollSearchBarSummary,
+  SearchBarSegment,
+} from "@/store/scrollSearchBarStore";
 import {
   SEARCH_BAR_VIEW_TRANSITION_NAME,
   type MorphTransitionStyle,
@@ -34,13 +39,17 @@ const DISTRICT_OPTIONS: { value: string; label: string }[] = [
 const DISTRICT_MAX_VISIBLE_OPTIONS = 6;
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
-const formatShort = (d: Date) => `${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`;
+const formatShort = (d: Date) =>
+  `${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`;
 const isSameDay = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
 
 const formatDateRangeLabel = (range: DateRange) => {
   if (!range.start) return "전체";
-  if (!range.end || isSameDay(range.start, range.end)) return formatShort(range.start);
+  if (!range.end || isSameDay(range.start, range.end))
+    return formatShort(range.start);
   return `${formatShort(range.start)} ~ ${formatShort(range.end)}`;
 };
 
@@ -58,7 +67,10 @@ const segmentTriggerClassName = (isOpen: boolean) =>
 // 세그먼트 사이 구분선: pill 높이 전체를 가르지 않고 위아래 여백을 살짝 두고
 // 세로선만 짧게 긋는다(피그마 디자인 반영).
 const SegmentDivider = () => (
-  <span aria-hidden="true" className="h-12 w-px shrink-0 self-center bg-[#c5c5c5]" />
+  <span
+    aria-hidden="true"
+    className="h-12 w-px shrink-0 self-center bg-[#c5c5c5]"
+  />
 );
 
 // 피그마 데스크톱(lg, 1024↑) 고정폭(공간유형 227 / 날짜 215 / 지역 215)과 동일하게
@@ -83,10 +95,20 @@ interface SegmentTriggerContentProps {
 }
 
 // 피그마 모바일 스펙: 라벨 12px / 값 14px (태블릿 이상은 기존 18px/20px 유지).
-const SegmentTriggerContent = ({ label, value, labelClassName }: SegmentTriggerContentProps) => (
+const SegmentTriggerContent = ({
+  label,
+  value,
+  labelClassName,
+}: SegmentTriggerContentProps) => (
   <>
-    <span className={`block max-w-full truncate text-[12px] leading-[1.4] md:text-[18px] ${labelClassName}`}>{label}</span>
-    <span className="text-text-primary block max-w-full truncate text-[14px] leading-[1.4] font-bold md:text-[20px]">{value}</span>
+    <span
+      className={`block max-w-full truncate text-[12px] leading-[1.4] md:text-[18px] ${labelClassName}`}
+    >
+      {label}
+    </span>
+    <span className="text-text-primary block max-w-full truncate text-[14px] leading-[1.4] font-bold md:text-[20px]">
+      {value}
+    </span>
   </>
 );
 
@@ -132,6 +154,15 @@ interface HeroSearchBarProps {
    * 헤더의 축소 pill도 같은 이름을 쓰므로, 항상 둘 중 하나만 true여야 한다.
    */
   isMorphTarget?: boolean;
+  /**
+   * 축소된 검색바 pill의 특정 세그먼트를 클릭해서 검색창이 펼쳐질 때, 그
+   * 세그먼트에 해당하는 드롭다운/캘린더/검색어 입력을 동시에 열기 위한 요청.
+   * token은 같은 segment를 연달아 클릭해도(예: 닫은 뒤 다시 같은 세그먼트
+   * 클릭) 매번 새로 반응하도록 호출부(ExplorePage)가 매번 다른 값을 넣는다
+   * (#275). 세그먼트 없이 그냥 pill 배경을 클릭했을 때는 segment가
+   * undefined라 아무 것도 자동으로 열리지 않는다.
+   */
+  autoOpenRequest?: { segment?: SearchBarSegment; token: number } | null;
 }
 
 /**
@@ -150,6 +181,7 @@ const HeroSearchBar = ({
   initialDateRange = { start: null, end: null },
   onSummaryChange,
   isMorphTarget = false,
+  autoOpenRequest,
 }: HeroSearchBarProps) => {
   const [keywordInput, setKeywordInput] = useState(initialKeyword);
   const [category, setCategory] = useState<SpaceCategory | "">(initialCategory);
@@ -157,6 +189,36 @@ const HeroSearchBar = ({
   const [dateRange, setDateRange] = useState<DateRange>(initialDateRange);
   const [isDateOpen, setIsDateOpen] = useState(false);
   const dateContainerRef = useRef<HTMLDivElement>(null);
+  const keywordInputRef = useRef<HTMLInputElement>(null);
+  // FilterDropdown에 openSignal로 넘길 카운터 - 값 자체가 아니라 "바뀜"이
+  // 신호이므로 세그먼트별로 매번 증가시킨다(공간유형/지역 드롭다운 전용,
+  // 날짜는 isDateOpen을 그대로 쓰고 검색어는 포커스만 주면 된다).
+  const [categoryOpenSignal, setCategoryOpenSignal] = useState<number>();
+  const [districtOpenSignal, setDistrictOpenSignal] = useState<number>();
+
+  // 축소된 pill의 세그먼트를 클릭해 검색창이 펼쳐질 때, 그 세그먼트의
+  // 드롭다운/캘린더/검색어 입력을 동시에 연다(#275). autoOpenRequest.token이
+  // 실제로 바뀔 때만 반응한다 - 같은 세그먼트를 다시 눌러도 token이 매번
+  // 새 값이라 정상적으로 재반응한다.
+  useEffect(() => {
+    const segment = autoOpenRequest?.segment;
+    if (!segment) return;
+    switch (segment) {
+      case "category":
+        setCategoryOpenSignal(autoOpenRequest.token);
+        break;
+      case "district":
+        setDistrictOpenSignal(autoOpenRequest.token);
+        break;
+      case "date":
+        setIsDateOpen(true);
+        break;
+      case "keyword":
+        keywordInputRef.current?.focus();
+        break;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenRequest?.token]);
 
   // 모바일(360~767)에서는 캘린더가 BottomSheet(portal, document.body 자식)로
   // 뜨기 때문에 dateContainerRef 바깥으로 취급돼 useOutsideClick이 시트 안
@@ -164,7 +226,11 @@ const HeroSearchBar = ({
   // 그 뒤에 오는 click 이벤트가 이미 사라진 옵션 버튼을 못 찾아 선택 자체가
   // 씹힌다) - 모바일에서는 이 훅을 끄고 BottomSheet 자체의 백드롭/Escape 닫기만 쓴다.
   const isMobile = useMediaQuery("(max-width: 767px)");
-  useOutsideClick(dateContainerRef, () => setIsDateOpen(false), isDateOpen && !isMobile);
+  useOutsideClick(
+    dateContainerRef,
+    () => setIsDateOpen(false),
+    isDateOpen && !isMobile,
+  );
 
   // lg(1024) 이상에서만 기존 데스크톱 고정폭 한 줄 레이아웃을 쓴다. 그 미만(태블릿
   // 768~1023 포함)에서는 CALENDAR_LEFT_OFFSET_PX 트릭이 더 이상 유효하지 않아
@@ -185,9 +251,12 @@ const HeroSearchBar = ({
     onSummaryChange?.({
       categoryLabel: isDefaultCategory
         ? "공간 전체"
-        : (CATEGORY_OPTIONS.find((option) => option.value === category)?.label ?? "전체"),
+        : (CATEGORY_OPTIONS.find((option) => option.value === category)
+            ?.label ?? "전체"),
       dateLabel: isDefaultDate ? "날짜 전체" : formatDateRangeLabel(dateRange),
-      districtLabel: DISTRICT_OPTIONS.find((option) => option.value === district)?.label ?? "서울 전체",
+      districtLabel:
+        DISTRICT_OPTIONS.find((option) => option.value === district)?.label ??
+        "서울 전체",
       keywordLabel: keywordInput.trim() || "검색어 추가",
     });
     // onSummaryChange는 상위에서 매 렌더 새로 만들어질 수 있어 deps에 넣지 않는다
@@ -196,7 +265,9 @@ const HeroSearchBar = ({
   }, [category, dateRange, district, keywordInput]);
 
   const isCompact = variant === "compact";
-  const labelClassName = isCompact ? "text-text-primary" : "text-text-secondary";
+  const labelClassName = isCompact
+    ? "text-text-primary"
+    : "text-text-secondary";
   const outerBorderClassName = isCompact
     ? "border-[3px] border-primary-hover"
     : "border border-text-secondary";
@@ -230,12 +301,13 @@ const HeroSearchBar = ({
             지우는 대신 시각적으로만 숨긴다(sr-only). md(768) 이상은 기존처럼 노출. */}
         <label
           htmlFor="hero-search-keyword"
-          className={`max-md:sr-only text-[18px] leading-[1.4] ${labelClassName}`}
+          className={`text-[18px] leading-[1.4] max-md:sr-only ${labelClassName}`}
         >
           검색어
         </label>
         <input
           id="hero-search-keyword"
+          ref={keywordInputRef}
           type="text"
           value={keywordInput}
           onChange={(e) => setKeywordInput(e.target.value)}
@@ -261,8 +333,19 @@ const HeroSearchBar = ({
           fill="none"
           aria-hidden="true"
         >
-          <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-          <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <circle
+            cx="11"
+            cy="11"
+            r="7"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+          <path
+            d="M21 21L16.65 16.65"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
     </>
@@ -296,14 +379,20 @@ const HeroSearchBar = ({
     // 테두리를 공유하는 하나의 div만 쓰도록 되돌리고(이음매 자체가 없음), 태블릿
     // (1024 미만)에서만 기존처럼 독립된 두 pill(Box A: 필터 3종 / Box B: 검색어)을
     // gap-3로 세로로 쌓는 구조를 쓴다.
-    <div style={morphStyle} className="relative z-10 flex flex-col items-stretch gap-2 md:gap-3">
-      <div className={`flex items-stretch rounded-full bg-white ${outerBorderClassName}`}>
-        <div className="flex flex-1 min-w-[33%] items-stretch lg:min-w-0 lg:w-[227px] lg:flex-none">
+    <div
+      style={morphStyle}
+      className="relative z-10 flex flex-col items-stretch gap-2 md:gap-3"
+    >
+      <div
+        className={`flex items-stretch rounded-full bg-white ${outerBorderClassName}`}
+      >
+        <div className="flex min-w-[33%] flex-1 items-stretch lg:w-[227px] lg:min-w-0 lg:flex-none">
           <FilterDropdown
             ariaLabel="공간 용도 필터"
             options={CATEGORY_OPTIONS}
             value={category}
             onChange={setCategory}
+            openSignal={categoryOpenSignal}
             // 맨 왼쪽 세그먼트라 열렸을 때 배경(bg-primary-light)이 pill의 둥근
             // 왼쪽 모서리 밖으로 각지게 삐져나오지 않도록 그때만 왼쪽을 둥글린다.
             triggerClassName={(isOpen) =>
@@ -322,7 +411,7 @@ const HeroSearchBar = ({
         <SegmentDivider />
 
         <div
-          className="relative flex flex-1 min-w-[33%] items-stretch lg:min-w-0 lg:w-[215px] lg:flex-none"
+          className="relative flex min-w-[33%] flex-1 items-stretch lg:w-[215px] lg:min-w-0 lg:flex-none"
           ref={dateContainerRef}
         >
           <button
@@ -381,13 +470,14 @@ const HeroSearchBar = ({
 
         <SegmentDivider />
 
-        <div className="flex flex-1 min-w-[33%] items-stretch lg:min-w-0 lg:w-[215px] lg:flex-none">
+        <div className="flex min-w-[33%] flex-1 items-stretch lg:w-[215px] lg:min-w-0 lg:flex-none">
           <FilterDropdown
             ariaLabel="지역(구) 필터"
             options={DISTRICT_OPTIONS}
             value={district}
             onChange={setDistrict}
             maxVisibleOptions={DISTRICT_MAX_VISIBLE_OPTIONS}
+            openSignal={districtOpenSignal}
             // 태블릿 두 줄 레이아웃에서는 Box A(3세그먼트 pill)의 맨 오른쪽
             // 세그먼트가 지역이라, 열렸을 때 배경(bg-primary-light)이 pill의
             // 둥근 오른쪽 모서리 밖으로 각지게 삐져나온다 - 공간유형(맨 왼쪽)에
@@ -410,7 +500,9 @@ const HeroSearchBar = ({
         {isWideDesktop && (
           <>
             <SegmentDivider />
-            <div className="flex flex-1 items-center gap-2.5 pr-3">{keywordContent}</div>
+            <div className="flex flex-1 items-center gap-2.5 pr-3">
+              {keywordContent}
+            </div>
           </>
         )}
       </div>
