@@ -42,9 +42,11 @@ const Input = ({
         // 컴포넌트가 아는 오류가 우선. 오류가 없을 때만 호출자 값을 따른다
         aria-invalid={error ? true : ariaInvalid}
         aria-describedby={describedByIds}
-        // focus는 테두리 색만 바꾼다 — ring을 쓰면 1px 테두리 바깥에 2px 링이 더 그려져
-        // default보다 두꺼워 보인다 (디자인 기준: 두께 유지, 색만 변경)
-        className={`text-text-primary placeholder:text-text-placeholder h-14 w-full rounded-lg border bg-white px-5 text-lg font-medium transition-colors focus:outline-none ${error ? "border-danger focus:border-danger" : "border-divider focus:border-primary"} ${props.disabled ? "bg-bg cursor-not-allowed opacity-40" : ""} ${className} `}
+        // 정상 상태의 focus는 테두리 색만 바꾼다 — ring을 쓰면 1px 테두리 바깥에 2px 링이
+        // 더 그려져 default보다 두꺼워 보인다 (디자인 기준: 두께 유지, 색만 변경).
+        // 오류 상태는 테두리가 이미 danger 색이라 색만 바꾸면 포커스 전후가 똑같아져
+        // 키보드로 이동했을 때 어느 칸에 있는지 알 수 없다. 그래서 여기만 ring을 남긴다
+        className={`text-text-primary placeholder:text-text-placeholder h-14 w-full rounded-lg border bg-white px-5 text-lg font-medium transition-colors focus:outline-none ${error ? "border-danger focus:ring-danger focus:ring-2" : "border-divider focus:border-primary"} ${props.disabled ? "bg-bg cursor-not-allowed opacity-40" : ""} ${className} `}
       />
       {error && (
         <span
