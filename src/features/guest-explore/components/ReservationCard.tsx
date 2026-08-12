@@ -184,6 +184,9 @@ export const ReservationCard = ({ reservation, onCancel, autoOpenContract, onAut
       setisPaymentModalOpen(true);
       return;
     }
+    // 이미 재조회가 진행 중인데 버튼을 연타한 경우 - GetPaymentInfo가 중복으로 나가지 않도록 막는다.
+    // (최초 로딩 중에 눌러 재조회가 시작되는 것 자체는 의도된 동작이라 여기서 막지 않는다)
+    if (pendingPaymentModalOpen) return;
     // 결제 정보가 아직 없는 상태(로딩 중이거나 이전 조회가 실패한 경우) - 화면엔 티 내지 않고
     // 조용히 재조회만 하고, 도착하면 아래 effect가 결제 모달을 대신 열어준다.
     setPendingPaymentModalOpen(true);
@@ -196,6 +199,8 @@ export const ReservationCard = ({ reservation, onCancel, autoOpenContract, onAut
         console.error(error);
         setIsPaymentInfoError(true);
         setPendingPaymentModalOpen(false);
+        // 재조회까지 실패하면 화면에 아무 변화가 없어 버튼이 고장난 것처럼 보이므로 이때만 알린다.
+        alert("결제 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
       });
   };
 
