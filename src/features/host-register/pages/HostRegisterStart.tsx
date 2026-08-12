@@ -55,7 +55,28 @@ export const HostRegisterStart = () => {
             데스크톱: 좌우 2단 + 버튼이 오른쪽 컬럼 안에 184폭 (기존 그대로)
           폭·패딩: 모바일 max 360 / p 20 · 태블릿 854 / 60·80 · 데스크톱 900 / 64·80.
           모바일 폭은 뷰포트 360에서 바깥 p-4(16×2)를 빼 328이 되고, 392 이상에서 360으로 멈춘다.
-          높이는 고정하지 않는다 — 내용이 정한다 */}
+          높이는 고정하지 않는다 — 내용이 정한다.
+
+          #285 — 위 시안 값은 그대로 두고 zoom으로 카드를 통째로 축소해 LoginModal과
+          같은 외곽 크기를 만든다. 배율은 목표폭 ÷ 시안폭 (소수 4자리까지 쓰는 이유는
+          0.93으로 반올림하면 데스크톱이 837이 되어 로그인보다 3px 좁아지기 때문):
+            모바일  230 ÷ 360 = 0.6389 → 230.0  (LoginModal.tsx:76 max-w-[230px])
+            태블릿  504 ÷ 854 = 0.5902 → 504.0  (LoginModal.tsx:76 md:max-w-[504px])
+            데스크톱 840 ÷ 900 = 0.9333 → 840.0  (LoginModal.tsx:140 max-w-[840px])
+          w-full은 zoom 안에서도 부모 폭을 그대로 채우므로(퍼센트가 zoom 좌표계로 환산됐다
+          되돌아온다) 360 뷰포트에서도 max-w가 그대로 먹어 정확히 230이 된다
+          내부 값(이미지·글자·로고·진행바·간격)을 하나씩 줄이지 않는 이유:
+          Logo(error variant 108×20.8)와 StepIndicator(size-9/text-[22px])는 크기가
+          컴포넌트 안에 하드코딩된 챈 공통 컴포넌트라 바깥에서 못 덮는다. 나머지만 줄이면
+          그 둘만 원래 크기로 남아 비율이 깨진다. zoom은 자식 전체에 균일하게 걸려
+          디자인이 그대로 유지된다.
+
+          transform: scale이 아니라 zoom인 이유: scale은 그려지는 크기만 바꾸고
+          레이아웃 박스는 360/854/900 그대로 남는다. 그러면 (1) 카드가 차지하는 자리가
+          실제보다 커서 m-auto 가운데 정렬이 어긋나고 (2) 부모 overflow-y-auto가
+          줄지 않은 높이 기준으로 스크롤을 만들어 빈 여백이 생긴다.
+          zoom은 레이아웃 박스까지 같이 줄여 두 문제가 다 없다.
+          (zoom은 CSS Viewport Level 1 표준 — Chrome·Safari 전부, Firefox 126+ 지원) */}
       <div
         ref={dialogRef}
         role="dialog"
@@ -74,7 +95,7 @@ export const HostRegisterStart = () => {
         // 88%로 두면 768 뷰포트에서 가용 720의 88% = 634가 되고, 여기서 좌우 패딩 160과
         // 이미지 240·간격 60을 빼면 오른쪽 컬럼에 174밖에 안 남아 제목과 안내문이 뭉갠다.
         // 854 상한이면 768에서는 가용 폭 720을 그대로 쓰고, 902 이상에서만 854에 멈춘다
-        className="relative z-10 m-auto flex w-full max-w-[360px] flex-col rounded-xl bg-white p-5 shadow-xl md:max-w-[854px] md:px-20 md:py-[60px] lg:max-w-[900px] lg:py-16"
+        className="relative z-10 m-auto flex w-full max-w-[360px] [zoom:0.6389] flex-col rounded-xl bg-white p-5 shadow-xl md:max-w-[854px] md:[zoom:0.5902] md:px-20 md:py-[60px] lg:max-w-[900px] lg:[zoom:0.9333] lg:py-16"
       >
         {/* X 닫기 — 모바일·태블릿은 카드 오른쪽 위.
             (공통 X 컴포넌트가 없어 LoginModal과 동일하게 raw button을 쓴다) */}
