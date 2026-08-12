@@ -8,8 +8,8 @@ import { useOutsideClick } from "@/shared/hooks/useOutsideClick";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";
 import type {
+  SearchBarAutoOpenRequest,
   ScrollSearchBarSummary,
-  SearchBarSegment,
 } from "@/store/scrollSearchBarStore";
 import {
   SEARCH_BAR_VIEW_TRANSITION_NAME,
@@ -162,7 +162,7 @@ interface HeroSearchBarProps {
    * (#275). 세그먼트 없이 그냥 pill 배경을 클릭했을 때는 segment가
    * undefined라 아무 것도 자동으로 열리지 않는다.
    */
-  autoOpenRequest?: { segment?: SearchBarSegment; token: number } | null;
+  autoOpenRequest?: SearchBarAutoOpenRequest | null;
   /**
    * autoOpenRequest의 각 token이 처리되었을 때 호출된다. 부모는 이 콜백에서
    * 완료된 token이 현재 요청의 token과 일치할 때만 autoOpenRequest를 지워야
@@ -208,28 +208,28 @@ const HeroSearchBar = ({
   // 실제로 바뀔 때만 반응한다 - 같은 세그먼트를 다시 눌러도 token이 매번
   // 새 값이라 정상적으로 재반응한다.
   useEffect(() => {
-    const segment = autoOpenRequest?.segment;
-    const token = autoOpenRequest?.token;
-    if (!segment || token === undefined) return;
-    switch (segment) {
-      case "category":
-        setCategoryOpenSignal(token);
-        break;
-      case "district":
-        setDistrictOpenSignal(token);
-        break;
-      case "date":
-        setIsDateOpen(true);
-        break;
-      case "keyword":
-        keywordInputRef.current?.focus();
-        break;
+    if (!autoOpenRequest) return;
+    const { segment, token } = autoOpenRequest;
+    if (segment) {
+      switch (segment) {
+        case "category":
+          setCategoryOpenSignal(token);
+          break;
+        case "district":
+          setDistrictOpenSignal(token);
+          break;
+        case "date":
+          setIsDateOpen(true);
+          break;
+        case "keyword":
+          keywordInputRef.current?.focus();
+          break;
+      }
     }
     // 각 token을 처리했음을 즉시 알린다. 부모는 이 token이 현재 요청과 일치할
     // 때만 autoOpenRequest를 지운다(그 사이 새 요청이 왔다면 보존).
     onAutoOpenComplete?.(token);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoOpenRequest?.token]);
+  }, [autoOpenRequest, onAutoOpenComplete]);
 
   // 모바일(360~767)에서는 캘린더가 BottomSheet(portal, document.body 자식)로
   // 뜨기 때문에 dateContainerRef 바깥으로 취급돼 useOutsideClick이 시트 안

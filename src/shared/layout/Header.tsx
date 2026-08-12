@@ -10,6 +10,7 @@ import {
   type SearchBarSegment,
 } from "@/store/scrollSearchBarStore";
 import {
+  isSearchBarTransitionPending,
   SEARCH_BAR_VIEW_TRANSITION_NAME,
   type MorphTransitionStyle,
 } from "@/shared/utils/viewTransition";
@@ -56,16 +57,36 @@ const Header = () => {
   // 기록된 버튼이 이미 사라졌다면 첫 세그먼트(공간유형)로 대신 되돌린다.
   const categorySegmentRef = useRef<HTMLButtonElement>(null);
   const lastActiveSegmentRef = useRef<HTMLButtonElement | null>(null);
+  const pendingFocusRestoreRef = useRef(false);
 
   // ExplorePage가 오버레이를 닫을 때(Escape 등) 포커스를 되돌릴 수 있도록
   // 등록해둔다 - 스토어를 통해서만 접근 가능하다(ExplorePage는 이 버튼들의
   // DOM을 직접 알 수 없다).
   useEffect(() => {
-    setFocusTrigger(() =>
-      (lastActiveSegmentRef.current ?? categorySegmentRef.current)?.focus(),
-    );
+    setFocusTrigger(() => {
+      pendingFocusRestoreRef.current = true;
+    });
     return () => setFocusTrigger(null);
   }, [setFocusTrigger]);
+
+  useEffect(() => {
+    if (
+      !isScrollBarVisible ||
+      !scrollBarSummary ||
+      !pendingFocusRestoreRef.current
+    ) {
+      return;
+    }
+    const frameId = requestAnimationFrame(() => {
+      if (!pendingFocusRestoreRef.current) return;
+      const target = lastActiveSegmentRef.current?.isConnected
+        ? lastActiveSegmentRef.current
+        : categorySegmentRef.current;
+      target?.focus();
+      pendingFocusRestoreRef.current = false;
+    });
+    return () => cancelAnimationFrame(frameId);
+  }, [isScrollBarVisible, scrollBarSummary]);
   // 이 pill이 지금 화면에 실제로 보일 때만 큰 검색바와 같은 view-transition-name을
   // 부여한다 - 그래야 스크롤로 접히거나 pill을 눌러 펼칠 때 브라우저가 둘을 같은
   // 대상으로 보고 모핑 애니메이션을 만들어준다(둘 다 동시에 이 이름을 가지면 안 됨).
@@ -258,7 +279,7 @@ const Header = () => {
                 동시에 그 세그먼트의 드롭다운/캘린더까지 함께 열려야 한다. */}
             <div
               role="group"
-              aria-label="검색 조건 펼치기"
+              aria-label="현재 검색 조건"
               style={pillMorphStyle}
               className={`border-divider pointer-events-auto flex max-w-[calc(100vw-104px)] items-center gap-1 rounded-full border bg-white px-2.5 py-2 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] md:max-w-[420px] md:gap-3 md:px-5 lg:max-w-[520px]`}
             >
@@ -311,6 +332,7 @@ const Header = () => {
                     }
                     type="button"
                     onClick={(e) => {
+                      if (isSearchBarTransitionPending()) return;
                       lastActiveSegmentRef.current = e.currentTarget;
                       expandScrollBar?.(segment);
                     }}

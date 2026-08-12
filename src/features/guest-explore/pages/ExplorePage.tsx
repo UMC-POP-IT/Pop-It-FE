@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import AiRecommendSpace from "@/features/guest-explore/components/AiRecommendSpace";
 import ExploreSpace from "@/features/guest-explore/components/ExploreSpace";
@@ -9,7 +9,7 @@ import HeroSearchBar from "@/features/guest-explore/components/HeroSearchBar";
 import {
   useScrollSearchBarStore,
   type ScrollSearchBarSummary,
-  type SearchBarSegment,
+  type SearchBarAutoOpenRequest,
 } from "@/store/scrollSearchBarStore";
 import { withSearchBarTransition } from "@/shared/utils/viewTransition";
 import {
@@ -119,10 +119,8 @@ export const ExplorePage = () => {
   // 드롭다운/캘린더/검색어 입력도 자동으로 열기 위해 HeroSearchBar에 내려주는
   // 요청(#275). token은 같은 세그먼트를 다시 클릭해도 매번 새 값이어야 하므로
   // 클릭마다 증가시킨다(useRef 카운터 - 리렌더를 유발할 필요는 없다).
-  const [autoOpenRequest, setAutoOpenRequest] = useState<{
-    segment?: SearchBarSegment;
-    token: number;
-  } | null>(null);
+  const [autoOpenRequest, setAutoOpenRequest] =
+    useState<SearchBarAutoOpenRequest | null>(null);
   const autoOpenTokenRef = useRef(0);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const setScrollSearchBarState = useScrollSearchBarStore((s) => s.setState);
@@ -131,6 +129,7 @@ export const ExplorePage = () => {
 
   const handleSearch = (filters: ExploreSearchFilters) => {
     setHasResults(false);
+    setAutoOpenRequest(null);
     const next = new URLSearchParams();
     next.set(SEARCH_FLAG_PARAM, "1");
     if (filters.keyword) next.set("keyword", filters.keyword);
@@ -152,16 +151,17 @@ export const ExplorePage = () => {
     const next = new URLSearchParams();
     next.set(SEARCH_FLAG_PARAM, "1"); // 결과 화면 자체는 유지하고 필터만 비운다
     setHasResults(false);
+    setAutoOpenRequest(null);
     setSearchParams(next, { replace: true });
   };
 
-  const handleAutoOpenComplete = (completedToken: number) => {
+  const handleAutoOpenComplete = useCallback((completedToken: number) => {
     // 완료된 token이 현재 요청의 token과 일치할 때만 autoOpenRequest를 지운다.
     // 그 사이에 새 요청이 왔다면(token이 이미 더 큰 값) 보존한다.
     setAutoOpenRequest((prev) =>
       prev && prev.token === completedToken ? null : prev,
     );
-  };
+  }, []);
 
   useEffect(() => {
     if (!hasActiveSearch) setHasResults(false);

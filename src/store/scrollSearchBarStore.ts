@@ -14,6 +14,11 @@ export interface ScrollSearchBarSummary {
  */
 export type SearchBarSegment = "category" | "date" | "district" | "keyword";
 
+export interface SearchBarAutoOpenRequest {
+  segment?: SearchBarSegment;
+  token: number;
+}
+
 interface ScrollSearchBarState {
   /**
    * 헤더(Header.tsx)에 축소된 검색바 pill을 보여줄지 여부.

@@ -34,6 +34,10 @@ export type MorphTransitionStyle = CSSProperties & {
  */
 /** withSearchBarTransition이 실행 중인 동안 true. Banner가 구독해서 flash 방지에 쓴다. */
 export let searchBarTransitionActive = false;
+let searchBarTransitionPendingCount = 0;
+
+export const isSearchBarTransitionPending = () =>
+  searchBarTransitionPendingCount > 0;
 
 /**
  * 마지막으로 시작된 전환의 종료(성공/실패 무관)를 기다릴 수 있는 promise.
@@ -57,6 +61,7 @@ export const withSearchBarTransition = (update: () => void) => {
     update();
     return;
   }
+  searchBarTransitionPendingCount += 1;
   // 이전 전환이 아직 끝나지 않았다면 그걸 먼저 기다린 뒤에 이번 전환을 시작한다.
   // 큐에 매달리는 동안에도 update 자체는 나중에 실행되므로(never lost), 순서만
   // 뒤로 밀린다 - 상태 업데이트가 유실되지는 않는다.
@@ -73,6 +78,10 @@ export const withSearchBarTransition = (update: () => void) => {
       .finished.catch(() => {})
       .finally(() => {
         searchBarTransitionActive = false;
+        searchBarTransitionPendingCount = Math.max(
+          searchBarTransitionPendingCount - 1,
+          0,
+        );
       });
   };
   lastTransitionSettled = lastTransitionSettled.then(runNext, runNext);
