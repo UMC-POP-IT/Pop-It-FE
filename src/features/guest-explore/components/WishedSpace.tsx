@@ -203,7 +203,7 @@ export const WishedSpace = () => {
   }, [status, scrollRef]);
 
   return (
-    <section className="flex flex-col gap-4 mt-20">
+    <section className="flex flex-col gap-4 min-[1024px]:mt-20 max-[1023px]:mt-10">
         <h2 className="text-text-primary text-2xl font-bold">내가 찜한 공간 <HeartIcon /></h2>
         <span className="text-text-secondary text-sm">관심 있는 공간을 한 눈에 확인해 보세요!</span>
 
