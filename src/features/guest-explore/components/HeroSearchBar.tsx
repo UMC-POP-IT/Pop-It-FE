@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import FilterDropdown from "@/features/guest-explore/components/FilterDropdown";
-import DateRangeCalendar, { type DateRange } from "@/shared/components/DateRangeCalendar";
+import DateRangeCalendar, {
+  type DateRange,
+} from "@/shared/components/DateRangeCalendar";
 import BottomSheet from "@/shared/components/BottomSheet";
 import { useOutsideClick } from "@/shared/hooks/useOutsideClick";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
@@ -34,13 +36,17 @@ const DISTRICT_OPTIONS: { value: string; label: string }[] = [
 const DISTRICT_MAX_VISIBLE_OPTIONS = 6;
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
-const formatShort = (d: Date) => `${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`;
+const formatShort = (d: Date) =>
+  `${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`;
 const isSameDay = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
 
 const formatDateRangeLabel = (range: DateRange) => {
   if (!range.start) return "전체";
-  if (!range.end || isSameDay(range.start, range.end)) return formatShort(range.start);
+  if (!range.end || isSameDay(range.start, range.end))
+    return formatShort(range.start);
   return `${formatShort(range.start)} ~ ${formatShort(range.end)}`;
 };
 
@@ -58,17 +64,32 @@ const segmentTriggerClassName = (isOpen: boolean) =>
 // 세그먼트 사이 구분선: pill 높이 전체를 가르지 않고 위아래 여백을 살짝 두고
 // 세로선만 짧게 긋는다(피그마 디자인 반영).
 const SegmentDivider = () => (
-  <span aria-hidden="true" className="h-12 w-px shrink-0 self-center bg-[#c5c5c5]" />
+  <span
+    aria-hidden="true"
+    className="h-12 w-px shrink-0 self-center bg-[#c5c5c5]"
+  />
 );
 
-// 피그마 데스크톱(lg, 1024↑) 고정폭(공간유형 227 / 날짜 215 / 지역 215)과 동일하게
-// 맞춘다. 날짜 드롭다운 패널을 검색바 왼쪽 라인에 맞추려면(아래 CALENDAR_LEFT_OFFSET_PX)
-// 이 폭이 실제 렌더 폭과 항상 같아야 하므로 lg에서는 min-w가 아니라 고정 w로 둔다.
-// lg 미만(태블릿 768~1023 등)은 Figma 스펙대로 3세그먼트를 한 줄에서 flex-1로 균등
-// 배분하고, 검색어 입력은 그 아래 별도 줄(둘째 pill)로 내려간다(HeroSearchBar 본문 참고).
-// lg에서만 실제로 쓰인다 - 날짜/지역 세그먼트 폭(215px)은 Tailwind 클래스
-// (lg:w-[215px])로 직접 박아뒀다(JIT가 정적으로 스캔할 수 있게); 공간유형 폭만
-// CALENDAR_LEFT_OFFSET_PX 계산에 JS 값으로도 필요해서 상수로 남겨둔다.
+// 피그마 데스크톱 고정폭(공간유형 227 / 날짜 215 / 지역 215 / 검색어+버튼 543)을
+// lg(1024) 이상에서의 "기준 비율"로 쓴다. 브레이크포인트는 총 2개(md 768, lg
+// 1024)뿐이고 lg 이상은 항상 이 한 줄 레이아웃이어야 한다 - lg에서 xl로 전환
+// 시점을 늦추는 방식으로 잘림 문제를 피했던 이전 버전은 1024~1279px 구간에서
+// 검색바가 다시 2줄로 보이는 회귀를 만들어서 되돌렸다.
+// 4세그먼트는 뷰포트가 커지거나 작아질 때 검색어 세그먼트 혼자만 늘고 주는 게
+// 아니라 넷 다 같이 비례해서 늘고 줄어야 한다 - 그래서 각 세그먼트의
+// lg:grow-[N]을 그 세그먼트의 lg:basis-[Npx]와 같은 숫자로 맞췄다(227/215/215/543).
+// flex-grow/flex-shrink는 basis 대비 비율로 여유/부족 폭을 나누기 때문에, grow
+// 값을 basis와 동일하게 맞추면 늘어날 때도 줄어들 때도 항상 227:215:215:543
+// 비율을 유지한 채로 함께 커지고 작아진다(전에는 세 필터가 lg:grow-0이라 남는
+// 폭을 검색어 혼자 grow-1로 다 흡수했었다). 각 세그먼트에는 min-width도 같이
+// 둬서 아무리 좁아져도 라벨/값 텍스트가 겹치지 않게 하고, 특히 검색어 세그먼트는
+// "공간 · 지역 세부 검색" placeholder 전체가 항상 보이도록 min-width를 넉넉히
+// 잡았다(아래 keywordContent의 min-w-[180px], 그리고 검색어+버튼 wrapper의
+// min-w-[300px]). 날짜 드롭다운 패널 위치(아래 CALENDAR_LEFT_OFFSET_PX)는
+// 공간유형 세그먼트가 축소 없이 227px 그대로일 때 기준으로 계산되므로, 아주
+// 좁은 lg 구간(예: 1024px 근처)에서 세그먼트가 실제로 조금 줄어들면 패널이
+// 몇 px 정도 어긋날 수 있다 - 텍스트가 잘리는 것보다는 훨씬 가벼운 문제라
+// 감수한다.
 const CATEGORY_SEGMENT_WIDTH_PX = 227;
 // 날짜 세그먼트 자신의 왼쪽 기준으로 -공간유형폭만큼 당겨서, 패널의 왼쪽 끝이
 // 검색바 전체의 왼쪽 끝(공간 유형 라벨 시작 지점)과 정확히 맞도록 한다.
@@ -83,10 +104,20 @@ interface SegmentTriggerContentProps {
 }
 
 // 피그마 모바일 스펙: 라벨 12px / 값 14px (태블릿 이상은 기존 18px/20px 유지).
-const SegmentTriggerContent = ({ label, value, labelClassName }: SegmentTriggerContentProps) => (
+const SegmentTriggerContent = ({
+  label,
+  value,
+  labelClassName,
+}: SegmentTriggerContentProps) => (
   <>
-    <span className={`block max-w-full truncate text-[12px] leading-[1.4] md:text-[18px] ${labelClassName}`}>{label}</span>
-    <span className="text-text-primary block max-w-full truncate text-[14px] leading-[1.4] font-bold md:text-[20px]">{value}</span>
+    <span
+      className={`block max-w-full truncate text-[12px] leading-[1.4] md:text-[18px] ${labelClassName}`}
+    >
+      {label}
+    </span>
+    <span className="text-text-primary block max-w-full truncate text-[14px] leading-[1.4] font-bold md:text-[20px]">
+      {value}
+    </span>
   </>
 );
 
@@ -164,12 +195,17 @@ const HeroSearchBar = ({
   // 그 뒤에 오는 click 이벤트가 이미 사라진 옵션 버튼을 못 찾아 선택 자체가
   // 씹힌다) - 모바일에서는 이 훅을 끄고 BottomSheet 자체의 백드롭/Escape 닫기만 쓴다.
   const isMobile = useMediaQuery("(max-width: 767px)");
-  useOutsideClick(dateContainerRef, () => setIsDateOpen(false), isDateOpen && !isMobile);
+  useOutsideClick(
+    dateContainerRef,
+    () => setIsDateOpen(false),
+    isDateOpen && !isMobile,
+  );
 
-  // lg(1024) 이상에서만 기존 데스크톱 고정폭 한 줄 레이아웃을 쓴다. 그 미만(태블릿
-  // 768~1023 포함)에서는 CALENDAR_LEFT_OFFSET_PX 트릭이 더 이상 유효하지 않아
-  // (공간유형 세그먼트가 더 이상 고정폭이 아니므로) 날짜 패널을 그냥 날짜 세그먼트
-  // 왼쪽 끝에 맞춘다.
+  // lg(1024) 이상에서 데스크톱 고정폭 한 줄 레이아웃을 쓴다 - 브레이크포인트는
+  // 총 2개(md 768, lg 1024)뿐이고 1024 이상은 항상 한 줄이어야 한다. 1024~1180px
+  // 구간에서 검색어 세그먼트가 잘리던 문제는 브레이크포인트를 옮기는 대신
+  // 세그먼트 폭 자체를 그 구간에서 줄어들 수 있게(basis+min-width) 고쳤다 -
+  // 아래 세그먼트 wrapper의 lg:basis-*/lg:min-w-* 참고.
   const isWideDesktop = useMediaQuery("(min-width: 1024px)");
 
   const markSearched = useSearchHistoryStore((s) => s.markSearched);
@@ -185,9 +221,12 @@ const HeroSearchBar = ({
     onSummaryChange?.({
       categoryLabel: isDefaultCategory
         ? "공간 전체"
-        : (CATEGORY_OPTIONS.find((option) => option.value === category)?.label ?? "전체"),
+        : (CATEGORY_OPTIONS.find((option) => option.value === category)
+            ?.label ?? "전체"),
       dateLabel: isDefaultDate ? "날짜 전체" : formatDateRangeLabel(dateRange),
-      districtLabel: DISTRICT_OPTIONS.find((option) => option.value === district)?.label ?? "서울 전체",
+      districtLabel:
+        DISTRICT_OPTIONS.find((option) => option.value === district)?.label ??
+        "서울 전체",
       keywordLabel: keywordInput.trim() || "검색어 추가",
     });
     // onSummaryChange는 상위에서 매 렌더 새로 만들어질 수 있어 deps에 넣지 않는다
@@ -196,7 +235,9 @@ const HeroSearchBar = ({
   }, [category, dateRange, district, keywordInput]);
 
   const isCompact = variant === "compact";
-  const labelClassName = isCompact ? "text-text-primary" : "text-text-secondary";
+  const labelClassName = isCompact
+    ? "text-text-primary"
+    : "text-text-secondary";
   const outerBorderClassName = isCompact
     ? "border-[3px] border-primary-hover"
     : "border border-text-secondary";
@@ -223,14 +264,14 @@ const HeroSearchBar = ({
   // 안에 들어가므로 두 군데에서 그대로 재사용한다(중복 작성 방지).
   const keywordContent = (
     <>
-      <div className="flex flex-1 flex-col justify-center gap-1.5 px-5 py-2 md:px-8 md:py-4 lg:px-5">
+      <div className="flex min-w-[180px] flex-1 flex-col justify-center gap-1.5 px-5 py-2 md:px-8 md:py-4 lg:px-5">
         {/* 피그마 모바일 스펙(node 5299:35318)에는 이 "검색어" 라벨이 화면에
             보이지 않고 placeholder만 한 줄로 보인다 - 다만 접근성상 label 자체를
             없애면 스크린 리더 사용자가 인풋의 용도를 알 수 없으므로, DOM에서
             지우는 대신 시각적으로만 숨긴다(sr-only). md(768) 이상은 기존처럼 노출. */}
         <label
           htmlFor="hero-search-keyword"
-          className={`max-md:sr-only text-[18px] leading-[1.4] ${labelClassName}`}
+          className={`text-[18px] leading-[1.4] max-md:sr-only ${labelClassName}`}
         >
           검색어
         </label>
@@ -244,11 +285,24 @@ const HeroSearchBar = ({
           }}
           maxLength={MAX_KEYWORD_LENGTH}
           placeholder="공간 · 지역 세부 검색"
-          className="text-text-primary placeholder:text-text-placeholder w-full text-[16px] leading-[1.4] font-medium outline-none md:text-[20px]"
+          // caret-primary: 이슈 #287 - 검색어 입력 커서(caret) 색을 브라우저
+          // 기본 검정 대신 브랜드 블루(--color-primary)로 맞춘다.
+          className="text-text-primary caret-primary placeholder:text-text-placeholder w-full text-[16px] leading-[1.4] font-medium outline-none md:text-[20px]"
         />
       </div>
-      {/* 피그마 스펙: 데스크톱/태블릿 68 Hug × 68 Hug, 모바일은 36 Hug(p-[6px] +
-          아이콘 24px) - 아이콘도 같은 비율(24/68≈34)로 함께 줄인다. */}
+      {/* 피그마 스펙(node 5299:39440, 5299:39441) 확정값: 버튼 프레임 68×68px,
+          패딩 10px 고정, 그 안의 아이콘 컨테이너 48×48px → 아이콘:버튼 비율 =
+          48/68 ≈ 70.59%. 버튼 자체 크기(모바일 36px / 데스크톱 68px)는 그대로
+          유지하고, 아이콘만 이 비율로 확대한다. 고정 px 대신 h-[70.59%]/
+          w-[70.59%]로 버튼 크기에 상대적으로 지정해서, breakpoint 사이는 물론
+          이후 버튼 크기가 바뀌더라도 피그마와 동일한 아이콘:버튼 비율이 항상
+          유지된다(px 값을 breakpoint마다 따로 맞추면 비율이 어긋나기 쉽다).
+          버튼 모양(rounded-full)은 이미 border-radius: 9999px로, 정사각형
+          버튼을 완전한 원으로 만들어 피그마의 rounded-[999px]와 시각적으로
+          동일하다. 선 굵기는 피그마 원본 벡터 에셋의 실제 두께를 그대로 가져올
+          수 없어(네트워크 제약으로 svg 원본 확보 불가) 스크린샷과 비교해 얇게
+          보이도록 strokeWidth를 2 → 1.5로 낮췄다(디자인 QA 피드백: "아이콘이
+          두꺼워 보인다"). */}
       <button
         type="button"
         aria-label="검색"
@@ -256,13 +310,24 @@ const HeroSearchBar = ({
         className="bg-primary-hover flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-white md:size-[68px]"
       >
         <svg
-          className="size-6 md:h-[34px] md:w-[34px]"
+          className="h-[70.59%] w-[70.59%]"
           viewBox="0 0 24 24"
           fill="none"
           aria-hidden="true"
         >
-          <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-          <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <circle
+            cx="11"
+            cy="11"
+            r="7"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <path
+            d="M21 21L16.65 16.65"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
     </>
@@ -289,21 +354,29 @@ const HeroSearchBar = ({
     // 안에 나란히 들어간다 - 예전엔 이걸 "Box A(3세그먼트) + Box B(검색어)를 각각
     // rounded-full로 만든 뒤 맞닿는 쪽 테두리/모서리만 lg:border-*-0·lg:rounded-*-none로
     // 지워서 시각적으로 이어붙이는" 방식으로 구현했었는데, 서로 다른 두 엘리먼트의
-    // 테두리를 각자 그린 뒤 픽셀 단위로 맞춰 붙이는 방식이라 데스크톱 폭(예: 1163px)에
+    // 테두리를 각자 그린 뒤 픽셀 단위로 맞춰 붙이는 방식이라 데스크톱 폭(예: 1440px)에
     // 따라 Box B가 lg:flex-1로 갖는 폭이 정수 픽셀로 딱 떨어지지 않을 때 두 테두리가
     // 반 픽셀 정도 어긋나 이음매가 잘린 것처럼 보이는 렌더링 버그가 있었다
     // (지역↔검색어 사이 테두리가 끊겨 보인다는 리포트). 그래서 데스크톱에서는 아예
     // 테두리를 공유하는 하나의 div만 쓰도록 되돌리고(이음매 자체가 없음), 태블릿
     // (1024 미만)에서만 기존처럼 독립된 두 pill(Box A: 필터 3종 / Box B: 검색어)을
     // gap-3로 세로로 쌓는 구조를 쓴다.
-    <div style={morphStyle} className="relative z-10 flex flex-col items-stretch gap-2 md:gap-3">
-      <div className={`flex items-stretch rounded-full bg-white ${outerBorderClassName}`}>
-        <div className="flex flex-1 min-w-[33%] items-stretch lg:min-w-0 lg:w-[227px] lg:flex-none">
+    <div
+      style={morphStyle}
+      className="relative z-10 flex flex-col items-stretch gap-2 md:gap-3"
+    >
+      <div
+        className={`flex items-stretch rounded-full bg-white ${outerBorderClassName}`}
+      >
+        <div className="flex min-w-[33%] flex-1 items-stretch lg:min-w-[100px] lg:shrink lg:grow-[227] lg:basis-[227px]">
           <FilterDropdown
             ariaLabel="공간 용도 필터"
             options={CATEGORY_OPTIONS}
             value={category}
             onChange={setCategory}
+            // 이슈 #287: 모바일(360~767)에서는 날짜 필터와 동일하게 바텀시트로
+            // 통일한다.
+            mobileBottomSheet
             // 맨 왼쪽 세그먼트라 열렸을 때 배경(bg-primary-light)이 pill의 둥근
             // 왼쪽 모서리 밖으로 각지게 삐져나오지 않도록 그때만 왼쪽을 둥글린다.
             triggerClassName={(isOpen) =>
@@ -322,7 +395,7 @@ const HeroSearchBar = ({
         <SegmentDivider />
 
         <div
-          className="relative flex flex-1 min-w-[33%] items-stretch lg:min-w-0 lg:w-[215px] lg:flex-none"
+          className="relative flex min-w-[33%] flex-1 items-stretch lg:min-w-[100px] lg:shrink lg:grow-[215] lg:basis-[215px]"
           ref={dateContainerRef}
         >
           <button
@@ -381,13 +454,16 @@ const HeroSearchBar = ({
 
         <SegmentDivider />
 
-        <div className="flex flex-1 min-w-[33%] items-stretch lg:min-w-0 lg:w-[215px] lg:flex-none">
+        <div className="flex min-w-[33%] flex-1 items-stretch lg:min-w-[100px] lg:shrink lg:grow-[215] lg:basis-[215px]">
           <FilterDropdown
             ariaLabel="지역(구) 필터"
             options={DISTRICT_OPTIONS}
             value={district}
             onChange={setDistrict}
             maxVisibleOptions={DISTRICT_MAX_VISIBLE_OPTIONS}
+            // 이슈 #287: 모바일(360~767)에서는 날짜 필터와 동일하게 바텀시트로
+            // 통일한다.
+            mobileBottomSheet
             // 태블릿 두 줄 레이아웃에서는 Box A(3세그먼트 pill)의 맨 오른쪽
             // 세그먼트가 지역이라, 열렸을 때 배경(bg-primary-light)이 pill의
             // 둥근 오른쪽 모서리 밖으로 각지게 삐져나온다 - 공간유형(맨 왼쪽)에
@@ -410,7 +486,9 @@ const HeroSearchBar = ({
         {isWideDesktop && (
           <>
             <SegmentDivider />
-            <div className="flex flex-1 items-center gap-2.5 pr-3">{keywordContent}</div>
+            <div className="flex min-w-[300px] shrink grow-[543] basis-[543px] items-center gap-2.5 pr-3">
+              {keywordContent}
+            </div>
           </>
         )}
       </div>

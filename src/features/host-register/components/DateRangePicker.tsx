@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect, useId } from "react";
 import calendarIcon from "@/assets/icons/icon_calendar.svg";
-
-// 요일 헤더 (일~토)
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
+import CalendarMonthGrid from "@/shared/components/calendar/CalendarMonthGrid";
 
 // 두 날짜가 '같은 날'인지 확인 (년·월·일 비교)
 const isSameDay = (a: Date, b: Date) =>
@@ -98,6 +97,17 @@ export const DateRangePicker = ({
   const containerRef = useRef<HTMLDivElement>(null); // 달력 전체를 가리키는 리모컨
   // 팝업을 연 필드 버튼 — 닫을 때 여기로 포커스를 되돌린다
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+
+  // 이슈 #287 디자인 QA: 날짜 칸·선택 원·밴드 크기를 모바일/태블릿/데스크톱
+  // 어디서나 완전히 동일한 픽셀 값(56px 칸·44px 원)으로 맞춘다(검색바 날짜
+  // 필터·공간상세 예약 캘린더와 동일 - CalendarMonthGrid 참고). 칸 가로폭만
+  // 모바일 바텀시트(360~767, 화면 폭이 다양해 고정 px를 못 씀)에서 유동으로
+  // 바뀐다. 두 달을 나란히(840px = 420px×2) 보여주려면 최소 md(768)로는
+  // 부족해서(768 < 840) 검색바 날짜 필터와 같은 기준으로 lg(1024) 이상에서만
+  // 2개월, 그 미만은 1개월만 보여준다 - 예전엔 md(768)부터 2개월이었지만,
+  // 그때는 태블릿 칸이 36px로 더 작아 616px 안에 두 달이 들어갔다.
+  const isMobileCalendar = useMediaQuery("(max-width: 767px)");
+  const isTwoMonthView = useMediaQuery("(min-width: 1024px)");
 
   // 오늘 자정. 날짜 비교는 '시각'이 아니라 '날짜' 단위여야 하므로 0시로 맞춘다
   const todayStart = new Date();
@@ -209,52 +219,43 @@ export const DateRangePicker = ({
     return false;
   };
 
-  // 칸 '배경' = 선택 범위 띠. 숫자 모양(원)은 renderDayNumber가 따로 그린다 (게스트 예약 달력과 동일 구조)
-  const getDayClassName = (date: Date) => {
-    if (isDateDisabled(date)) {
-      return "cursor-not-allowed";
-    }
+  // 밴드(선택 범위를 잇는 하늘색 배경). 칸 전체 높이가 아니라 원과 같은 고정
+  // 높이(h-8)의 별도 absolute span에 적용해서, 밴드 세로 길이가 항상 원의
+  // 지름과 같아지도록 한다. 숫자 모양(원)은 renderDayNumber가 따로 그린다
+  // (게스트 예약 달력과 동일 구조).
+  const getBandClassName = (date: Date) => {
+    if (isDateDisabled(date)) return "";
     if (startDate && endDate && !isSameDay(startDate, endDate)) {
-      // 시작일/종료일 칸은 원의 세로 지름(칸 정중앙)까지만 배경을 채운다.
+      // 시작일/종료일 칸은 원의 가로 중심까지만 배경을 채운다.
       // 그 바깥쪽(반대쪽 절반)은 배경 없이 비워둬 띠가 원 뒤로 삐져나오지 않게 한다.
       if (isSameDay(date, startDate)) {
-        return "text-text-primary bg-[linear-gradient(to_right,transparent_50%,var(--color-primary-100)_50%)]";
+        return "bg-[linear-gradient(to_right,transparent_50%,var(--color-primary-100)_50%)]";
       }
       if (isSameDay(date, endDate)) {
-        return "text-text-primary bg-[linear-gradient(to_right,var(--color-primary-100)_50%,transparent_50%)]";
+        return "bg-[linear-gradient(to_right,var(--color-primary-100)_50%,transparent_50%)]";
       }
       if (date > startDate && date < endDate) {
-        return "bg-primary-100 text-text-primary";
+        return "bg-primary-100";
       }
     }
-    return "text-text-primary";
+    return "";
   };
 
-  // 칸 안의 '숫자'를 어떤 모양으로 그릴지.
-  // 우선순위: 선택됨(꽉 찬 진파랑 원) > 오늘(연파랑 테두리 원) > 선택 불가(회색 취소선) > 기본
-  const renderDayNumber = (date: Date) => {
-    const day = date.getDate();
+  // 시작·종료·범위 안(양 끝 포함) 날짜인지 → 스크린리더용 aria-pressed.
+  // 강조 원(isSelectedEndpoint)과 달리 사이 날짜까지 전부 "선택됨"으로 알린다.
+  const isDateSelected = (date: Date) =>
+    (!!startDate && isSameDay(date, startDate)) ||
+    (!!endDate && isSameDay(date, endDate)) ||
+    (!!startDate && !!endDate && date > startDate && date < endDate);
 
-    if (isSelectedEndpoint(date)) {
-      return (
-        <span className="bg-primary relative z-10 flex aspect-square h-full shrink-0 items-center justify-center rounded-full text-white">
-          {day}
-        </span>
-      );
-    }
-    if (isSameDay(date, todayStart)) {
-      // 오늘 — 연파랑 테두리 원. 선택은 못 하지만 위치는 보여준다
-      return (
-        <span className="border-primary-100 text-text-primary relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border">
-          {day}
-        </span>
-      );
-    }
-    if (isDateDisabled(date)) {
-      // 과거·3개월 초과: 원 없이 회색 취소선 텍스트만
-      return <span className="text-text-disabled line-through">{day}</span>;
-    }
-    return day;
+  // 스크린 리더용 날짜 라벨. 오늘은 disabled 속성을 안 쓰는 대신(클릭은 받아야
+  // 해서) 라벨에 "선택할 수 없다"는 사실을 직접 알려준다 - 예전엔 aria-disabled로
+  // 전달했는데, 공용 CalendarMonthGrid는 그 prop을 따로 받지 않아 라벨 쪽으로 옮겼다.
+  const getDayAriaLabel = (date: Date) => {
+    const base = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+    return isSameDay(date, todayStart)
+      ? `${base}, 오늘은 선택할 수 없어요`
+      : base;
   };
 
   // 딤을 누르거나 시트를 끌어내려 닫을 때 — 고른 범위가 완성돼 있으면 저장하고 닫는다.
@@ -343,105 +344,39 @@ export const DateRangePicker = ({
   const goNext = () =>
     setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
 
-  // 한 달치 달력 카드. arrow로 이 카드에 붙일 화살표를 정한다 (피그마: 왼쪽 달 ‹, 오른쪽 달 ›)
+  // 모바일 바텀시트(360~767)는 화면 폭이 다양해 칸 가로폭에 고정 px를 쓸 수
+  // 없으므로 유동(fr) 7열을 쓴다. 태블릿/데스크톱(팝오버)은 항상 폭이 넉넉해
+  // CalendarMonthGrid 기본값(56px 고정 7열)을 그대로 쓴다.
+  const mobileGridProps = isMobileCalendar
+    ? {
+        monthWidthClassName: "w-full",
+        gridColsClassName: "grid w-full grid-cols-7",
+        cellWidthClassName: "min-w-0",
+      }
+    : {};
+
+  // 한 달치 달력 카드. arrow로 이 카드에 붙일 화살표를 정한다 (피그마: 왼쪽 달 ‹, 오른쪽 달 ›).
+  // 실제 그리드(요일 헤더 + 날짜 칸)는 CalendarMonthGrid가 그린다 - 검색바 날짜
+  // 필터·공간상세 예약 캘린더와 완전히 같은 칸/원/밴드 크기를 공유한다.
   const renderMonth = (base: Date, arrow: "prev" | "next") => (
-    // 데스크톱 피그마 card_calendar_X5: W 448 = px-3.5(14)×2 + 60px×7.
-    // lg 미만(바텀시트)은 달이 하나뿐이라 시트 폭을 그대로 쓴다 (모바일 328 × 그리드 230).
-    // 헤더↔요일 간격 28 = gap-3(12) + 헤더 mb-4(16)
-    <div className="flex w-full shrink-0 flex-col gap-3 md:w-[308px] md:px-3.5 md:py-8 lg:w-[448px] lg:py-5">
-      {/* 월 헤더 — 라벨은 카드 정중앙.
-          갈 수 없는 방향의 화살표는 아예 렌더링하지 않되(게스트 예약 달력과 동일),
-          w-8 자리는 그대로 비워둬 월 라벨이 한쪽으로 밀리지 않게 한다 */}
-      {/* 헤더↔요일줄 = 이 mb + 카드 gap-3(12). 모바일·데스크톱 28, 태블릿 12 */}
-      <div className="mb-4 flex items-center justify-center gap-1 md:mb-0 lg:mb-4">
-        <div className="flex h-8 w-8 items-center justify-center">
-          {arrow === "prev" && !isPrevMonthDisabled && (
-            <button
-              type="button"
-              onClick={goPrev}
-              aria-label="이전 달"
-              className="text-text-primary flex h-8 w-8 items-center justify-center text-xl"
-            >
-              ‹
-            </button>
-          )}
-        </div>
-        {/* 피그마 20px/700 #121212 */}
-        <span className="text-text-primary text-xl font-bold md:text-base lg:text-xl">
-          {base.getFullYear()}.{String(base.getMonth() + 1).padStart(2, "0")}
-        </span>
-        <div className="flex h-8 w-8 items-center justify-center">
-          {arrow === "next" && (
-            <button
-              type="button"
-              onClick={goNext}
-              aria-label="다음 달"
-              className="text-text-primary flex h-8 w-8 items-center justify-center text-xl"
-            >
-              ›
-            </button>
-          )}
-          {/* md 미만(바텀시트)은 달 카드가 하나뿐이라 ›도 이 카드가 갖는다.
-              md 이상에서는 오른쪽 달 카드가 자기 ›를 그리므로 여기 것은 숨긴다.
-              (태블릿에서 다음 달로 못 넘어가는 게 아니라, › 주인이 바뀌는 것이다) */}
-          {arrow === "prev" && (
-            <button
-              type="button"
-              onClick={goNext}
-              aria-label="다음 달"
-              className="text-text-primary flex h-8 w-8 items-center justify-center text-xl md:hidden"
-            >
-              ›
-            </button>
-          )}
-        </div>
-      </div>
-      {/* 요일 줄 */}
-      <div className="grid grid-cols-7">
-        {WEEKDAYS.map((day) => (
-          <span
-            key={day}
-            className="text-text-secondary flex h-9 w-full items-center justify-center text-sm font-medium md:text-xs lg:text-sm"
-          >
-            {day}
-          </span>
-        ))}
-      </div>
-      {/* 날짜 칸 — 피그마 60×46. null은 그 달에 없는 자리라 빈 칸으로 둔다 */}
-      <div className="grid grid-cols-7">
-        {getCalendarDays(base).map((date, i) => {
-          if (!date)
-            return (
-              <div
-                key={`empty-${i}`}
-                className="h-[46px] md:h-9 lg:h-[46px]"
-              />
-            );
-          const isToday = isSameDay(date, todayStart);
-          // 선택된 날(시작·종료·범위 안)인지 → 스크린리더용 aria-pressed
-          const isSelected =
-            (!!startDate && isSameDay(date, startDate)) ||
-            (!!endDate && isSameDay(date, endDate)) ||
-            (!!startDate && !!endDate && date > startDate && date < endDate);
-          return (
-            <button
-              type="button"
-              key={date.toISOString()}
-              disabled={isDateDisabled(date)}
-              // 오늘은 disabled를 쓰지 않는다 — 눌렀을 때 안내 문구를 띄워야 하므로
-              // 클릭은 받고 handleSelectDate에서 막는다. aria-disabled로 보조기술에만 알림
-              aria-disabled={isToday || undefined}
-              aria-label={`${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`}
-              aria-pressed={isSelected}
-              onClick={() => handleSelectDate(date)}
-              className={`relative box-border flex h-[46px] w-full items-center justify-center border-0 p-0 text-base font-bold disabled:cursor-not-allowed md:h-9 md:text-sm lg:h-[46px] lg:text-base ${getDayClassName(date)}`}
-            >
-              {renderDayNumber(date)}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <CalendarMonthGrid
+      monthDate={base}
+      cells={getCalendarDays(base)}
+      showPrevArrow={arrow === "prev" && !isPrevMonthDisabled}
+      // lg 미만(바텀시트/1개월 팝오버)은 달 카드가 하나뿐이라 그 카드가 다음 달
+      // 화살표도 함께 갖는다. lg 이상은 오른쪽(arrow="next") 카드가 전담한다.
+      showNextArrow={arrow === "next" || !isTwoMonthView}
+      onPrevMonth={goPrev}
+      onNextMonth={goNext}
+      isSelectedEndpoint={isSelectedEndpoint}
+      isToday={(date) => isSameDay(date, todayStart)}
+      isDisabled={isDateDisabled}
+      getBandClassName={getBandClassName}
+      onSelectDate={handleSelectDate}
+      getAriaLabel={getDayAriaLabel}
+      isAriaPressed={isDateSelected}
+      {...mobileGridProps}
+    />
   );
 
   // 필드에 보여줄 텍스트
@@ -518,21 +453,23 @@ export const DateRangePicker = ({
           />
 
           {/* md 미만: 화면 아래에 붙는 바텀시트 (위 모서리만 radius 20, 안쪽 16, 높이는 내용만큼)
-              md 이상: 필드 아래에 뜨는 팝업 — 태블릿 616(308 카드 2개) / 데스크톱 896(448 카드 2개).
-                       데스크톱은 본문(644)보다 넓어 좌우로 126씩 넘치므로 left-1/2 + -translate-x-1/2로
-                       가운데 정렬해 넘침을 대칭으로 만든다.
-                       MainLayout의 overflow-x-clip이 가로 스크롤바 생성을 막는다 */}
+              md 이상: 필드 아래에 뜨는 팝업 — 칸 크기가 이제 모든 화면에서 고정 56px라
+              카드 자체가 늘 같은 폭(1개월 420px / 2개월 840px)이므로 w-fit으로 내용에
+              맞춘다(예전처럼 태블릿·데스크톱마다 616px/896px로 따로 맞출 필요가 없다).
+              데스크톱(2개월, 840px)은 본문보다 넓어 좌우로 넘칠 수 있으므로 left-1/2 +
+              -translate-x-1/2로 가운데 정렬해 넘침을 대칭으로 만든다.
+              MainLayout의 overflow-x-clip이 가로 스크롤바 생성을 막는다 */}
           <div
             id={popupId}
             role="dialog"
             aria-label="계약 가능 기간 선택"
             // 끌어내린 만큼 시트를 내린다. dragY가 0이면 transform을 아예 안 줘야
-            // lg의 -translate-x-1/2(가로 가운데 정렬)를 덮어쓰지 않는다
+            // md의 -translate-x-1/2(가로 가운데 정렬)를 덮어쓰지 않는다
             style={{
               transform: dragY ? `translateY(${dragY}px)` : undefined,
               transition: isDragging ? "none" : "transform 200ms ease-out",
             }}
-            className="border-border fixed inset-x-0 bottom-0 z-50 rounded-t-[20px] border bg-white px-4 pt-1 pb-4 shadow-lg md:absolute md:inset-x-auto md:bottom-auto md:left-1/2 md:z-10 md:mt-2 md:w-[616px] md:-translate-x-1/2 md:overflow-hidden md:rounded-lg md:p-0 lg:w-[896px]"
+            className="border-border fixed inset-x-0 bottom-0 z-50 rounded-t-[20px] border bg-white px-4 pt-1 pb-4 shadow-lg md:absolute md:inset-x-auto md:bottom-auto md:left-1/2 md:z-10 md:mt-2 md:w-fit md:-translate-x-1/2 md:overflow-hidden md:rounded-lg md:p-0"
           >
             {/* 손잡이 바 40×4 — 끌어내려 닫는다. 데스크톱 팝업엔 없다.
                 py-2로 손가락이 닿는 범위를 바보다 위아래 8씩 넓히고, 시트 pt-1(4)과 합쳐
@@ -549,12 +486,10 @@ export const DateRangePicker = ({
               <div className="bg-divider h-1 w-10 rounded-full" />
             </div>
 
-            {/* 달 카드 — md 미만(바텀시트)은 1개월, md 이상은 2개월 나란히 */}
+            {/* 달 카드 — lg 미만(바텀시트/태블릿 팝오버)은 1개월, lg 이상은 2개월 나란히 */}
             <div className="flex">
               {renderMonth(viewDate, "prev")}
-              <div className="hidden md:block">
-                {renderMonth(nextMonth, "next")}
-              </div>
+              {isTwoMonthView && renderMonth(nextMonth, "next")}
             </div>
 
             {/* 고를 수 없는 날짜를 눌렀을 때만 나타남.
@@ -587,7 +522,7 @@ export const DateRangePicker = ({
                 type="button"
                 disabled={!(startDate && endDate)}
                 onClick={handleConfirm}
-                className="bg-primary-hover flex h-[52px] w-[94px] shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white disabled:opacity-40 md:h-12 md:w-20 md:text-base lg:h-[52px] lg:w-[94px] lg:text-lg"
+                className="bg-primary-hover flex h-[52px] w-[94px] shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white disabled:opacity-40"
               >
                 확인
               </button>
