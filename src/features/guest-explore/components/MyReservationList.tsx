@@ -23,14 +23,20 @@ const TAB_STATUS_MAP: Status[][] = [
 
 // GetReservations는 페이지 단위로만 응답하므로, hasNext/nextCursor를 따라가며
 // 전체 예약을 모아야 오래된(=완료된) 예약이 첫 페이지 밖으로 밀려 누락되지 않는다.
+// MAX_PAGES는 백엔드가 hasNext를 계속 true로 주거나 동일 커서를 반복 반환하는 등의
+// 이상 응답에서도 무한 루프에 빠지지 않게 막는 상한선이다(500건이면 충분).
+const MAX_PAGES = 10;
+
 const fetchAllReservations = async (): Promise<Reservation[]> => {
   const all: Reservation[] = [];
   let cursor: number | undefined = undefined;
-  while (true) {
+  let pageCount = 0;
+  while (pageCount < MAX_PAGES) {
     const result = await GetReservations(cursor, 50);
     all.push(...(result?.reservations ?? []));
-    if (!result?.hasNext || result.nextCursor == null) break;
+    if (!result?.hasNext || result.nextCursor == null || result.nextCursor === cursor) break;
     cursor = result.nextCursor;
+    pageCount++;
   }
   return all;
 };
