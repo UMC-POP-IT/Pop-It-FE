@@ -123,46 +123,48 @@ const ExploreDetailInfo = ({
         </div>
 
         <div className="flex flex-col items-start">
-          <div className="flex items-center gap-3 py-2">
-            {/* 위치 아이콘: 피그마 기준 회색 원 배경 없이 아이콘만 텍스트와 나란히 배치 */}
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="text-text-primary shrink-0"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 22s7-7.58 7-12.5S16.14 2 12 2 5 4.99 5 9.5 12 22 12 22Z"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinejoin="round"
-              />
-              <circle cx="12" cy="9.5" r="2.5" stroke="currentColor" strokeWidth="1.6" />
-            </svg>
+          <div className="flex items-center gap-4 py-2">
+            <span className="bg-bg-footer flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="text-text-primary"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12 22s7-7.58 7-12.5S16.14 2 12 2 5 4.99 5 9.5 12 22 12 22Z"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinejoin="round"
+                />
+                <circle cx="12" cy="9.5" r="2.5" stroke="currentColor" strokeWidth="1.6" />
+              </svg>
+            </span>
             <span className="text-text-primary text-lg font-bold">
               {space.address}
             </span>
           </div>
-          <div className="flex items-center gap-3 py-2">
-            {/* 크기 아이콘: 위치 아이콘과 동일하게 배경 없이 아이콘만 배치 */}
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="text-text-primary shrink-0"
-              aria-hidden="true"
-            >
-              <path
-                d="M4 12h16M4 12l3.5-3.5M4 12l3.5 3.5M20 12l-3.5-3.5M20 12l-3.5 3.5"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <div className="flex items-center gap-4 py-2">
+            <span className="bg-bg-footer flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="text-text-primary"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 12h16M4 12l3.5-3.5M4 12l3.5 3.5M20 12l-3.5-3.5M20 12l-3.5 3.5"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
             <span className="text-text-primary text-lg font-bold">
               {space.area}m²
             </span>
@@ -174,39 +176,39 @@ const ExploreDetailInfo = ({
         {/* 가격 */}
         <div className="flex flex-col items-start gap-5">
           <SectionTitle>가격</SectionTitle>
-          <div className="flex w-[200px] flex-col items-end gap-3 text-base font-bold">
-            <div className="flex w-full items-center justify-between">
-              <span className="text-text-primary font-normal">일 단가</span>
-              <span className="text-right">
-                <span className="text-primary">
-                  {space.cost.day.toLocaleString()}
+          <div className="flex items-end gap-6">
+            <div className="flex w-[200px] flex-col items-end gap-3 text-base font-bold">
+              <div className="flex w-full items-center justify-between">
+                <span className="text-text-primary font-normal">일 단가</span>
+                <span className="text-right">
+                  <span className="text-primary">
+                    {space.cost.day.toLocaleString()}
+                  </span>
+                  <span className="text-text-primary">원</span>
                 </span>
-                <span className="text-text-primary">원</span>
-              </span>
-            </div>
-            <div className="flex w-full items-center justify-between">
-              <span className="text-text-primary font-normal">주 단가</span>
-              <span className="text-right">
-                <span className="text-primary">
-                  {(space.cost.day * 7).toLocaleString()}
+              </div>
+              <div className="flex w-full items-center justify-between">
+                <span className="text-text-primary font-normal">주 단가</span>
+                <span className="text-right">
+                  <span className="text-primary">
+                    {(space.cost.day * 7).toLocaleString()}
+                  </span>
+                  <span className="text-text-primary">원</span>
                 </span>
-                <span className="text-text-primary">원</span>
-              </span>
-            </div>
-            <div className="flex w-full items-center justify-between">
-              <span className="text-text-primary font-normal">월 단가</span>
-              <span className="flex items-baseline gap-1 text-right">
-                <span>
+              </div>
+              <div className="flex w-full items-center justify-between">
+                <span className="text-text-primary font-normal">월 단가</span>
+                <span className="text-right">
                   <span className="text-primary">
                     {(space.cost.day * 30).toLocaleString()}
                   </span>
                   <span className="text-text-primary">원</span>
                 </span>
-                <span className="text-text-tag text-xs font-normal whitespace-nowrap">
-                  (30일 기준)
-                </span>
-              </span>
+              </div>
             </div>
+            <span className="text-text-tag text-base font-normal whitespace-nowrap">
+              (30일 기준)
+            </span>
           </div>
         </div>
 
