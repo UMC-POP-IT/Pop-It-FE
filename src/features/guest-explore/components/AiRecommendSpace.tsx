@@ -167,7 +167,7 @@ const AiRecommendSpace = () => {
         >
           {isLoading
             ? Array.from({ length: CARDS_PER_SCROLL }).map((_, i) => (
-                <div key={i} className={`${cardWidthClass} flex-none`}>
+                <div key={i} role="status" aria-label="로딩 중" className={`${cardWidthClass} flex-none`}>
                   <SkeletonCard />
                 </div>
               ))
