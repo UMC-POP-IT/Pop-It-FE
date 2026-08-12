@@ -5,6 +5,7 @@ import { ReservationCard } from "@/features/guest-explore/components/Reservation
 import MyReservationListEmptyState from "@/features/guest-explore/components/MyReservationListEmptyState";
 import Modal from "@/shared/components/Modal";
 import { pollVerificationStatus } from "@/features/guest-explore/utils/verificationPolling";
+import { useTossPaymentResultStore } from "@/store/tossPaymentResultStore";
 
 const TAB_STATUSES = ["예약 예정", "승인 완료", "계약 완료", "사용 중", "지난 예약"];
 
@@ -24,12 +25,22 @@ export const MyReservationList = () => {
   const [reservationList, setReservationList] = useState<Reservation[]>([]);
   const [autoOpenReservationId, setAutoOpenReservationId] = useState<number | null>(null);
   const [verificationFailed, setVerificationFailed] = useState(false);
+  const paymentApprovedAt = useTossPaymentResultStore((s) => s.approvedAt);
 
   useEffect(() => {
     GetReservations()
       .then((data) => setReservationList(data?.reservations ?? []))
       .catch((error) => console.error("게스트 - 나의 예약 내역 조회 실패", error));
   }, []);
+
+  // Toss 결제 승인이 위 최초 조회보다 늦게 끝나면 목록이 승인 전 상태로 남을 수 있어,
+  // 승인이 완료되는 시점에 한 번 더 조회해 최신 상태로 맞춘다.
+  useEffect(() => {
+    if (paymentApprovedAt == null) return;
+    GetReservations()
+      .then((data) => setReservationList(data?.reservations ?? []))
+      .catch((error) => console.error("게스트 - 나의 예약 내역 재조회 실패", error));
+  }, [paymentApprovedAt]);
 
   // 계약서 모달에서 PASS 인증 중 모바일 리다이렉트로 페이지가 새로고침된 경우,
   // 돌아왔을 때 URL의 identityVerificationId로 서버에 인증을 확정 짓고
