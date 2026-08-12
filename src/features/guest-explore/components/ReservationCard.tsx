@@ -13,6 +13,8 @@ import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 interface ReservationCardProps {
   reservation: Reservation;
   onCancel?: () => Promise<void> | void;
+  autoOpenContract?: boolean;
+  onAutoOpenContractHandled?: () => void;
 }
 
 interface CardMeta {
@@ -94,7 +96,7 @@ const getCardMeta = (r: Reservation): CardMeta => {
   };
 };
 
-export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps) => {
+export const ReservationCard = ({ reservation, onCancel, autoOpenContract, onAutoOpenContractHandled }: ReservationCardProps) => {
   const cardMeta = getCardMeta(reservation);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false); // 예약 취소 창 open 여부
   const [isCancelling, setIsCancelling] = useState(false); // 예약 취소 진행 중 여부
@@ -107,6 +109,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false); // 사진 업로드 진행 중 여부
   const [paymentInfo, setPaymentInfo] = useState<GetPaymentInfoResponse | null>(null); // 결제 정보
   const [isPaymentInfoError, setIsPaymentInfoError] = useState(false); // 결제 정보 조회 실패 여부
+  const [contractModalFocusAuth, setContractModalFocusAuth] = useState(false); // 인증 리다이렉트 복귀로 재오픈된 경우, 본인 인증/서명란이 보이도록 스크롤할지 여부
 
   const label = cardMeta.label;
   const needsPhotoVerification = cardMeta.needsPhotoVerification && !isPhotoSubmitted;
@@ -162,6 +165,7 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
     setisPaymentModalOpen(false);
     setAgreedToGuide(false);
     setIsContractModalOpen(true);
+    setContractModalFocusAuth(false);
   };
 
   useEffect(() => {
@@ -188,6 +192,15 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
       ignore = true;
     };
   }, [reservation.reservationId, reservation.status]);
+
+  // 계약서 모달에서 PASS 인증 중 모바일 리다이렉트로 페이지가 새로고침되어 모달이 닫혔던 경우,
+  // 결제 정보가 다시 로드되는 시점에 원래 열려있던 계약서 모달을 자동으로 재오픈한다.
+  useEffect(() => {
+    if (!autoOpenContract || !paymentInfo) return;
+    setIsContractModalOpen(true);
+    setContractModalFocusAuth(true);
+    onAutoOpenContractHandled?.();
+  }, [autoOpenContract, paymentInfo, onAutoOpenContractHandled]);
 
   return (
     <div className="border-divider flex items-start justify-between gap-7 border-b py-5 last:border-none">
@@ -285,7 +298,11 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
           isOpen={isContractModalOpen}
           reservation={reservation}
           paymentInfo={paymentInfo}
-          onClose={() => setIsContractModalOpen(false)}
+          onClose={() => {
+            setIsContractModalOpen(false);
+            setContractModalFocusAuth(false);
+          }}
+          scrollToAuthOnOpen={contractModalFocusAuth}
         />
       )}
 

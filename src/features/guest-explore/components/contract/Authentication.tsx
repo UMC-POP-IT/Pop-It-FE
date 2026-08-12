@@ -7,11 +7,12 @@ const RETRY_INTERVAL_MS = 1500;
 const MAX_RETRIES = 3;
 
 interface AuthenticationProps {
+  reservationId: number;
   onVerified?: (identityVerificationId: string) => Promise<void>;
   onIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) => {
+const Authentication = ({ reservationId, onVerified, onIsAuthenticated }: AuthenticationProps) => {
   const [status, setStatus] = useState<"idle" | "checking" | "pending" | "done" | "error">("checking");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // polling 도중 컴포넌트가 언마운트되면 이후 상태/콜백 갱신을 막기 위한 플래그
@@ -74,12 +75,27 @@ const Authentication = ({ onVerified, onIsAuthenticated }: AuthenticationProps) 
 
     const identityVerificationId = `identity-verification-${crypto.randomUUID()}`;
 
+    // 모바일에서는 PASS 인증이 팝업이 아닌 페이지 리다이렉트로 진행되어 이 지점 이후 코드가
+    // 실행되지 못한 채 페이지가 새로고침될 수 있다. 복귀 후 어떤 예약의 계약서 모달을
+    // 다시 열어야 하는지 알 수 있도록 리다이렉트 전에 reservationId를 남겨둔다.
+    sessionStorage.setItem("pendingContractReservationId", String(reservationId));
+
     const response = await PortOne.requestIdentityVerification({
       storeId: import.meta.env.VITE_PORTONE_STORE_ID,
       channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
       identityVerificationId,
       redirectUrl: window.location.href,
+      bypass: {
+        inicisUnified: {
+          flgFixedUser: "N",
+          directAgency: "PASS"
+        }
+      }
     });
+
+    // 이 지점에 도달했다는 것은 리다이렉트 없이(팝업/아이프레임 방식) 현재 페이지에서
+    // 프로미스가 그대로 resolve됐다는 뜻이므로, 복귀 처리용 플래그는 더 이상 필요 없다.
+    sessionStorage.removeItem("pendingContractReservationId");
 
     if (response?.code !== undefined) {
       setStatus("error");

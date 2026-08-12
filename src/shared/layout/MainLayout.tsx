@@ -209,10 +209,6 @@ const TossPaymentResultHandler = () => {
       }
     }
 
-    // 성공/최종 실패/취소 중 무엇으로 끝나든 이 결제 시도는 여기서 종결된다.
-    // 다음 계약 작성 시 이전 시도의 contractId·멱등키를 이어받지 않도록 지금 정리한다.
-    if (reservationId !== undefined) clearTossPaymentCache(reservationId);
-
     // 성공 리다이렉트: paymentKey/orderId/amount + 결제 요청 시 저장해둔 paymentId가 모두 있어야 승인 가능
     if (paymentKey && orderId && amount && paymentId !== undefined) {
       PaymentApproval(paymentId, {
@@ -221,6 +217,10 @@ const TossPaymentResultHandler = () => {
         amount: Number(amount),
       })
         .then(() => {
+          // 결제가 실제로 승인된 뒤에야 이 계약 시도가 종결된다. SubmitSignature는 예약당
+          // 한 번만 성공하는 동작이라, 결제 실패·취소 시 캐시를 지우면 재시도 시 서명을
+          // 다시 제출하려다 "이미 서명 처리됨" 오류로 막히므로 실패/취소 시에는 지우지 않는다.
+          if (reservationId !== undefined) clearTossPaymentCache(reservationId);
           setResult({
             success: true,
             title: "계약 작성 및 입금이 완료되었습니다",

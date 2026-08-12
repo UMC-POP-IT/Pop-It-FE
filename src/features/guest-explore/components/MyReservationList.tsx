@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Tab from "@/shared/components/Tab";
-import { CancelReservations, GetReservations, Reservation, Status } from "../api/my_reservation_api";
+import { CancelReservations, GetReservations, RequestVerification, Reservation, Status } from "../api/my_reservation_api";
 import { ReservationCard } from "@/features/guest-explore/components/ReservationCard";
 import MyReservationListEmptyState from "@/features/guest-explore/components/MyReservationListEmptyState";
 
@@ -20,12 +20,46 @@ const TAB_STATUS_MAP: Status[][] = [
 export const MyReservationList = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [reservationList, setReservationList] = useState<Reservation[]>([]);
+  const [autoOpenReservationId, setAutoOpenReservationId] = useState<number | null>(null);
 
   useEffect(() => {
     GetReservations()
       .then((data) => setReservationList(data?.reservations ?? []))
       .catch((error) => console.error("게스트 - 나의 예약 내역 조회 실패", error));
   }, []);
+
+  // 계약서 모달에서 PASS 인증 중 모바일 리다이렉트로 페이지가 새로고침된 경우,
+  // 돌아왔을 때 URL의 identityVerificationId로 서버에 인증을 확정 짓고
+  // 원래 인증을 시작했던 예약의 탭·계약서 모달을 다시 열어준다.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const identityVerificationId = params.get("identityVerificationId");
+    if (!identityVerificationId) return;
+
+    const pendingReservationId = sessionStorage.getItem("pendingContractReservationId");
+
+    RequestVerification({ identityVerificationId })
+      .catch((error) => {
+        console.error("[MyReservationList] 본인인증 확정 실패:", error);
+      })
+      .finally(() => {
+        sessionStorage.removeItem("pendingContractReservationId");
+        params.delete("identityVerificationId");
+        params.delete("identityVerificationTxId");
+        const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+        window.history.replaceState(null, "", newUrl);
+        if (pendingReservationId) setAutoOpenReservationId(Number(pendingReservationId));
+      });
+  }, []);
+
+  // 재오픈 대상 예약이 속한 탭으로 이동해야 ReservationCard가 렌더링되어 모달을 열 수 있다.
+  useEffect(() => {
+    if (autoOpenReservationId == null || reservationList.length === 0) return;
+    const targetIndex = TAB_STATUS_MAP.findIndex((statuses) =>
+      reservationList.some((r) => r.reservationId === autoOpenReservationId && statuses.includes(r.status)),
+    );
+    if (targetIndex !== -1) setActiveIndex(targetIndex);
+  }, [autoOpenReservationId, reservationList]);
 
   const handleCancelReservation = async (reservationId: number) => {
     await CancelReservations(reservationId);
@@ -59,6 +93,8 @@ export const MyReservationList = () => {
               key={reservation.reservationId}
               reservation={reservation}
               onCancel={() => handleCancelReservation(reservation.reservationId)}
+              autoOpenContract={reservation.reservationId === autoOpenReservationId}
+              onAutoOpenContractHandled={() => setAutoOpenReservationId(null)}
             />
           ))
         )}
