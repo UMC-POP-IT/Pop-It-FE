@@ -98,12 +98,19 @@ export const HostRegisterStart = () => {
         className="relative z-10 m-auto flex w-full max-w-[360px] [zoom:0.6389] flex-col rounded-xl bg-white p-5 shadow-xl md:max-w-[854px] md:[zoom:0.5902] md:px-20 md:py-[60px] lg:max-w-[900px] lg:[zoom:0.9333] lg:py-16"
       >
         {/* X 닫기 — 모바일·태블릿은 카드 오른쪽 위.
-            (공통 X 컴포넌트가 없어 LoginModal과 동일하게 raw button을 쓴다) */}
+            (공통 X 컴포넌트가 없어 LoginModal과 동일하게 raw button을 쓴다)
+
+            after:*는 눌리는 영역만 넓히는 투명 사각형이다. 위 zoom이 자식의 조작 영역까지
+            같이 줄여서 32px 아이콘이 모바일 20.4px · 태블릿 18.9px로 렌더되는데,
+            이건 WCAG 2.5.8(최소 24×24) 미달이라 손가락으로 누르기 어렵다.
+            32 + 5×2 = 42px에 zoom을 곱하면 모바일 26.8 · 태블릿 24.8로 둘 다 24를 넘긴다.
+            ::after는 position:absolute라 자리를 차지하지 않고 배경색도 없다 —
+            카드 크기(230×452.2 / 504×338)와 아이콘 크기는 그대로다 */}
         <button
           type="button"
           aria-label="닫기"
           onClick={handleClose}
-          className="text-text-secondary hover:text-text-primary self-end lg:hidden"
+          className="text-text-secondary hover:text-text-primary relative self-end after:absolute after:-inset-[5px] after:content-[''] lg:hidden"
         >
           <img
             src={iconClose}
@@ -129,12 +136,14 @@ export const HostRegisterStart = () => {
               폭은 flex-1 — 피그마도 Fill(flex: 1 0 0) */}
           <div className="mt-4 flex flex-1 flex-col items-center md:mt-0 md:items-start">
             {/* 데스크톱 전용 X — 이 자리에 있어야 왼쪽 이미지가 X 높이까지 늘어난다.
-                카드 레벨로 빼면 이미지 상단이 32px 내려가 기존 데스크톱 모양이 바뀐다 */}
+                카드 레벨로 빼면 이미지 상단이 32px 내려가 기존 데스크톱 모양이 바뀐다.
+                데스크톱은 zoom 0.9333이라 32 → 29.9로 이미 24를 넘지만, 위 모바일·태블릿
+                버튼과 동작이 갈리지 않도록 같은 after:*를 붙여둔다 */}
             <button
               type="button"
               aria-label="닫기"
               onClick={handleClose}
-              className="text-text-secondary hover:text-text-primary hidden self-end lg:block"
+              className="text-text-secondary hover:text-text-primary relative hidden self-end after:absolute after:-inset-[5px] after:content-[''] lg:block"
             >
               <img
                 src={iconClose}
