@@ -317,8 +317,6 @@ export const ReservationCard = ({ reservation, onCancel, autoOpenContract, onAut
         isAwaitingHostApproval={isAwaitingHostApproval}
         showCancel={showCancel}
         showContract={showContract}
-        isPaymentInfoError={isPaymentInfoError}
-        paymentInfo={paymentInfo}
         onSpaceDetail={() => navigate(`/spaces/${reservation.space.spaceId}`)}
         onPhotoVerify={handleOpenPhotoModal}
         onShowRejectedPhoto={handleOpenRejectedPhotoModal}
