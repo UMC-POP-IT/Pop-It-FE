@@ -195,6 +195,7 @@ export const ReservationCard = ({ reservation, onCancel, autoOpenContract, onAut
       .catch((error) => {
         console.error(error);
         setIsPaymentInfoError(true);
+        setPendingPaymentModalOpen(false);
       });
   };
 
