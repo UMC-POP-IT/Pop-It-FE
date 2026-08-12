@@ -111,6 +111,7 @@ export const ReservationCard = ({ reservation, onCancel, autoOpenContract, onAut
   const [isPaymentInfoError, setIsPaymentInfoError] = useState(false); // 결제 정보 조회 실패 여부
   const [contractModalFocusAuth, setContractModalFocusAuth] = useState(false); // 인증 리다이렉트 복귀로 재오픈된 경우, 본인 인증/서명란이 보이도록 스크롤할지 여부
   const [isAutoOpenPaymentInfoErrorModalOpen, setIsAutoOpenPaymentInfoErrorModalOpen] = useState(false); // 인증 리다이렉트 복귀 시 결제 정보 조회가 실패해 계약서 모달을 못 연 경우 안내
+  const [pendingPaymentModalOpen, setPendingPaymentModalOpen] = useState(false); // 결제 정보 없이 "계약 하기"를 눌러 재조회 중인 상태 - 도착하면 자동으로 결제 모달을 연다
   // paymentInfo 로딩 대기 중 사용자가 이 카드에서 다른 모달을 직접 연 적이 있는지 여부.
   // true면 뒤늦게 도착한 응답으로 계약서 모달을 강제로 띄우지 않는다(사용자가 이미 다른 액션을 시작했으므로).
   const userInteractedRef = useRef(false);
@@ -179,7 +180,22 @@ export const ReservationCard = ({ reservation, onCancel, autoOpenContract, onAut
 
   const handleOpenPaymentModal = () => {
     userInteractedRef.current = true;
-    setisPaymentModalOpen(true);
+    if (paymentInfo) {
+      setisPaymentModalOpen(true);
+      return;
+    }
+    // 결제 정보가 아직 없는 상태(로딩 중이거나 이전 조회가 실패한 경우) - 화면엔 티 내지 않고
+    // 조용히 재조회만 하고, 도착하면 아래 effect가 결제 모달을 대신 열어준다.
+    setPendingPaymentModalOpen(true);
+    GetPaymentInfo(reservation.reservationId)
+      .then((data) => {
+        setPaymentInfo(data);
+        setIsPaymentInfoError(false);
+      })
+      .catch((error) => {
+        console.error(error);
+        setIsPaymentInfoError(true);
+      });
   };
 
   const handleOpenPhotoModal = () => {
@@ -216,6 +232,14 @@ export const ReservationCard = ({ reservation, onCancel, autoOpenContract, onAut
       ignore = true;
     };
   }, [reservation.reservationId, reservation.status]);
+
+  // "계약 하기" 클릭 시점엔 결제 정보가 없어 재조회만 하고 대기시켜둔 상태(pendingPaymentModalOpen)를,
+  // 정보가 도착하면 이어서 결제 모달로 열어준다.
+  useEffect(() => {
+    if (!pendingPaymentModalOpen || !paymentInfo) return;
+    setisPaymentModalOpen(true);
+    setPendingPaymentModalOpen(false);
+  }, [pendingPaymentModalOpen, paymentInfo]);
 
   // 계약서 모달에서 PASS 인증 중 모바일 리다이렉트로 페이지가 새로고침되어 모달이 닫혔던 경우,
   // 결제 정보가 다시 로드되는 시점에 원래 열려있던 계약서 모달을 자동으로 재오픈한다.
@@ -274,8 +298,6 @@ export const ReservationCard = ({ reservation, onCancel, autoOpenContract, onAut
               isAwaitingHostApproval={isAwaitingHostApproval}
               showCancel={showCancel}
               showContract={showContract}
-              isPaymentInfoError={isPaymentInfoError}
-              paymentInfo={paymentInfo}
               onSpaceDetail={() => navigate(`/spaces/${reservation.space.spaceId}`)}
               onPhotoVerify={handleOpenPhotoModal}
               onShowRejectedPhoto={handleOpenRejectedPhotoModal}
