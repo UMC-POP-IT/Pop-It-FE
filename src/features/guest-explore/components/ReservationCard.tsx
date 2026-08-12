@@ -110,6 +110,7 @@ export const ReservationCard = ({ reservation, onCancel, autoOpenContract, onAut
   const [paymentInfo, setPaymentInfo] = useState<GetPaymentInfoResponse | null>(null); // 결제 정보
   const [isPaymentInfoError, setIsPaymentInfoError] = useState(false); // 결제 정보 조회 실패 여부
   const [contractModalFocusAuth, setContractModalFocusAuth] = useState(false); // 인증 리다이렉트 복귀로 재오픈된 경우, 본인 인증/서명란이 보이도록 스크롤할지 여부
+  const [isAutoOpenPaymentInfoErrorModalOpen, setIsAutoOpenPaymentInfoErrorModalOpen] = useState(false); // 인증 리다이렉트 복귀 시 결제 정보 조회가 실패해 계약서 모달을 못 연 경우 안내
 
   const label = cardMeta.label;
   const needsPhotoVerification = cardMeta.needsPhotoVerification && !isPhotoSubmitted;
@@ -195,12 +196,20 @@ export const ReservationCard = ({ reservation, onCancel, autoOpenContract, onAut
 
   // 계약서 모달에서 PASS 인증 중 모바일 리다이렉트로 페이지가 새로고침되어 모달이 닫혔던 경우,
   // 결제 정보가 다시 로드되는 시점에 원래 열려있던 계약서 모달을 자동으로 재오픈한다.
+  // 결제 정보 조회 자체가 실패하면 paymentInfo가 계속 null로 남아 이 효과가 영원히 대기하고
+  // 사용자는 인증을 마치고 돌아왔는데도 아무 반응이 없는 것처럼 보이므로, 실패 시에는 별도로 알린다.
   useEffect(() => {
-    if (!autoOpenContract || !paymentInfo) return;
+    if (!autoOpenContract) return;
+    if (isPaymentInfoError) {
+      setIsAutoOpenPaymentInfoErrorModalOpen(true);
+      onAutoOpenContractHandled?.();
+      return;
+    }
+    if (!paymentInfo) return;
     setIsContractModalOpen(true);
     setContractModalFocusAuth(true);
     onAutoOpenContractHandled?.();
-  }, [autoOpenContract, paymentInfo, onAutoOpenContractHandled]);
+  }, [autoOpenContract, paymentInfo, isPaymentInfoError, onAutoOpenContractHandled]);
 
   return (
     <div className="border-divider flex items-start justify-between gap-7 border-b py-5 last:border-none">
@@ -277,6 +286,17 @@ export const ReservationCard = ({ reservation, onCancel, autoOpenContract, onAut
         confirmDisabled={isCancelling}
         onConfirm={handleCancelReservation}
         onCancel={() => setIsCancelModalOpen(false)}
+      />
+
+      {/* 인증 리다이렉트 복귀 후 결제 정보 조회 실패 안내 Modal */}
+      <Modal
+        isOpen={isAutoOpenPaymentInfoErrorModalOpen}
+        title="결제 정보를 불러오지 못했습니다"
+        description={"네트워크 상태를 확인한 후\n계약서 화면에서 다시 시도해주세요"}
+        iconVariant="warning"
+        singleButton
+        confirmLabel="확인"
+        onConfirm={() => setIsAutoOpenPaymentInfoErrorModalOpen(false)}
       />
 
       {/* Payment Modal */}

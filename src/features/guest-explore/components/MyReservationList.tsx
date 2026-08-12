@@ -29,7 +29,7 @@ const MAX_PAGES = 10;
 
 const fetchAllReservations = async (): Promise<Reservation[]> => {
   const all: Reservation[] = [];
-  let cursor: number | undefined = undefined;
+  let cursor: string | undefined = undefined;
   let pageCount = 0;
   while (pageCount < MAX_PAGES) {
     const result = await GetReservations(cursor, 50);
