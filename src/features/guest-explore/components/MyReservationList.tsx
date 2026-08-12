@@ -4,7 +4,7 @@ import { CancelReservations, GetReservations, Reservation, Status } from "../api
 import { ReservationCard } from "@/features/guest-explore/components/ReservationCard";
 import MyReservationListEmptyState from "@/features/guest-explore/components/MyReservationListEmptyState";
 
-const TAB_STATUSES = ["예약 예정", "승인 완료", "계약 완료", "사용 중", "지난 예약"];
+export const TAB_STATUSES = ["예약 예정", "승인 완료", "계약 완료", "사용 중", "지난 예약"] as const;
 
 // TAB_STATUSES와 순서를 맞춘 탭별 매칭 상태값
 // 계약(서명)·결제 중 하나라도 안 끝난 상태(APPROVED, CONTRACT_COMPLETED - 결제 전/취소/실패)는
@@ -52,7 +52,7 @@ export const MyReservationList = () => {
 
       <div className="flex flex-col">
         {activeReservations.length === 0 ? (
-          <MyReservationListEmptyState />
+          <MyReservationListEmptyState status={TAB_STATUSES[activeIndex]} />
         ) : (
           activeReservations.map((reservation) => (
             <ReservationCard
