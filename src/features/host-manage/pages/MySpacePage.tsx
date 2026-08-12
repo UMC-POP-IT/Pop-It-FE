@@ -5,6 +5,7 @@ import { fetchMySpaces, deleteSpace } from "@/features/host-manage/api/hostApi";
 import type { ApiMySpace } from "@/types";
 import iconPlus from "@/assets/icons/icon_plus.svg";
 import { useRegisterStore } from "@/store/registerStore";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 
 const formatDate = (dateStr: string) => {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -25,9 +26,21 @@ export const MySpacePage = () => {
   const [showDeleteError, setShowDeleteError] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
   // 모바일 바텀시트
   const [bottomSheetSpaceId, setBottomSheetSpaceId] = useState<number | null>(null);
   const [bottomSheetSelection, setBottomSheetSelection] = useState<"edit" | "delete" | null>(null);
+
+  // 바텀시트 열릴 때 body 스크롤 잠금
+  useEffect(() => {
+    if (bottomSheetSpaceId !== null) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [bottomSheetSpaceId]);
 
   const loadSpaces = useCallback(async () => {
     try {
@@ -90,7 +103,7 @@ export const MySpacePage = () => {
   };
 
   const handleMenuClick = (spaceId: number) => {
-    if (window.innerWidth < 768) {
+    if (isMobile) {
       setBottomSheetSpaceId(spaceId);
       setBottomSheetSelection(null);
     } else {
@@ -261,7 +274,7 @@ export const MySpacePage = () => {
             onKeyDown={(e) => { if (e.key === "Escape") setBottomSheetSpaceId(null); }}
           >
             {/* 핸들 */}
-            <div className="flex justify-center px-40 py-3">
+            <div className="flex justify-center py-3">
               <div className="h-1 w-10 rounded-full bg-[#999]" />
             </div>
             {/* 항목 */}

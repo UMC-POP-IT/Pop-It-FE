@@ -150,7 +150,7 @@ const Header = () => {
       {isSpaceDetail && (
         <div className="flex h-[74px] w-full items-center px-4 lg:hidden">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/")}
             className="flex h-10 w-10 items-center justify-center"
             aria-label="뒤로가기"
           >

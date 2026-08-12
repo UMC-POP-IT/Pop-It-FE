@@ -38,14 +38,15 @@ const HostContractModal = ({
   const signatureBoardRef = useRef<SignatureBoardRef>(null);
   const titleId = useId();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isApprovedRef = useRef(false);
 
   useEffect(() => {
     if (isOpen) {
-      // useDialogA11y의 focus() 이후에 실행해야 스크롤이 덮어쓰이지 않는다
-      const id = setTimeout(() => {
+      isApprovedRef.current = false;
+      const id = requestAnimationFrame(() => {
         scrollRef.current?.scrollTo({ top: 0 });
-      }, 0);
-      return () => clearTimeout(id);
+      });
+      return () => cancelAnimationFrame(id);
     }
   }, [isOpen]);
 
@@ -60,7 +61,10 @@ const HostContractModal = ({
     setIsSubmitting(true);
     setSubmitError(false);
     try {
-      await approveReservation(reservation.reservationId);
+      if (!isApprovedRef.current) {
+        await approveReservation(reservation.reservationId);
+        isApprovedRef.current = true;
+      }
       const { uploads } = await GetPresignedURL({
         uploadType: "CONTRACT_SIGNATURE",
         files: [{ contentType: "image/png" }],

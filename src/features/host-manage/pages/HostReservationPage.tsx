@@ -51,7 +51,6 @@ export const HostReservationPage = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [agreedToGuide, setAgreedToGuide] = useState(false);
-  const [approveError, setApproveError] = useState(false);
 
 
   // 모바일 포트원 redirect 복귀 시 URL 파라미터로 본인인증 확정 처리
@@ -163,7 +162,7 @@ export const HostReservationPage = () => {
   const closeContractModal = () => {
     setIsContractModalOpen(false);
     setApproveTargetId(null);
-    // 서명 없이 닫으면 목록을 재조회하지 않는다 — 서버는 APPROVED지만 로컬은 현재 탭에 그대로 유지
+    // 서명 전이라 서버 상태가 바뀌지 않았으므로 재조회하지 않는다
   };
 
   const completeContractModal = () => {
@@ -350,12 +349,9 @@ export const HostReservationPage = () => {
             }}
             agreedToGuide={agreedToGuide}
             onAgreedToGuideChange={setAgreedToGuide}
-            isSubmitting={false}
-            submitError={approveError}
             onClose={() => {
               setIsPaymentModalOpen(false);
               setApproveTargetId(null);
-              setApproveError(false);
             }}
             onSignContract={handleSignContract}
           />
