@@ -150,7 +150,6 @@ export const HostReservationPage = () => {
     setApproveTargetId(approveConfirmTargetId);
     setApproveConfirmTargetId(null);
     setAgreedToGuide(false);
-    setApproveError(false);
     setIsPaymentModalOpen(true);
   };
 
