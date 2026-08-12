@@ -64,9 +64,10 @@ const Header = () => {
   // 축소 검색바 pill이 실제로 보이는 동안에만 우측 액션(모드 전환/프로필)을 숨긴다.
   // pill을 눌러 원래 검색바를 펼친 상태에서는 pill이 사라지므로 액션도 다시 접근 가능해야 한다.
   const hideHeaderActions = Boolean(scrollBarSummary) && isScrollBarVisible;
-  const hideModeToggle = mode === "GUEST" && pathname !== "/";
-  const isSpaceDetail =
-    !!useMatch("/spaces/:spaceId") || !!useMatch("/host/spaces/:spaceId");
+  const shouldHideModeToggle = mode === "GUEST" && pathname !== "/";
+  const spaceDetailMatch = useMatch("/spaces/:spaceId");
+  const hostSpaceDetailMatch = useMatch("/host/spaces/:spaceId");
+  const isSpaceDetail = Boolean(spaceDetailMatch || hostSpaceDetailMatch);
   const [modeError, setModeError] = useState(""); // 모드 전환 실패 사유
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -292,7 +293,7 @@ const Header = () => {
           }`}
         >
           {/* 모드 전환 버튼 — 게스트 모드 나의 예약 탭에서는 숨김 */}
-          {!hideModeToggle && (
+          {!shouldHideModeToggle && (
             <>
               {/* 태블릿/데스크탑: 아이콘 포함 pill */}
               <button
