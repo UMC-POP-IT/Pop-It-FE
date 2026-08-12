@@ -219,7 +219,7 @@ const FilterDropdown = function <T extends string>({
       <button
         ref={triggerRef}
         type="button"
-        aria-haspopup="menu"
+        aria-haspopup={isMobile ? "dialog" : "menu"}
         aria-expanded={isOpen}
         aria-label={ariaLabel}
         onClick={() => (isOpen ? setIsOpen(false) : openDropdown())}

@@ -163,6 +163,12 @@ interface HeroSearchBarProps {
    * undefined라 아무 것도 자동으로 열리지 않는다.
    */
   autoOpenRequest?: { segment?: SearchBarSegment; token: number } | null;
+  /**
+   * autoOpenRequest의 각 token이 처리되었을 때 호출된다. 부모는 이 콜백에서
+   * 완료된 token이 현재 요청의 token과 일치할 때만 autoOpenRequest를 지워야
+   * 한다(그 사이에 새 요청이 왔다면 보존).
+   */
+  onAutoOpenComplete?: (completedToken: number) => void;
 }
 
 /**
@@ -182,6 +188,7 @@ const HeroSearchBar = ({
   onSummaryChange,
   isMorphTarget = false,
   autoOpenRequest,
+  onAutoOpenComplete,
 }: HeroSearchBarProps) => {
   const [keywordInput, setKeywordInput] = useState(initialKeyword);
   const [category, setCategory] = useState<SpaceCategory | "">(initialCategory);
@@ -202,13 +209,14 @@ const HeroSearchBar = ({
   // 새 값이라 정상적으로 재반응한다.
   useEffect(() => {
     const segment = autoOpenRequest?.segment;
-    if (!segment) return;
+    const token = autoOpenRequest?.token;
+    if (!segment || token === undefined) return;
     switch (segment) {
       case "category":
-        setCategoryOpenSignal(autoOpenRequest.token);
+        setCategoryOpenSignal(token);
         break;
       case "district":
-        setDistrictOpenSignal(autoOpenRequest.token);
+        setDistrictOpenSignal(token);
         break;
       case "date":
         setIsDateOpen(true);
@@ -217,6 +225,9 @@ const HeroSearchBar = ({
         keywordInputRef.current?.focus();
         break;
     }
+    // 각 token을 처리했음을 즉시 알린다. 부모는 이 token이 현재 요청과 일치할
+    // 때만 autoOpenRequest를 지운다(그 사이 새 요청이 왔다면 보존).
+    onAutoOpenComplete?.(token);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoOpenRequest?.token]);
 

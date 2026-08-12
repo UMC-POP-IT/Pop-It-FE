@@ -127,6 +127,7 @@ export const ExplorePage = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const setScrollSearchBarState = useScrollSearchBarStore((s) => s.setState);
   const resetScrollSearchBar = useScrollSearchBarStore((s) => s.reset);
+  const [pendingFocusRestore, setPendingFocusRestore] = useState(false);
 
   const handleSearch = (filters: ExploreSearchFilters) => {
     setHasResults(false);
@@ -152,6 +153,14 @@ export const ExplorePage = () => {
     next.set(SEARCH_FLAG_PARAM, "1"); // 결과 화면 자체는 유지하고 필터만 비운다
     setHasResults(false);
     setSearchParams(next, { replace: true });
+  };
+
+  const handleAutoOpenComplete = (completedToken: number) => {
+    // 완료된 token이 현재 요청의 token과 일치할 때만 autoOpenRequest를 지운다.
+    // 그 사이에 새 요청이 왔다면(token이 이미 더 큰 값) 보존한다.
+    setAutoOpenRequest((prev) =>
+      prev && prev.token === completedToken ? null : prev,
+    );
   };
 
   useEffect(() => {
@@ -186,15 +195,38 @@ export const ExplorePage = () => {
     if (!isScrolledPastBar) setIsOverlayOpen(false);
   }, [isScrolledPastBar]);
 
+  // Escape로 오버레이를 닫았을 때 저장한 포커스 복원 요청을 실행한다.
+  // 오버레이가 닫히고 pill 세그먼트 버튼이 실제로 렌더된 뒤에야 포커스를
+  // 옮겨야 한다 - 그 전에 focus()를 호출하면 버튼이 아직 없어서 실패한다.
+  // pill은 hasActiveSearch && isScrolledPastBar && !isOverlayOpen일 때만
+  // 마운트되므로, 이 세 조건이 모두 참일 때 requestAnimationFrame으로 렌더
+  // 이후 시점을 보장하고 포커스를 복원한다.
+  useEffect(() => {
+    if (
+      !pendingFocusRestore ||
+      !hasActiveSearch ||
+      !isScrolledPastBar ||
+      isOverlayOpen
+    )
+      return;
+    const handle = requestAnimationFrame(() => {
+      useScrollSearchBarStore.getState().focusTrigger?.();
+      setPendingFocusRestore(false);
+    });
+    return () => cancelAnimationFrame(handle);
+  }, [pendingFocusRestore, hasActiveSearch, isScrolledPastBar, isOverlayOpen]);
+
   // 오버레이가 펼쳐져 있을 때 Escape로 닫는다(바깥 클릭 닫기와 동일한 동작).
   // 닫은 뒤에는 포커스가 사라지지 않도록 헤더의 pill 트리거로 되돌린다 -
   // Header.tsx가 스토어에 등록해둔 focusTrigger를 통해서만 접근 가능하다.
+  // Escape는 즉시 포커스를 옮기지 않고 요청만 저장한다 - 오버레이가 닫히고
+  // isVisible이 pill 세그먼트 버튼을 다시 렌더한 뒤에 실제로 포커스를 옮긴다.
   useEffect(() => {
     if (!isOverlayOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         withSearchBarTransition(() => setIsOverlayOpen(false));
-        useScrollSearchBarStore.getState().focusTrigger?.();
+        setPendingFocusRestore(true);
       }
     };
     document.addEventListener("keydown", handleKeyDown);
@@ -289,6 +321,7 @@ export const ExplorePage = () => {
           onSummaryChange={hasActiveSearch ? setSummary : undefined}
           isMorphTarget={searchBarPosition !== "pinned-hidden"}
           autoOpenRequest={autoOpenRequest}
+          onAutoOpenComplete={handleAutoOpenComplete}
         />
       </Banner>
 
