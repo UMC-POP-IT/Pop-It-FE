@@ -18,7 +18,8 @@ import {
   switchMode,
   getCurrentUser,
 } from "@/shared/utils/oauth";
-import { PaymentApproval } from "@/features/guest-explore/api/my_reservation_api";
+import { useQueryClient } from "@tanstack/react-query";
+import { PaymentApproval, RESERVATIONS_QUERY_KEY } from "@/features/guest-explore/api/my_reservation_api";
 import { TOSS_PENDING_PAYMENT_KEY, clearTossPaymentCache } from "@/features/guest-explore/components/contract/TossPayments";
 
 // 새로고침 시 authStore의 user는 초기화되지만 localStorage의 토큰은 남아있으므로,
@@ -178,6 +179,7 @@ interface TossPaymentResultState {
 
 const TossPaymentResultHandler = () => {
   const [result, setResult] = useState<TossPaymentResultState | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -209,10 +211,6 @@ const TossPaymentResultHandler = () => {
       }
     }
 
-    // 성공/최종 실패/취소 중 무엇으로 끝나든 이 결제 시도는 여기서 종결된다.
-    // 다음 계약 작성 시 이전 시도의 contractId·멱등키를 이어받지 않도록 지금 정리한다.
-    if (reservationId !== undefined) clearTossPaymentCache(reservationId);
-
     // 성공 리다이렉트: paymentKey/orderId/amount + 결제 요청 시 저장해둔 paymentId가 모두 있어야 승인 가능
     if (paymentKey && orderId && amount && paymentId !== undefined) {
       PaymentApproval(paymentId, {
@@ -221,6 +219,14 @@ const TossPaymentResultHandler = () => {
         amount: Number(amount),
       })
         .then(() => {
+          // 결제가 실제로 승인된 뒤에야 이 계약 시도가 종결된다. SubmitSignature는 예약당
+          // 한 번만 성공하는 동작이라, 결제 실패·취소 시 캐시를 지우면 재시도 시 서명을
+          // 다시 제출하려다 "이미 서명 처리됨" 오류로 막히므로 실패/취소 시에는 지우지 않는다.
+          if (reservationId !== undefined) clearTossPaymentCache(reservationId);
+          // 이 승인 요청은 MyReservationList의 예약 목록 쿼리와 별도로 진행되어,
+          // 조회가 먼저 끝나면 예약이 결제 승인 전 상태로 남아있게 된다. 같은 쿼리 키를
+          // invalidate해 최신 상태로 재조회하도록 한다.
+          queryClient.invalidateQueries({ queryKey: RESERVATIONS_QUERY_KEY });
           setResult({
             success: true,
             title: "계약 작성 및 입금이 완료되었습니다",
@@ -244,7 +250,7 @@ const TossPaymentResultHandler = () => {
       title: "결제에 실패했습니다",
       description: "결제 정보를 확인한 후 다시 시도해주시기 바랍니다", // 그냥 결제 실패와 취소를 구분할 수 없으므로 같은 메시지로 처리하는 게 맞을 듯하다.
     });
-  }, []);
+  }, [queryClient]);
 
   return (
     <Modal

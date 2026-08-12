@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "@/shared/components/Modal";
 import { GetPaymentInfo, GetPaymentInfoResponse, GetPresignedURL, Reservation, Status, SubmitCheckOutPhoto, UploadFileToPresignedURL } from "../api/my_reservation_api";
@@ -13,6 +13,8 @@ import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 interface ReservationCardProps {
   reservation: Reservation;
   onCancel?: () => Promise<void> | void;
+  autoOpenContract?: boolean;
+  onAutoOpenContractHandled?: () => void;
 }
 
 interface CardMeta {
@@ -94,7 +96,7 @@ const getCardMeta = (r: Reservation): CardMeta => {
   };
 };
 
-export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps) => {
+export const ReservationCard = ({ reservation, onCancel, autoOpenContract, onAutoOpenContractHandled }: ReservationCardProps) => {
   const cardMeta = getCardMeta(reservation);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false); // 예약 취소 창 open 여부
   const [isCancelling, setIsCancelling] = useState(false); // 예약 취소 진행 중 여부
@@ -107,6 +109,11 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false); // 사진 업로드 진행 중 여부
   const [paymentInfo, setPaymentInfo] = useState<GetPaymentInfoResponse | null>(null); // 결제 정보
   const [isPaymentInfoError, setIsPaymentInfoError] = useState(false); // 결제 정보 조회 실패 여부
+  const [contractModalFocusAuth, setContractModalFocusAuth] = useState(false); // 인증 리다이렉트 복귀로 재오픈된 경우, 본인 인증/서명란이 보이도록 스크롤할지 여부
+  const [isAutoOpenPaymentInfoErrorModalOpen, setIsAutoOpenPaymentInfoErrorModalOpen] = useState(false); // 인증 리다이렉트 복귀 시 결제 정보 조회가 실패해 계약서 모달을 못 연 경우 안내
+  // paymentInfo 로딩 대기 중 사용자가 이 카드에서 다른 모달을 직접 연 적이 있는지 여부.
+  // true면 뒤늦게 도착한 응답으로 계약서 모달을 강제로 띄우지 않는다(사용자가 이미 다른 액션을 시작했으므로).
+  const userInteractedRef = useRef(false);
 
   const label = cardMeta.label;
   const needsPhotoVerification = cardMeta.needsPhotoVerification && !isPhotoSubmitted;
@@ -162,6 +169,27 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
     setisPaymentModalOpen(false);
     setAgreedToGuide(false);
     setIsContractModalOpen(true);
+    setContractModalFocusAuth(false);
+  };
+
+  const handleOpenCancelModal = () => {
+    userInteractedRef.current = true;
+    setIsCancelModalOpen(true);
+  };
+
+  const handleOpenPaymentModal = () => {
+    userInteractedRef.current = true;
+    setisPaymentModalOpen(true);
+  };
+
+  const handleOpenPhotoModal = () => {
+    userInteractedRef.current = true;
+    setIsPhotoModalOpen(true);
+  };
+
+  const handleOpenRejectedPhotoModal = () => {
+    userInteractedRef.current = true;
+    setIsRejectedPhotoModalOpen(true);
   };
 
   useEffect(() => {
@@ -188,6 +216,28 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
       ignore = true;
     };
   }, [reservation.reservationId, reservation.status]);
+
+  // 계약서 모달에서 PASS 인증 중 모바일 리다이렉트로 페이지가 새로고침되어 모달이 닫혔던 경우,
+  // 결제 정보가 다시 로드되는 시점에 원래 열려있던 계약서 모달을 자동으로 재오픈한다.
+  // 결제 정보 조회 자체가 실패하면 paymentInfo가 계속 null로 남아 이 효과가 영원히 대기하고
+  // 사용자는 인증을 마치고 돌아왔는데도 아무 반응이 없는 것처럼 보이므로, 실패 시에는 별도로 알린다.
+  useEffect(() => {
+    if (!autoOpenContract) return;
+    if (isPaymentInfoError) {
+      setIsAutoOpenPaymentInfoErrorModalOpen(true);
+      onAutoOpenContractHandled?.();
+      return;
+    }
+    if (!paymentInfo) return;
+    if (userInteractedRef.current) {
+      // 로딩 대기 중 사용자가 이미 다른 모달을 직접 열었다면, 뒤늦게 계약서 모달을 강제로 띄우지 않는다.
+      onAutoOpenContractHandled?.();
+      return;
+    }
+    setIsContractModalOpen(true);
+    setContractModalFocusAuth(true);
+    onAutoOpenContractHandled?.();
+  }, [autoOpenContract, paymentInfo, isPaymentInfoError, onAutoOpenContractHandled]);
 
   return (
     <div className="border-divider flex items-start justify-between gap-7 border-b py-5 last:border-none">
@@ -227,10 +277,10 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
               isPaymentInfoError={isPaymentInfoError}
               paymentInfo={paymentInfo}
               onSpaceDetail={() => navigate(`/spaces/${reservation.space.spaceId}`)}
-              onPhotoVerify={() => setIsPhotoModalOpen(true)}
-              onShowRejectedPhoto={() => setIsRejectedPhotoModalOpen(true)}
-              onCancelReservation={() => setIsCancelModalOpen(true)}
-              onSignPayment={() => setisPaymentModalOpen(true)}
+              onPhotoVerify={handleOpenPhotoModal}
+              onShowRejectedPhoto={handleOpenRejectedPhotoModal}
+              onCancelReservation={handleOpenCancelModal}
+              onSignPayment={handleOpenPaymentModal}
             />
           </div>}
         </div>
@@ -248,10 +298,10 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
         isPaymentInfoError={isPaymentInfoError}
         paymentInfo={paymentInfo}
         onSpaceDetail={() => navigate(`/spaces/${reservation.space.spaceId}`)}
-        onPhotoVerify={() => setIsPhotoModalOpen(true)}
-        onShowRejectedPhoto={() => setIsRejectedPhotoModalOpen(true)}
-        onCancelReservation={() => setIsCancelModalOpen(true)}
-        onSignPayment={() => setisPaymentModalOpen(true)}
+        onPhotoVerify={handleOpenPhotoModal}
+        onShowRejectedPhoto={handleOpenRejectedPhotoModal}
+        onCancelReservation={handleOpenCancelModal}
+        onSignPayment={handleOpenPaymentModal}
       />}
 
       {/* Reservation Cancel Modal */}
@@ -264,6 +314,17 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
         confirmDisabled={isCancelling}
         onConfirm={handleCancelReservation}
         onCancel={() => setIsCancelModalOpen(false)}
+      />
+
+      {/* 인증 리다이렉트 복귀 후 결제 정보 조회 실패 안내 Modal */}
+      <Modal
+        isOpen={isAutoOpenPaymentInfoErrorModalOpen}
+        title="결제 정보를 불러오지 못했습니다"
+        description={"네트워크 상태를 확인한 후\n계약서 화면에서 다시 시도해주세요"}
+        iconVariant="warning"
+        singleButton
+        confirmLabel="확인"
+        onConfirm={() => setIsAutoOpenPaymentInfoErrorModalOpen(false)}
       />
 
       {/* Payment Modal */}
@@ -285,7 +346,11 @@ export const ReservationCard = ({ reservation, onCancel }: ReservationCardProps)
           isOpen={isContractModalOpen}
           reservation={reservation}
           paymentInfo={paymentInfo}
-          onClose={() => setIsContractModalOpen(false)}
+          onClose={() => {
+            setIsContractModalOpen(false);
+            setContractModalFocusAuth(false);
+          }}
+          scrollToAuthOnOpen={contractModalFocusAuth}
         />
       )}
 

@@ -3,7 +3,7 @@ import SignatureBoard, { type SignatureBoardRef } from "./SignatureBoard";
 import { formatDate } from "@/shared/utils/date";
 import TossPayments from "./TossPayments";
 import Authentication from "./Authentication";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 
 interface ContractModalProps {
@@ -11,14 +11,22 @@ interface ContractModalProps {
   reservation: Reservation;
   paymentInfo: GetPaymentInfoResponse;
   onClose: () => void;
+  // 본인인증 리다이렉트 복귀로 모달이 재오픈된 경우, 계약서 본문 대신 본인 인증/서명란이 보이도록 스크롤한다.
+  scrollToAuthOnOpen?: boolean;
 }
 
-const ContractModal = ({ isOpen, reservation, paymentInfo, onClose }: ContractModalProps) => {
+const ContractModal = ({ isOpen, reservation, paymentInfo, onClose, scrollToAuthOnOpen }: ContractModalProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSigned, setIsSigned] = useState(false);
   const titleId = useId();
   const signatureBoardRef = useRef<SignatureBoardRef>(null);
+  const authSectionRef = useRef<HTMLDivElement>(null);
   const dialogRef = useDialogA11y<HTMLDivElement>({ isOpen, onClose });
+
+  useEffect(() => {
+    if (!isOpen || !scrollToAuthOnOpen) return;
+    authSectionRef.current?.scrollIntoView({ block: "start" });
+  }, [isOpen, scrollToAuthOnOpen]);
 
   if (!isOpen) return null;
 
@@ -110,8 +118,10 @@ const ContractModal = ({ isOpen, reservation, paymentInfo, onClose }: ContractMo
             </div>
           </div>
 
-          <Authentication onIsAuthenticated={setIsAuthenticated}/>
-          <SignatureBoard ref={signatureBoardRef} onIsSigned={setIsSigned}/>
+          <div ref={authSectionRef} className="flex flex-col gap-4">
+            <Authentication reservationId={reservation.reservationId} onIsAuthenticated={setIsAuthenticated}/>
+            <SignatureBoard ref={signatureBoardRef} onIsSigned={setIsSigned}/>
+          </div>
 
           <div className="flex flex-row justify-center gap-5">
             <button
