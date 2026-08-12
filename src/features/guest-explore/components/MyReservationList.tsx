@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Tab from "@/shared/components/Tab";
-import { CancelReservations, GetReservations, RequestVerification, Reservation, Status } from "../api/my_reservation_api";
+import { CancelReservations, GetReservations, RequestVerification, Reservation, Status, RESERVATIONS_QUERY_KEY } from "../api/my_reservation_api";
 import { ReservationCard } from "@/features/guest-explore/components/ReservationCard";
 import MyReservationListEmptyState from "@/features/guest-explore/components/MyReservationListEmptyState";
 import Modal from "@/shared/components/Modal";
 import { pollVerificationStatus } from "@/features/guest-explore/utils/verificationPolling";
 import { PENDING_CONTRACT_RESERVATION_KEY } from "@/features/guest-explore/utils/contractSession";
-import { useTossPaymentResultStore } from "@/store/tossPaymentResultStore";
 
 const TAB_STATUSES = ["예약 예정", "승인 완료", "계약 완료", "사용 중", "지난 예약"];
 
@@ -37,25 +37,21 @@ const fetchAllReservations = async (): Promise<Reservation[]> => {
 
 export const MyReservationList = () => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [reservationList, setReservationList] = useState<Reservation[]>([]);
   const [autoOpenReservationId, setAutoOpenReservationId] = useState<number | null>(null);
   const [verificationFailed, setVerificationFailed] = useState(false);
-  const paymentApprovedAt = useTossPaymentResultStore((s) => s.approvedAt);
+  const queryClient = useQueryClient();
+
+  // 목록은 TanStack Query로 관리한다. Toss 결제 승인(MainLayout의 TossPaymentResultHandler)이
+  // 이 조회보다 늦게 끝나 승인 전 상태를 덮어쓰는 문제는, 같은 쿼리 키를 승인 완료 시
+  // invalidateQueries 하는 방식으로 해결한다 - 항상 최신 요청의 응답만 상태에 반영된다.
+  const { data: reservationList = [], error } = useQuery({
+    queryKey: RESERVATIONS_QUERY_KEY,
+    queryFn: fetchAllReservations,
+  });
 
   useEffect(() => {
-    fetchAllReservations()
-      .then(setReservationList)
-      .catch((error) => console.error("게스트 - 나의 예약 내역 조회 실패", error));
-  }, []);
-
-  // Toss 결제 승인이 위 최초 조회보다 늦게 끝나면 목록이 승인 전 상태로 남을 수 있어,
-  // 승인이 완료되는 시점에 한 번 더 조회해 최신 상태로 맞춘다.
-  useEffect(() => {
-    if (paymentApprovedAt == null) return;
-    fetchAllReservations()
-      .then(setReservationList)
-      .catch((error) => console.error("게스트 - 나의 예약 내역 재조회 실패", error));
-  }, [paymentApprovedAt]);
+    if (error) console.error("게스트 - 나의 예약 내역 조회 실패", error);
+  }, [error]);
 
   // 계약서 모달에서 PASS 인증 중 모바일 리다이렉트로 페이지가 새로고침된 경우,
   // 돌아왔을 때 URL의 identityVerificationId로 서버에 인증을 확정 짓고
@@ -114,7 +110,9 @@ export const MyReservationList = () => {
 
   const handleCancelReservation = async (reservationId: number) => {
     await CancelReservations(reservationId);
-    setReservationList((prev) => prev.filter((r) => r.reservationId !== reservationId));
+    queryClient.setQueryData<Reservation[]>(RESERVATIONS_QUERY_KEY, (prev) =>
+      prev?.filter((r) => r.reservationId !== reservationId) ?? [],
+    );
   };
 
   const grouped = TAB_STATUS_MAP.map((statuses) =>

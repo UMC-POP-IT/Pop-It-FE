@@ -31,6 +31,10 @@ export interface GetReservationsResponse {
     nextCursor: number | null;
 }
 
+// 예약 목록(GetReservations) TanStack Query 키. 결제 승인 등 목록 갱신이 필요한
+// 다른 화면/컴포넌트에서도 이 키로 invalidateQueries를 호출해야 같은 캐시를 갱신한다.
+export const RESERVATIONS_QUERY_KEY = ["reservations", "me"] as const;
+
 export interface CancelReservationResponse {
     reservationId: number;
     status: Status;

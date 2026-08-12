@@ -17,6 +17,9 @@ importers:
       '@react-three/fiber':
         specifier: ^9.6.1
         version: 9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1)
+      '@tanstack/react-query':
+        specifier: ^5.101.4
+        version: 5.101.4(react@19.2.7)
       '@toss/tds-mobile':
         specifier: ^2.5.0
         version: 2.5.0(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -735,6 +738,14 @@ packages:
     resolution: {integrity: sha512-hItDHuIIlEV61R+faXu66s1K36aTurO/Qw0e45Vskz57gXl9pWOT6eg3zmcEui6CZXddbN7zd41bwmvag4JGwQ==}
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7 || ^8
+
+  '@tanstack/query-core@5.101.4':
+    resolution: {integrity: sha512-gNwcvOJcRbLWPOLG/2OBm+zM+Yv+MKsXKEOWC57USuZDEsI71hEErQsiEGx5wX9rzWWkfwM0fVSPoiIFSsxfiw==}
+
+  '@tanstack/react-query@5.101.4':
+    resolution: {integrity: sha512-yRg2pfOCxIs4ZJW3XYYHU/WgtD04FHSnfHlpRT7h7pR77hwkdRG4wxbKe4aq6P0RvXUTBSQpQeadS1SUYUe+KA==}
+    peerDependencies:
+      react: ^18 || ^19
 
   '@toss/tds-mobile@2.5.0':
     resolution: {integrity: sha512-tMhL4NAEz3UxBp8YdZ1EKgQ8xyWaZckVVK9Ej8DcHHZMOAWfqro9P06hwXaX1M89RSdARxKKm8Pv55ToSHb0fg==}
@@ -2370,6 +2381,13 @@ snapshots:
       '@tailwindcss/oxide': 4.3.1
       tailwindcss: 4.3.1
       vite: 6.4.3(@types/node@26.0.1)(jiti@2.7.0)(lightningcss@1.32.0)
+
+  '@tanstack/query-core@5.101.4': {}
+
+  '@tanstack/react-query@5.101.4(react@19.2.7)':
+    dependencies:
+      '@tanstack/query-core': 5.101.4
+      react: 19.2.7
 
   '@toss/tds-mobile@2.5.0(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
