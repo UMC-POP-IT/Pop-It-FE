@@ -151,7 +151,7 @@ export const RegisterStep3 = () => {
                   // focus:outline-none은 브라우저 기본 포커스 링을 지운다. 대체 표시가 없으면
                   // 키보드로 이동했을 때 지금 어느 칸에 있는지 알 수 없다.
                   // 공통 Input(shared/components/Input.tsx)과 같은 조합을 쓴다
-                  className="text-text-primary placeholder:text-text-secondary border-divider focus:border-primary focus:ring-primary h-14 w-full [appearance:textfield] rounded-lg border bg-white pr-12 pl-5 text-right text-lg font-medium transition-colors focus:ring-2 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  className="text-text-primary placeholder:text-text-secondary border-divider focus:border-primary h-14 w-full [appearance:textfield] rounded-lg border bg-white pr-12 pl-5 text-right text-lg font-medium transition-colors focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 <span className="text-text-secondary pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 text-lg font-medium">
                   ㎡
@@ -171,7 +171,7 @@ export const RegisterStep3 = () => {
                   readOnly
                   // readOnly는 disabled와 달리 포커스를 받는다 — Tab이 여기 들어오므로
                   // 위 ㎡ 칸과 같은 포커스 표시가 필요하다
-                  className="text-text-primary placeholder:text-text-secondary border-divider focus:border-primary focus:ring-primary h-14 w-full [appearance:textfield] rounded-lg border bg-white pr-12 pl-5 text-right text-lg font-medium transition-colors focus:ring-2 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  className="text-text-primary placeholder:text-text-secondary border-divider focus:border-primary h-14 w-full [appearance:textfield] rounded-lg border bg-white pr-12 pl-5 text-right text-lg font-medium transition-colors focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 <span className="text-text-secondary pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 text-lg font-medium">
                   평

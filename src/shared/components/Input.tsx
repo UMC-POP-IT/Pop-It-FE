@@ -42,7 +42,9 @@ const Input = ({
         // 컴포넌트가 아는 오류가 우선. 오류가 없을 때만 호출자 값을 따른다
         aria-invalid={error ? true : ariaInvalid}
         aria-describedby={describedByIds}
-        className={`text-text-primary placeholder:text-text-placeholder h-14 w-full rounded-lg border bg-white px-5 text-lg font-medium transition-colors focus:ring-2 focus:outline-none ${error ? "border-danger focus:ring-danger" : "border-divider focus:border-primary focus:ring-primary"} ${props.disabled ? "bg-bg cursor-not-allowed opacity-40" : ""} ${className} `}
+        // focus는 테두리 색만 바꾼다 — ring을 쓰면 1px 테두리 바깥에 2px 링이 더 그려져
+        // default보다 두꺼워 보인다 (디자인 기준: 두께 유지, 색만 변경)
+        className={`text-text-primary placeholder:text-text-placeholder h-14 w-full rounded-lg border bg-white px-5 text-lg font-medium transition-colors focus:outline-none ${error ? "border-danger focus:border-danger" : "border-divider focus:border-primary"} ${props.disabled ? "bg-bg cursor-not-allowed opacity-40" : ""} ${className} `}
       />
       {error && (
         <span

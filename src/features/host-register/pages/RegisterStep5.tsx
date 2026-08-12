@@ -119,11 +119,14 @@ export const RegisterStep5 = () => {
       {/* 섹션: 사진 등록 — 피그마 74 = mt-[62px] + 진행바 아래 py-3(12).
           모바일은 58 = mt-[46px] + 12 */}
       <div className="mt-[46px] flex flex-col md:mt-[62px]">
-        {/* 섹션 제목 + 안내문 — 안내문↔구분선은 이미 피그마 24(pb-6) */}
-        <div className="border-border flex flex-col gap-1 border-b pb-6">
-          <h2 className="text-text-primary text-[24px] font-bold md:text-[28px]">
-            사진 등록
-          </h2>
+        {/* 섹션 제목 — 구분선은 안내문이 아니라 제목 바로 아래에 붙는다
+            (1·2단계 RegisterStep1/2와 같은 기준) */}
+        <h2 className="text-text-primary border-border border-b pb-6 text-[24px] font-bold md:text-[28px]">
+          사진 등록
+        </h2>
+
+        {/* 안내문 — 구분선 아래 28(mt-7), 문구 사이 4(gap-1) */}
+        <div className="mt-7 flex flex-col gap-1">
           <p className="text-text-primary text-[22px] font-bold">
             공간의 사진을 등록해 주세요
           </p>
@@ -133,7 +136,7 @@ export const RegisterStep5 = () => {
           </p>
         </div>
 
-        {/* 입력 필드 묶음 — 구분선 아래 28(mt-7).
+        {/* 입력 필드 묶음 — 안내문 아래 28(mt-7).
             이 화면은 필드가 둘(사진 업로더 / 가이드 박스)이고 사이가 피그마 32(gap-8) */}
         <div className="mt-7 flex flex-col gap-8">
           {/* 사진 업로더 + 제외 안내문 — 안내문이 떴다 사라져도 가이드 박스와의
@@ -228,7 +231,7 @@ export const RegisterStep5 = () => {
             {photoNotice && (
               <span
                 role="alert"
-                className="text-danger text-right text-base font-bold whitespace-pre-line"
+                className="text-danger text-left text-base font-bold whitespace-pre-line"
               >
                 {photoNotice}
               </span>
@@ -380,13 +383,13 @@ const PhotoThumbnail = ({
         </button>
       </div>
 
-      {/* 태블릿·모바일 삭제 버튼 — 오른쪽 위 회색 원 안에 흰 X.
+      {/* 태블릿·모바일 삭제 버튼 — 오른쪽 위 파란 원 안에 흰 X.
           hover가 없는 기기라 항상 보여야 한다 */}
       <button
         type="button"
         aria-label="사진 삭제"
         onClick={onRemove}
-        className="bg-text-secondary absolute top-2 right-2 flex size-6 items-center justify-center rounded-full text-white lg:hidden"
+        className="bg-primary absolute top-2 right-2 flex size-6 items-center justify-center rounded-full text-white lg:hidden"
       >
         <svg
           width="10"
