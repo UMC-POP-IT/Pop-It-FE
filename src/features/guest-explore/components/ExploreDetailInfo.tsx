@@ -52,7 +52,7 @@ const ExploreDetailInfo = ({
                 aria-label={isWished ? "찜 해제하기" : "찜하기"}
                 aria-pressed={isWished}
                 onClick={onWishToggle}
-                className={`flex items-center justify-center p-3 ${isWished ? "text-red-500" : "text-text-secondary"}`}
+                className={`flex items-center justify-center p-3 ${isWished ? "text-red-500" : "text-text-primary"}`}
               >
                 <svg
                   width="24"
@@ -76,7 +76,7 @@ const ExploreDetailInfo = ({
               type="button"
               aria-label="지도로 보기"
               onClick={() => setIsMapOpen(true)}
-              className="text-text-secondary flex items-center justify-center p-3"
+              className="text-text-primary flex items-center justify-center p-3"
             >
               <svg
                 width="24"
@@ -124,17 +124,45 @@ const ExploreDetailInfo = ({
 
         <div className="flex flex-col items-start">
           <div className="flex items-center gap-3 py-2">
-            <span className="bg-bg-footer flex h-5 w-5 items-center justify-center rounded-full text-[10px]">
-              📍
-            </span>
+            {/* 위치 아이콘: 피그마 기준 회색 원 배경 없이 아이콘만 텍스트와 나란히 배치 */}
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="text-text-primary shrink-0"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 22s7-7.58 7-12.5S16.14 2 12 2 5 4.99 5 9.5 12 22 12 22Z"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+              />
+              <circle cx="12" cy="9.5" r="2.5" stroke="currentColor" strokeWidth="1.6" />
+            </svg>
             <span className="text-text-primary text-lg font-bold">
               {space.address}
             </span>
           </div>
           <div className="flex items-center gap-3 py-2">
-            <span className="bg-bg-footer flex h-5 w-5 items-center justify-center rounded-full text-[10px]">
-              ↔
-            </span>
+            {/* 크기 아이콘: 위치 아이콘과 동일하게 배경 없이 아이콘만 배치 */}
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="text-text-primary shrink-0"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 12h16M4 12l3.5-3.5M4 12l3.5 3.5M20 12l-3.5-3.5M20 12l-3.5 3.5"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
             <span className="text-text-primary text-lg font-bold">
               {space.area}m²
             </span>
@@ -165,18 +193,18 @@ const ExploreDetailInfo = ({
                 <span className="text-text-primary">원</span>
               </span>
             </div>
-            <div className="flex w-full items-start justify-between">
-              <span className="text-text-primary flex flex-col font-normal">
-                월 단가
-                <span className="text-text-tag text-xs font-normal">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-text-primary font-normal">월 단가</span>
+              <span className="flex items-baseline gap-1 text-right">
+                <span>
+                  <span className="text-primary">
+                    {(space.cost.day * 30).toLocaleString()}
+                  </span>
+                  <span className="text-text-primary">원</span>
+                </span>
+                <span className="text-text-tag text-xs font-normal whitespace-nowrap">
                   (30일 기준)
                 </span>
-              </span>
-              <span className="text-right">
-                <span className="text-primary">
-                  {(space.cost.day * 30).toLocaleString()}
-                </span>
-                <span className="text-text-primary">원</span>
               </span>
             </div>
           </div>
@@ -199,7 +227,6 @@ const ExploreDetailInfo = ({
                 key={index}
                 className="bg-bg-footer text-text-primary flex items-center gap-2 rounded-full px-2 py-1 text-base font-medium whitespace-nowrap"
               >
-                <span className="bg-primary-100 h-5 w-5 rounded-full" />
                 {item}
               </span>
             ))}
@@ -216,7 +243,6 @@ const ExploreDetailInfo = ({
                 key={index}
                 className="bg-bg-footer text-text-primary flex items-center gap-2 rounded-full px-2 py-1 text-base font-medium"
               >
-                <span className="bg-primary-100 h-5 w-5 rounded-full" />
                 {item}
               </span>
             ))}

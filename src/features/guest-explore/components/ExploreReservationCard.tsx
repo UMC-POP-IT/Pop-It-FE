@@ -333,8 +333,14 @@ const ExploreReservationCard = ({
   };
 
   // 완료 모달에는 클라이언트 예상치가 아닌 서버가 계산한 실제 금액(임대료/보험료/보증금/총액)을 보여준다.
+  // "결제 예정 금액"은 강조가 필요한 정보라, description(text-text-tertiary text-base)이 아니라
+  // title(text-[22px] font-bold) 쪽에 붙여서 자연스럽게 강조 스타일을 얻는다
+  // (공용 Modal 컴포넌트는 건드리지 않고 기존 title/description prop만 활용).
+  const completeTitle = reservationResult
+    ? `예약 요청이 완료 되었습니다\n결제 예정 금액 ${reservationResult.totalPrice.toLocaleString()}원`
+    : "예약 요청이 완료 되었습니다";
   const completeDescription = reservationResult
-    ? `나의 예약 > 예약 예정\n\n임대료 ${reservationResult.rentalFee.toLocaleString()}원 · 보험료 ${reservationResult.insuranceFee.toLocaleString()}원 · 보증금 ${reservationResult.deposit.toLocaleString()}원\n총 결제 예정 금액 ${reservationResult.totalPrice.toLocaleString()}원`
+    ? `나의 예약 > 예약 예정\n\n임대료 ${reservationResult.rentalFee.toLocaleString()}원 · 보험료 ${reservationResult.insuranceFee.toLocaleString()}원 · 보증금 ${reservationResult.deposit.toLocaleString()}원`
     : "나의 예약 > 예약 예정";
 
   // 여러 날짜(기간)를 선택한 경우에만 시작일~종료일 사이를 이어주는 캡슐 배경을 그린다.
@@ -454,13 +460,15 @@ const ExploreReservationCard = ({
           </div>
         )}
         <div className="flex flex-col gap-4">
-          {/* 시작일 / 종료일 */}
-          <div className="flex items-center justify-center gap-10 rounded-lg bg-white px-8 py-2">
-            <span className="text-text-primary text-base font-bold">
+          {/* 시작일 / 종료일 — 중앙선을 grid로 고정해, 선택된 날짜의 글자 수가 달라져도
+              중앙선과 좌우 텍스트 위치가 흔들리지 않게 한다. 양쪽 칸을 동일한 폭(1fr)으로
+              만들어 각 칸 안에서 텍스트를 중앙 정렬하면, 중앙선 기준 좌우 간격도 항상 같다. */}
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 rounded-lg bg-white px-8 py-2">
+            <span className="text-text-primary text-center text-base font-bold">
               {startDate ? formatDate(startDate) : "시작일 선택"}
             </span>
-            <span className="bg-border h-[22px] w-px" />
-            <span className="text-text-primary text-base font-bold">
+            <span className="bg-border h-[22px] w-px justify-self-center" />
+            <span className="text-text-primary text-center text-base font-bold">
               {endDate ? formatDate(endDate) : "종료일 선택"}
             </span>
           </div>
@@ -586,7 +594,7 @@ const ExploreReservationCard = ({
         isOpen={isCompleteModalOpen}
         iconVariant="check"
         singleButton
-        title="예약 요청이 완료 되었습니다"
+        title={completeTitle}
         description={completeDescription}
         confirmLabel="확인"
         onConfirm={handleCompleteConfirm}
