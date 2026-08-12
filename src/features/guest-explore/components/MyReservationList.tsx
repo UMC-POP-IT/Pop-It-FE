@@ -21,6 +21,20 @@ const TAB_STATUS_MAP: Status[][] = [
   ["USAGE_COMPLETED", "CHECKOUT_COMPLETED"],
 ];
 
+// GetReservations는 페이지 단위로만 응답하므로, hasNext/nextCursor를 따라가며
+// 전체 예약을 모아야 오래된(=완료된) 예약이 첫 페이지 밖으로 밀려 누락되지 않는다.
+const fetchAllReservations = async (): Promise<Reservation[]> => {
+  const all: Reservation[] = [];
+  let cursor: number | undefined = undefined;
+  while (true) {
+    const result = await GetReservations(cursor, 50);
+    all.push(...(result?.reservations ?? []));
+    if (!result?.hasNext || result.nextCursor == null) break;
+    cursor = result.nextCursor;
+  }
+  return all;
+};
+
 export const MyReservationList = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [reservationList, setReservationList] = useState<Reservation[]>([]);
@@ -29,8 +43,8 @@ export const MyReservationList = () => {
   const paymentApprovedAt = useTossPaymentResultStore((s) => s.approvedAt);
 
   useEffect(() => {
-    GetReservations()
-      .then((data) => setReservationList(data?.reservations ?? []))
+    fetchAllReservations()
+      .then(setReservationList)
       .catch((error) => console.error("게스트 - 나의 예약 내역 조회 실패", error));
   }, []);
 
@@ -38,8 +52,8 @@ export const MyReservationList = () => {
   // 승인이 완료되는 시점에 한 번 더 조회해 최신 상태로 맞춘다.
   useEffect(() => {
     if (paymentApprovedAt == null) return;
-    GetReservations()
-      .then((data) => setReservationList(data?.reservations ?? []))
+    fetchAllReservations()
+      .then(setReservationList)
       .catch((error) => console.error("게스트 - 나의 예약 내역 재조회 실패", error));
   }, [paymentApprovedAt]);
 
