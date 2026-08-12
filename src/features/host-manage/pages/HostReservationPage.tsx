@@ -157,28 +157,15 @@ export const HostReservationPage = () => {
     setIsPaymentModalOpen(true);
   };
 
-  const handleSignContract = async () => {
-    if (approveTargetId === null) return;
-    setIsApproving(true);
-    setApproveError(false);
-    try {
-      await approveReservation(approveTargetId);
-      setIsPaymentModalOpen(false);
-      setIsContractModalOpen(true);
-    } catch (err) {
-      console.error("[HostReservationPage] 예약 승인 실패:", err);
-      setApproveError(true);
-      await loadReservations();
-    } finally {
-      setIsApproving(false);
-    }
+  const handleSignContract = () => {
+    setIsPaymentModalOpen(false);
+    setIsContractModalOpen(true);
   };
 
   const closeContractModal = () => {
     setIsContractModalOpen(false);
     setApproveTargetId(null);
-    // 서명 없이 닫아도 서버는 이미 APPROVED로 전환됐으므로 목록을 재조회해 로컬 상태를 동기화한다
-    loadReservations();
+    // 서명 없이 닫으면 목록을 재조회하지 않는다 — 서버는 APPROVED지만 로컬은 현재 탭에 그대로 유지
   };
 
   const completeContractModal = () => {

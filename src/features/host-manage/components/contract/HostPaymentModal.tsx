@@ -104,7 +104,7 @@ const HostPaymentModal = ({
           <Button
             variant="outline"
             size="md"
-            className="flex-1 border-none! bg-secure-payment-bg! text-text-secondary! font-normal"
+            className="flex-1 border-none! bg-surface-blue! text-text-primary! font-normal"
             onClick={onClose}
             disabled={isSubmitting}
           >

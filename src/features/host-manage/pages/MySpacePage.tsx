@@ -25,6 +25,10 @@ export const MySpacePage = () => {
   const [showDeleteError, setShowDeleteError] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // 모바일 바텀시트
+  const [bottomSheetSpaceId, setBottomSheetSpaceId] = useState<number | null>(null);
+  const [bottomSheetSelection, setBottomSheetSelection] = useState<"edit" | "delete" | null>(null);
+
   const loadSpaces = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -83,6 +87,21 @@ export const MySpacePage = () => {
         await loadSpaces();
       }
     }
+  };
+
+  const handleMenuClick = (spaceId: number) => {
+    if (window.innerWidth < 768) {
+      setBottomSheetSpaceId(spaceId);
+      setBottomSheetSelection(null);
+    } else {
+      setOpenMenuId((prev) => (prev === spaceId ? null : spaceId));
+    }
+  };
+
+  const handleBottomSheetConfirm = () => {
+    if (bottomSheetSelection === "edit") setEditTargetId(bottomSheetSpaceId);
+    else if (bottomSheetSelection === "delete") setDeleteTargetId(bottomSheetSpaceId);
+    setBottomSheetSpaceId(null);
   };
 
   const handleEdit = () => {
@@ -155,11 +174,7 @@ export const MySpacePage = () => {
                 ref={openMenuId === space.spaceId ? menuRef : null}
               >
                 <button
-                  onClick={() =>
-                    setOpenMenuId((prev) =>
-                      prev === space.spaceId ? null : space.spaceId,
-                    )
-                  }
+                  onClick={() => handleMenuClick(space.spaceId)}
                   className="text-text-secondary hover:text-text-primary flex h-7 w-7 items-center justify-center rounded text-xl"
                   aria-label="더보기"
                 >
@@ -229,6 +244,49 @@ export const MySpacePage = () => {
             아직 등록된 공간이 없어요
           </p>
         </div>
+      )}
+
+      {/* 모바일 바텀시트 */}
+      {bottomSheetSpaceId !== null && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/40"
+            onClick={() => setBottomSheetSpaceId(null)}
+          />
+          <div className="fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-[20px] bg-white shadow-[0px_-4px_20px_rgba(0,0,0,0.1)]">
+            {/* 핸들 */}
+            <div className="flex justify-center px-40 py-3">
+              <div className="h-1 w-10 rounded-full bg-[#999]" />
+            </div>
+            {/* 항목 */}
+            <div className="flex flex-col px-4 py-3">
+              <button
+                onClick={() => setBottomSheetSelection("edit")}
+                className={`rounded-[4px] p-4 text-left text-[20px] font-medium text-[#121212] ${bottomSheetSelection === "edit" ? "bg-[#f2f2f2]" : "bg-white"}`}
+              >
+                공간 수정
+              </button>
+              <button
+                onClick={() => setBottomSheetSelection("delete")}
+                className={`rounded-[4px] p-4 text-left text-[20px] font-medium text-[#f74b4b] ${bottomSheetSelection === "delete" ? "bg-[#f2f2f2]" : "bg-white"}`}
+              >
+                공간 삭제
+              </button>
+            </div>
+            {/* 확인 버튼 */}
+            <div className="flex flex-col items-end rounded-b-[8px] p-5">
+              <button
+                onClick={handleBottomSheetConfirm}
+                disabled={bottomSheetSelection === null}
+                className="bg-primary-hover hover:bg-primary h-[52px] w-full rounded-lg text-[18px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                확인
+              </button>
+            </div>
+            {/* Safe area */}
+            <div className="h-8" />
+          </div>
+        </>
       )}
 
       {/* 공간 수정 확인 모달 */}

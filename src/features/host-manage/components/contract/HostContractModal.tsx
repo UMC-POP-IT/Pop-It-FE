@@ -1,4 +1,4 @@
-import { useState, useRef, useId } from "react";
+import { useState, useRef, useId, useEffect } from "react";
 import type { ApiHostReservation } from "@/types";
 import Authentication from "@/features/guest-explore/components/contract/Authentication";
 import SignatureBoard, { type SignatureBoardRef } from "@/features/guest-explore/components/contract/SignatureBoard";
@@ -9,6 +9,7 @@ import {
   UploadFileToPresignedURL,
   SubmitSignature,
 } from "@/features/guest-explore/api/my_reservation_api";
+import { approveReservation } from "@/features/host-manage/api/hostApi";
 
 interface SpaceBasicInfo {
   name: string;
@@ -36,6 +37,18 @@ const HostContractModal = ({
   const [submitError, setSubmitError] = useState(false);
   const signatureBoardRef = useRef<SignatureBoardRef>(null);
   const titleId = useId();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      // useDialogA11y의 focus() 이후에 실행해야 스크롤이 덮어쓰이지 않는다
+      const id = setTimeout(() => {
+        scrollRef.current?.scrollTo({ top: 0 });
+      }, 0);
+      return () => clearTimeout(id);
+    }
+  }, [isOpen]);
+
   const dialogRef = useDialogA11y<HTMLDivElement>({
     isOpen,
     onClose: isSubmitting ? undefined : onClose,
@@ -47,6 +60,7 @@ const HostContractModal = ({
     setIsSubmitting(true);
     setSubmitError(false);
     try {
+      await approveReservation(reservation.reservationId);
       const { uploads } = await GetPresignedURL({
         uploadType: "CONTRACT_SIGNATURE",
         files: [{ contentType: "image/png" }],
@@ -80,7 +94,7 @@ const HostContractModal = ({
         tabIndex={-1}
         aria-modal="true"
       >
-        <div className="flex flex-col gap-10 overflow-y-auto p-5 md:p-8">
+        <div ref={scrollRef} className="flex flex-col gap-10 overflow-y-auto p-5 md:p-8">
           <div className="flex flex-col gap-2">
             <h3 id={titleId} className="text-[22px] font-bold break-keep text-[#121212]">단기 임대차 계약서</h3>
             <span className="text-[18px] font-medium break-keep text-[#747474]">
@@ -183,16 +197,16 @@ const HostContractModal = ({
             </p>
           )}
 
-          <div className="flex flex-wrap justify-center gap-4 md:gap-5">
+          <div className="flex w-full flex-row gap-4 md:w-auto md:justify-center md:gap-5">
             <button
-              className="h-14 w-[136px] rounded-lg bg-[#f0f6fe] text-[18px] font-medium text-[#121212] disabled:cursor-not-allowed disabled:opacity-50 md:w-[184px]"
+              className="h-14 flex-1 rounded-lg bg-[#f0f6fe] text-[18px] font-medium text-[#121212] disabled:cursor-not-allowed disabled:opacity-50 md:w-[184px] md:flex-none"
               onClick={onClose}
               disabled={isSubmitting}
             >
               취소
             </button>
             <button
-              className="h-14 w-[136px] rounded-lg bg-[#3783f7] text-[18px] font-bold text-white hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50 md:w-[184px]"
+              className="h-14 flex-1 rounded-lg bg-[#3783f7] text-[18px] font-bold text-white hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50 md:w-[184px] md:flex-none"
               disabled={!(isAuthenticated && isSigned) || isSubmitting}
               onClick={handleComplete}
             >
