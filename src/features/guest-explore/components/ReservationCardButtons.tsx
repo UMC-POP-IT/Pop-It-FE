@@ -88,7 +88,7 @@ export const ReservationCardButtons = ({
               }`}
               disabled
             >
-              {isAwaitingHostApproval ? ( isMobile ? "승인 대기중..." : "호스트 승인 대기중...") : "인증 완료"}
+              {isAwaitingHostApproval ? "승인 대기 중" : "인증 완료"}
             </Button>
           ))}
         <Button variant="secondary" size="sm" className={FLUID_BUTTON_CLASS} onClick={onSpaceDetail}>

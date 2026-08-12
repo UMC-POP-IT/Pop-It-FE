@@ -204,8 +204,8 @@ export const WishedSpace = () => {
 
   return (
     <section className="flex flex-col gap-4 min-[1024px]:mt-20 max-[1023px]:mt-10">
-        <h2 className="text-text-primary text-2xl font-bold">내가 찜한 공간 <HeartIcon /></h2>
-        <span className="text-text-secondary text-sm">관심 있는 공간을 한 눈에 확인해 보세요!</span>
+        <h2 className="text-text-primary text-2xl font-bold mb-[-12px]">내가 찜한 공간 <HeartIcon /></h2>
+        <span className="text-text-secondary text-sm mb-[5px]">관심 있는 공간을 한 눈에 확인해 보세요!</span>
 
         {status === "loading" && (
           <div className="bg-tag-bg flex h-[200px] w-full items-center justify-center rounded-xl">
