@@ -251,8 +251,9 @@ export const DateRangePicker = ({
   // 스크린 리더용 날짜 라벨. 오늘은 disabled 속성을 안 쓰는 대신(클릭은 받아야
   // 해서) 라벨에 "선택할 수 없다"는 사실을 직접 알려준다 - 예전엔 aria-disabled로
   // 전달했는데, 공용 CalendarMonthGrid는 그 prop을 따로 받지 않아 라벨 쪽으로 옮겼다.
-  // dev에 병합된 "오늘 = 회색 테두리 원 + 취소선" 스타일은 CalendarMonthGrid의
-  // isToday 분기가 공통으로 그린다.
+  // (dev에 별도로 병합된 "오늘 = 회색 테두리 원 + 취소선" 스타일은 CalendarMonthGrid의
+  // isToday 분기가 동일하게 그리고, "선택됨 = h-full로 칸을 꽉 채우는 원"이던 부분은
+  // 이 리팩터로 다른 두 달력과 동일하게 고정 44px 원으로 통일된다 - 아래 renderMonth 참고.)
   const getDayAriaLabel = (date: Date) => {
     const base = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
     return isSameDay(date, todayStart)
@@ -471,63 +472,86 @@ export const DateRangePicker = ({
               transform: dragY ? `translateY(${dragY}px)` : undefined,
               transition: isDragging ? "none" : "transform 200ms ease-out",
             }}
-            className="border-border fixed inset-x-0 bottom-0 z-50 rounded-t-[20px] border bg-white px-4 pt-1 pb-4 shadow-lg md:absolute md:inset-x-auto md:bottom-auto md:left-1/2 md:z-10 md:mt-2 md:w-fit md:-translate-x-1/2 md:overflow-hidden md:rounded-lg md:p-0"
+            // 칸 높이가 56px로 통일되면서(예전 46px보다 커짐) 6주짜리 달(예: 2026년
+            // 8월)을 펼치면 시트 내용이 키 작은 화면(360×640 등)의 세로 공간을 넘길
+            // 수 있다 - max-h-[85vh]로 시트 자체 높이를 뷰포트 안으로 묶고, 아래
+            // 스크롤 영역(달력+에러+하단 버튼)만 그 안에서 스크롤되게 한다(월 헤더의
+            // ‹/› 화살표나 확인 버튼이 화면 밖으로 밀려 안 보이는 문제 방지 -
+            // BottomSheet.tsx와 동일한 max-h-[Nvh] + 내부 overflow-y-auto 패턴).
+            // md 이상(딤 없는 팝업)은 원래도 이 문제가 없어 md:max-h-none으로 그대로 둔다.
+            className="border-border fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-[20px] border bg-white px-4 pt-1 pb-4 shadow-lg md:absolute md:inset-x-auto md:bottom-auto md:left-1/2 md:z-10 md:mt-2 md:max-h-none md:w-fit md:-translate-x-1/2 md:overflow-hidden md:rounded-lg md:p-0"
           >
             {/* 손잡이 바 40×4 — 끌어내려 닫는다. 데스크톱 팝업엔 없다.
                 py-2로 손가락이 닿는 범위를 바보다 위아래 8씩 넓히고, 시트 pt-1(4)과 합쳐
                 바가 시안대로 위에서 12에 놓인다. 아래 mb-1(4)+패딩 8 = 12.
-                touch-none: 이게 없으면 브라우저가 끌기를 '페이지 스크롤'로 가로챈다 */}
+                touch-none: 이게 없으면 브라우저가 끌기를 '페이지 스크롤'로 가로챈다.
+                shrink-0: 스크롤 영역이 줄어들어도 손잡이 자체는 항상 맨 위에 고정된
+                크기로 남아야 한다(끌어서 닫는 조작 지점이 스크롤에 밀려 사라지면 안 됨). */}
             <div
               role="presentation"
               onPointerDown={handleDragStart}
               onPointerMove={handleDragMove}
               onPointerUp={handleDragEnd}
               onPointerCancel={handleDragEnd}
-              className="mb-1 flex cursor-grab touch-none justify-center py-2 active:cursor-grabbing md:hidden"
+              className="mb-1 flex shrink-0 cursor-grab touch-none justify-center py-2 active:cursor-grabbing md:hidden"
             >
               <div className="bg-divider h-1 w-10 rounded-full" />
             </div>
 
-            {/* 달 카드 — lg 미만(바텀시트/태블릿 팝오버)은 1개월, lg 이상은 2개월 나란히 */}
-            <div className="flex">
-              {renderMonth(viewDate, "prev")}
-              {isTwoMonthView && renderMonth(nextMonth, "next")}
-            </div>
+            {/* 달력·에러 문구·하단 버튼을 묶는 스크롤 영역 - 모바일에서 시트 높이가
+                max-h-[85vh]를 넘으면 이 안에서만 스크롤된다(손잡이는 위에서 고정).
+                md 이상은 display:contents로 이 wrapper 자체를 레이아웃에서 지워
+                기존처럼 스크롤 없이 그대로 이어 붙는다. */}
+            <div className="min-h-0 flex-1 overflow-y-auto md:contents">
+              {/* 달 카드 — lg 미만(바텀시트/태블릿 팝오버)은 1개월, lg 이상은 2개월 나란히.
+                  max-md:-mx-4: 모바일 바텀시트는 이 팝업 자체가 이미 px-4(16px) 좌우
+                  여백을 갖고 있는데, CalendarMonthGrid도 자기 몫으로 px-3.5(14px)를
+                  또 두르고 있어 그대로 두면 한 칸 너비가 (360-32-28)/7≈42.9px까지
+                  줄어 44px 고정 원(CALENDAR_CIRCLE_SIZE_PX)보다 좁아져 이웃 칸 원끼리
+                  겹쳐 보인다. 이 줄만 부모의 px-4를 정확히 상쇄해서(-16px) 모바일에서도
+                  검색바 날짜 필터·공간상세 예약 캘린더와 같은 여백(칸 너비
+                  (360-28)/7≈47.4px)이 되게 한다. md 이상은 부모가 이미 p-0이라
+                  영향이 없다. */}
+              <div className="flex max-md:-mx-4">
+                {renderMonth(viewDate, "prev")}
+                {isTwoMonthView && renderMonth(nextMonth, "next")}
+              </div>
 
-            {/* 고를 수 없는 날짜를 눌렀을 때만 나타남.
-                role="alert"이면 스크린리더가 포커스를 옮기지 않고도 즉시 읽어준다 */}
-            {dateError && (
-              <p
-                role="alert"
-                className="text-danger text-sm font-medium md:px-4 lg:px-5"
-              >
-                {dateError}
-              </p>
-            )}
+              {/* 고를 수 없는 날짜를 눌렀을 때만 나타남.
+                  role="alert"이면 스크린리더가 포커스를 옮기지 않고도 즉시 읽어준다 */}
+              {dateError && (
+                <p
+                  role="alert"
+                  className="text-danger text-sm font-medium md:px-4 lg:px-5"
+                >
+                  {dateError}
+                </p>
+              )}
 
-            {/* 하단 — lg 미만: [초기화] [확인] 우측 정렬, 그리드에서 40 아래.
-                데스크톱: 왼쪽에 선택 범위 텍스트 + 오른쪽 [확인], padding 20 (기존 그대로) */}
-            <div className="mt-10 flex items-center justify-end gap-5 md:mt-0 md:justify-between md:p-4 lg:p-5">
-              {/* 보조 정보라 작고 회색으로 — 확인 버튼이 시선을 먼저 받게 한다 */}
-              <span className="text-text-secondary hidden text-sm font-medium md:inline lg:text-base">
-                {fieldText(startDate, "시작일")} ~{" "}
-                {fieldText(endDate, "종료일")}
-              </span>
-              <button
-                type="button"
-                onClick={handleReset}
-                className="text-text-secondary hover:text-text-primary shrink-0 text-lg font-bold md:hidden"
-              >
-                초기화
-              </button>
-              <button
-                type="button"
-                disabled={!(startDate && endDate)}
-                onClick={handleConfirm}
-                className="bg-primary-hover flex h-[52px] w-[94px] shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white disabled:opacity-40"
-              >
-                확인
-              </button>
+              {/* 하단 — lg 미만: [초기화] [확인] 우측 정렬, 그리드에서 40 아래.
+                  데스크톱: 왼쪽에 선택 범위 텍스트 + 오른쪽 [확인], padding 20 (기존 그대로) */}
+              <div className="mt-10 flex items-center justify-end gap-5 md:mt-0 md:justify-between md:p-4 lg:p-5">
+                {/* 보조 정보라 작고 회색으로 — 확인 버튼이 시선을 먼저 받게 한다 */}
+                <span className="text-text-secondary hidden text-sm font-medium md:inline lg:text-base">
+                  {fieldText(startDate, "시작일")} ~{" "}
+                  {fieldText(endDate, "종료일")}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="text-text-secondary hover:text-text-primary shrink-0 text-lg font-bold md:hidden"
+                >
+                  초기화
+                </button>
+                <button
+                  type="button"
+                  disabled={!(startDate && endDate)}
+                  onClick={handleConfirm}
+                  className="bg-primary-hover flex h-[52px] w-[94px] shrink-0 items-center justify-center rounded-lg text-lg font-bold text-white disabled:opacity-40"
+                >
+                  확인
+                </button>
+              </div>
             </div>
           </div>
         </>
