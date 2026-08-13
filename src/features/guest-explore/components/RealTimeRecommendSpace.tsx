@@ -7,6 +7,11 @@ import { getRealTimeRecommend } from "../api/spaces_api";
 import { useCardCarousel } from "@/features/guest-explore/hooks/useCardCarousel";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 
+// RealTimeBanner와 동일한 비율(4:5)의 로딩 스켈레톤
+const SkeletonBanner = () => (
+  <div data-card-image className="bg-tag-bg aspect-[4/5] w-full animate-pulse" />
+);
+
 const RealTimeRecommendSpace = () => {
   const [spaces, setSpaces] = useState<recommendSpace[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,7 +61,7 @@ const RealTimeRecommendSpace = () => {
       <h2 className="text-text-primary text-[clamp(19px,_14.59px_+_1.225vw,_24px)] font-bold">실시간 추천 공간</h2>
 
       <div className="relative">
-        {canScrollPrev && imageCenter !== null && <ScrollButton direction="prev" topOffset={imageCenter} onClick={() => scrollByCard(-1)} className="max-[1024px]:hidden" />}
+        {!isLoading && !isError && canScrollPrev && imageCenter !== null && <ScrollButton direction="prev" topOffset={imageCenter} onClick={() => scrollByCard(-1)} className="max-[1024px]:hidden" />}
 
         {/* overflow-x-hidden은 휠/트랙패드/드래그 스크롤을 의도적으로 차단하기 위함 (화살표 버튼의 scrollBy만 허용).
             단, 1024px 이하(태블릿/모바일, 화살표 버튼이 숨는 구간과 동일)는 버튼 대신 터치 스크롤을 허용하고,
@@ -66,13 +71,23 @@ const RealTimeRecommendSpace = () => {
           className="flex gap-4 overflow-x-hidden scroll-smooth max-[1024px]:overflow-x-auto max-[1024px]:snap-x max-[1024px]:snap-mandatory max-[1024px]:[scrollbar-width:none] max-[1024px]:[-ms-overflow-style:none] max-[1024px]:[&::-webkit-scrollbar]:hidden"
         >
           {isLoading ? (
-            <p role="status" aria-live="polite" className="text-text-secondary text-sm">
-              실시간 추천 공간 로딩 UI 추가 예정
-            </p>
-          ) : isError ? (
-            <p role="alert" aria-live="assertive" className="text-text-secondary text-sm">
-              실시간 추천 공간 조회 실패 UI 추가 예정
-            </p>
+            Array.from({ length: CARDS_PER_SCROLL }).map((_, i) => (
+              <div key={i} role="status" aria-label="로딩 중" className={`${cardWidthClass} flex-none`}>
+                <SkeletonBanner />
+              </div>
+            ))
+          ) : isError || spaces.length === 0 ? (
+            <div
+              role={isError ? "alert" : "status"}
+              aria-live={isError ? "assertive" : "polite"}
+              className="bg-tag-bg flex h-64 w-full items-center justify-center"
+            >
+              <p className="text-text-secondary text-sm">
+                {isError
+                  ? "실시간 추천 공간 조회에 실패했습니다"
+                  : "실시간 추천 가능한 공간이 없습니다"}
+              </p>
+            </div>
           ) : (
             spaces.map((space) => (
               <div
@@ -87,7 +102,7 @@ const RealTimeRecommendSpace = () => {
             ))
           )}
         </div>
-        {canScrollNext && imageCenter !== null && <ScrollButton direction="next" topOffset={imageCenter} onClick={() => scrollByCard(1)} className="max-[1024px]:hidden" />}
+        {!isLoading && !isError && canScrollNext && imageCenter !== null && <ScrollButton direction="next" topOffset={imageCenter} onClick={() => scrollByCard(1)} className="max-[1024px]:hidden" />}
       </div>
     </section>
   );
