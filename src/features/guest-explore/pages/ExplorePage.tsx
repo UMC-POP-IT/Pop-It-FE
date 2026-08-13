@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import AiRecommendSpace from "@/features/guest-explore/components/AiRecommendSpace";
 import ExploreSpace from "@/features/guest-explore/components/ExploreSpace";
@@ -6,7 +6,11 @@ import RealTimeRecommendSpace from "@/features/guest-explore/components/RealTime
 import Banner, { RESULTS_MODE_TOP_OFFSET_PX } from "@/shared/layout/Banner";
 import { HEADER_HEIGHT_PX } from "@/shared/layout/Header";
 import HeroSearchBar from "@/features/guest-explore/components/HeroSearchBar";
-import { useScrollSearchBarStore, type ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
+import {
+  useScrollSearchBarStore,
+  type ScrollSearchBarSummary,
+  type SearchBarAutoOpenRequest,
+} from "@/store/scrollSearchBarStore";
 import { withSearchBarTransition } from "@/shared/utils/viewTransition";
 import {
   SPACE_CATEGORY_OPTIONS,
@@ -59,17 +63,22 @@ const parseDateParam = (value: string | null): Date | null => {
   return date;
 };
 
-const filtersFromSearchParams = (params: URLSearchParams): ExploreSearchFilters => {
+const filtersFromSearchParams = (
+  params: URLSearchParams,
+): ExploreSearchFilters => {
   // URL은 사용자가 직접 편집하거나 오래된 링크를 통해 들어올 수 있어, 실제
   // 존재하는 카테고리/지역 값인지 검증한다. 검증 없이 그냥 캐스팅만 하면 잘못된
   // 값이 그대로 FilterDropdown(라벨을 못 찾아 빈 칸)과 getSpaces 요청(백엔드가
   // 모르는 값)까지 흘러들어간다.
   const rawCategory = params.get("spaceCategory");
   const spaceCategory: SpaceCategory | "" =
-    rawCategory && VALID_SPACE_CATEGORIES.has(rawCategory) ? (rawCategory as SpaceCategory) : "";
+    rawCategory && VALID_SPACE_CATEGORIES.has(rawCategory)
+      ? (rawCategory as SpaceCategory)
+      : "";
 
   const rawDistrict = params.get("district");
-  const district = rawDistrict && VALID_DISTRICTS.has(rawDistrict) ? rawDistrict : "";
+  const district =
+    rawDistrict && VALID_DISTRICTS.has(rawDistrict) ? rawDistrict : "";
 
   const rawKeyword = params.get("keyword")?.trim() ?? "";
 
@@ -106,19 +115,30 @@ export const ExplorePage = () => {
   // 자체가 필요 없다(ExploreSpace가 결과 유무를 알려준다).
   const [hasResults, setHasResults] = useState(false);
   const [summary, setSummary] = useState<ScrollSearchBarSummary | null>(null);
+  // pill의 특정 세그먼트를 클릭했을 때, 검색창이 펼쳐짐과 동시에 그 세그먼트의
+  // 드롭다운/캘린더/검색어 입력도 자동으로 열기 위해 HeroSearchBar에 내려주는
+  // 요청(#275). token은 같은 세그먼트를 다시 클릭해도 매번 새 값이어야 하므로
+  // 클릭마다 증가시킨다(useRef 카운터 - 리렌더를 유발할 필요는 없다).
+  const [autoOpenRequest, setAutoOpenRequest] =
+    useState<SearchBarAutoOpenRequest | null>(null);
+  const autoOpenTokenRef = useRef(0);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const setScrollSearchBarState = useScrollSearchBarStore((s) => s.setState);
   const resetScrollSearchBar = useScrollSearchBarStore((s) => s.reset);
+  const [pendingFocusRestore, setPendingFocusRestore] = useState(false);
 
   const handleSearch = (filters: ExploreSearchFilters) => {
     setHasResults(false);
+    setAutoOpenRequest(null);
     const next = new URLSearchParams();
     next.set(SEARCH_FLAG_PARAM, "1");
     if (filters.keyword) next.set("keyword", filters.keyword);
     if (filters.spaceCategory) next.set("spaceCategory", filters.spaceCategory);
     if (filters.district) next.set("district", filters.district);
-    if (filters.dateRange.start) next.set(DATE_START_PARAM, formatDateParam(filters.dateRange.start));
-    if (filters.dateRange.end) next.set(DATE_END_PARAM, formatDateParam(filters.dateRange.end));
+    if (filters.dateRange.start)
+      next.set(DATE_START_PARAM, formatDateParam(filters.dateRange.start));
+    if (filters.dateRange.end)
+      next.set(DATE_END_PARAM, formatDateParam(filters.dateRange.end));
     // 아직 결과 화면이 아니었다면(처음 검색) 새 히스토리 항목을 쌓아 뒤로가기로
     // 검색 전 화면에 돌아갈 수 있게 하고, 이미 결과 화면이면(조건만 바꿔 재검색)
     // 히스토리를 계속 쌓지 않도록 현재 항목을 교체한다.
@@ -131,8 +151,17 @@ export const ExplorePage = () => {
     const next = new URLSearchParams();
     next.set(SEARCH_FLAG_PARAM, "1"); // 결과 화면 자체는 유지하고 필터만 비운다
     setHasResults(false);
+    setAutoOpenRequest(null);
     setSearchParams(next, { replace: true });
   };
+
+  const handleAutoOpenComplete = useCallback((completedToken: number) => {
+    // 완료된 token이 현재 요청의 token과 일치할 때만 autoOpenRequest를 지운다.
+    // 그 사이에 새 요청이 왔다면(token이 이미 더 큰 값) 보존한다.
+    setAutoOpenRequest((prev) =>
+      prev && prev.token === completedToken ? null : prev,
+    );
+  }, []);
 
   useEffect(() => {
     if (!hasActiveSearch) setHasResults(false);
@@ -166,15 +195,38 @@ export const ExplorePage = () => {
     if (!isScrolledPastBar) setIsOverlayOpen(false);
   }, [isScrolledPastBar]);
 
+  // Escape로 오버레이를 닫았을 때 저장한 포커스 복원 요청을 실행한다.
+  // 오버레이가 닫히고 pill 세그먼트 버튼이 실제로 렌더된 뒤에야 포커스를
+  // 옮겨야 한다 - 그 전에 focus()를 호출하면 버튼이 아직 없어서 실패한다.
+  // pill은 hasActiveSearch && isScrolledPastBar && !isOverlayOpen일 때만
+  // 마운트되므로, 이 세 조건이 모두 참일 때 requestAnimationFrame으로 렌더
+  // 이후 시점을 보장하고 포커스를 복원한다.
+  useEffect(() => {
+    if (
+      !pendingFocusRestore ||
+      !hasActiveSearch ||
+      !isScrolledPastBar ||
+      isOverlayOpen
+    )
+      return;
+    const handle = requestAnimationFrame(() => {
+      useScrollSearchBarStore.getState().focusTrigger?.();
+      setPendingFocusRestore(false);
+    });
+    return () => cancelAnimationFrame(handle);
+  }, [pendingFocusRestore, hasActiveSearch, isScrolledPastBar, isOverlayOpen]);
+
   // 오버레이가 펼쳐져 있을 때 Escape로 닫는다(바깥 클릭 닫기와 동일한 동작).
   // 닫은 뒤에는 포커스가 사라지지 않도록 헤더의 pill 트리거로 되돌린다 -
   // Header.tsx가 스토어에 등록해둔 focusTrigger를 통해서만 접근 가능하다.
+  // Escape는 즉시 포커스를 옮기지 않고 요청만 저장한다 - 오버레이가 닫히고
+  // isVisible이 pill 세그먼트 버튼을 다시 렌더한 뒤에 실제로 포커스를 옮긴다.
   useEffect(() => {
     if (!isOverlayOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         withSearchBarTransition(() => setIsOverlayOpen(false));
-        useScrollSearchBarStore.getState().focusTrigger?.();
+        setPendingFocusRestore(true);
       }
     };
     document.addEventListener("keydown", handleKeyDown);
@@ -192,9 +244,25 @@ export const ExplorePage = () => {
       isVisible: !isOverlayOpen,
       summary,
       // pill을 눌러 펼치는 순간도 모핑 애니메이션이 재생되도록 감싼다.
-      onExpand: () => withSearchBarTransition(() => setIsOverlayOpen(true)),
+      // segment가 있으면(pill의 개별 세그먼트를 클릭한 경우) 검색창이 펼쳐짐과
+      // 동시에 그 세그먼트의 드롭다운/캘린더/검색어 입력도 열도록 요청을
+      // 남긴다(#275) - token은 같은 세그먼트를 다시 클릭해도 매번 새 값이어야
+      // HeroSearchBar의 effect가 재반응한다.
+      onExpand: (segment) =>
+        withSearchBarTransition(() => {
+          setIsOverlayOpen(true);
+          autoOpenTokenRef.current += 1;
+          setAutoOpenRequest({ segment, token: autoOpenTokenRef.current });
+        }),
     });
-  }, [hasActiveSearch, isScrolledPastBar, isOverlayOpen, summary, setScrollSearchBarState, resetScrollSearchBar]);
+  }, [
+    hasActiveSearch,
+    isScrolledPastBar,
+    isOverlayOpen,
+    summary,
+    setScrollSearchBarState,
+    resetScrollSearchBar,
+  ]);
 
   // 페이지를 떠날 때(라우트 이동)도 헤더에 남아있는 pill 상태를 정리한다.
   useEffect(() => resetScrollSearchBar, [resetScrollSearchBar]);
@@ -211,7 +279,11 @@ export const ExplorePage = () => {
   // 다시 펼친 오버레이에서는 첫 메인페이지(hero)와 같은 회색 테두리 디자인을
   // 쓴다 - 헤더가 그대로 이어지는 느낌을 주려면 배너의 기본 검색바와 같은
   // 스타일이어야 한다(피그마 Frame 2147225751).
-  const heroSearchBarVariant = !hasActiveSearch ? "hero" : isScrolledPastBar ? "hero" : "compact";
+  const heroSearchBarVariant = !hasActiveSearch
+    ? "hero"
+    : isScrolledPastBar
+      ? "hero"
+      : "compact";
 
   return (
     <div>
@@ -234,7 +306,10 @@ export const ExplorePage = () => {
           HeroSearchBar 자체는 searchParams.toString()이 바뀔 때만(검색 실행/
           초기화/뒤로가기 등으로 URL이 실제로 바뀔 때만) key가 바뀌어 새로
           마운트되고, 그때마다 URL이 담고 있는 값으로 표시가 다시 맞춰진다. */}
-      <Banner showImage={!hasActiveSearch} searchBarPosition={searchBarPosition}>
+      <Banner
+        showImage={!hasActiveSearch}
+        searchBarPosition={searchBarPosition}
+      >
         <HeroSearchBar
           key={searchParams.toString()}
           onSearch={handleSearch}
@@ -245,6 +320,8 @@ export const ExplorePage = () => {
           initialDateRange={dateRange}
           onSummaryChange={hasActiveSearch ? setSummary : undefined}
           isMorphTarget={searchBarPosition !== "pinned-hidden"}
+          autoOpenRequest={autoOpenRequest}
+          onAutoOpenComplete={handleAutoOpenComplete}
         />
       </Banner>
 
@@ -288,7 +365,9 @@ export const ExplorePage = () => {
           // 검색 결과 화면에서만 호출된다 - 검색 결과 유무에 따라 검색바가
           // pinned⇄inline으로 실제 자리를 옮길 때만 트랜지션이 걸리고, 화면
           // 밖(브라우징 모드)에서 조용히 트랜지션이 발생하는 경우는 없다.
-          onHasResultsChange={(next) => withSearchBarTransition(() => setHasResults(next))}
+          onHasResultsChange={(next) =>
+            withSearchBarTransition(() => setHasResults(next))
+          }
         />
       )}
     </div>

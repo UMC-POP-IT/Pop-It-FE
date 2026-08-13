@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 import iconNavChevron from "@/assets/icons/icon_nav_chevron.svg";
-import iconClose from "@/assets/icons/icon_close_circle_blue.svg";
 
 interface PhotoGalleryModalProps {
   isOpen: boolean;
@@ -60,13 +59,15 @@ const PhotoGalleryModal = ({
         className="relative h-[420px] w-full max-w-[340px] overflow-hidden bg-[#fafafa] max-h-[calc(100dvh-2rem)] md:h-[520px] md:max-w-[700px] lg:max-w-[900px]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 닫기 버튼 */}
+        {/* 닫기 버튼 — 지도(SpaceLocationMapModal)·3D뷰(CurationModal) 닫기 버튼과 동일한
+            스타일(파란 원 + 흰색 X, 36px)로 통일 */}
         <button
-          className="absolute top-4 right-4 md:top-6 md:right-6 lg:top-8 lg:right-8"
+          type="button"
+          className="bg-primary absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full text-white shadow-md md:top-6 md:right-6 lg:top-8 lg:right-8"
           onClick={onClose}
           aria-label="닫기"
         >
-          <img src={iconClose} alt="" className="h-6 w-6" />
+          ✕
         </button>
 
         {isLoading ? (

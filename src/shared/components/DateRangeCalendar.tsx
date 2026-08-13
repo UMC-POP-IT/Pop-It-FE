@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
-
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+import CalendarMonthGrid from "@/shared/components/calendar/CalendarMonthGrid";
 
 export interface DateRange {
   start: Date | null;
@@ -48,8 +47,19 @@ const getMonthCells = (year: number, month: number): (Date | null)[] => {
  * 공간상세 예약 캘린더(ExploreReservationCard)와 같은 선택 상태 전이 규칙을
  * 쓰되(첫 클릭=시작일, 두번째 클릭=종료일, 시작일 이전 클릭 시 재시작),
  * 검색 필터용이라 특정 공간의 예약 가능 여부는 확인하지 않는다.
+ *
+ * 실제 "한 달치" 그리드(요일 헤더 + 날짜 칸)는 CalendarMonthGrid가 그린다 -
+ * 이슈 #287 디자인 QA: 모바일/태블릿/데스크톱 어디서나 날짜 칸·선택 원·밴드가
+ * 완전히 같은 픽셀 값이어야 해서, 그 스타일은 이제 이 컴포넌트가 아니라
+ * CalendarMonthGrid 한 곳에만 존재한다(ExploreReservationCard·
+ * DateRangePicker도 동일하게 그 컴포넌트를 재사용한다).
  */
-const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCalendarProps) => {
+const DateRangeCalendar = ({
+  value,
+  onChange,
+  onConfirm,
+  onReset,
+}: DateRangeCalendarProps) => {
   const todayStart = startOfToday();
   const [viewDate, setViewDate] = useState(() => {
     const now = new Date();
@@ -62,15 +72,27 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
   const isTwoMonthView = useMediaQuery("(min-width: 1024px)");
   const isMobileCalendar = useMediaQuery("(max-width: 767px)");
 
-  const secondViewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
+  const secondViewDate = new Date(
+    viewDate.getFullYear(),
+    viewDate.getMonth() + 1,
+    1,
+  );
   // 실제로 화면에 보이는 달 중 가장 오른쪽(=가장 미래) 달. 2개월 뷰에서는 secondViewDate,
   // 1개월 뷰에서는 viewDate 자신이다 - "다음 달로 더 못 넘어가는" 기준을 여기에 맞춘다.
   const rightmostViewDate = isTwoMonthView ? secondViewDate : viewDate;
 
   // 오늘이 속한 달보다 과거로는 이동할 수 없다(ExploreReservationCard와 동일한 규칙).
   // 가장 왼쪽(=viewDate) 달이 이동 불가한 상태면 "이전 달" 화살표 자체를 렌더링하지 않는다.
-  const currentMonthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
-  const viewedMonthStart = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+  const currentMonthStart = new Date(
+    todayStart.getFullYear(),
+    todayStart.getMonth(),
+    1,
+  );
+  const viewedMonthStart = new Date(
+    viewDate.getFullYear(),
+    viewDate.getMonth(),
+    1,
+  );
   const isPrevMonthDisabled = viewedMonthStart <= currentMonthStart;
 
   // 오늘로부터 90일 이후의 달로는 이동할 수 없다(공간상세 예약 캘린더와 동일한 규칙).
@@ -82,7 +104,7 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
     rightmostViewDate.getMonth() === maxSelectableDate.getMonth();
 
   const handleSelectDate = (date: Date) => {
-    if (date < todayStart || date > maxSelectableDate) return;
+    if (date <= todayStart || date > maxSelectableDate) return;
     const { start, end } = value;
     if (!start || end) {
       onChange({ start: date, end: null });
@@ -106,30 +128,31 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
     }
   };
 
-  // 오늘 이전이거나(과거) 오늘로부터 90일을 넘는 날짜는 선택할 수 없다
-  // (공간상세 예약 캘린더와 동일한 규칙 - 회색 취소선으로 표시).
-  const isDateDisabled = (date: Date) => date < todayStart || date > maxSelectableDate;
+  // 오늘이거나(당일 예약 불가) 그 이전(과거), 혹은 오늘로부터 90일을 넘는
+  // 날짜는 선택할 수 없다 - 오늘은 항상 회색 취소선 + 회색 원으로 표시하고
+  // 선택 대상에서 제외한다(이슈 #287 디자인 QA).
+  const isDateDisabled = (date: Date) =>
+    date <= todayStart || date > maxSelectableDate;
 
-  // 공간상세 예약 캘린더(ExploreReservationCard)와 동일한 시스템: 시작일=종료일이
-  // 아닌 기간을 선택했을 때만 칸 배경에 캡슐(이어지는 옅은 파란 배경)을 그린다.
-  // 시작/종료 칸은 원의 세로 지름(칸 정중앙)까지만 배경을 채우고 반대쪽은 비워서
-  // renderDayNumber가 그리는 꽉 찬 원 뒤로 배경이 삐져나오지 않게 한다.
-  const getDayClassName = (date: Date) => {
+  // 두 날짜(시작~종료) 사이를 잇는 "밴드"의 배경색만 반환한다. 실제 높이는
+  // CalendarMonthGrid가 고정값(44px)으로 그린다. 시작/종료 칸은 원의 가로
+  // 중심까지만 배경을 채우고 반대쪽은 비워서, 원 뒤로 배경이 삐져나오지 않게 한다.
+  const getBandClassName = (date: Date) => {
     const { start, end } = value;
-    if (isDateDisabled(date)) return "cursor-not-allowed";
+    if (isDateDisabled(date)) return "";
 
     if (start && end && !isSameDay(start, end)) {
       if (isSameDay(date, start)) {
-        return "text-text-primary bg-[linear-gradient(to_right,transparent_50%,var(--color-primary-100)_50%)]";
+        return "bg-[linear-gradient(to_right,transparent_50%,var(--color-primary-100)_50%)]";
       }
       if (isSameDay(date, end)) {
-        return "text-text-primary bg-[linear-gradient(to_right,var(--color-primary-100)_50%,transparent_50%)]";
+        return "bg-[linear-gradient(to_right,var(--color-primary-100)_50%,transparent_50%)]";
       }
       if (date > start && date < end) {
-        return "bg-primary-100 text-text-primary";
+        return "bg-primary-100";
       }
     }
-    return "text-text-primary";
+    return "";
   };
 
   const isSelectedEndpoint = (date: Date) => {
@@ -139,104 +162,51 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
     return false;
   };
 
-  // 날짜 칸 안의 숫자: 선택됨(꽉 찬 원, 흰 글씨) > 오늘(옅은 테두리 원) >
-  // 선택 불가(회색 취소선) > 기본. ExploreReservationCard의 renderDayNumber와 동일한 우선순위.
-  const renderDayNumber = (date: Date) => {
-    const day = date.getDate();
+  const isToday = (date: Date) => isSameDay(date, todayStart);
 
-    if (isSelectedEndpoint(date)) {
-      return (
-        <span className="bg-primary relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full text-white">
-          {day}
-        </span>
-      );
-    }
-    if (isDateDisabled(date)) {
-      return <span className="text-text-disabled line-through">{day}</span>;
-    }
-    if (isSameDay(date, todayStart)) {
-      return (
-        <span className="border-primary-100 relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full border text-text-primary">
-          {day}
-        </span>
-      );
-    }
-    return day;
-  };
+  // 모바일 바텀시트는 화면 폭이 다양(360~767px)해 칸 가로폭에 고정 px를 쓸 수
+  // 없으므로 유동(fr) 7열을 쓴다. 태블릿/데스크톱(팝오버)은 항상 폭이 넉넉해
+  // CalendarMonthGrid 기본값(56px 고정 7열)을 그대로 쓴다.
+  const mobileGridProps = isMobileCalendar
+    ? {
+        monthWidthClassName: "w-full",
+        gridColsClassName: "grid w-full grid-cols-7",
+        cellWidthClassName: "min-w-0",
+      }
+    : {};
 
   const renderMonth = (
     monthDate: Date,
-    { showPrevArrow, showNextArrow }: { showPrevArrow: boolean; showNextArrow: boolean },
+    {
+      showPrevArrow,
+      showNextArrow,
+    }: { showPrevArrow: boolean; showNextArrow: boolean },
   ) => {
     const cells = getMonthCells(monthDate.getFullYear(), monthDate.getMonth());
 
     return (
-      <div className="flex w-full flex-col items-center gap-7 px-3.5 py-5">
-        <div className="flex w-full items-center justify-center gap-3">
-          {/* 화살표 유무와 상관없이 "YYYY.MM" 라벨 위치가 고정되도록, 이동 불가
-              방향이어도 자리(w-8)는 항상 비워둔다(ExploreReservationCard와 동일). */}
-          <div className="flex h-8 w-8 items-center justify-center">
-            {showPrevArrow && !isPrevMonthDisabled && (
-              <button
-                type="button"
-                aria-label="이전 달"
-                onClick={() =>
-                  setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
-                }
-                className="text-text-primary hover:bg-primary-light active:bg-primary-light focus-visible:ring-primary flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                ‹
-              </button>
-            )}
-          </div>
-          <span className="text-text-primary text-xl font-bold">
-            {monthDate.getFullYear()}.{String(monthDate.getMonth() + 1).padStart(2, "0")}
-          </span>
-          <div className="flex h-8 w-8 items-center justify-center">
-            {showNextArrow && !isNextMonthDisabled && (
-              <button
-                type="button"
-                aria-label="다음 달"
-                onClick={() =>
-                  setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
-                }
-                className="text-text-primary hover:bg-primary-light active:bg-primary-light focus-visible:ring-primary flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-xl transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                ›
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="flex w-full flex-col items-center gap-3">
-          <div className="grid w-full grid-cols-7">
-            {WEEKDAYS.map((day) => (
-              <span key={day} className="text-text-primary flex min-w-0 items-center justify-center py-2 text-sm">
-                {day}
-              </span>
-            ))}
-          </div>
-
-          <div className="grid w-full grid-cols-7">
-            {cells.map((date, index) =>
-              date ? (
-                <button
-                  type="button"
-                  key={date.toISOString()}
-                  onClick={() => handleSelectDate(date)}
-                  disabled={isDateDisabled(date)}
-                  aria-pressed={isSelectedEndpoint(date)}
-                  className={`focus-visible:ring-primary relative box-border flex h-[46px] min-w-0 cursor-pointer items-center justify-center border-0 p-0 text-base font-bold focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed ${getDayClassName(date)}`}
-                >
-                  <span className="flex size-11 items-center justify-center rounded-full">{renderDayNumber(date)}</span>
-                </button>
-              ) : (
-                <span key={`blank-${index}`} className="h-[46px] min-w-0" aria-hidden="true" />
-              ),
-            )}
-          </div>
-        </div>
-      </div>
+      <CalendarMonthGrid
+        monthDate={monthDate}
+        cells={cells}
+        showPrevArrow={showPrevArrow && !isPrevMonthDisabled}
+        showNextArrow={showNextArrow && !isNextMonthDisabled}
+        onPrevMonth={() =>
+          setViewDate(
+            new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1),
+          )
+        }
+        onNextMonth={() =>
+          setViewDate(
+            new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1),
+          )
+        }
+        isSelectedEndpoint={isSelectedEndpoint}
+        isToday={isToday}
+        isDisabled={isDateDisabled}
+        getBandClassName={getBandClassName}
+        onSelectDate={handleSelectDate}
+        {...mobileGridProps}
+      />
     );
   };
 
@@ -250,17 +220,23 @@ const DateRangeCalendar = ({ value, onChange, onConfirm, onReset }: DateRangeCal
           onConfirm();
         }
       }}
-      className={`mx-auto flex w-full shrink-0 flex-col items-center bg-white ${
+      className={`mx-auto flex shrink-0 flex-col items-center bg-white ${
         isMobileCalendar
-          ? "h-auto"
-          : "border-divider h-[520px] w-[420px] max-w-[calc(100vw-24px)] rounded-xl border-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]"
+          ? "h-auto w-full"
+          : "border-divider h-auto w-fit max-w-[calc(100vw-24px)] rounded-xl border-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]"
       }`}
     >
       <div className="flex items-center rounded-xl">
         {isTwoMonthView ? (
           <>
-            {renderMonth(viewDate, { showPrevArrow: true, showNextArrow: false })}
-            {renderMonth(secondViewDate, { showPrevArrow: false, showNextArrow: true })}
+            {renderMonth(viewDate, {
+              showPrevArrow: true,
+              showNextArrow: false,
+            })}
+            {renderMonth(secondViewDate, {
+              showPrevArrow: false,
+              showNextArrow: true,
+            })}
           </>
         ) : (
           renderMonth(viewDate, { showPrevArrow: true, showNextArrow: true })

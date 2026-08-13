@@ -68,14 +68,14 @@ export const CurationModal = ({
             </span>
           </div>
 
+          {/* 닫기 버튼 — 지도(SpaceLocationMapModal)·사진 상세(PhotoGalleryModal) 닫기 버튼과
+              동일한 스타일(파란 원 + 흰색 X, 36px)로 통일 */}
           <Button
-            className="!h-11 !w-11 !rounded-full bg-blue-500 absolute top-0 right-0 text-white mt-6 mr-6 z-20 hidden md:flex"
+            className="bg-primary !h-9 !w-9 !rounded-full absolute top-0 right-0 text-white shadow-md mt-6 mr-6 z-20 hidden md:flex"
             onClick={onClose}
+            aria-label="닫기"
           >
-            <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
-              <line x1="1" y1="1" x2="23" y2="23" />
-              <line x1="23" y1="1" x2="1" y2="23" />
-            </svg>
+            ✕
           </Button>
 
           <CurationViewer property={property} />

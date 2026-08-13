@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 import iconCheckBigSized from "@/assets/icons/icon_check_big_sized.svg";
 import iconWarningBigSized from "@/assets/icons/icon_warn_big_sized.svg";
@@ -6,7 +6,7 @@ import iconWarningBigSized from "@/assets/icons/icon_warn_big_sized.svg";
 interface ModalProps {
   isOpen: boolean;
   title: string;
-  description?: string;
+  description?: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   /** true면 확인 버튼 하나만 표시 */
@@ -80,9 +80,9 @@ const Modal = ({
             </h3>
 
             {description && (
-              <p className="text-text-tertiary text-base font-medium whitespace-pre-line break-keep">
+              <div className="text-text-tertiary text-base font-medium whitespace-pre-line break-keep">
                 {description}
-              </p>
+              </div>
             )}
           </div>
         </div>
