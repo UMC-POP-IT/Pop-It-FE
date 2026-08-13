@@ -209,7 +209,7 @@ pnpm format
 | 홈 (추천+탐색) | HomePage → AiRecommendSpace, RealTimeRecommendSpace, ExploreSpace | `/` | 고태현 / 강민경 |
 | 공간 탐색 | ExplorePage | `/explore` | 강민경 |
 | 공간 상세 | SpaceDetailPage | `/spaces/:spaceId` | 강민경 |
-| 3D 큐레이션 | SpaceViewPage (CurationViewer) | `/spaces/:spaceId/view` | 고태현 |
+| 3D 큐레이션 | SpaceDetailPage (Modal) | `/spaces/:spaceId` | 고태현 |
 | 전자계약/결제 | ContractModal, Authentication, SignatureBoard, PaymentModal, TossPayments | 공간 상세 내 모달 | 강민경 |
 | 나의 예약 | MyReservationPage | `/reservations` | 고태현 |
 | 공간 등록 (1~5단계) | RegisterStep1~5 | `/host/register`, `/host/register/step2 ~ /host/register/step5` | 이수빈 |
