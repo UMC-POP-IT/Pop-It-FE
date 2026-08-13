@@ -110,6 +110,8 @@ const Banner = ({
     "inline" | "pinned-hidden" | "pinned-open"
   >(searchBarPosition);
   const prevPositionRef = useRef(searchBarPosition);
+  const searchBarWrapperRef = useRef<HTMLDivElement>(null);
+  const [inlineSearchBarHeight, setInlineSearchBarHeight] = useState(0);
 
   useLayoutEffect(() => {
     const prev = prevPositionRef.current;
@@ -125,6 +127,23 @@ const Banner = ({
       setActualPosition(searchBarPosition);
     }
   }, [searchBarPosition]);
+
+  useLayoutEffect(() => {
+    if (actualPosition !== "inline") return;
+    const node = searchBarWrapperRef.current;
+    if (!node) return;
+
+    const updateInlineHeight = () => {
+      setInlineSearchBarHeight(node.getBoundingClientRect().height);
+    };
+
+    updateInlineHeight();
+    if (typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(updateInlineHeight);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [actualPosition]);
 
   const goTo = (index: number) => setCurrent((index + total) % total);
 
@@ -197,8 +216,10 @@ const Banner = ({
     actualPosition === "inline" ? undefined : { top: HEADER_HEIGHT_PX };
   const innerWrapperClassName =
     actualPosition === "inline"
-      ? `w-full max-w-[1200px] ${showImage ? "mt-4 md:mt-10 lg:mt-20" : ""}`
+      ? "w-full max-w-[1200px]"
       : "mx-auto w-full max-w-[1200px] px-4 py-2 md:px-10 md:py-4 lg:px-[76px]";
+  const shouldReserveInlineSearchBarSpace =
+    showImage && actualPosition !== "inline" && inlineSearchBarHeight > 0;
 
   return (
     <div
@@ -242,13 +263,22 @@ const Banner = ({
             <div
               ref={searchBarTopRef}
               aria-hidden="true"
+              className={showImage ? "mt-4 md:mt-10 lg:mt-20" : undefined}
             />
             <div
+              ref={searchBarWrapperRef}
               className={outerWrapperClassName}
               style={outerWrapperStyle}
             >
               <div className={innerWrapperClassName}>{children}</div>
             </div>
+            {shouldReserveInlineSearchBarSpace && (
+              <div
+                aria-hidden="true"
+                className="shrink-0"
+                style={{ height: inlineSearchBarHeight }}
+              />
+            )}
           </>
         )}
       </div>
