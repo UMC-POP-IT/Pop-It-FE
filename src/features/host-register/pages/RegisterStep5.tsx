@@ -140,8 +140,12 @@ export const RegisterStep5 = () => {
             이 화면은 필드가 둘(사진 업로더 / 가이드 박스)이고 사이가 피그마 32(gap-8) */}
         <div className="mt-7 flex flex-col gap-8">
           {/* 사진 업로더 + 제외 안내문 — 안내문이 떴다 사라져도 가이드 박스와의
-              간격이 32로 고정되도록 한 묶음으로 감싼다 */}
-          <div className="flex flex-col gap-6">
+              간격이 32로 고정되도록 한 묶음으로 감싼다.
+              gap-6을 쓰지 않는 이유: 아래 안내문을 항상 마운트해 두는데(라이브 영역을
+              조건부로 넣다 빼면 보조기술이 등록을 놓칠 수 있다), gap은 자식이 비어
+              있어도 그려진다. 그래서 간격을 안내문 자신의 mt-6으로 옮기고 비었을 때는
+              empty:mt-0으로 죽여, 정상 상태 높이를 예전과 똑같이 유지한다 */}
+          <div className="flex flex-col">
             {/* 사진 업로더: 카메라 타일 + 업로드된 썸네일들.
                 타일 146 고정, 간격만 3단 — 열 수는 폭에 따라 flex-wrap이 알아서 나눈다.
                   모바일 328: 146×2 + 16     = 308 → 2열
@@ -226,16 +230,17 @@ export const RegisterStep5 = () => {
               ))}
             </div>
 
-            {/* 개수 제한·형식 오류로 빠진 사진 안내 — 나타나는 순간 스크린 리더가 읽도록 role="alert".
+            {/* 개수 제한·형식 오류로 빠진 사진 안내. 노드는 항상 두고 내용만 갱신한다
+            (위 wrapper 주석 참고). 거부된 파일이 파일당 한 줄씩 붙어 높이가 가변이라
+            여기만 예약 높이를 두지 않는다 — 자르면 "어느 파일이 왜 빠졌는지"라는
+            문구의 목적이 사라진다.
             여러 줄이 될 수 있어 whitespace-pre-line으로 \n을 살린다 */}
-            {photoNotice && (
-              <span
-                role="alert"
-                className="text-danger text-left text-base font-bold whitespace-pre-line"
-              >
-                {photoNotice}
-              </span>
-            )}
+            <span
+              aria-live="polite"
+              className="text-danger mt-6 text-left text-base font-bold whitespace-pre-line empty:mt-0"
+            >
+              {photoNotice}
+            </span>
           </div>
 
           {/* 사진 촬영 가이드 박스 */}
@@ -258,16 +263,34 @@ export const RegisterStep5 = () => {
       </div>
 
       {/* 오류 문구 + 버튼을 한 묶음으로 감싼다 — 문구가 떴다 사라져도
-          섹션 아래 간격이 항상 피그마 72로 고정된다 */}
-      <div className="mt-18 flex flex-col items-end gap-2">
-        {submitError && (
-          <span
-            role="alert"
-            className="text-danger text-base font-bold"
-          >
-            {submitError}
-          </span>
-        )}
+          섹션 아래 간격이 항상 피그마 72로 고정된다.
+          이슈 #306: 문구 노드를 항상 남기고 자리를 미리 잡아, 제출 실패 순간 버튼이
+          아래로 튀지 않게 한다.
+          예약은 두 줄(min-h-12 48px)이다 — 한 줄로 잡았더니 실제 문구가 모바일 328px에서
+          두 줄이라(예: "수정할 공간 정보를 찾을 수 없습니다…" 실측 411.5px) 24px이 그대로
+          남았다.
+          천장(line-clamp-2)은 일부러 걸지 않는다. setSubmitError에는 서버 error.message가
+          그대로 들어오고, upload_api.ts가 만드는 메시지에는 사용자가 고른 파일명이
+          박혀 있다(`파일 업로드에 실패했습니다 (413): ${file.name}`). 2줄에서 자르면
+          하필 '어느 파일이 실패했는지'가 잘려 나가는데, 그게 사용자가 조치할 수 있는
+          유일한 정보다. console.error는 사용자에게 보이는 화면이 아니다.
+          대신 세 줄 이상인 문구에서만 버튼이 내려간다 — 제출 버튼을 누른 직후이고
+          사용자의 다음 행동이 '탭'이 아니라 '읽기'라, 타이핑 중 밀림과 성격이 다르다.
+          max-w-full + break-words가 필요한 이유 — items-end 안에서 이 span 폭은
+          shrink-to-fit(= max-content)이라, 줄바꿈 지점이 없는 긴 토큰이 오면 컨테이너를
+          가로로 뚫는다. 실제로 위 파일명이 한글 없는 라틴 문자열이면(밑줄에서는 줄바꿈이
+          안 된다) 폭이 328 → 828px로 벌어진다. max-w-full이 폭을 컨테이너에 묶고
+          break-words가 토큰 안에서 끊는다. 예전에는 line-clamp-2의 overflow:hidden이
+          이걸 가려주고 있었을 뿐 고쳐진 게 아니었다.
+          예약한 48 + gap-2(8)를 섹션 간격에서 미리 빼서(72 → mt-4 16) 버튼 위치는
+          피그마 그대로 유지 */}
+      <div className="mt-4 flex flex-col items-end gap-2">
+        <span
+          role="alert"
+          className="text-danger min-h-12 max-w-full text-base font-bold break-words"
+        >
+          {submitError}
+        </span>
 
         {/* 이전 / 완료 버튼 (우측 정렬) — 버튼 사이 모바일 16 / md 이상 8 */}
         <div className="flex justify-end gap-4 md:gap-2">

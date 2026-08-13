@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useId } from "react";
-import calendarIcon from "@/assets/icons/icon_calendar.svg";
+import CalendarIcon from "@/features/host-register/components/CalendarIcon";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
-import CalendarMonthGrid from "@/shared/components/calendar/CalendarMonthGrid";
+import ContractCalendarGrid from "@/features/host-register/components/ContractCalendarGrid";
 
 // 두 날짜가 '같은 날'인지 확인 (년·월·일 비교)
 const isSameDay = (a: Date, b: Date) =>
@@ -70,6 +70,15 @@ export const DateRangePicker = ({
   onConfirm,
 }: DateRangePickerProps) => {
   const [isOpen, setIsOpen] = useState(false); // 달력 팝업 열림/닫힘
+  // 지금 열려 있는 팝업을 띄운 필드.
+  // isOpen 하나로 테두리를 칠하면 두 칸이 동시에 파래진다 — 실제로 누른 칸만
+  // 강조해야 하므로 어느 칸이 열었는지를 따로 기억한다 (이슈 #306).
+  // 화면에 보이는 라벨("시작일")이 아니라 별도 키를 쓴다: 라벨을 식별자로 쓰면
+  // 타입이 string이라 오타를 컴파일러가 못 잡고(테두리만 조용히 안 칠해진다),
+  // 나중에 라벨 문구를 "대여 시작일"로 바꾸려는 사람이 이게 상태 키인 줄 모른다.
+  // 닫을 때 굳이 비우지 않는다 — 아래 강조 조건이 isOpen과 AND로 묶여 있어
+  // 닫혀 있으면 남은 값이 화면에 영향을 주지 않는다
+  const [openedField, setOpenedField] = useState<"start" | "end" | null>(null);
   // 시작일·종료일 버튼이 같은 팝업을 가리키도록 id를 하나만 만들어 공유한다
   const popupId = useId();
   // 저장된 시작일이 있으면 그 달을 먼저 보여줌 (없으면 이번 달)
@@ -98,16 +107,12 @@ export const DateRangePicker = ({
   // 팝업을 연 필드 버튼 — 닫을 때 여기로 포커스를 되돌린다
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
-  // 이슈 #287 디자인 QA: 날짜 칸·선택 원·밴드 크기를 모바일/태블릿/데스크톱
-  // 어디서나 완전히 동일한 픽셀 값(56px 칸·44px 원)으로 맞춘다(검색바 날짜
-  // 필터·공간상세 예약 캘린더와 동일 - CalendarMonthGrid 참고). 칸 가로폭만
-  // 모바일 바텀시트(360~767, 화면 폭이 다양해 고정 px를 못 씀)에서 유동으로
-  // 바뀐다. 두 달을 나란히(840px = 420px×2) 보여주려면 최소 md(768)로는
-  // 부족해서(768 < 840) 검색바 날짜 필터와 같은 기준으로 lg(1024) 이상에서만
-  // 2개월, 그 미만은 1개월만 보여준다 - 예전엔 md(768)부터 2개월이었지만,
-  // 그때는 태블릿 칸이 36px로 더 작아 616px 안에 두 달이 들어갔다.
-  const isMobileCalendar = useMediaQuery("(max-width: 767px)");
-  const isTwoMonthView = useMediaQuery("(min-width: 1024px)");
+  // 이슈 #306: 태블릿이 1개월만 보여줘 데스크톱과 레이아웃이 갈라진 것을 되돌린다.
+  // #287이 칸을 56px로 통일하자 두 달이 840px(420×2)가 되어 태블릿 768px에 안 들어가서
+  // 2개월 기준이 lg(1024)로 밀렸던 것이 원인이다. 이 화면은 공용 그리드를 쓰지 않고
+  // 시안 크기(태블릿 칸 40×36 → 월 카드 308 → 두 달 616)로 돌아왔으므로 768에 들어간다.
+  // 그래서 md(768)부터 2개월 — #287 이전과 같은 기준이다.
+  const isTwoMonthView = useMediaQuery("(min-width: 768px)");
 
   // 오늘 자정. 날짜 비교는 '시각'이 아니라 '날짜' 단위여야 하므로 0시로 맞춘다
   const todayStart = new Date();
@@ -186,7 +191,9 @@ export const DateRangePicker = ({
     // 오늘·과거는 계약 시작일이 될 수 없다.
     // 과거 칸은 disabled라 클릭이 아예 안 오므로 실제로 여기 걸리는 건 오늘뿐이다.
     if (date <= todayStart) {
-      setDateError("오늘 날짜는 선택할 수 없어요. 내일부터 선택해 주세요.");
+      // 아래 안내 칸이 한 줄(20px)만 예약하므로 한 줄에 들어가는 길이로 둔다.
+      // 실측 252.4px — 360px 기기의 시트 가용 폭 328px 안에 들어간다
+      setDateError("오늘은 선택할 수 없어요. 내일부터 골라주세요");
       return;
     }
     setDateError(null);
@@ -263,10 +270,20 @@ export const DateRangePicker = ({
 
   // 딤을 누르거나 시트를 끌어내려 닫을 때 — 고른 범위가 완성돼 있으면 저장하고 닫는다.
   // (바깥 클릭으로 닫는 기존 동작과 같게 맞춘다)
+  //
+  // 포커스 복원: 팝업이 언마운트되면 그 안에 있던 포커스가 <body>로 떨어져서,
+  // 키보드·스크린리더 사용자가 다음 Tab에 문서 맨 처음으로 튄다. 그래서 닫는 경로마다
+  // 팝업을 연 버튼으로 되돌린다. 지금 이 함수(딤 탭 / 손잡이 끌어내리기)와
+  // Esc(useEffect 안), 확인 버튼(handleConfirm) 세 곳이 전부다.
+  // 바깥 클릭(handleClickOutside)만 예외로 둔다 — 그 핸들러는 mousedown에서 돌아
+  // 브라우저가 방금 누른 요소로 포커스를 옮기기 '전'이다. 여기서 focus()를 부르면
+  // 사용자가 실제로 클릭한 대상에서 포커스를 빼앗고, 곧 브라우저가 다시 덮어써
+  // 결과가 브라우저마다 달라진다. 그 경로는 애초에 포인터 조작이라 잃을 포커스가 없다.
   const closeWithSave = () => {
     if (startDate && endDate) onConfirm(toYmd(startDate), toYmd(endDate));
     setIsOpen(false);
     setDragY(0);
+    triggerRef.current?.focus();
   };
 
   // 손잡이 끌기 — 포인터 이벤트라 터치·마우스·펜을 한 번에 받는다.
@@ -347,28 +364,21 @@ export const DateRangePicker = ({
   const goNext = () =>
     setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
 
-  // 모바일 바텀시트(360~767)는 화면 폭이 다양해 칸 가로폭에 고정 px를 쓸 수
-  // 없으므로 유동(fr) 7열을 쓴다. 태블릿/데스크톱(팝오버)은 항상 폭이 넉넉해
-  // CalendarMonthGrid 기본값(56px 고정 7열)을 그대로 쓴다.
-  const mobileGridProps = isMobileCalendar
-    ? {
-        monthWidthClassName: "w-full",
-        gridColsClassName: "grid w-full grid-cols-7",
-        cellWidthClassName: "min-w-0",
-      }
-    : {};
-
-  // 한 달치 달력 카드. arrow로 이 카드에 붙일 화살표를 정한다 (피그마: 왼쪽 달 ‹, 오른쪽 달 ›).
-  // 실제 그리드(요일 헤더 + 날짜 칸)는 CalendarMonthGrid가 그린다 - 검색바 날짜
-  // 필터·공간상세 예약 캘린더와 완전히 같은 칸/원/밴드 크기를 공유한다.
+  // 한 달치 달력 카드. arrow로 이 카드에 붙일 화살표를 정한다 (시안: 왼쪽 달 ‹, 오른쪽 달 ›).
+  // 그리드는 이 폴더의 ContractCalendarGrid가 그린다 — 공용
+  // shared/components/calendar/CalendarMonthGrid를 쓰지 않는 이유는 그 파일 주석 참고
+  // (요약: 공용 쪽은 칸 56px·원 44px가 리터럴로 고정돼 이 화면 시안과 다르고,
+  //  고치면 검색바 날짜 필터·공간상세 예약 달력까지 같이 흔들린다).
   const renderMonth = (base: Date, arrow: "prev" | "next") => (
-    <CalendarMonthGrid
+    <ContractCalendarGrid
       monthDate={base}
       cells={getCalendarDays(base)}
       showPrevArrow={arrow === "prev" && !isPrevMonthDisabled}
-      // lg 미만(바텀시트/1개월 팝오버)은 달 카드가 하나뿐이라 그 카드가 다음 달
-      // 화살표도 함께 갖는다. lg 이상은 오른쪽(arrow="next") 카드가 전담한다.
-      showNextArrow={arrow === "next" || !isTwoMonthView}
+      // md 이상은 두 달을 나란히 보여주므로 오른쪽(arrow="next") 카드가 › 를 전담한다.
+      showNextArrow={arrow === "next"}
+      // md 미만(바텀시트)은 달 카드가 하나뿐이라 그 카드가 › 도 함께 갖는다.
+      // CSS(md:hidden)로 숨기므로 화면을 넓혀도 › 가 두 개로 겹치지 않는다
+      showNextArrowOnMobile={arrow === "prev"}
       onPrevMonth={goPrev}
       onNextMonth={goNext}
       isSelectedEndpoint={isSelectedEndpoint}
@@ -378,7 +388,6 @@ export const DateRangePicker = ({
       onSelectDate={handleSelectDate}
       getAriaLabel={getDayAriaLabel}
       isAriaPressed={isDateSelected}
-      {...mobileGridProps}
     />
   );
 
@@ -394,54 +403,74 @@ export const DateRangePicker = ({
       {/* 시작일 / 종료일 — 라벨은 필드 '위'에, 필드 안에는 고른 날짜 또는 "날짜 선택" */}
       {/* 피그마: 필드 387 + gap 20 + 필드 387 = 본문 794 */}
       <div className="grid grid-cols-2 gap-5">
-        {[
-          { date: startDate, label: "시작일" },
-          { date: endDate, label: "종료일" },
-        ].map((field) => (
-          <div
-            key={field.label}
-            // 모바일 필드 묶음 96 = 라벨 28 + gap 12 + 입력칸 56
-            className="flex flex-col gap-3 md:gap-2"
-          >
-            {/* 같은 페이지의 다른 하위 필드 라벨(전용면적 등)과 동일한 계층 */}
-            <span className="text-text-tertiary text-xl font-bold">
-              {field.label}
-            </span>
-            <button
-              type="button"
-              aria-haspopup="dialog"
-              aria-expanded={isOpen}
-              aria-controls={popupId}
-              // 라벨이 버튼 밖으로 나가면서 두 버튼의 읽히는 이름이 "날짜 선택"으로 같아진다.
-              // 어느 필드인지 구분되도록 라벨을 이름에 직접 넣어준다.
-              aria-label={`${field.label} ${field.date ? toDisplay(field.date) : "날짜 선택"}`}
-              onClick={(e) => {
-                triggerRef.current = e.currentTarget; // 방금 누른 버튼을 기억
-                setDateError(null); // 지난번 안내 문구가 남아있지 않게 지움
-                setIsOpen((v) => !v);
-              }}
-              className="border-divider flex h-14 items-center gap-2 rounded-lg border bg-white px-5"
+        {(
+          [
+            // key는 상태 식별자, label은 화면 문구 — 둘을 분리해 둔다 (위 openedField 주석)
+            { key: "start", date: startDate, label: "시작일" },
+            { key: "end", date: endDate, label: "종료일" },
+          ] as const
+        ).map((field) => {
+          // 이 칸이 지금 열려 있는 팝업의 주인인가 → 테두리를 파랗게 칠할지 판단
+          const isThisFieldOpen = isOpen && openedField === field.key;
+          return (
+            <div
+              key={field.key}
+              // 모바일 필드 묶음 96 = 라벨 28 + gap 12 + 입력칸 56
+              className="flex flex-col gap-3 md:gap-2"
             >
-              {/* 모바일은 아이콘을 빼고 날짜 글자만 둔다 (시안) */}
-              <img
-                src={calendarIcon}
-                alt=""
-                className="hidden h-8 w-8 md:block"
-              />
-
-              {/* 피그마: 미선택 #808080 18px/500, 선택 후 #121212 18px/700 (둘 다 line-height 140%) */}
-              <span
-                className={`text-lg leading-[1.4] ${
-                  field.date
-                    ? "text-text-primary font-bold"
-                    : "text-text-secondary font-medium"
-                }`}
-              >
-                {field.date ? toDisplay(field.date) : "날짜 선택"}
+              {/* 같은 페이지의 다른 하위 필드 라벨(전용면적 등)과 동일한 계층 */}
+              <span className="text-text-tertiary text-xl font-bold">
+                {field.label}
               </span>
-            </button>
-          </div>
-        ))}
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                // isOpen이 아니라 이 칸 기준이다 — 테두리를 칸별로 칠하게 바꾼 순간
+                // isOpen을 쓰면 시작일을 눌러 열었는데 종료일 버튼도 "확장됨"으로
+                // 읽혀, 화면 상태(회색 테두리)와 스크린리더 상태가 갈라진다
+                // (WCAG 4.1.2 Name, Role, Value)
+                aria-expanded={isThisFieldOpen}
+                aria-controls={popupId}
+                // 라벨이 버튼 밖으로 나가면서 두 버튼의 읽히는 이름이 "날짜 선택"으로 같아진다.
+                // 어느 필드인지 구분되도록 라벨을 이름에 직접 넣어준다.
+                aria-label={`${field.label} ${field.date ? toDisplay(field.date) : "날짜 선택"}`}
+                onClick={(e) => {
+                  triggerRef.current = e.currentTarget; // 방금 누른 버튼을 기억
+                  setDateError(null); // 지난번 안내 문구가 남아있지 않게 지움
+                  // 같은 칸을 다시 누르면 닫고, 열려 있는 상태에서 다른 칸을 누르면
+                  // 닫지 않고 강조만 그 칸으로 옮긴다 (팝업은 두 칸이 공유한다)
+                  setIsOpen(!isThisFieldOpen);
+                  setOpenedField(isThisFieldOpen ? null : field.key);
+                }}
+                // 이슈 #306: 누른 칸만 테두리를 primary로 (default는 divider).
+                // 글자색은 여기 한 번만 정하고 아래 아이콘·날짜 글자가 물려받는다 —
+                // 아이콘 색과 글자 색이 갈라질 여지를 없앤다.
+                // 피그마: 미선택 #808080(text-secondary), 선택 후 #121212(text-primary)
+                className={`flex h-14 items-center gap-2 rounded-lg border bg-white px-5 transition-colors ${
+                  isThisFieldOpen ? "border-primary" : "border-divider"
+                } ${field.date ? "text-text-primary" : "text-text-secondary"}`}
+              >
+                {/* 아이콘 색을 글자색과 맞춰야 하는데(이슈 #306) icon_calendar.svg 안에
+                    fill="#363636"이 하드코딩돼 있어 <img>로는 CSS가 닿지 않는다.
+                    그래서 path를 인라인으로 들고 fill="currentColor"로 위 button의
+                    글자색을 물려받는 CalendarIcon을 쓴다. mask-image 방식을 왜 버렸는지는
+                    CalendarIcon.tsx 주석 참고 (로딩 전 회색 사각형 번쩍임 등).
+                    모바일은 아이콘을 빼고 날짜 글자만 둔다 (시안) */}
+                <CalendarIcon className="hidden size-8 shrink-0 md:block" />
+
+                {/* 피그마: 미선택 18px/500, 선택 후 18px/700 (둘 다 line-height 140%).
+                    색은 위 button이 정한다 */}
+                <span
+                  className={`text-lg leading-[1.4] ${
+                    field.date ? "font-bold" : "font-medium"
+                  }`}
+                >
+                  {field.date ? toDisplay(field.date) : "날짜 선택"}
+                </span>
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       {isOpen && (
@@ -456,10 +485,18 @@ export const DateRangePicker = ({
           />
 
           {/* md 미만: 화면 아래에 붙는 바텀시트 (위 모서리만 radius 20, 안쪽 16, 높이는 내용만큼)
-              md 이상: 필드 아래에 뜨는 팝업 — 칸 크기가 이제 모든 화면에서 고정 56px라
-              카드 자체가 늘 같은 폭(1개월 420px / 2개월 840px)이므로 w-fit으로 내용에
-              맞춘다(예전처럼 태블릿·데스크톱마다 616px/896px로 따로 맞출 필요가 없다).
-              데스크톱(2개월, 840px)은 본문보다 넓어 좌우로 넘칠 수 있으므로 left-1/2 +
+              md 이상: 필드 아래에 뜨는 팝업. 이슈 #306에서 태블릿도 2개월이 되면서 폭을
+              다시 정했다.
+              폭은 달 카드 폭 × 2다 (ContractCalendarGrid의 시안 규격).
+                태블릿 616 = 308 × 2  (768 화면에 들어간다)
+                데스크톱 896 = 448 × 2
+              max-w-[calc(100vw-2rem)]는 보험이다. md는 폭이 768 이상이므로 616이
+              들어가고(768-32=736 > 616), lg는 1024 이상이므로 896이 들어간다
+              (1024-32=992 > 896) — 즉 정상 구간에서는 절대 걸리지 않는다. 다만 고정
+              px 두 개만 두면 브라우저 확대/축소나 예상 못한 뷰포트에서 가로로 삐져나갈
+              수 있고, 이 팝업은 left-1/2 + -translate-x-1/2로 가운데 정렬이라 넘침이
+              양쪽으로 생긴다. 상한을 걸어두면 그 경우 폭이 줄어들 뿐 화면을 넘지 않는다
+              팝업이 본문(md 535 / lg 644)보다 넓어 좌우로 넘치므로 left-1/2 +
               -translate-x-1/2로 가운데 정렬해 넘침을 대칭으로 만든다.
               MainLayout의 overflow-x-clip이 가로 스크롤바 생성을 막는다 */}
           <div
@@ -472,14 +509,13 @@ export const DateRangePicker = ({
               transform: dragY ? `translateY(${dragY}px)` : undefined,
               transition: isDragging ? "none" : "transform 200ms ease-out",
             }}
-            // 칸 높이가 56px로 통일되면서(예전 46px보다 커짐) 6주짜리 달(예: 2026년
-            // 8월)을 펼치면 시트 내용이 키 작은 화면(360×640 등)의 세로 공간을 넘길
-            // 수 있다 - max-h-[85vh]로 시트 자체 높이를 뷰포트 안으로 묶고, 아래
+            // 6주짜리 달(예: 2026년 8월)을 펼치면 시트 내용이 키 작은 화면(360×640 등)의
+            // 세로 공간을 넘길 수 있다 - max-h-[85vh]로 시트 자체 높이를 뷰포트 안으로 묶고, 아래
             // 스크롤 영역(달력+에러+하단 버튼)만 그 안에서 스크롤되게 한다(월 헤더의
             // ‹/› 화살표나 확인 버튼이 화면 밖으로 밀려 안 보이는 문제 방지 -
             // BottomSheet.tsx와 동일한 max-h-[Nvh] + 내부 overflow-y-auto 패턴).
             // md 이상(딤 없는 팝업)은 원래도 이 문제가 없어 md:max-h-none으로 그대로 둔다.
-            className="border-border fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-[20px] border bg-white px-4 pt-1 pb-4 shadow-lg md:absolute md:inset-x-auto md:bottom-auto md:left-1/2 md:z-10 md:mt-2 md:max-h-none md:w-fit md:-translate-x-1/2 md:overflow-hidden md:rounded-lg md:p-0"
+            className="border-border fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-[20px] border bg-white px-4 pt-1 pb-4 shadow-lg md:absolute md:inset-x-auto md:bottom-auto md:left-1/2 md:z-10 md:mt-2 md:max-h-none md:w-[616px] md:max-w-[calc(100vw-2rem)] md:-translate-x-1/2 md:overflow-hidden md:rounded-lg md:p-0 lg:w-[896px]"
           >
             {/* 손잡이 바 40×4 — 끌어내려 닫는다. 데스크톱 팝업엔 없다.
                 py-2로 손가락이 닿는 범위를 바보다 위아래 8씩 넓히고, 시트 pt-1(4)과 합쳐
@@ -503,34 +539,42 @@ export const DateRangePicker = ({
                 md 이상은 display:contents로 이 wrapper 자체를 레이아웃에서 지워
                 기존처럼 스크롤 없이 그대로 이어 붙는다. */}
             <div className="min-h-0 flex-1 overflow-y-auto md:contents">
-              {/* 달 카드 — lg 미만(바텀시트/태블릿 팝오버)은 1개월, lg 이상은 2개월 나란히.
-                  max-md:-mx-4: 모바일 바텀시트는 이 팝업 자체가 이미 px-4(16px) 좌우
-                  여백을 갖고 있는데, CalendarMonthGrid도 자기 몫으로 px-3.5(14px)를
-                  또 두르고 있어 그대로 두면 한 칸 너비가 (360-32-28)/7≈42.9px까지
-                  줄어 44px 고정 원(CALENDAR_CIRCLE_SIZE_PX)보다 좁아져 이웃 칸 원끼리
-                  겹쳐 보인다. 이 줄만 부모의 px-4를 정확히 상쇄해서(-16px) 모바일에서도
-                  검색바 날짜 필터·공간상세 예약 캘린더와 같은 여백(칸 너비
-                  (360-28)/7≈47.4px)이 되게 한다. md 이상은 부모가 이미 p-0이라
-                  영향이 없다. */}
-              <div className="flex max-md:-mx-4">
+              {/* 달 카드 — 모바일(바텀시트)은 1개월, md 이상은 2개월 나란히.
+                  ContractCalendarGrid는 모바일에서 자기 좌우 패딩을 두지 않으므로
+                  시트의 px-4를 상쇄할 필요가 없다(360 화면에서 칸 너비 328/7 ≈ 46.9px,
+                  선택 원 지름 46px보다 넓다). md 이상은 부모가 p-0이다. */}
+              <div className="flex">
                 {renderMonth(viewDate, "prev")}
                 {isTwoMonthView && renderMonth(nextMonth, "next")}
               </div>
 
-              {/* 고를 수 없는 날짜를 눌렀을 때만 나타남.
-                  role="alert"이면 스크린리더가 포커스를 옮기지 않고도 즉시 읽어준다 */}
-              {dateError && (
-                <p
-                  role="alert"
-                  className="text-danger text-sm font-medium md:px-4 lg:px-5"
-                >
-                  {dateError}
-                </p>
-              )}
+              {/* 고를 수 없는 날짜를 눌렀을 때 나타남.
+                  role="alert"이면 스크린리더가 포커스를 옮기지 않고도 즉시 읽어준다.
+                  Input.tsx는 같은 role을 버리고 aria-live로 갔는데 여기 남긴 이유 둘:
+                  (1) 여기는 role을 켰다 끄지 않는다 — 팝업이 열릴 때 빈 상태로 마운트돼
+                      라이브 영역 등록이 끝난 뒤 내용만 바뀐다. Input이 문제였던 건
+                      텍스트와 role이 같은 커밋에 동시에 생기는 '토글'이었다.
+                  (2) 이 문구는 타이핑이 아니라 날짜 탭으로 뜬다. assertive가 끊을
+                      낭독이 애초에 없어서 즉시 읽어주는 편이 낫다.
+                  이슈 #306: 바텀시트는 아래(bottom-0)에 고정돼 있어 내용이 늘면 위로
+                  자라는데, 그러면 손가락 밑에 있던 달력 숫자가 20px 올라가 오탭이 난다.
+                  min-h-5(20px = text-sm 한 줄)로 자리를 미리 잡고, 예약한 20을 아래
+                  버튼줄 mt-10(40)에서 빼서(mt-5) 시트 전체 높이는 그대로 유지한다.
+                  md 이상에서도 예약을 유지한다 — 처음엔 md:min-h-0으로 되돌렸는데,
+                  팝오버가 절대배치라 '페이지'는 안 밀려도 팝오버 안의 초기화·확인
+                  버튼이 손가락/커서 밑에서 20px 내려가 모바일에서 막으려던 오클릭이
+                  그대로 재현됐다. 대신 md 이상 팝오버에 빈 20px가 상시로 남는다 */}
+              <p
+                role="alert"
+                className="text-danger min-h-5 text-sm font-medium md:px-4 lg:px-5"
+              >
+                {dateError}
+              </p>
 
-              {/* 하단 — lg 미만: [초기화] [확인] 우측 정렬, 그리드에서 40 아래.
+              {/* 하단 — lg 미만: [초기화] [확인] 우측 정렬, 그리드에서 40 아래
+                  (위 안내문 슬롯 20 + mt-5 20 = 40).
                   데스크톱: 왼쪽에 선택 범위 텍스트 + 오른쪽 [확인], padding 20 (기존 그대로) */}
-              <div className="mt-10 flex items-center justify-end gap-5 md:mt-0 md:justify-between md:p-4 lg:p-5">
+              <div className="mt-5 flex items-center justify-end gap-5 md:mt-0 md:justify-between md:p-4 lg:p-5">
                 {/* 보조 정보라 작고 회색으로 — 확인 버튼이 시선을 먼저 받게 한다 */}
                 <span className="text-text-secondary hidden text-sm font-medium md:inline lg:text-base">
                   {fieldText(startDate, "시작일")} ~{" "}

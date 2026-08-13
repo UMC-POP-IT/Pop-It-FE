@@ -57,14 +57,17 @@ export const HostRegisterComplete = () => {
         {isLeaving ? "이동 중..." : "호스트 홈으로"}
       </Button>
 
-      {error && (
-        <span
-          role="alert"
-          className="text-danger text-sm"
-        >
-          {error}
-        </span>
-      )}
+      {/* 노드를 조건부로 넣었다 빼지 않는다 — 라이브 영역을 그렇게 다루면 보조기술이
+          등록을 놓칠 수 있다. 항상 두고 내용만 갱신한다 (이슈 #306, 폼 전체 통일).
+          이 화면은 버튼 아래 마지막 요소이고 부모에 gap이 없어, 비어 있으면 높이 0이라
+          예약 높이를 따로 두지 않아도 레이아웃이 그대로다.
+          polite인 이유: 버튼을 누른 뒤 한 번 바뀌는 값이라 낭독을 끊을 필요가 없다 */}
+      <span
+        aria-live="polite"
+        className="text-danger text-sm"
+      >
+        {error}
+      </span>
     </div>
   );
 };

@@ -74,9 +74,14 @@ export const RegisterStep3 = () => {
 
   // 범위를 벗어나면 최종 제출에서 서버가 400을 준다 → 입력 단계에서 막는다
   const areaNumber = Number(form.area);
+  // 문구에서 "전용 면적은"을 뺀 이유 — 이슈 #306: 아래 메시지 칸이 한 줄(24px)만
+  // 예약하는데, 원래 문구는 모바일 328px에서 두 줄로 접혀(실측 346.4px) 타이핑 중
+  // 아래 층수·주차·시설 섹션이 24px씩 밀렸다. 줄인 뒤 269.1px로 한 줄에 들어간다.
+  // 필드 이름은 바로 위 "전용 면적" 라벨이 알려주고, 스크린리더도 aria-describedby로
+  // "전용 면적 (제곱미터), 편집, 1㎡ 이상 …"으로 이어 읽어 맥락이 유지된다
   const areaError =
     form.area !== "" && !(areaNumber >= MIN_AREA && areaNumber <= MAX_AREA)
-      ? `전용 면적은 ${MIN_AREA}㎡ 이상 ${MAX_AREA.toLocaleString()}㎡ 이하로 입력해 주세요`
+      ? `${MIN_AREA}㎡ 이상 ${MAX_AREA.toLocaleString()}㎡ 이하로 입력해 주세요`
       : "";
 
   const isValid =
@@ -183,22 +188,31 @@ export const RegisterStep3 = () => {
                 </span>
               </div>
             </div>
-            {areaError ? (
+            {/* 오류·안내가 한 칸을 나눠 쓴다. 예전에는 삼항으로 둘 중 하나만 그려서
+                "노드 수가 같으니 안 밀린다"고 봤는데, 실제로는 오류 문구가 안내보다
+                길어 모바일에서 줄 수가 1 → 2로 늘면서 아래가 24px 밀렸다 (이슈 #306).
+                min-h-6으로 한 줄분을 고정하고, 위 areaError를 한 줄에 들어가게 줄였다.
+                노드를 조건부로 넣었다 빼지 않는 이유는 라이브 영역이 '있던 요소의 내용이
+                바뀔 때' 읽어주기 때문 — Input.tsx의 메시지 슬롯과 같은 구조다 */}
+            <span
+              id="area-message"
+              // block을 명시하는 이유 — min-height는 인라인 요소에 적용되지 않는다.
+              // 지금은 부모가 flex라 자동으로 블록화되지만, 부모가 flex를 잃는 순간
+              // 예약이 조용히 사라진다 (Input.tsx의 슬롯도 같은 이유로 block을 쓴다)
+              className="block min-h-6 text-left text-base"
+            >
               <span
-                id="area-message"
-                role="alert"
-                className="text-danger text-left text-base font-bold"
+                aria-live="polite"
+                className="text-danger font-bold"
               >
                 {areaError}
               </span>
-            ) : (
-              <span
-                id="area-message"
-                className="text-text-secondary text-left text-base font-medium"
-              >
-                ㎡ 입력 시 평이 자동 계산돼요
-              </span>
-            )}
+              {!areaError && (
+                <span className="text-text-secondary font-medium">
+                  ㎡ 입력 시 평이 자동 계산돼요
+                </span>
+              )}
+            </span>
           </div>
 
           {/* 층수 유형(택1) + 상세 층수 입력 — 둘이 한 필드라 60 밖으로 묶고 안쪽은 기존 24를 쓴다 */}
@@ -220,6 +234,9 @@ export const RegisterStep3 = () => {
 
             {needsFloorNumber && (
               <div className="relative">
+                {/* error·hint·counter를 넘기지 않는다 = 메시지 슬롯 없음.
+                    층수는 검증 오류가 없어 문구가 뜰 자리가 필요 없다
+                    — Input.tsx 상단 '메시지 슬롯 계약' 참고 */}
                 <Input
                   type="number"
                   aria-label="층수"
@@ -259,31 +276,46 @@ export const RegisterStep3 = () => {
             <span className="text-text-primary text-[22px] font-bold">
               시설 정보
             </span>
-            {isFacilityLoading ? (
+            {/* 라이브 영역과 칩 목록을 한 자식으로 묶는다. 이 wrapper는 gap이 없어서
+                안내 문구가 비어 있으면(=칩이 뜨는 정상 상태) 높이 0으로 사라지고, 위
+                라벨과 칩 사이 간격은 부모 gap-6(24) 하나만 남는다 — 즉 라이브 영역을
+                항상 마운트해도 레이아웃이 그대로다.
+                왜 항상 마운트하나: 조건부로 넣었다 빼면 보조기술이 라이브 영역 등록을
+                놓칠 수 있는 경우가 생긴다. 노드를 남기고 '내용만' 갱신하는 쪽이
+                엔진 차이에 안전하고, 폼 전체(Input 슬롯·면적·공간 설명)와 방식이 같아진다.
+                aria-live="polite"로 통일한 이유 — 이 문구는 화면 진입 직후 로딩 결과로
+                한 번 바뀌는 값이라 낭독을 끊을 이유가 없다 */}
+            <div>
               <span
-                role="status"
-                className="text-text-placeholder text-base font-bold"
+                aria-live="polite"
+                className={`text-base font-bold ${
+                  facilityError ? "text-danger" : "text-text-placeholder"
+                }`}
               >
-                시설 목록을 불러오는 중이에요...
+                {isFacilityLoading
+                  ? "시설 목록을 불러오는 중이에요..."
+                  : facilityError
+                    ? // 로딩 문구(실측 206.2px)와 같은 자리를 교대하므로 줄 수가 같아야
+                      // 한다. 원래 문구는 393.8px로 모바일 328px에서 두 줄이었다 (이슈 #306).
+                      // 정렬도 로딩 문구와 같은 좌측이다 — 예전엔 text-right여서 로딩이
+                      // 실패하는 순간 문구가 왼쪽 끝에서 오른쪽 끝으로 튀었다
+                      "시설 목록을 불러오지 못했어요. 새로고침 해주세요"
+                    : ""}
               </span>
-            ) : facilityError ? (
-              <span
-                role="alert"
-                className="text-danger text-right text-base font-bold"
-              >
-                시설 목록을 불러오지 못했어요. 새로고침 후 다시 시도해주세요
-              </span>
-            ) : (
-              facilityGroups.map((group) => (
-                <FacilityChipGroup
-                  key={group.category}
-                  label={FACILITY_CATEGORY_LABEL[group.category]}
-                  items={group.items}
-                  selectedIds={form.facilityIds}
-                  onToggle={toggleFacility}
-                />
-              ))
-            )}
+              {!isFacilityLoading && !facilityError && (
+                <div className="flex flex-col gap-6">
+                  {facilityGroups.map((group) => (
+                    <FacilityChipGroup
+                      key={group.category}
+                      label={FACILITY_CATEGORY_LABEL[group.category]}
+                      items={group.items}
+                      selectedIds={form.facilityIds}
+                      onToggle={toggleFacility}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

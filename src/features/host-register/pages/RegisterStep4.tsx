@@ -32,6 +32,8 @@ export const RegisterStep4 = () => {
 
   // 오류 문구를 textarea와 묶기 위한 id (스크린리더가 입력 이름 뒤에 이어서 읽게)
   const descriptionHintId = useId();
+  // 공간명 20자 상한을 스크린리더에 알리는 sr-only 문구의 id (아래 span 주석 참고)
+  const nameLimitId = useId();
 
   return (
     // 여백·폭 규격은 RegisterStep1과 동일 (본문 328/535/644, 위 134 / 아래 120·88)
@@ -80,20 +82,32 @@ export const RegisterStep4 = () => {
             >
               공간명
             </label>
+            {/* 20자 상한을 스크린리더에만 알린다. 화면에는 우측 카운터(7/20)가 있지만
+                그건 aria-hidden이고(한 글자마다 "7 슬래시 20"을 읽으면 방해만 된다),
+                maxLength는 HTML-AAM에서 ARIA로 매핑되지 않아 어떤 스크린리더도 읽지
+                않는다. 이 문구가 없으면 입력이 20자에서 멈추는 이유를 알 수 없다.
+                sr-only라 시안에는 영향이 없다 */}
+            <span
+              id={nameLimitId}
+              className="sr-only"
+            >
+              최대 20자
+            </span>
             <Input
               id="building-name"
+              aria-describedby={nameLimitId}
               placeholder="예: 성수 000 건물"
               value={form.buildingName}
               onChange={(e) => setValues({ buildingName: e.target.value })}
               maxLength={20}
               error={nameError}
+              // 글자수 카운터와 에러가 Input의 같은 메시지 슬롯을 나눠 쓴다.
+              // 예전엔 카운터를 Input 밖에 두고 {!nameError && ...}로 교대시켰는데,
+              // 부모 gap-2(8)와 Input 내부 gap-1(4)이 달라 에러가 뜰 때마다 4px씩 튀었다.
+              // counter는 우측 정렬 + aria-hidden이 Input 안에서 처리된다 — 정렬을
+              // 호출부에서 정하지 않는 이유는 Input.tsx의 메시지 슬롯 주석 참고
+              counter={`${form.buildingName.length}/20`}
             />
-            {/* 에러가 뜰 땐 숨긴다 — 같은 자리에 두 줄이 겹치지 않게 (RegisterStep2 보증금과 동일한 방식) */}
-            {!nameError && (
-              <span className="text-text-secondary text-right text-base font-medium">
-                {form.buildingName.length}/20
-              </span>
-            )}
           </div>
 
           {/* 공간 설명 + TIP 박스 — 이 둘 사이만 피그마 24라 48(gap-12) 밖으로 묶는다.
@@ -133,16 +147,23 @@ export const RegisterStep4 = () => {
                   {form.description.length}/1000
                 </span>
               </div>
-              {/* Input과 달리 textarea는 error prop이 없어 문구를 직접 그린다 (클래스는 Input.tsx와 동일).
+              {/* Input과 달리 textarea는 error prop이 없어 문구를 직접 그린다
+              (색·크기·굵기는 Input.tsx의 오류 문구와 같은 값을 맞춰 둔 것이고,
+               클래스 문자열 자체는 Input 쪽이 슬롯 구조를 갖게 되면서 갈라졌다).
               회색 안내는 두지 않는다 — 칸 안에 0/1000 카운터가 있고, 10자 미만이면 어차피
               이 빨간 문구가 떠서 요건이 전달된다.
-              단 노드는 조건부로 넣었다 빼지 않는다 — 라이브 영역은 '있던 요소의 내용이
-              바뀔 때' 읽어주므로, 요소가 새로 생기면 스크린리더가 놓친다.
-              비었을 때는 empty:hidden으로 죽여 gap-2만큼의 빈 줄이 생기지 않게 한다 */}
+              단 노드는 조건부로 넣었다 빼지 않는다. 신뢰할 수 없는 건 '이미 있던 노드에
+              role·aria-live 속성을 나중에 붙이는' 경우다(엔진에 따라 등록을 놓친다).
+              내용을 가진 채로 삽입되는 role="alert"도 표준 alert 패턴이라 대개 낭독되지만,
+              폼 안에서 방식이 갈리면 어느 쪽이 맞는지 알 수 없어 이 화면들은 전부
+              '항상 마운트 + 내용만 갱신'으로 통일했다 (이슈 #306 리뷰 반영).
+              이슈 #306: 예전엔 비었을 때 empty:hidden으로 죽였는데, display:none은
+              자리도 같이 없애서 10자 미만을 칠 때마다 아래 TIP 박스와 버튼이 28px씩
+              움직였다. min-h-6(24px = 한 줄)으로 자리를 미리 잡아 둔다 */}
               <span
                 id={descriptionHintId}
                 aria-live="polite"
-                className="text-danger text-left text-base font-bold empty:hidden"
+                className="text-danger min-h-6 text-left text-base font-bold"
               >
                 {descriptionError}
               </span>
