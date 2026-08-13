@@ -41,6 +41,14 @@ interface FilterDropdownProps<T extends string> {
    */
   triggerClassName?: string | ((isOpen: boolean) => string);
   /**
+   * true면 모바일(360~767)에서 옵션 목록을 데스크톱과 같은 absolute 패널 대신
+   * BottomSheet로 띄운다 - 날짜 필터(HeroSearchBar)가 이미 쓰는 패턴과
+   * 통일한다(이슈 #287: 모바일 필터 UI를 바텀시트 방식으로 통일).
+   * 기본값 false(기존 동작 유지) - HeroSearchBar의 공간유형/지역 세그먼트에서만
+   * 켠다. ExploreSearchFilterBar 등 다른 사용처는 영향받지 않는다.
+   */
+  mobileBottomSheet?: boolean;
+  /**
    * 값이 바뀔 때마다(같은 값이 다시 와도 매번 새 값이어야 함 - 호출부는 보통
    * 증가하는 카운터나 Date.now()를 넘긴다) 이 드롭다운을 외부에서 강제로 연다.
    * 축소된 검색바 pill의 세그먼트를 클릭했을 때, 검색창이 펼쳐짐과 동시에
@@ -85,6 +93,7 @@ const FilterDropdown = function <T extends string>({
   maxVisibleOptions,
   renderTrigger,
   triggerClassName,
+  mobileBottomSheet = false,
   openSignal,
 }: FilterDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
@@ -93,16 +102,18 @@ const FilterDropdown = function <T extends string>({
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  // 모바일(360~767): 드롭다운 패널 대신 BottomSheet로 연다(피그마 스펙, #275) -
-  // 날짜 캘린더(HeroSearchBar)에 이미 적용된 패턴과 동일하게 맞춘다.
   const isMobile = useMediaQuery("(max-width: 767px)");
+  // 바텀시트로 뜨는 동안은 옵션 목록이 portal(document.body 자식)로 그려져
+  // containerRef 바깥으로 취급된다 - useOutsideClick이 시트 안 클릭까지
+  // "바깥 클릭"으로 오인해 먼저 닫아버리는 걸 막기 위해 이때는 훅을 끈다
+  // (HeroSearchBar의 날짜 필터와 동일한 이유).
+  const useBottomSheet = mobileBottomSheet && isMobile;
 
-  // 모바일에서는 useOutsideClick을 끈다 - BottomSheet는 document.body에 포탈로
-  // 그려져서 containerRef 바깥으로 취급되므로, 이 훅이 시트 안 클릭까지 "바깥
-  // 클릭"으로 오인해 mousedown 시점에 먼저 닫아버린다(HeroSearchBar의 날짜
-  // 캘린더와 동일한 이유). 모바일에서는 BottomSheet 자체의 백드롭/Escape
-  // 닫기만 쓴다.
-  useOutsideClick(containerRef, () => setIsOpen(false), isOpen && !isMobile);
+  useOutsideClick(
+    containerRef,
+    () => setIsOpen(false),
+    isOpen && !useBottomSheet,
+  );
 
   // value가 options에 없는 경우(현재는 그런 경로가 없지만, 추후 URL
   // 쿼리에서 필터를 복원하는 기능이 붙으면 잘못된 값이 들어올 수 있다)
@@ -174,37 +185,60 @@ const FilterDropdown = function <T extends string>({
     }
   };
 
-  // 데스크톱 패널과 모바일 BottomSheet가 같은 옵션 목록을 그대로 재사용한다
-  // (동작·마크업 중복 방지) - 컨테이너(ul)만 각자 자리에서 다르게 감싼다.
-  const optionButtons = options.map((option, index) => {
-    const isSelected = option.value === value;
-    return (
-      <li
-        key={option.value || "all"}
-        role="none"
-      >
-        <button
-          ref={(el) => {
-            optionRefs.current[index] = el;
-          }}
-          type="button"
-          role="menuitemradio"
-          aria-checked={isSelected}
-          onClick={() => {
-            onChange(option.value);
-            closeAndReturnFocus();
-          }}
-          className={`w-full cursor-pointer rounded-lg px-4 py-3 text-left text-lg whitespace-nowrap transition-colors ${
-            isSelected
-              ? "bg-tag-bg text-text-primary font-bold"
-              : "text-text-primary hover:bg-tag-bg/60"
-          }`}
-        >
-          {option.label}
-        </button>
-      </li>
-    );
-  });
+  // 옵션 목록 자체(desktop absolute 패널/모바일 바텀시트 공통) - 바텀시트에서는
+  // 터치 타깃을 넉넉히 키우고(py-4), maxVisibleOptions 높이 제한은 적용하지
+  // 않는다(시트 자체가 max-h-[80vh] + 내부 스크롤을 이미 제공한다).
+  const optionList = (
+    <ul
+      role="menu"
+      aria-label={ariaLabel}
+      onKeyDown={handleListKeyDown}
+      className={
+        useBottomSheet
+          ? "flex flex-col gap-1 p-2 pb-2"
+          : "border-divider absolute top-full left-0 z-20 mt-2 w-max min-w-full overflow-y-auto rounded-xl border-2 bg-white p-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#d8d8d8] [&::-webkit-scrollbar-track]:bg-transparent"
+      }
+      style={
+        !useBottomSheet && maxVisibleOptions
+          ? {
+              maxHeight: maxVisibleOptions * OPTION_ROW_HEIGHT + LIST_PADDING_Y,
+            }
+          : undefined
+      }
+    >
+      {options.map((option, index) => {
+        const isSelected = option.value === value;
+        return (
+          <li
+            key={option.value || "all"}
+            role="none"
+          >
+            <button
+              ref={(el) => {
+                optionRefs.current[index] = el;
+              }}
+              type="button"
+              role="menuitemradio"
+              aria-checked={isSelected}
+              onClick={() => {
+                onChange(option.value);
+                closeAndReturnFocus();
+              }}
+              className={`w-full cursor-pointer rounded-lg px-4 text-left whitespace-nowrap transition-colors ${
+                useBottomSheet ? "py-4 text-lg" : "py-3 text-lg"
+              } ${
+                isSelected
+                  ? "bg-tag-bg text-text-primary font-bold"
+                  : "text-text-primary hover:bg-tag-bg/60"
+              }`}
+            >
+              {option.label}
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
 
   return (
     // h-full w-full: HeroSearchBar처럼 고정폭 부모 안에 넣고 renderTrigger로
@@ -219,7 +253,7 @@ const FilterDropdown = function <T extends string>({
       <button
         ref={triggerRef}
         type="button"
-        aria-haspopup={isMobile ? "dialog" : "menu"}
+        aria-haspopup={useBottomSheet ? "dialog" : "menu"}
         aria-expanded={isOpen}
         aria-label={ariaLabel}
         onClick={() => (isOpen ? setIsOpen(false) : openDropdown())}
@@ -243,43 +277,16 @@ const FilterDropdown = function <T extends string>({
         )}
       </button>
 
-      {isOpen && !isMobile && (
-        <ul
-          role="menu"
-          aria-label={ariaLabel}
-          onKeyDown={handleListKeyDown}
-          className="border-divider absolute top-full left-0 z-20 mt-2 w-max min-w-full overflow-y-auto rounded-xl border-2 bg-white p-2 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#d8d8d8] [&::-webkit-scrollbar-track]:bg-transparent"
-          style={
-            maxVisibleOptions
-              ? {
-                  maxHeight:
-                    maxVisibleOptions * OPTION_ROW_HEIGHT + LIST_PADDING_Y,
-                }
-              : undefined
-          }
-        >
-          {optionButtons}
-        </ul>
-      )}
-
-      {/* 모바일: 같은 옵션 목록을 화면 하단 BottomSheet로 연다(피그마 스펙, #275) -
-          날짜 캘린더와 동일한 패턴. onClose에서 트리거로 포커스를 되돌린다. */}
-      {isMobile && (
+      {isOpen && useBottomSheet && (
         <BottomSheet
           isOpen={isOpen}
           onClose={closeAndReturnFocus}
           ariaLabel={ariaLabel}
         >
-          <ul
-            role="menu"
-            aria-label={ariaLabel}
-            onKeyDown={handleListKeyDown}
-            className="flex flex-col gap-1 px-3 pb-2"
-          >
-            {optionButtons}
-          </ul>
+          {optionList}
         </BottomSheet>
       )}
+      {isOpen && !useBottomSheet && optionList}
     </div>
   );
 };
