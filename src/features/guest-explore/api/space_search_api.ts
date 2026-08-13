@@ -126,6 +126,11 @@ export const getSpaces = async (params: SpaceSearchParams = {}) => {
   if (params.spaceCategory) query.set("spaceCategory", params.spaceCategory);
   if (params.district) query.set("district", params.district);
   if (params.startDate && params.endDate) {
+    const startTime = params.startDate.getTime();
+    const endTime = params.endDate.getTime();
+    if (endTime < startTime) {
+      throw new RangeError("endDate must be on or after startDate");
+    }
     query.set("startDate", toApiDateString(params.startDate));
     query.set("endDate", toApiDateString(params.endDate));
   }
