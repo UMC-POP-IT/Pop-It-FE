@@ -104,11 +104,10 @@ export const ExplorePage = () => {
   const searchFilters = filtersFromSearchParams(searchParams);
   const { keyword, spaceCategory, district, dateRange } = searchFilters;
 
-  // 스크롤을 내리면 검색바가 헤더의 축소된 pill로 바뀌고, pill을 클릭하면
-  // 헤더 바로 아래에 원래 검색바가 오버레이로 다시 펼쳐진다(에어비앤비 참고).
-  // 검색을 실행했는지(hasActiveSearch), 결과가 있는지와 무관하게 - 게스트
-  // 홈(브라우징 화면)이든 검색 결과 화면이든, 검색 버튼을 눌렀든 안 눌렀든 -
-  // 스크롤로 검색바가 헤더 뒤로 넘어가면 항상 pill로 바뀐다(#301).
+  // 검색 결과 화면에서 스크롤을 내리면 검색바가 헤더의 축소된 pill로 바뀌고,
+  // pill을 클릭하면 헤더 바로 아래에 원래 검색바가 오버레이로 다시 펼쳐진다
+  // (에어비앤비 참고). 게스트 첫 화면은 아무리 스크롤해도 큰 검색바를 헤더 pill로
+  // 올리지 않는다 - 결과 목록이 무한스크롤로 뜨는 search=1 화면 전용 동작이다.
   const [isScrolledPastBar, setIsScrolledPastBar] = useState(false);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [summary, setSummary] = useState<ScrollSearchBarSummary | null>(null);
@@ -158,12 +157,17 @@ export const ExplorePage = () => {
     );
   }, []);
 
-  // 검색바가 원래 있던 자리(Banner 안, sentinel)가 헤더 뒤로 넘어가면
-  // "스크롤됨"으로 표시한다. rootMargin으로 헤더 높이만큼 보정해서, 실제로
-  // 헤더 뒤에 가려지는 시점과 최대한 맞춘다. hasActiveSearch/결과 유무와
-  // 무관하게 항상 감지한다 - 게스트 홈(브라우징 화면)에서도 스크롤을 내리면
-  // 무조건 검색바가 헤더의 작은 pill로 올라가야 한다(#301).
+  // 검색 결과 화면에서 검색바가 원래 있던 자리(Banner 안, sentinel)가 헤더 뒤로
+  // 넘어가면 "스크롤됨"으로 표시한다. rootMargin으로 헤더 높이만큼 보정해서,
+  // 실제로 헤더 뒤에 가려지는 시점과 최대한 맞춘다. 게스트 첫 화면에서는 이
+  // 감지를 끄고 상태도 리셋해서 스크롤만으로 pill이 뜨는 일을 막는다.
   useEffect(() => {
+    if (!hasActiveSearch) {
+      setIsScrolledPastBar(false);
+      setIsOverlayOpen(false);
+      resetScrollSearchBar();
+      return;
+    }
     const node = sentinelRef.current;
     if (!node) return;
     const observer = new IntersectionObserver(
@@ -177,7 +181,7 @@ export const ExplorePage = () => {
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [hasActiveSearch, resetScrollSearchBar]);
 
   // 스크롤을 다시 올려 원래 검색바가 보이게 되면, 열려있던 오버레이도 접는다.
   useEffect(() => {
@@ -217,11 +221,10 @@ export const ExplorePage = () => {
   }, [isOverlayOpen]);
 
   // 위 상태들을 종합해서 헤더(전역 컴포넌트)가 구독하는 스토어에 반영한다.
-  // 이 화면을 벗어나거나 스크롤이 위로 돌아가면 pill을 숨긴다. hasActiveSearch와
-  // 무관하게 isScrolledPastBar만으로 판단한다 - 게스트 홈에서도 스크롤로 pill이
-  // 떠야 한다(#301).
+  // 이 화면을 벗어나거나, 검색 결과 화면이 아니거나, 스크롤이 위로 돌아가면
+  // pill을 숨긴다. 축소 검색바는 search=1 결과 화면 전용이다.
   useEffect(() => {
-    if (!isScrolledPastBar) {
+    if (!hasActiveSearch || !isScrolledPastBar) {
       resetScrollSearchBar();
       return;
     }
@@ -241,6 +244,7 @@ export const ExplorePage = () => {
         }),
     });
   }, [
+    hasActiveSearch,
     isScrolledPastBar,
     isOverlayOpen,
     summary,
@@ -251,11 +255,12 @@ export const ExplorePage = () => {
   // 페이지를 떠날 때(라우트 이동)도 헤더에 남아있는 pill 상태를 정리한다.
   useEffect(() => resetScrollSearchBar, [resetScrollSearchBar]);
 
-  const searchBarPosition = isScrolledPastBar
-    ? isOverlayOpen
-      ? "pinned-open"
-      : "pinned-hidden"
-    : "inline";
+  const searchBarPosition =
+    hasActiveSearch && isScrolledPastBar
+      ? isOverlayOpen
+        ? "pinned-open"
+        : "pinned-hidden"
+      : "inline";
 
   // 검색 직후 최상단(아직 스크롤 안 함)에서는 결과화면 전용 스타일(굵은 파란
   // 테두리, 피그마 node 5019:73539)을 쓰고, 스크롤해서 헤더 pill로 축소됐다가
