@@ -139,7 +139,7 @@ const CalendarMonthGrid = ({
 
   return (
     <div
-      className={`flex ${monthWidthClassName} flex-col items-center gap-7 px-3.5 py-5`}
+      className={`mx-auto flex ${monthWidthClassName} flex-col items-center gap-7 px-3.5 py-5`}
     >
       {/* 화살표 유무와 상관없이 "YYYY.MM" 라벨 위치가 고정되도록, 이동 불가 방향이어도
           자리(w-8)는 항상 비워둔다. */}

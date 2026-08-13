@@ -31,7 +31,7 @@ const ExploreDetailInfo = ({
 
   return (
     <div
-      className={`flex shrink-0 flex-col gap-10 ${isHost ? "w-full" : "w-full lg:w-[689px]"}`}
+      className={`flex min-w-0 shrink-0 flex-col gap-10 ${isHost ? "w-full" : "w-full lg:w-[calc(100%_-_511px)]"}`}
     >
       {/* 제목 + 액션 */}
       <div className="flex flex-col items-start gap-4">
