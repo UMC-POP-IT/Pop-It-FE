@@ -5,7 +5,7 @@ import iconWarningBigSized from "@/assets/icons/icon_warn_big_sized.svg";
 
 interface ModalProps {
   isOpen: boolean;
-  title: ReactNode;
+  title: string;
   description?: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;

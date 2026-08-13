@@ -334,14 +334,24 @@ const ExploreReservationCard = ({
   };
 
   // 완료 모달에는 클라이언트 예상치가 아닌 서버가 계산한 실제 금액(임대료/보험료/보증금/총액)을 보여준다.
-  // "결제 예정 금액"은 강조가 필요한 정보라, description(text-text-tertiary text-base)이 아니라
-  // title(text-[22px] font-bold) 쪽에 붙여서 자연스럽게 강조 스타일을 얻는다
-  // (공용 Modal 컴포넌트는 건드리지 않고 기존 title/description prop만 활용).
-  const completeTitle = reservationResult
-    ? `예약 요청이 완료 되었습니다\n결제 예정 금액 ${reservationResult.totalPrice.toLocaleString()}원`
-    : "예약 요청이 완료 되었습니다";
+  // "결제 예정 금액"은 상세 금액 바로 아래에 두되, 기존 제목과 같은 강조 스타일을 유지한다.
+  const completeTitle = "예약 요청이 완료 되었습니다";
   const completeDescription = reservationResult
-    ? `나의 예약 > 예약 예정\n\n임대료 ${reservationResult.rentalFee.toLocaleString()}원 · 보험료 ${reservationResult.insuranceFee.toLocaleString()}원 · 보증금 ${reservationResult.deposit.toLocaleString()}원`
+    ? (
+        <div className="flex flex-col items-center gap-5">
+          <span>나의 예약 &gt; 예약 예정</span>
+          <div className="flex flex-col items-center gap-2">
+            <span>
+              임대료 {reservationResult.rentalFee.toLocaleString()}원 · 보험료{" "}
+              {reservationResult.insuranceFee.toLocaleString()}원 · 보증금{" "}
+              {reservationResult.deposit.toLocaleString()}원
+            </span>
+            <span className="text-primary text-xl font-bold">
+              결제 예정 금액 {reservationResult.totalPrice.toLocaleString()}원
+            </span>
+          </div>
+        </div>
+      )
     : "나의 예약 > 예약 예정";
 
   // 여러 날짜(기간)를 선택한 경우에만 시작일~종료일 사이를 이어주는 캡슐 배경을 그린다.
@@ -464,15 +474,25 @@ const ExploreReservationCard = ({
           {/* 시작일 / 종료일 — 중앙선을 grid로 고정해, 선택된 날짜의 글자 수가 달라져도
               중앙선과 좌우 텍스트 위치가 흔들리지 않게 한다. 양쪽 칸을 동일한 폭(1fr)으로
               만들어 각 칸 안에서 텍스트를 중앙 정렬하면, 중앙선 기준 좌우 간격도 항상 같다. */}
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 rounded-lg bg-white px-8 py-2">
-            <span className="text-text-primary flex items-center justify-center gap-1.5 text-base font-bold">
-              <img src={calendarIcon} alt="" className="h-4 w-4 shrink-0" />
-              {startDate ? formatDate(startDate) : "시작일 선택"}
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-lg bg-white px-4 py-2 sm:gap-4 sm:px-8">
+            <span className="text-text-primary flex min-w-0 items-center justify-center gap-3 text-center text-base font-bold whitespace-nowrap">
+              <img
+                src={calendarIcon}
+                alt=""
+                aria-hidden="true"
+                className="h-5 w-5 shrink-0"
+              />
+              <span>{startDate ? formatDate(startDate) : "시작일 선택"}</span>
             </span>
             <span className="bg-border h-[22px] w-px justify-self-center" />
-            <span className="text-text-primary flex items-center justify-center gap-1.5 text-base font-bold">
-              <img src={calendarIcon} alt="" className="h-4 w-4 shrink-0" />
-              {endDate ? formatDate(endDate) : "종료일 선택"}
+            <span className="text-text-primary flex min-w-0 items-center justify-center gap-3 text-center text-base font-bold whitespace-nowrap">
+              <img
+                src={calendarIcon}
+                alt=""
+                aria-hidden="true"
+                className="h-5 w-5 shrink-0"
+              />
+              <span>{endDate ? formatDate(endDate) : "종료일 선택"}</span>
             </span>
           </div>
 
