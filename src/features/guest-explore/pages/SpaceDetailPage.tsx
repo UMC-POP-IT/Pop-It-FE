@@ -10,9 +10,11 @@ import ExploreDetailInfo from "@/features/guest-explore/components/ExploreDetail
 import ExploreReservationCard from "@/features/guest-explore/components/ExploreReservationCard";
 import Button from "@/shared/components/Button";
 import PhotoGalleryModal from "@/shared/components/PhotoGalleryModal";
+import Spinner from "@/shared/components/Spinner";
 import { useWishStore } from "@/store/wishStore";
 import { useAuthStore } from "@/store/authStore";
 import { useWishGuard } from "@/shared/hooks/useWishGuard";
+import { useDelayedLoading } from "@/shared/hooks/useDelayedLoading";
 
 type FetchStatus = "loading" | "success" | "notfound" | "error";
 
@@ -84,12 +86,18 @@ export const SpaceDetailPage = () => {
 
   const isWished = !!space && wishedIds.includes(space.id);
 
+  // 실제로 지연이 거의 없는 대부분의 요청(특히 뒤로가기로 재진입할 때)에는
+  // 이 화면 자체를 비워둔다 - 헤더(MainLayout, 이 컴포넌트 바깥)만 그대로
+  // 유지되고 콘텐츠 영역은 아무 것도 렌더링하지 않아, 화면이 순간 깜빡이며
+  // 오류처럼 보이는 현상을 없앤다. 400ms 넘게 실제로 걸리는 경우에만 작은
+  // 스피너를 보여준다(#275).
+  const showLoadingSpinner = useDelayedLoading(status === "loading");
+
   if (status === "loading") {
+    if (!showLoadingSpinner) return null;
     return (
-      <div className="bg-tag-bg flex h-[400px] w-full flex-col items-center justify-center gap-4 rounded-xl">
-        <p className="text-text-primary text-xl font-medium">
-          공간 정보를 불러오는 중이에요
-        </p>
+      <div className="flex h-[400px] w-full items-center justify-center">
+        <Spinner aria-label="공간 정보를 불러오는 중" />
       </div>
     );
   }
