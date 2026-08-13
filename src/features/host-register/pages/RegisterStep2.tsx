@@ -20,7 +20,7 @@ export const RegisterStep2 = () => {
   const setValues = useRegisterStore((s) => s.setValues);
 
   const depositError =
-    Number(form.deposit) > 100 ? "보증금은 100만원 이하 입력해 주세요" : "";
+    Number(form.deposit) > 100 ? "100만원 이하로 입력해 주세요" : "";
 
   //금액: 일 단가 입력됐는지 (주/월 가격은 상세 페이지에서 일 단가로 계산)
   const hasPrice = form.priceDay !== "";
@@ -30,9 +30,9 @@ export const RegisterStep2 = () => {
   const priceDayError = !hasPrice
     ? ""
     : !(priceDayNumber >= MIN_PRICE_DAY_MANWON)
-      ? `1일 대여료는 ${MIN_PRICE_DAY_MANWON}만원 이상 입력해 주세요`
+      ? `${MIN_PRICE_DAY_MANWON}만원 이상 입력해 주세요`
       : priceDayNumber > MAX_PRICE_DAY_MANWON
-        ? `1일 대여료는 ${MAX_PRICE_DAY_MANWON.toLocaleString()}만원 이하로 입력해 주세요`
+        ? `${MAX_PRICE_DAY_MANWON.toLocaleString()}만원 이하로 입력해 주세요`
         : "";
 
   //기간: 시작일 + 종료일 둘 다 입력됐나
@@ -95,16 +95,19 @@ export const RegisterStep2 = () => {
                     onKeyDown={blockNonNumeric}
                     className={NO_SPINNER}
                     error={depositError}
+                    // 회색 안내를 Input 밖에 따로 두면 '에러가 뜰 때 안내가 사라지는' 교대가
+                    // 되어 두 요소의 부모 gap 차이만큼(4px) 아래가 튄다. 같은 슬롯에 넣어
+                    // 높이가 항상 같게 만든다.
+                    // messageLines={2}: 이 2단 그리드 한 칸 폭이 모바일 360에서 152px밖에
+                    // 안 돼 16px 문구가 두 줄로 접힌다(실측 192.2px). md 이상은 255.5px,
+                    // lg는 310px라 한 줄이므로 Input이 md부터 한 줄분으로 되돌린다
+                    hint="최대 100만원 설정 가능"
+                    messageLines={2}
                   />
                   <span className="text-text-secondary pointer-events-none absolute top-7 right-4 -translate-y-1/2 text-lg font-medium">
                     만원
                   </span>
                 </div>
-                {!depositError && (
-                  <span className="text-text-secondary text-left text-base font-medium">
-                    최대 100만원 설정 가능
-                  </span>
-                )}
               </div>
 
               {/* 금액 (일 단가만 입력 — 주/월 가격은 상세 페이지에서 계산) */}
@@ -128,6 +131,16 @@ export const RegisterStep2 = () => {
                     onKeyDown={blockNonNumeric}
                     className={NO_SPINNER}
                     error={priceDayError}
+                    // 회색 안내는 없지만 슬롯은 예약한다.
+                    // 처음엔 이 칸을 이슈 #306의 주범으로 봤는데 아니었다 — 그리드 행
+                    // 높이는 max(칸 높이)이고, 옆 보증금 칸이 회색 안내 때문에 늘 더
+                    // 높아서(모바일 140 vs 88) 이 칸이 커져도 행이 안 늘었다. 즉 계약
+                    // 가능 기간 섹션은 원래도 안 밀렸다.
+                    // 그래도 예약해 두는 이유: 두 칸 높이를 대칭으로 만들고, 행 높이가
+                    // '보증금 안내 문구 길이'에 의존하는 상태를 없앤다. 안내 문구가
+                    // 짧아지거나 사라지면 그때부터 이 칸의 에러가 행을 늘린다.
+                    // 가장 긴 문구가 실측 223.8px라 모바일 152px에서 두 줄이다
+                    messageLines={2}
                   />
                   <span className="text-text-secondary pointer-events-none absolute top-7 right-4 -translate-y-1/2 text-lg font-medium">
                     만원/일
@@ -153,7 +166,8 @@ export const RegisterStep2 = () => {
               }
             />
 
-            <span className="text-text-secondary text-right text-base font-medium">
+            {/* 이슈 #306: 날짜 필드 아래 안내는 좌측 정렬 (기존 text-right) */}
+            <span className="text-text-secondary text-left text-base font-medium">
               최대 3개월 선택 가능
             </span>
           </div>
