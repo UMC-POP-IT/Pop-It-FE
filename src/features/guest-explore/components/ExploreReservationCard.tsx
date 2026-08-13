@@ -10,6 +10,7 @@ import {
 import ReservationRequestModal from "@/features/guest-explore/components/ReservationRequestModal";
 import Modal from "@/shared/components/Modal";
 import calendarIcon from "@/assets/icons/icon_calendar.svg";
+import CalendarMonthGrid from "@/shared/components/calendar/CalendarMonthGrid";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -224,7 +225,9 @@ const ExploreReservationCard = ({
   const isDateDisabled = (date: Date) => {
     if (availabilityStatus !== "success") return true;
     const target = toDateOnly(date);
-    if (target < todayStart || target < hostMinDate || target > hostMaxDate)
+    // 오늘도 항상 선택 불가로 취급한다(당일 예약 불가) - 항상 회색 취소선 +
+    // 회색 원으로 표시한다(이슈 #287 디자인 QA).
+    if (target <= todayStart || target < hostMinDate || target > hostMaxDate)
       return true;
     if (
       startDate &&
@@ -354,27 +357,33 @@ const ExploreReservationCard = ({
       )
     : "나의 예약 > 예약 예정";
 
-  // 여러 날짜(기간)를 선택한 경우에만 시작일~종료일 사이를 이어주는 캡슐 배경을 그린다.
-  // 시작일=종료일(하루만 선택)인 경우는 캡슐 없이 숫자에 꽉 찬 원만 표시한다 (피그마 디자인 기준).
-  const getDayClassName = (date: Date) => {
-    const isCurrentMonth = date.getMonth() === viewDate.getMonth();
-
-    if (isDateDisabled(date)) {
-      return "cursor-not-allowed";
-    }
+  // 여러 날짜(기간)를 선택한 경우에만 시작일~종료일 사이를 이어주는 밴드(캡슐) 배경을
+  // 그린다. 시작일=종료일(하루만 선택)인 경우는 밴드 없이 숫자에 꽉 찬 원만 표시한다
+  // (피그마 디자인 기준). 밴드는 칸 전체 높이가 아니라 원과 같은 고정 높이(h-8)의 별도
+  // absolute span에 적용해서, 하늘색 밴드의 세로 길이가 항상 원의 지름과 같아지도록 한다.
+  const getBandClassName = (date: Date) => {
+    if (isDateDisabled(date)) return "";
     if (startDate && endDate && !isSameDay(startDate, endDate)) {
-      // 시작일/종료일 칸은 원의 세로 지름(칸 정중앙)까지만 배경을 채운다.
+      // 시작일/종료일 칸은 원의 가로 중심까지만 배경을 채운다.
       // 그 바깥쪽(반대쪽 절반)은 배경 없이 비워둬 원 뒤로 삐져나오지 않게 한다.
       if (isSameDay(date, startDate)) {
-        return "text-text-primary bg-[linear-gradient(to_right,transparent_50%,var(--color-primary-100)_50%)]";
+        return "bg-[linear-gradient(to_right,transparent_50%,var(--color-primary-100)_50%)]";
       }
       if (isSameDay(date, endDate)) {
-        return "text-text-primary bg-[linear-gradient(to_right,var(--color-primary-100)_50%,transparent_50%)]";
+        return "bg-[linear-gradient(to_right,var(--color-primary-100)_50%,transparent_50%)]";
       }
       if (date > startDate && date < endDate) {
-        return "bg-primary-100 text-text-primary";
+        return "bg-primary-100";
       }
     }
+    return "";
+  };
+
+  // 다른 달(현재 보고 있는 달이 아닌) 날짜를 옅게 표시하기 위한 기본 텍스트 색.
+  // disabled 날짜는 renderDayNumber가 항상 별도 span으로 색을 씌우므로 여기 값과
+  // 무관하게 그쪽이 우선 적용된다.
+  const getDayTextClassName = (date: Date) => {
+    const isCurrentMonth = date.getMonth() === viewDate.getMonth();
     return isCurrentMonth ? "text-text-primary" : "text-text-disabled";
   };
 
@@ -405,45 +414,6 @@ const ExploreReservationCard = ({
       return `${base}, 종료일`;
     }
     return base;
-  };
-
-  // 날짜 칸 안의 숫자를 어떤 모양으로 그릴지 결정한다.
-  // 우선순위: 선택됨(꽉 찬 원) > 오늘(테두리 원, 선택 불가 시 회색 테두리+취소선) > 선택 불가(회색 취소선 텍스트만) > 기본
-  const renderDayNumber = (date: Date) => {
-    const day = date.getDate();
-
-    if (isSelectedEndpoint(date)) {
-      return (
-        <span className="bg-primary relative z-10 flex aspect-square h-full shrink-0 items-center justify-center rounded-full text-white">
-          {day}
-        </span>
-      );
-    }
-
-    const isToday = isSameDay(date, todayStart);
-    const disabled = isDateDisabled(date);
-
-    if (isToday && !disabled) {
-      // 오늘 날짜 표시 (선택 가능): 옅은 파란 테두리 원
-      return (
-        <span className="border-primary-100 text-text-primary relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border">
-          {day}
-        </span>
-      );
-    }
-    if (isToday && disabled) {
-      // 오늘 날짜 표시 (선택 불가): 회색 테두리 원 + 취소선 (피그마 디자인 기준)
-      return (
-        <span className="border-text-disabled text-text-disabled relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border line-through">
-          {day}
-        </span>
-      );
-    }
-    if (disabled) {
-      // 오늘이 아닌 나머지 선택 불가 날짜: 원 없이 회색 취소선 텍스트만
-      return <span className="text-text-disabled line-through">{day}</span>;
-    }
-    return day;
   };
 
   return (
@@ -496,69 +466,26 @@ const ExploreReservationCard = ({
             </span>
           </div>
 
-          {/* 달력 */}
-          <div className="flex flex-col gap-7 rounded-lg bg-white px-3.5 py-5">
-            {/* 화살표 유무와 상관없이 "YYYY.MM" 라벨 위치가 항상 고정되도록,
-                화살표 자리는 비활성 방향일 때도 같은 크기(w-8)로 비워둔다. */}
-            <div className="flex w-full items-center justify-center gap-1">
-              <div className="flex h-8 w-8 items-center justify-center">
-                {!isPrevMonthDisabled && (
-                  <button
-                    type="button"
-                    aria-label="이전 달"
-                    onClick={handlePrevMonth}
-                    className="text-text-primary flex h-8 w-8 items-center justify-center text-xl"
-                  >
-                    ‹
-                  </button>
-                )}
-              </div>
-              <span className="text-text-primary text-xl font-bold">
-                {viewDate.getFullYear()}.
-                {String(viewDate.getMonth() + 1).padStart(2, "0")}
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center">
-                {!isNextMonthDisabled && (
-                  <button
-                    type="button"
-                    aria-label="다음 달"
-                    onClick={handleNextMonth}
-                    className="text-text-primary flex h-8 w-8 items-center justify-center text-xl"
-                  >
-                    ›
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center">
-                {WEEKDAYS.map((day) => (
-                  <span
-                    key={day}
-                    className="text-text-primary flex w-[60px] items-center justify-center py-2 text-sm"
-                  >
-                    {day}
-                  </span>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-7">
-                {calendarDays.map((date) => (
-                  <button
-                    type="button"
-                    key={date.toISOString()}
-                    onClick={() => handleSelectDate(date)}
-                    disabled={isDateDisabled(date)}
-                    aria-label={getDayAriaLabel(date)}
-                    aria-pressed={isDateSelected(date)}
-                    className={`relative box-border flex h-10 w-full items-center justify-center border-0 p-0 text-base font-bold disabled:cursor-not-allowed ${getDayClassName(date)}`}
-                  >
-                    {renderDayNumber(date)}
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* 달력 - "한 달치" 그리드 자체는 CalendarMonthGrid가 그린다(검색바
+              날짜 필터·호스트 계약 캘린더와 완전히 같은 칸/원/밴드 크기를
+              공유하기 위해 - 이슈 #287 디자인 QA). */}
+          <div className="rounded-lg bg-white">
+            <CalendarMonthGrid
+              monthDate={viewDate}
+              cells={calendarDays}
+              showPrevArrow={!isPrevMonthDisabled}
+              showNextArrow={!isNextMonthDisabled}
+              onPrevMonth={handlePrevMonth}
+              onNextMonth={handleNextMonth}
+              isSelectedEndpoint={isSelectedEndpoint}
+              isToday={(date) => isSameDay(date, todayStart)}
+              isDisabled={isDateDisabled}
+              getBandClassName={getBandClassName}
+              onSelectDate={handleSelectDate}
+              getAriaLabel={getDayAriaLabel}
+              isAriaPressed={isDateSelected}
+              getDayTextClassName={getDayTextClassName}
+            />
           </div>
         </div>
 

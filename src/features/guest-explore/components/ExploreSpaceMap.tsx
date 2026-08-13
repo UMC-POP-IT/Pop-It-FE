@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { createPortal } from "react-dom";
 import KakaoMap from "./KakaoMap";
 import KakaoMapOverlay from "./KakaoMapOverlay";
 import MapBackground from "./MapBackground";
@@ -204,104 +205,133 @@ const ExploreSpaceMap = ({
         </>
       )}
 
-      {selectedSpace && isMobile && (
-        <div
-          ref={sheetDialogRef}
-          role="dialog"
-          aria-label={`${selectedSpace.name} 공간 정보`}
-          className="absolute inset-x-0 bottom-0 z-30 rounded-t-[20px] bg-white shadow-[0px_-4px_10px_rgba(0,0,0,0.16)] transition-transform duration-150 ease-out"
-          style={{ transform: `translateY(${sheetDragOffsetY}px)` }}
-        >
-          <div ref={sheetInitialFocusRef} tabIndex={-1} className="sr-only" />
+      {selectedSpace &&
+        isMobile &&
+        createPortal(
           <div
-            role="button"
-            tabIndex={0}
-            aria-label="공간 카드 접기"
-            onPointerDown={handleSheetDragStart}
-            onPointerMove={handleSheetDragMove}
-            onPointerUp={handleSheetDragEnd}
-            onPointerCancel={() => {
-              sheetDragStartYRef.current = null;
-              setSheetDragOffsetY(0);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                setSelectedSpaceId(null);
-              }
-            }}
-            className="flex touch-none cursor-grab items-center justify-center py-3 active:cursor-grabbing"
+            ref={sheetDialogRef}
+            role="dialog"
+            aria-label={`${selectedSpace.name} 공간 정보`}
+            // 지도 박스(overflow-hidden, 뷰포트보다 낮은 고정 높이) 안에 그대로 두면
+            // absolute든 fixed든 그 박스 경계에서 잘려버리고, 하단 고정 내비게이션
+            // (MobileBottomNav, fixed bottom-0 z-40)에도 z-index가 밀려 가려진다 -
+            // document.body로 포탈해서 지도 DOM 트리를 완전히 벗어나야 진짜
+            // 뷰포트 기준 fixed로 동작하고, z-50(내비바 z-40보다 위)로 내비바
+            // 위에 뜬다(BottomSheet.tsx와 동일한 패턴).
+            className="fixed inset-x-0 bottom-0 z-50 rounded-t-[20px] bg-white shadow-[0px_-4px_10px_rgba(0,0,0,0.16)] transition-transform duration-150 ease-out"
+            style={{ transform: `translateY(${sheetDragOffsetY}px)` }}
           >
-            <span aria-hidden="true" className="h-1 w-10 rounded-full bg-[#999999]" />
-          </div>
-          <div className="px-3 pb-4 text-left">
-            <div className="bg-bg relative aspect-[4/3] w-full overflow-hidden rounded-t-lg">
+            <div
+              ref={sheetInitialFocusRef}
+              tabIndex={-1}
+              className="sr-only"
+            />
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="공간 카드 접기"
+              onPointerDown={handleSheetDragStart}
+              onPointerMove={handleSheetDragMove}
+              onPointerUp={handleSheetDragEnd}
+              onPointerCancel={() => {
+                sheetDragStartYRef.current = null;
+                setSheetDragOffsetY(0);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setSelectedSpaceId(null);
+                }
+              }}
+              className="flex cursor-grab touch-none items-center justify-center py-3 active:cursor-grabbing"
+            >
+              <span
+                aria-hidden="true"
+                className="h-1 w-10 rounded-full bg-[#999999]"
+              />
+            </div>
+            <div className="px-3 pb-4 text-left">
+              <div className="bg-bg relative aspect-[4/3] w-full overflow-hidden rounded-t-lg">
+                <button
+                  type="button"
+                  onClick={() => onSelectSpace(selectedSpace.id)}
+                  className="block h-full w-full"
+                >
+                  {selectedSpace.imageUrls[0] && (
+                    <img
+                      src={selectedSpace.imageUrls[0]}
+                      alt={selectedSpace.name}
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+                </button>
+                <div className="absolute right-2 bottom-2">
+                  <span className="rounded bg-black/35 px-2 py-1 text-[10px] font-medium text-white">
+                    {mapSpaceCategoryTag(selectedSpace.category)}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  aria-label={
+                    wishedIds.includes(selectedSpace.id)
+                      ? "찜 해제하기"
+                      : "찜하기"
+                  }
+                  onClick={() =>
+                    onWishToggle
+                      ? onWishToggle(selectedSpace)
+                      : handleWishToggle(selectedSpace.id)
+                  }
+                  className={`absolute top-3 right-3 text-lg leading-none ${
+                    wishedIds.includes(selectedSpace.id)
+                      ? "text-red-500"
+                      : "text-white drop-shadow"
+                  }`}
+                >
+                  {wishedIds.includes(selectedSpace.id) ? "♥" : "♡"}
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={() => onSelectSpace(selectedSpace.id)}
-                className="block h-full w-full"
+                className="flex w-full items-start justify-between gap-3 px-1 pt-3 text-left"
               >
-                {selectedSpace.imageUrls[0] && (
-                  <img
-                    src={selectedSpace.imageUrls[0]}
-                    alt={selectedSpace.name}
-                    className="h-full w-full object-cover"
-                  />
-                )}
-              </button>
-              <div className="absolute right-2 bottom-2">
-                <span className="rounded bg-black/35 px-2 py-1 text-[10px] font-medium text-white">
-                  {mapSpaceCategoryTag(selectedSpace.category)}
+                <div className="min-w-0">
+                  <span className="text-text-primary block truncate text-sm font-bold">
+                    {selectedSpace.name}
+                  </span>
+                  <span className="text-text-primary mt-1 block text-sm font-bold">
+                    {selectedSpace.cost.day.toLocaleString()}원{" "}
+                    <span className="text-text-secondary text-xs font-normal">
+                      /일
+                    </span>
+                  </span>
+                  {selectedSpace.keywords.length > 0 && (
+                    <div className="mt-2 flex gap-1">
+                      {selectedSpace.keywords
+                        .slice(0, 2)
+                        .map((keyword, index) => (
+                          <span
+                            key={`${keyword}-${index}`}
+                            className="bg-tag-bg text-text-tag rounded-full px-2 py-0.5 text-xs"
+                          >
+                            {keyword.startsWith("#") ? keyword : `#${keyword}`}
+                          </span>
+                        ))}
+                    </div>
+                  )}
+                </div>
+                <span className="text-text-secondary flex shrink-0 items-center gap-0.5 text-xs">
+                  ♡ {selectedSpace.heartCount}
                 </span>
-              </div>
-              <button
-                type="button"
-                aria-label={wishedIds.includes(selectedSpace.id) ? "찜 해제하기" : "찜하기"}
-                onClick={() =>
-                  onWishToggle
-                    ? onWishToggle(selectedSpace)
-                    : handleWishToggle(selectedSpace.id)
-                }
-                className={`absolute top-3 right-3 text-lg leading-none ${
-                  wishedIds.includes(selectedSpace.id) ? "text-red-500" : "text-white drop-shadow"
-                }`}
-              >
-                {wishedIds.includes(selectedSpace.id) ? "♥" : "♡"}
               </button>
             </div>
-            <button
-              type="button"
-              onClick={() => onSelectSpace(selectedSpace.id)}
-              className="flex w-full items-start justify-between gap-3 px-1 pt-3 text-left"
-            >
-              <div className="min-w-0">
-                <span className="text-text-primary block truncate text-sm font-bold">
-                  {selectedSpace.name}
-                </span>
-                <span className="text-text-primary mt-1 block text-sm font-bold">
-                  {selectedSpace.cost.day.toLocaleString()}원{" "}
-                  <span className="text-text-secondary text-xs font-normal">/일</span>
-                </span>
-                {selectedSpace.keywords.length > 0 && (
-                  <div className="mt-2 flex gap-1">
-                    {selectedSpace.keywords.slice(0, 2).map((keyword, index) => (
-                      <span
-                        key={`${keyword}-${index}`}
-                        className="bg-tag-bg text-text-tag rounded-full px-2 py-0.5 text-xs"
-                      >
-                        {keyword.startsWith("#") ? keyword : `#${keyword}`}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <span className="text-text-secondary flex shrink-0 items-center gap-0.5 text-xs">
-                ♡ {selectedSpace.heartCount}
-              </span>
-            </button>
-          </div>
-        </div>
-      )}
+            {/* iOS 홈 인디케이터 세이프 에어리어 - BottomSheet.tsx와 동일하게 실제
+              기기의 하단 제스처 바 영역만큼 비워둔다. */}
+            <div className="pb-[env(safe-area-inset-bottom)]" />
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };
