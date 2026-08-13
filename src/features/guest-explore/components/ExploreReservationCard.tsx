@@ -11,6 +11,7 @@ import ReservationRequestModal from "@/features/guest-explore/components/Reserva
 import Modal from "@/shared/components/Modal";
 import calendarIcon from "@/assets/icons/icon_calendar.svg";
 import CalendarMonthGrid from "@/shared/components/calendar/CalendarMonthGrid";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -87,6 +88,7 @@ const ExploreReservationCard = ({
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const guestName = user?.nickname ?? "";
+  const isMobileCalendar = useMediaQuery("(max-width: 767px)");
 
   const todayStart = toDateOnly(new Date());
   // 호스트가 설정한 계약 가능 기간 (이 범위 밖의 날짜는 선택 불가)
@@ -339,23 +341,23 @@ const ExploreReservationCard = ({
   // 완료 모달에는 클라이언트 예상치가 아닌 서버가 계산한 실제 금액(임대료/보험료/보증금/총액)을 보여준다.
   // "결제 예정 금액"은 상세 금액 바로 아래에 두되, 기존 제목과 같은 강조 스타일을 유지한다.
   const completeTitle = "예약 요청이 완료 되었습니다";
-  const completeDescription = reservationResult
-    ? (
-        <div className="flex flex-col items-center gap-5">
-          <span>나의 예약 &gt; 예약 예정</span>
-          <div className="flex flex-col items-center gap-2">
-            <span>
-              임대료 {reservationResult.rentalFee.toLocaleString()}원 · 보험료{" "}
-              {reservationResult.insuranceFee.toLocaleString()}원 · 보증금{" "}
-              {reservationResult.deposit.toLocaleString()}원
-            </span>
-            <span className="text-primary text-xl font-bold">
-              결제 예정 금액 {reservationResult.totalPrice.toLocaleString()}원
-            </span>
-          </div>
-        </div>
-      )
-    : "나의 예약 > 예약 예정";
+  const completeDescription = reservationResult ? (
+    <div className="flex flex-col items-center gap-5">
+      <span>나의 예약 &gt; 예약 예정</span>
+      <div className="flex flex-col items-center gap-2">
+        <span>
+          임대료 {reservationResult.rentalFee.toLocaleString()}원 · 보험료{" "}
+          {reservationResult.insuranceFee.toLocaleString()}원 · 보증금{" "}
+          {reservationResult.deposit.toLocaleString()}원
+        </span>
+        <span className="text-primary text-xl font-bold">
+          결제 예정 금액 {reservationResult.totalPrice.toLocaleString()}원
+        </span>
+      </div>
+    </div>
+  ) : (
+    "나의 예약 > 예약 예정"
+  );
 
   // 여러 날짜(기간)를 선택한 경우에만 시작일~종료일 사이를 이어주는 밴드(캡슐) 배경을
   // 그린다. 시작일=종료일(하루만 선택)인 경우는 밴드 없이 숫자에 꽉 찬 원만 표시한다
@@ -485,6 +487,15 @@ const ExploreReservationCard = ({
               getAriaLabel={getDayAriaLabel}
               isAriaPressed={isDateSelected}
               getDayTextClassName={getDayTextClassName}
+              monthWidthClassName={isMobileCalendar ? "w-full" : undefined}
+              gridColsClassName={
+                isMobileCalendar
+                  ? "grid w-full grid-cols-[repeat(7,minmax(0,1fr))]"
+                  : undefined
+              }
+              cellWidthClassName={
+                isMobileCalendar ? "min-w-0 w-full" : undefined
+              }
             />
           </div>
         </div>
