@@ -76,21 +76,19 @@ const FileUploadRow = ({
           />
         </label>
       </div>
-      {/* 검사 실패 시에만 새 요소로 나타나야 스크린 리더가 읽어준다 */}
-      {/* 모바일은 버튼 아래 오른쪽에 붙는다 — 위 gap-2(8)에 mt-1(4)을 더해 피그마 12를 만든다.
+      {/* 안내문과 실패 사유가 한 칸을 나눠 쓴다. 예전에는 삼항으로 노드를 갈아끼우면서
+          role="alert"도 같이 생겼다 사라졌는데, 라이브 영역을 조건부로 넣다 빼면
+          보조기술이 등록을 놓칠 수 있다. 그래서 안쪽에 토글되지 않는 aria-live 영역을
+          두고 '내용만' 바꾼다 — 공용 Input의 메시지 슬롯과 같은 구조다.
+          polite인 이유: 파일을 고른 직후 한 번 바뀌는 값이라 낭독을 끊을 필요가 없다.
+          모바일은 버튼 아래 오른쪽에 붙는다 — 위 gap-2(8)에 mt-1(4)을 더해 시안 12를 만든다.
           md 이상은 왼쪽 정렬에 간격 8 그대로 */}
-      {error ? (
-        <span
-          role="alert"
-          className="text-danger mt-1 text-right text-base font-bold md:mt-0 md:text-left"
-        >
-          {error}
-        </span>
-      ) : (
-        <span className="text-text-secondary mt-1 text-right text-base font-medium md:mt-0 md:text-left">
-          {hint}
-        </span>
-      )}
+      <span className="text-danger mt-1 block text-right text-base font-bold md:mt-0 md:text-left">
+        <span aria-live="polite">{error}</span>
+        {!error && (
+          <span className="text-text-secondary font-medium">{hint}</span>
+        )}
+      </span>
     </div>
   );
 };

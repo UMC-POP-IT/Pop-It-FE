@@ -211,6 +211,10 @@ export const HostRegisterStep2 = () => {
             >
               정산 입금 계좌 번호
             </label>
+            {/* error·hint·counter를 넘기지 않는다 = 메시지 슬롯 없음.
+                이 칸은 클라이언트 검증이 없어(형식 오류를 서버가 판단) 문구가 뜰 자리가
+                필요 없다. 나중에 검증을 붙이면 정상일 때도 error=""를 넘겨야 예약된다
+                — Input.tsx 상단 '메시지 슬롯 계약' 참고 */}
             <Input
               id="account-number"
               placeholder="- 없이 숫자만 입력"

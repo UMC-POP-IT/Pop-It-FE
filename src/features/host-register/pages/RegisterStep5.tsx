@@ -140,8 +140,12 @@ export const RegisterStep5 = () => {
             이 화면은 필드가 둘(사진 업로더 / 가이드 박스)이고 사이가 피그마 32(gap-8) */}
         <div className="mt-7 flex flex-col gap-8">
           {/* 사진 업로더 + 제외 안내문 — 안내문이 떴다 사라져도 가이드 박스와의
-              간격이 32로 고정되도록 한 묶음으로 감싼다 */}
-          <div className="flex flex-col gap-6">
+              간격이 32로 고정되도록 한 묶음으로 감싼다.
+              gap-6을 쓰지 않는 이유: 아래 안내문을 항상 마운트해 두는데(라이브 영역을
+              조건부로 넣다 빼면 보조기술이 등록을 놓칠 수 있다), gap은 자식이 비어
+              있어도 그려진다. 그래서 간격을 안내문 자신의 mt-6으로 옮기고 비었을 때는
+              empty:mt-0으로 죽여, 정상 상태 높이를 예전과 똑같이 유지한다 */}
+          <div className="flex flex-col">
             {/* 사진 업로더: 카메라 타일 + 업로드된 썸네일들.
                 타일 146 고정, 간격만 3단 — 열 수는 폭에 따라 flex-wrap이 알아서 나눈다.
                   모바일 328: 146×2 + 16     = 308 → 2열
@@ -226,16 +230,17 @@ export const RegisterStep5 = () => {
               ))}
             </div>
 
-            {/* 개수 제한·형식 오류로 빠진 사진 안내 — 나타나는 순간 스크린 리더가 읽도록 role="alert".
+            {/* 개수 제한·형식 오류로 빠진 사진 안내. 노드는 항상 두고 내용만 갱신한다
+            (위 wrapper 주석 참고). 거부된 파일이 파일당 한 줄씩 붙어 높이가 가변이라
+            여기만 예약 높이를 두지 않는다 — 자르면 "어느 파일이 왜 빠졌는지"라는
+            문구의 목적이 사라진다.
             여러 줄이 될 수 있어 whitespace-pre-line으로 \n을 살린다 */}
-            {photoNotice && (
-              <span
-                role="alert"
-                className="text-danger text-left text-base font-bold whitespace-pre-line"
-              >
-                {photoNotice}
-              </span>
-            )}
+            <span
+              aria-live="polite"
+              className="text-danger mt-6 text-left text-base font-bold whitespace-pre-line empty:mt-0"
+            >
+              {photoNotice}
+            </span>
           </div>
 
           {/* 사진 촬영 가이드 박스 */}

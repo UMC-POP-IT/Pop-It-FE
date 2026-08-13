@@ -270,10 +270,20 @@ export const DateRangePicker = ({
 
   // 딤을 누르거나 시트를 끌어내려 닫을 때 — 고른 범위가 완성돼 있으면 저장하고 닫는다.
   // (바깥 클릭으로 닫는 기존 동작과 같게 맞춘다)
+  //
+  // 포커스 복원: 팝업이 언마운트되면 그 안에 있던 포커스가 <body>로 떨어져서,
+  // 키보드·스크린리더 사용자가 다음 Tab에 문서 맨 처음으로 튄다. 그래서 닫는 경로마다
+  // 팝업을 연 버튼으로 되돌린다. 지금 이 함수(딤 탭 / 손잡이 끌어내리기)와
+  // Esc(useEffect 안), 확인 버튼(handleConfirm) 세 곳이 전부다.
+  // 바깥 클릭(handleClickOutside)만 예외로 둔다 — 그 핸들러는 mousedown에서 돌아
+  // 브라우저가 방금 누른 요소로 포커스를 옮기기 '전'이다. 여기서 focus()를 부르면
+  // 사용자가 실제로 클릭한 대상에서 포커스를 빼앗고, 곧 브라우저가 다시 덮어써
+  // 결과가 브라우저마다 달라진다. 그 경로는 애초에 포인터 조작이라 잃을 포커스가 없다.
   const closeWithSave = () => {
     if (startDate && endDate) onConfirm(toYmd(startDate), toYmd(endDate));
     setIsOpen(false);
     setDragY(0);
+    triggerRef.current?.focus();
   };
 
   // 손잡이 끌기 — 포인터 이벤트라 터치·마우스·펜을 한 번에 받는다.
@@ -480,6 +490,12 @@ export const DateRangePicker = ({
               폭은 달 카드 폭 × 2다 (ContractCalendarGrid의 시안 규격).
                 태블릿 616 = 308 × 2  (768 화면에 들어간다)
                 데스크톱 896 = 448 × 2
+              max-w-[calc(100vw-2rem)]는 보험이다. md는 폭이 768 이상이므로 616이
+              들어가고(768-32=736 > 616), lg는 1024 이상이므로 896이 들어간다
+              (1024-32=992 > 896) — 즉 정상 구간에서는 절대 걸리지 않는다. 다만 고정
+              px 두 개만 두면 브라우저 확대/축소나 예상 못한 뷰포트에서 가로로 삐져나갈
+              수 있고, 이 팝업은 left-1/2 + -translate-x-1/2로 가운데 정렬이라 넘침이
+              양쪽으로 생긴다. 상한을 걸어두면 그 경우 폭이 줄어들 뿐 화면을 넘지 않는다
               팝업이 본문(md 535 / lg 644)보다 넓어 좌우로 넘치므로 left-1/2 +
               -translate-x-1/2로 가운데 정렬해 넘침을 대칭으로 만든다.
               MainLayout의 overflow-x-clip이 가로 스크롤바 생성을 막는다 */}
@@ -499,7 +515,7 @@ export const DateRangePicker = ({
             // ‹/› 화살표나 확인 버튼이 화면 밖으로 밀려 안 보이는 문제 방지 -
             // BottomSheet.tsx와 동일한 max-h-[Nvh] + 내부 overflow-y-auto 패턴).
             // md 이상(딤 없는 팝업)은 원래도 이 문제가 없어 md:max-h-none으로 그대로 둔다.
-            className="border-border fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-[20px] border bg-white px-4 pt-1 pb-4 shadow-lg md:absolute md:inset-x-auto md:bottom-auto md:left-1/2 md:z-10 md:mt-2 md:max-h-none md:w-[616px] md:-translate-x-1/2 md:overflow-hidden md:rounded-lg md:p-0 lg:w-[896px]"
+            className="border-border fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-[20px] border bg-white px-4 pt-1 pb-4 shadow-lg md:absolute md:inset-x-auto md:bottom-auto md:left-1/2 md:z-10 md:mt-2 md:max-h-none md:w-[616px] md:max-w-[calc(100vw-2rem)] md:-translate-x-1/2 md:overflow-hidden md:rounded-lg md:p-0 lg:w-[896px]"
           >
             {/* 손잡이 바 40×4 — 끌어내려 닫는다. 데스크톱 팝업엔 없다.
                 py-2로 손가락이 닿는 범위를 바보다 위아래 8씩 넓히고, 시트 pt-1(4)과 합쳐

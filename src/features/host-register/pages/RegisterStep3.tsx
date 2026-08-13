@@ -234,6 +234,9 @@ export const RegisterStep3 = () => {
 
             {needsFloorNumber && (
               <div className="relative">
+                {/* error·hint·counter를 넘기지 않는다 = 메시지 슬롯 없음.
+                    층수는 검증 오류가 없어 문구가 뜰 자리가 필요 없다
+                    — Input.tsx 상단 '메시지 슬롯 계약' 참고 */}
                 <Input
                   type="number"
                   aria-label="층수"
@@ -273,36 +276,46 @@ export const RegisterStep3 = () => {
             <span className="text-text-primary text-[22px] font-bold">
               시설 정보
             </span>
-            {isFacilityLoading ? (
+            {/* 라이브 영역과 칩 목록을 한 자식으로 묶는다. 이 wrapper는 gap이 없어서
+                안내 문구가 비어 있으면(=칩이 뜨는 정상 상태) 높이 0으로 사라지고, 위
+                라벨과 칩 사이 간격은 부모 gap-6(24) 하나만 남는다 — 즉 라이브 영역을
+                항상 마운트해도 레이아웃이 그대로다.
+                왜 항상 마운트하나: 조건부로 넣었다 빼면 보조기술이 라이브 영역 등록을
+                놓칠 수 있는 경우가 생긴다. 노드를 남기고 '내용만' 갱신하는 쪽이
+                엔진 차이에 안전하고, 폼 전체(Input 슬롯·면적·공간 설명)와 방식이 같아진다.
+                aria-live="polite"로 통일한 이유 — 이 문구는 화면 진입 직후 로딩 결과로
+                한 번 바뀌는 값이라 낭독을 끊을 이유가 없다 */}
+            <div>
               <span
-                role="status"
-                className="text-text-placeholder text-base font-bold"
+                aria-live="polite"
+                className={`text-base font-bold ${
+                  facilityError ? "text-danger" : "text-text-placeholder"
+                }`}
               >
-                시설 목록을 불러오는 중이에요...
+                {isFacilityLoading
+                  ? "시설 목록을 불러오는 중이에요..."
+                  : facilityError
+                    ? // 로딩 문구(실측 206.2px)와 같은 자리를 교대하므로 줄 수가 같아야
+                      // 한다. 원래 문구는 393.8px로 모바일 328px에서 두 줄이었다 (이슈 #306).
+                      // 정렬도 로딩 문구와 같은 좌측이다 — 예전엔 text-right여서 로딩이
+                      // 실패하는 순간 문구가 왼쪽 끝에서 오른쪽 끝으로 튀었다
+                      "시설 목록을 불러오지 못했어요. 새로고침 해주세요"
+                    : ""}
               </span>
-            ) : facilityError ? (
-              // 로딩 문구(실측 206.2px)와 이 오류 문구가 같은 자리를 교대하므로 줄 수가
-              // 같아야 한다. 원래 문구는 393.8px로 모바일 328px에서 두 줄이었다 (이슈 #306).
-              // text-right를 뺐다 — 교대 상대인 위 로딩 문구는 정렬 클래스가 없어 좌측이라,
-              // 로딩이 실패하는 순간 문구가 왼쪽 끝에서 오른쪽 끝으로 튀었다.
-              // 이 폴더의 다른 오류 문구도 전부 좌측이다
-              <span
-                role="alert"
-                className="text-danger text-base font-bold"
-              >
-                시설 목록을 불러오지 못했어요. 새로고침 해주세요
-              </span>
-            ) : (
-              facilityGroups.map((group) => (
-                <FacilityChipGroup
-                  key={group.category}
-                  label={FACILITY_CATEGORY_LABEL[group.category]}
-                  items={group.items}
-                  selectedIds={form.facilityIds}
-                  onToggle={toggleFacility}
-                />
-              ))
-            )}
+              {!isFacilityLoading && !facilityError && (
+                <div className="flex flex-col gap-6">
+                  {facilityGroups.map((group) => (
+                    <FacilityChipGroup
+                      key={group.category}
+                      label={FACILITY_CATEGORY_LABEL[group.category]}
+                      items={group.items}
+                      selectedIds={form.facilityIds}
+                      onToggle={toggleFacility}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
