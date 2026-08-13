@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useSearchParams } from "react-router-dom";
 import AiRecommendSpace from "@/features/guest-explore/components/AiRecommendSpace";
 import ExploreSpace from "@/features/guest-explore/components/ExploreSpace";
@@ -94,19 +100,18 @@ const filtersFromSearchParams = (
 export const ExplorePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // 검색을 실제로 실행했는지는 "search=1" 쿼리 존재 여부로 판단한다(필터 값이
-  // 전부 비어있어도 - 예: 조건 초기화 후에도 - 결과 화면 자체는 유지되어야 하므로
-  // 개별 필터 값 유무만으로는 판단할 수 없다). true면 배너 이미지/AI 추천/실시간
-  // 추천이 사라지고 검색 결과 전용 화면(무한스크롤)으로 바뀐다.
+  // 검색 결과 화면 여부는 URL의 "search=1" 쿼리로 판단한다. 필터 값이 전부
+  // 비어있어도(예: 조건 초기화 후) 결과 화면 자체는 유지되어야 하므로 개별 필터
+  // 값 유무만으로 판단하지 않는다. URL 공유/직접 진입도 지원하므로 사용자가
+  // "/"에 "?search=1"을 붙여 들어오면 의도적으로 검색 결과 화면으로 취급한다.
   const hasActiveSearch = searchParams.get(SEARCH_FLAG_PARAM) === "1";
   const searchFilters = filtersFromSearchParams(searchParams);
   const { keyword, spaceCategory, district, dateRange } = searchFilters;
 
-  // 스크롤을 내리면 검색바가 헤더의 축소된 pill로 바뀌고, pill을 클릭하면
-  // 헤더 바로 아래에 원래 검색바가 오버레이로 다시 펼쳐진다(에어비앤비 참고).
-  // 검색을 실행했는지(hasActiveSearch), 결과가 있는지와 무관하게 - 게스트
-  // 홈(브라우징 화면)이든 검색 결과 화면이든, 검색 버튼을 눌렀든 안 눌렀든 -
-  // 스크롤로 검색바가 헤더 뒤로 넘어가면 항상 pill로 바뀐다(#301).
+  // 검색 결과 화면에서 스크롤을 내리면 검색바가 헤더의 축소된 pill로 바뀌고,
+  // pill을 클릭하면 헤더 바로 아래에 원래 검색바가 오버레이로 다시 펼쳐진다
+  // (에어비앤비 참고). 게스트 첫 화면은 아무리 스크롤해도 큰 검색바를 헤더 pill로
+  // 올리지 않는다 - 결과 목록이 무한스크롤로 뜨는 search=1 화면 전용 동작이다.
   const [isScrolledPastBar, setIsScrolledPastBar] = useState(false);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [summary, setSummary] = useState<ScrollSearchBarSummary | null>(null);
@@ -156,12 +161,21 @@ export const ExplorePage = () => {
     );
   }, []);
 
-  // 검색바가 원래 있던 자리(Banner 안, sentinel)가 헤더 뒤로 넘어가면
-  // "스크롤됨"으로 표시한다. rootMargin으로 헤더 높이만큼 보정해서, 실제로
-  // 헤더 뒤에 가려지는 시점과 최대한 맞춘다. hasActiveSearch/결과 유무와
-  // 무관하게 항상 감지한다 - 게스트 홈(브라우징 화면)에서도 스크롤을 내리면
-  // 무조건 검색바가 헤더의 작은 pill로 올라가야 한다(#301).
+  // 검색 결과 화면에서 빠져나온 렌더는 paint 전에 헤더 pill 상태를 정리한다.
+  // useEffect로만 처리하면 같은 ExplorePage 안에서 "?search=1" → "/"로 URL만
+  // 바뀌는 순간 이전 store 상태가 한 프레임 보일 수 있다.
+  useLayoutEffect(() => {
+    if (hasActiveSearch) return;
+    setIsScrolledPastBar(false);
+    setIsOverlayOpen(false);
+    resetScrollSearchBar();
+  }, [hasActiveSearch, resetScrollSearchBar]);
+
+  // 검색 결과 화면에서만 검색바가 원래 있던 자리(Banner 안, sentinel)를 감지한다.
+  // 게스트 첫 화면에서는 IntersectionObserver 자체를 등록하지 않아 스크롤마다
+  // 축소 검색바 조건을 확인하는 일이 없다.
   useEffect(() => {
+    if (!hasActiveSearch) return;
     const node = sentinelRef.current;
     if (!node) return;
     const observer = new IntersectionObserver(
@@ -175,7 +189,7 @@ export const ExplorePage = () => {
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [hasActiveSearch, resetScrollSearchBar]);
 
   // 스크롤을 다시 올려 원래 검색바가 보이게 되면, 열려있던 오버레이도 접는다.
   useEffect(() => {
@@ -215,11 +229,10 @@ export const ExplorePage = () => {
   }, [isOverlayOpen]);
 
   // 위 상태들을 종합해서 헤더(전역 컴포넌트)가 구독하는 스토어에 반영한다.
-  // 이 화면을 벗어나거나 스크롤이 위로 돌아가면 pill을 숨긴다. hasActiveSearch와
-  // 무관하게 isScrolledPastBar만으로 판단한다 - 게스트 홈에서도 스크롤로 pill이
-  // 떠야 한다(#301).
+  // 이 화면을 벗어나거나, 검색 결과 화면이 아니거나, 스크롤이 위로 돌아가면
+  // pill을 숨긴다. 축소 검색바는 search=1 결과 화면 전용이다.
   useEffect(() => {
-    if (!isScrolledPastBar) {
+    if (!hasActiveSearch || !isScrolledPastBar) {
       resetScrollSearchBar();
       return;
     }
@@ -239,6 +252,7 @@ export const ExplorePage = () => {
         }),
     });
   }, [
+    hasActiveSearch,
     isScrolledPastBar,
     isOverlayOpen,
     summary,
@@ -249,11 +263,12 @@ export const ExplorePage = () => {
   // 페이지를 떠날 때(라우트 이동)도 헤더에 남아있는 pill 상태를 정리한다.
   useEffect(() => resetScrollSearchBar, [resetScrollSearchBar]);
 
-  const searchBarPosition = isScrolledPastBar
-    ? isOverlayOpen
-      ? "pinned-open"
-      : "pinned-hidden"
-    : "inline";
+  const searchBarPosition =
+    hasActiveSearch && isScrolledPastBar
+      ? isOverlayOpen
+        ? "pinned-open"
+        : "pinned-hidden"
+      : "inline";
 
   // 검색 직후 최상단(아직 스크롤 안 함)에서는 결과화면 전용 스타일(굵은 파란
   // 테두리, 피그마 node 5019:73539)을 쓰고, 스크롤해서 헤더 pill로 축소됐다가
