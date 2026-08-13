@@ -1,9 +1,9 @@
   import { useState, useEffect, useRef } from "react";
 import * as PortOne from "@portone/browser-sdk/v2";
-import passIcon from "@/features/guest-explore/icons/PASS.png";
 import { GetVerificationStatus, RequestVerification } from "@/features/guest-explore/api/my_reservation_api";
 import { pollVerificationStatus } from "@/features/guest-explore/utils/verificationPolling";
 import { PENDING_CONTRACT_RESERVATION_KEY } from "@/features/guest-explore/utils/contractSession";
+import PASS_ICON from "@/features/guest-explore/icons/pass.svg";
 
 interface AuthenticationProps {
   reservationId: number;
@@ -143,7 +143,7 @@ const Authentication = ({ reservationId, onVerified, onIsAuthenticated }: Authen
         className="border-border flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 disabled:cursor-not-allowed hover:bg-bg"
       >
         <div className="flex items-center gap-1">
-          <img src={passIcon} alt="PASS" className="h-10 w-10 rounded-md"/>
+          <img src={PASS_ICON} alt="PASS" className="h-[46px] w-[146px]"/>
         </div>
 
         <span className="text-grey-700 shrink-0 text-sm font-medium">
