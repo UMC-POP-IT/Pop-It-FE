@@ -29,7 +29,7 @@ const SpaceCard = ({
 }: SpaceCardProps) => (
   <div
     onClick={onClick}
-    className={`border-border group w-full cursor-pointer overflow-hidden border border-transparent bg-white transition-all duration-300 ease-out ${
+    className={`border-border group w-auto cursor-pointer overflow-hidden border border-transparent bg-white transition-all duration-300 ease-out ${
       hoverEffect === "dim" ? "" : "hover:-translate-y-1 hover:shadow-xl"
     }`}
     role="button"
