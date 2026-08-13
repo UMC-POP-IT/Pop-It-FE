@@ -14,6 +14,10 @@ import {
   SEARCH_BAR_VIEW_TRANSITION_NAME,
   type MorphTransitionStyle,
 } from "@/shared/utils/viewTransition";
+import {
+  HOST_REGISTER_PATH,
+  isHostRegisterPath,
+} from "@/shared/constants/routes";
 
 /**
  * sticky 헤더의 실제 높이(아래 h-[74px]과 반드시 같아야 한다). Banner.tsx의
@@ -97,6 +101,22 @@ const Header = () => {
   // pill을 눌러 원래 검색바를 펼친 상태에서는 pill이 사라지므로 액션도 다시 접근 가능해야 한다.
   const hideHeaderActions = Boolean(scrollBarSummary) && isScrollBarVisible;
   const shouldHideModeToggle = mode === "GUEST" && pathname !== "/";
+  // 호스트 등록 흐름에서는 nav 아이템을 감춘다 (#302).
+  // RouteModeSync가 /host* 경로를 전부 HOST 모드로 맞추므로 이 화면에서도
+  // [내 공간]·[예약 관리]가 뜨는데, 아직 호스트가 아닌 사용자에게는 둘 다 403이다.
+  // 다만 결과가 다르다 — [내 공간]은 MySpacePage가 /host/host-register로 되돌려
+  // (MySpacePage.tsx의 403 분기) 등록 흐름의 처음으로 밀려나고, [예약 관리]는
+  // HostReservationPage가 loadError를 세워 빈 오류 화면에 남긴다. 입력값 자체는
+  // registerStore(모듈 스코프)에 남지만 몇 단계까지 왔는지는 잃는다.
+  //
+  // /host/host-register/complete만은 이미 등록이 끝나 403이 안 나므로 이 근거가
+  // 적용되지 않는다. 그래도 감추는 쪽으로 뒀다 — 출구를 [호스트 홈으로] 하나로
+  // 모으는 마무리 화면이라 nav가 다시 나타나면 CTA와 목적지가 겹친다.
+  //
+  // 헤더의 나머지(높이 74·로고·모드 전환·프로필)는 그대로 두므로 이 흐름을 빠져나갈
+  // 수단은 남는다. 단 [게스트 전환]은 아래 shouldHideModeToggle이 mode==="GUEST"일 때
+  // 감추므로, RouteModeSync가 HOST로 맞추기 전 한 렌더 동안은 없을 수 있다.
+  const isHostRegisterFlow = isHostRegisterPath(pathname);
   const spaceDetailMatch = useMatch("/spaces/:spaceId");
   const hostSpaceDetailMatch = useMatch("/host/spaces/:spaceId");
   const isSpaceDetail = Boolean(spaceDetailMatch || hostSpaceDetailMatch);
@@ -151,7 +171,7 @@ const Header = () => {
     // 비로그인: 호스트 여부를 조회할 수 없으므로(401) 등록 화면을 기본값으로 둔다
     if (!user) {
       const targetMode = mode === "GUEST" ? "HOST" : "GUEST";
-      const navigateTo = mode === "GUEST" ? "/host/host-register" : "/";
+      const navigateTo = mode === "GUEST" ? HOST_REGISTER_PATH : "/";
       openLoginModal({ type: "modeToggle", targetMode, navigateTo });
       return;
     }
@@ -202,82 +222,87 @@ const Header = () => {
             <Logo variant="header" />
           </NavLink>
 
-          {/* nav: 아이템 간 gap 없음, 각 아이템 w-[112px] px-[10px] — 작은 화면에서 숨김 */}
-          <nav className="hidden h-[74px] md:flex">
-            {mode === "HOST" ? (
-              <>
-                <NavLink
-                  to="/host/spaces"
-                  className={({ isActive }) =>
-                    `flex h-full w-[112px] items-center justify-center px-[10px] text-base font-bold transition-colors ${
-                      isActive
-                        ? "text-primary [&>span]:border-b-2 [&>span]:border-[#0564f5]"
-                        : "text-text-primary"
-                    }`
-                  }
-                >
-                  <span className="flex h-full w-[72px] items-center justify-center">
-                    내 공간
-                  </span>
-                </NavLink>
-                <NavLink
-                  to="/host/reservations"
-                  className={({ isActive }) =>
-                    `flex h-full w-[112px] items-center justify-center px-[10px] text-base font-bold transition-colors ${
-                      isActive
-                        ? "text-primary [&>span]:border-b-2 [&>span]:border-[#0564f5]"
-                        : "text-text-primary"
-                    }`
-                  }
-                >
-                  <span className="flex h-full w-[72px] items-center justify-center">
-                    예약 관리
-                  </span>
-                </NavLink>
-              </>
-            ) : (
-              <>
-                <NavLink
-                  to="/"
-                  className={({ isActive }) =>
-                    `flex h-full w-[112px] items-center justify-center px-[10px] text-base font-bold transition-colors ${
-                      isActive
-                        ? "text-primary [&>span]:border-b-2 [&>span]:border-[#0564f5]"
-                        : "text-text-primary"
-                    }`
-                  }
-                >
-                  <span className="flex h-full w-[72px] items-center justify-center">
-                    공간탐색
-                  </span>
-                </NavLink>
-                <button
-                  onClick={() => {
-                    if (!user) {
-                      openLoginModal({
-                        type: "navigate",
-                        path: "/reservations",
-                      });
-                      return;
+          {/* nav: 아이템 간 gap 없음, 각 아이템 w-[112px] px-[10px] — 작은 화면에서 숨김.
+              호스트 등록 흐름에서는 통째로 렌더하지 않는다(위 isHostRegisterFlow 주석).
+              빈 <nav>을 남기지 않는 이유: 접근성 트리에 항목 없는 내비게이션 랜드마크가
+              남고, 부모의 gap-8이 로고 뒤에 32px 빈칸을 계속 만든다 */}
+          {!isHostRegisterFlow && (
+            <nav className="hidden h-[74px] md:flex">
+              {mode === "HOST" ? (
+                <>
+                  <NavLink
+                    to="/host/spaces"
+                    className={({ isActive }) =>
+                      `flex h-full w-[112px] items-center justify-center px-[10px] text-base font-bold transition-colors ${
+                        isActive
+                          ? "text-primary [&>span]:border-b-2 [&>span]:border-[#0564f5]"
+                          : "text-text-primary"
+                      }`
                     }
-                    navigate("/reservations");
-                  }}
-                  aria-current={
-                    pathname === "/reservations" ? "page" : undefined
-                  }
-                  className={`flex h-full w-[112px] items-center justify-center px-[10px] text-base font-bold transition-colors ${
-                    pathname === "/reservations"
-                      ? "text-primary [&>span]:border-b-2 [&>span]:border-[#0564f5]"
-                      : "text-text-primary"
-                  }`}
-                >
-                  <span className="flex h-full w-[72px] items-center justify-center">
-                    나의 예약
-                  </span>
-                </button>
-              </>
-            )}
-          </nav>
+                  >
+                    <span className="flex h-full w-[72px] items-center justify-center">
+                      내 공간
+                    </span>
+                  </NavLink>
+                  <NavLink
+                    to="/host/reservations"
+                    className={({ isActive }) =>
+                      `flex h-full w-[112px] items-center justify-center px-[10px] text-base font-bold transition-colors ${
+                        isActive
+                          ? "text-primary [&>span]:border-b-2 [&>span]:border-[#0564f5]"
+                          : "text-text-primary"
+                      }`
+                    }
+                  >
+                    <span className="flex h-full w-[72px] items-center justify-center">
+                      예약 관리
+                    </span>
+                  </NavLink>
+                </>
+              ) : (
+                <>
+                  <NavLink
+                    to="/"
+                    className={({ isActive }) =>
+                      `flex h-full w-[112px] items-center justify-center px-[10px] text-base font-bold transition-colors ${
+                        isActive
+                          ? "text-primary [&>span]:border-b-2 [&>span]:border-[#0564f5]"
+                          : "text-text-primary"
+                      }`
+                    }
+                  >
+                    <span className="flex h-full w-[72px] items-center justify-center">
+                      공간탐색
+                    </span>
+                  </NavLink>
+                  <button
+                    onClick={() => {
+                      if (!user) {
+                        openLoginModal({
+                          type: "navigate",
+                          path: "/reservations",
+                        });
+                        return;
+                      }
+                      navigate("/reservations");
+                    }}
+                    aria-current={
+                      pathname === "/reservations" ? "page" : undefined
+                    }
+                    className={`flex h-full w-[112px] items-center justify-center px-[10px] text-base font-bold transition-colors ${
+                      pathname === "/reservations"
+                        ? "text-primary [&>span]:border-b-2 [&>span]:border-[#0564f5]"
+                        : "text-text-primary"
+                    }`}
+                  >
+                    <span className="flex h-full w-[72px] items-center justify-center">
+                      나의 예약
+                    </span>
+                  </button>
+                </>
+              )}
+            </nav>
+          )}
         </div>
 
         {/* 검색 결과 화면 전용: 스크롤을 내리면 우측 액션 자리의 축소 검색바 pill이
