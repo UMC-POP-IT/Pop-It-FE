@@ -9,7 +9,7 @@ import {
   STEPS,
   BUILDING_TYPES,
 } from "@/features/host-register/api/mock_register";
-import { useState, useId } from "react";
+import { useState } from "react";
 import AddressSearchModal from "@/features/host-register/components/AddressSearchModal";
 import { useKakaoLoader } from "@/shared/hooks/useKakaoLoader";
 import { geocodeAddress } from "@/shared/utils/geocodeAddress";
@@ -23,8 +23,6 @@ export const RegisterStep1 = () => {
   const [isAddrOpen, setIsAddrOpen] = useState(false);
   const [addrError, setAddrError] = useState(""); // 서울 외 지역 선택 시 에러
   const { isLoaded, error: kakaoError } = useKakaoLoader(); // 카카오 SDK 로드 (좌표 변환에 필요)
-  // 글자수 안내를 상세 주소 입력과 묶기 위한 id
-  const detailAddressHintId = useId();
   const isValid =
     form.buildingType !== "" &&
     form.address !== "" &&
@@ -104,49 +102,50 @@ export const RegisterStep1 = () => {
             </span>
 
             {/* 주소 찾기(다음 우편번호) — 시/구는 검색 결과로 자동 채움.
-    입력창·안내문·[주소 찾기] 셋을 한 flex-wrap에 넣고 자리만 order로 바꾼다.
-    안내문이 항상 입력창 바로 아래 오도록 DOM 순서는 입력창 → 안내문 → 버튼으로 둔다.
+    [입력창+안내문] 묶음과 [주소 찾기] 버튼을 한 flex-wrap에 넣는다.
 
-      데스크톱(1024) : [입력창 440][20][버튼 184] 한 줄 → 아래 줄에 안내문 (order 1·3·2)
-      모바일         : [입력창 328] 한 줄 → 다음 줄에 [안내문 | 버튼 156]
+      데스크톱(1024) : [입력창 440][20][버튼 184] 한 줄, 안내문은 입력창 바로 아래
+      모바일         : [입력창 328] 한 줄 → 다음 줄 오른쪽에 [주소 찾기 156]
 
-      데스크톱(1024) : [입력창 440][20][버튼 184] 한 줄 → 아래 줄에 안내문 (order 1·3·2)
-      모바일         : [입력창 328] 한 줄 → 다음 줄에 [안내문 | 주소 찾기]
+    md:items-start — 입력창 묶음이 안내문 때문에 버튼보다 키가 커서(56 vs 84), 버튼을
+    입력창과 같은 위쪽 선에 맞춘다. 지금은 이게 없어도 버튼이 위에 붙는데, align-items
+    기본값 stretch가 '교차축 크기가 auto일 때만' 늘리기 때문이다 — Button size="field"가
+    h-14를 갖고 있어 stretch가 flex-start처럼 동작한다. 즉 버튼이 고정 높이를 잃는 순간
+    84px로 늘어난다. 그 의존을 없애려고 명시해 둔다.
+    items-center / md:gap-y-1 / order-*는 안내문이 이 컨테이너의 형제였을 때 필요했던 값이라
+    지웠다 — 자식이 둘뿐이고 각 줄에 하나씩 놓여 정렬·행간격·순서가 모두 무의미하다 */}
+            <div className="flex flex-wrap gap-x-3 gap-y-3 md:items-start md:gap-x-5">
+              {/* w-full이 입력창에게 한 줄을 통째로 준다. md부터는 풀고 flex-1로 남는 폭을 먹는다.
 
-    모바일은 입력창 아래 12(gap-y-3)에 안내문과 버튼이 같은 줄로 오고,
-    md부터는 4(md:gap-y-1)로 좁히고 안내문만 아래 줄로 내려간다 */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-3 md:items-start md:gap-x-5 md:gap-y-1">
-              {/* w-full이 입력창에게 한 줄을 통째로 준다. md부터는 풀고 flex-1로 남는 폭을 먹는다 */}
-              <div className="w-full md:order-1 md:w-auto md:flex-1">
+      안내문·에러가 Input의 메시지 슬롯 하나를 나눠 쓴다. 예전엔 안내문을 이 flex-wrap의
+      형제(order-3)로 두고 {!addrError && ...}로 교대시켰는데, 두 요소가 서로 다른
+      부모(= 다른 gap)에 있어 에러가 뜰 때 줄 높이가 달라지고 아래 상세 주소·버튼이
+      밀렸다 (이슈 #306).
+      들여쓰기(ps-5)는 넣지 않는다 — 이 칸만 20px 들여쓰면 다른 페이지의 오류 문구와
+      왼쪽 끝이 어긋난다. 들여쓸지 말지는 폼 전체가 같이 정할 일이다.
+      주소만 있고 좌표가 없으면 재검색을 유도한다 */}
+              <div className="w-full md:w-auto md:flex-1">
                 <Input
                   aria-label="주소"
                   placeholder="주소 찾기로 주소를 입력해주세요"
                   value={form.address}
                   readOnly
                   error={addrError}
+                  hint={
+                    form.address !== "" &&
+                    (form.latitude === null || form.longitude === null)
+                      ? "주소를 다시 검색해주세요"
+                      : "현재 서울 지역만 등록 가능합니다"
+                  }
                 />
               </div>
 
-              {/* 안내문 — 3단 모두 한 줄을 통째로 차지한다(w-full).
-      모바일에서 버튼 옆에 끼우면 자리가 160밖에 안 나와 16px 원문이 두 줄로 접혔다.
-      ps-5(20)는 Input 내부 px-5와 같은 값 — 안내문 첫 글자를 입력창 안 글자와 같은 세로선에 맞춘다.
-      에러(Input 내부)와는 끝이 어긋나지만 둘은 동시에 뜨지 않는다.
-      주소만 있고 좌표가 없으면 재검색을 유도한다 */}
-              {!addrError && (
-                <span className="text-text-secondary w-full ps-5 text-left text-base font-medium md:order-3">
-                  {form.address !== "" &&
-                  (form.latitude === null || form.longitude === null)
-                    ? "주소를 다시 검색해주세요"
-                    : "현재 서울 지역만 등록 가능합니다"}
-                </span>
-              )}
-
-              {/* ml-auto: 에러가 떠서 안내문이 사라졌을 때도 버튼이 오른쪽에 남게 한다.
-                  md부터는 입력창 바로 뒤에 붙어야 하므로 푼다 */}
+              {/* ml-auto: 모바일에서 입력창이 한 줄을 통째로 쓰므로 다음 줄로 내려온
+                  버튼을 오른쪽에 붙인다. md부터는 입력창 바로 뒤에 붙어야 하므로 푼다 */}
               <Button
                 variant="black"
                 size="field"
-                className="ml-auto md:order-2 md:ml-0"
+                className="ml-auto md:ml-0"
                 onClick={() => {
                   setAddrError("");
                   setIsAddrOpen(true);
@@ -157,25 +156,20 @@ export const RegisterStep1 = () => {
             </div>
 
             {/* 상세 주소 — 서버 SpaceCreateReq.addressDetail이 30자 제한.
-    안내를 Input과 한 칸에 묶어 gap-1로 붙인다 (위 주소 안내문과 같은 간격).
-    placeholder는 입력을 시작하면 사라지므로 이름은 aria-label로 고정하고,
-    30자 제한 안내는 aria-describedby로 입력과 묶어 함께 읽히게 한다 */}
-            <div className="flex flex-col gap-1">
-              <Input
-                aria-label="상세 주소"
-                aria-describedby={detailAddressHintId}
-                placeholder="상세 주소를 입력해주세요"
-                value={form.detailAddress}
-                onChange={(e) => setValues({ detailAddress: e.target.value })}
-                maxLength={30}
-              />
-              <span
-                id={detailAddressHintId}
-                className="text-text-secondary text-right text-base font-medium"
-              >
-                {form.detailAddress.length}/30
-              </span>
-            </div>
+    글자수는 hint가 아니라 counter로 넘긴다 — counter는 aria-hidden이라 스크린리더가
+    "상세 주소, 편집, 5 슬래시 30"처럼 뜻 없는 소리를 한 글자마다 읽지 않는다.
+    대신 30자 상한을 aria-label에 넣었다 — maxLength는 HTML-AAM에서 ARIA 속성으로
+    매핑되지 않아 NVDA·JAWS·VoiceOver 어느 쪽도 읽지 않으므로, 이 문구가 없으면
+    입력이 30자에서 조용히 멈추는 이유를 알 수 없다. 화면에는 영향이 없다.
+    placeholder는 입력을 시작하면 사라지므로 이름은 aria-label로 고정한다 */}
+            <Input
+              aria-label="상세 주소 (최대 30자)"
+              placeholder="상세 주소를 입력해주세요"
+              value={form.detailAddress}
+              onChange={(e) => setValues({ detailAddress: e.target.value })}
+              maxLength={30}
+              counter={`${form.detailAddress.length}/30`}
+            />
           </div>
         </div>
       </div>
@@ -215,10 +209,13 @@ export const RegisterStep1 = () => {
           }
           //지도 SDK 로드 전이면 변환 불가
           if (!isLoaded) {
+            // 이슈 #306: 메시지 슬롯이 한 줄(24px)만 예약하므로 문구가 두 줄로 접히면
+            // 그만큼 아래가 다시 밀린다. 모바일 주소 칸 가용 폭 308px / SUIT 16px 기준
+            // 한 줄에 들어가는 길이로 줄였다 (실측: 284.9px / 292.2px)
             setAddrError(
               kakaoError
-                ? "지도 서비스를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요"
-                : "지도를 불러오는 중입니다. 잠시 후 다시 시도해주세요",
+                ? "지도를 불러오지 못했어요. 새로고침 해주세요"
+                : "지도 준비 중이에요. 잠시 후 다시 시도해주세요",
             );
             clearAddress();
             return;
@@ -226,9 +223,10 @@ export const RegisterStep1 = () => {
 
           const coordinate = await geocodeAddress(address);
           if (!coordinate) {
-            setAddrError(
-              "주소의 좌표를 찾지 못했습니다. 다른 주소로 검색해주세요",
-            );
+            // "좌표"는 구현 용어다 — 건물을 등록하는 호스트는 좌표가 아니라 주소로
+            // 생각하므로 geocoding 실패라는 사실을 사용자 언어로 번역한다.
+            // 한 줄 유지 (실측 260.6px < 308px, 여유 47.4px)
+            setAddrError("위치를 찾을 수 없어요. 다시 검색해주세요");
             clearAddress();
             return;
           }

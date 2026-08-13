@@ -74,9 +74,14 @@ export const RegisterStep3 = () => {
 
   // 범위를 벗어나면 최종 제출에서 서버가 400을 준다 → 입력 단계에서 막는다
   const areaNumber = Number(form.area);
+  // 문구에서 "전용 면적은"을 뺀 이유 — 이슈 #306: 아래 메시지 칸이 한 줄(24px)만
+  // 예약하는데, 원래 문구는 모바일 328px에서 두 줄로 접혀(실측 346.4px) 타이핑 중
+  // 아래 층수·주차·시설 섹션이 24px씩 밀렸다. 줄인 뒤 269.1px로 한 줄에 들어간다.
+  // 필드 이름은 바로 위 "전용 면적" 라벨이 알려주고, 스크린리더도 aria-describedby로
+  // "전용 면적 (제곱미터), 편집, 1㎡ 이상 …"으로 이어 읽어 맥락이 유지된다
   const areaError =
     form.area !== "" && !(areaNumber >= MIN_AREA && areaNumber <= MAX_AREA)
-      ? `전용 면적은 ${MIN_AREA}㎡ 이상 ${MAX_AREA.toLocaleString()}㎡ 이하로 입력해 주세요`
+      ? `${MIN_AREA}㎡ 이상 ${MAX_AREA.toLocaleString()}㎡ 이하로 입력해 주세요`
       : "";
 
   const isValid =
@@ -183,22 +188,31 @@ export const RegisterStep3 = () => {
                 </span>
               </div>
             </div>
-            {areaError ? (
+            {/* 오류·안내가 한 칸을 나눠 쓴다. 예전에는 삼항으로 둘 중 하나만 그려서
+                "노드 수가 같으니 안 밀린다"고 봤는데, 실제로는 오류 문구가 안내보다
+                길어 모바일에서 줄 수가 1 → 2로 늘면서 아래가 24px 밀렸다 (이슈 #306).
+                min-h-6으로 한 줄분을 고정하고, 위 areaError를 한 줄에 들어가게 줄였다.
+                노드를 조건부로 넣었다 빼지 않는 이유는 라이브 영역이 '있던 요소의 내용이
+                바뀔 때' 읽어주기 때문 — Input.tsx의 메시지 슬롯과 같은 구조다 */}
+            <span
+              id="area-message"
+              // block을 명시하는 이유 — min-height는 인라인 요소에 적용되지 않는다.
+              // 지금은 부모가 flex라 자동으로 블록화되지만, 부모가 flex를 잃는 순간
+              // 예약이 조용히 사라진다 (Input.tsx의 슬롯도 같은 이유로 block을 쓴다)
+              className="block min-h-6 text-left text-base"
+            >
               <span
-                id="area-message"
-                role="alert"
-                className="text-danger text-left text-base font-bold"
+                aria-live="polite"
+                className="text-danger font-bold"
               >
                 {areaError}
               </span>
-            ) : (
-              <span
-                id="area-message"
-                className="text-text-secondary text-left text-base font-medium"
-              >
-                ㎡ 입력 시 평이 자동 계산돼요
-              </span>
-            )}
+              {!areaError && (
+                <span className="text-text-secondary font-medium">
+                  ㎡ 입력 시 평이 자동 계산돼요
+                </span>
+              )}
+            </span>
           </div>
 
           {/* 층수 유형(택1) + 상세 층수 입력 — 둘이 한 필드라 60 밖으로 묶고 안쪽은 기존 24를 쓴다 */}
@@ -267,11 +281,16 @@ export const RegisterStep3 = () => {
                 시설 목록을 불러오는 중이에요...
               </span>
             ) : facilityError ? (
+              // 로딩 문구(실측 206.2px)와 이 오류 문구가 같은 자리를 교대하므로 줄 수가
+              // 같아야 한다. 원래 문구는 393.8px로 모바일 328px에서 두 줄이었다 (이슈 #306).
+              // text-right를 뺐다 — 교대 상대인 위 로딩 문구는 정렬 클래스가 없어 좌측이라,
+              // 로딩이 실패하는 순간 문구가 왼쪽 끝에서 오른쪽 끝으로 튀었다.
+              // 이 폴더의 다른 오류 문구도 전부 좌측이다
               <span
                 role="alert"
-                className="text-danger text-right text-base font-bold"
+                className="text-danger text-base font-bold"
               >
-                시설 목록을 불러오지 못했어요. 새로고침 후 다시 시도해주세요
+                시설 목록을 불러오지 못했어요. 새로고침 해주세요
               </span>
             ) : (
               facilityGroups.map((group) => (

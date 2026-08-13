@@ -251,16 +251,28 @@ export const HostRegisterStep2 = () => {
       </div>
 
       {/* 오류 문구 + 버튼을 한 묶음으로 감싼다 — 문구가 떴다 사라져도
-          섹션 아래 간격이 항상 고정된다 (모바일 56 / md 이상 80) */}
-      <div className="mt-14 flex flex-col items-end gap-2 md:mt-20">
-        {submitError && (
-          <span
-            role="alert"
-            className="text-danger text-base font-bold"
-          >
-            {submitError}
-          </span>
-        )}
+          섹션 아래 간격이 항상 고정된다 (모바일 56 / md 이상 80).
+          이슈 #306: 문구 노드를 항상 남기고 자리를 미리 잡아, 제출 실패 순간 버튼이
+          아래로 튀지 않게 한다.
+          예약은 두 줄(min-h-12 48px)이다 — 한 줄로 잡았더니 실제 문구가 모바일 328px과
+          md 535px에서 두 줄이라(사업자등록번호 중복 안내 실측 554.3px) 24px이 그대로
+          남았다. 앱이 직접 쓴 문구는 전부 두 줄 안에 들어간다.
+          천장(line-clamp-2)은 걸지 않는다 — 위 catch가 서버 error.message를 그대로 넣는
+          경로가 있어 길이에 상한이 없는데, 자르면 사용자가 조치할 단서가 사라진다
+          (RegisterStep5의 같은 슬롯 주석 참고). 세 줄 이상일 때만 버튼이 내려가고,
+          그건 제출 버튼을 누른 직후라 타이핑 중 밀림과 성격이 다르다.
+          max-w-full + break-words는 items-end 안에서 폭이 shrink-to-fit이라 줄바꿈
+          지점 없는 긴 토큰이 컨테이너를 가로로 뚫는 것을 막는다(RegisterStep5의 같은
+          슬롯 주석 참고).
+          예약한 48 + gap-2(8)를 섹션 간격에서 미리 빼서(56/80 → 0/24) 버튼 위치는
+          시안 그대로 유지 */}
+      <div className="flex flex-col items-end gap-2 md:mt-6">
+        <span
+          role="alert"
+          className="text-danger min-h-12 max-w-full text-base font-bold break-words"
+        >
+          {submitError}
+        </span>
 
         {/* 이전 / 다음으로 버튼 (우측 정렬) — 버튼 사이 모바일 16 / md 이상 8 */}
         <div className="flex gap-4 md:gap-2">
