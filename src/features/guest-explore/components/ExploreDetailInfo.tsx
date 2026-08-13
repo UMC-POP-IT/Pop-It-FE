@@ -123,11 +123,12 @@ const ExploreDetailInfo = ({
         </div>
 
         <div className="flex flex-col items-start">
-          <div className="flex items-center gap-4 py-2">
-            <span className="bg-bg-footer flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+          <div className="flex items-center gap-3 py-2">
+            {/* 위치 아이콘: 하늘색(bg-bg-footer, Blue/blue-30) 원 배경 위에 아이콘 배치 (피그마 기준) */}
+            <span className="bg-bg-footer flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
               <svg
-                width="24"
-                height="24"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 className="text-text-primary"
@@ -146,11 +147,12 @@ const ExploreDetailInfo = ({
               {space.address}
             </span>
           </div>
-          <div className="flex items-center gap-4 py-2">
-            <span className="bg-bg-footer flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+          <div className="flex items-center gap-3 py-2">
+            {/* 크기 아이콘: 위치 아이콘과 동일한 하늘색 원 배경 */}
+            <span className="bg-bg-footer flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
               <svg
-                width="24"
-                height="24"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 className="text-text-primary"
@@ -176,27 +178,30 @@ const ExploreDetailInfo = ({
         {/* 가격 */}
         <div className="flex flex-col items-start gap-5">
           <SectionTitle>가격</SectionTitle>
-          <div className="flex items-end gap-6">
-            <div className="flex w-[200px] flex-col items-end gap-3 text-base font-bold">
-              <div className="flex w-full items-center justify-between">
-                <span className="text-text-primary font-normal">일 단가</span>
-                <span className="text-right">
-                  <span className="text-primary">
-                    {space.cost.day.toLocaleString()}
-                  </span>
-                  <span className="text-text-primary">원</span>
+          {/* 일/주/월 단가 각 행은 동일한 폭(200px)의 label-price 블록을 공유해, 프라이스 컬럼이
+              세 행 모두 같은 위치에 정렬된다. "(30일 기준)"은 이 블록 바깥(오른쪽)에 별도로 붙여서
+              기존 일/주 단가 행의 정렬에는 전혀 영향을 주지 않는다. */}
+          <div className="flex flex-col items-start gap-3 text-base font-bold">
+            <div className="flex w-[200px] items-center justify-between">
+              <span className="text-text-primary font-normal">일 단가</span>
+              <span className="text-right">
+                <span className="text-primary">
+                  {space.cost.day.toLocaleString()}
                 </span>
-              </div>
-              <div className="flex w-full items-center justify-between">
-                <span className="text-text-primary font-normal">주 단가</span>
-                <span className="text-right">
-                  <span className="text-primary">
-                    {(space.cost.day * 7).toLocaleString()}
-                  </span>
-                  <span className="text-text-primary">원</span>
+                <span className="text-text-primary">원</span>
+              </span>
+            </div>
+            <div className="flex w-[200px] items-center justify-between">
+              <span className="text-text-primary font-normal">주 단가</span>
+              <span className="text-right">
+                <span className="text-primary">
+                  {(space.cost.day * 7).toLocaleString()}
                 </span>
-              </div>
-              <div className="flex w-full items-center justify-between">
+                <span className="text-text-primary">원</span>
+              </span>
+            </div>
+            <div className="flex items-center">
+              <div className="flex w-[200px] items-center justify-between">
                 <span className="text-text-primary font-normal">월 단가</span>
                 <span className="text-right">
                   <span className="text-primary">
@@ -205,10 +210,10 @@ const ExploreDetailInfo = ({
                   <span className="text-text-primary">원</span>
                 </span>
               </div>
+              <span className="text-text-tag ml-2 shrink-0 text-xs font-normal whitespace-nowrap">
+                (30일 기준)
+              </span>
             </div>
-            <span className="text-text-tag text-base font-normal whitespace-nowrap">
-              (30일 기준)
-            </span>
           </div>
         </div>
 
