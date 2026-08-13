@@ -3,10 +3,12 @@ import type { Space } from "@/types";
 import { SPACE_CATEGORY_OPTIONS } from "@/shared/utils/spaceCategory";
 import type { SpaceCategory } from "@/shared/utils/spaceCategory";
 import { normalizeKeywords } from "@/shared/utils/keyword";
+import { toApiDateString } from "@/shared/utils/date";
 
 // ============================================================
 // GET /api/v1/spaces - 공간 탐색 (검색/필터)
 // (#145) 게스트 메인 화면의 공간 탐색 목록 - 통합 검색 + 필터 + 페이지네이션
+// (#305) startDate/endDate(이용 희망 기간) 쿼리 파라미터 반영
 // ============================================================
 
 export type { SpaceCategory };
@@ -58,6 +60,15 @@ export interface SpaceSearchParams {
   keyword?: string;
   spaceCategory?: SpaceCategory | "";
   district?: string;
+  /**
+   * 이용 희망 시작일/종료일(종료일 포함). 백엔드 스펙상 둘 다 함께 전달해야
+   * 하고(하나만 있으면 안 됨), 시작일이 종료일보다 늦으면 안 된다 - 이 검증은
+   * DateRangeCalendar/CalendarMonthGrid의 선택 규칙(시작일 이전 클릭 시
+   * 재시작)이 이미 보장하므로 여기서 다시 하지 않는다. 둘 다 없으면 기간
+   * 조건 없이 조회(파라미터 자체를 생략)한다.
+   */
+  startDate?: Date;
+  endDate?: Date;
   /** 0부터 시작 */
   page?: number;
   /** 1~50, 기본 16(DEFAULT_PAGE_SIZE) */
@@ -66,9 +77,8 @@ export interface SpaceSearchParams {
 
 /**
  * 히어로 검색바(HeroSearchBar)에서 사용자가 확정(검색 실행)한 검색 조건.
- * 날짜(dateRange)는 현재 /api/v1/spaces가 지원하지 않아 화면 표시 용도로만
- * 들고 있고, getSpaces 요청에는 실어 보내지 않는다. 백엔드에 날짜 파라미터가
- * 추가되면 이 타입에 필드를 더하고 getSpaces 호출부만 연결하면 된다.
+ * 날짜(dateRange)는 getSpaces 호출부(ExploreSpace)에서 startDate/endDate로
+ * 변환되어 /api/v1/spaces 요청에 함께 실린다(#305).
  */
 export interface ExploreSearchFilters {
   keyword: string;
@@ -112,6 +122,13 @@ export const getSpaces = async (params: SpaceSearchParams = {}) => {
   if (params.keyword) query.set("keyword", params.keyword);
   if (params.spaceCategory) query.set("spaceCategory", params.spaceCategory);
   if (params.district) query.set("district", params.district);
+  // startDate/endDate는 반드시 함께 전달해야 하는 페어라, 하나만 선택된
+  // 상태(예: 종료일을 아직 확정하지 않은 채 검색이 실행된 경우)라면 둘 다
+  // 생략해서 "기간 조건 없이 조회"로 안전하게 fallback한다.
+  if (params.startDate && params.endDate) {
+    query.set("startDate", toApiDateString(params.startDate));
+    query.set("endDate", toApiDateString(params.endDate));
+  }
   query.set("page", String(params.page ?? 0));
   query.set("size", String(params.size ?? DEFAULT_PAGE_SIZE));
 
