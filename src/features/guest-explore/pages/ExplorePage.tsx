@@ -23,10 +23,10 @@ import {
 // 검색 실행 여부/조건을 URL 쿼리스트링에 반영한다 - 새로고침해도 결과 화면이
 // 유지되고, URL을 복사/공유하면 같은 검색 결과로 다시 진입할 수 있고, 브라우저
 // 뒤로가기를 누르면 검색 전 화면으로 자연스럽게 돌아간다.
-// 날짜(dateRange)도 여기 포함해서 URL에 반영한다 - /api/v1/spaces가
-// startDate/endDate 쿼리 파라미터를 지원해(#305) ExploreSpace가 getSpaces
-// 요청에 실어 보내며, URL에도 담아둬야 검색 실행 직후·새로고침·뒤로가기마다
-// 사용자가 고른 날짜가 화면에서 조용히 사라지지 않는다.
+// 날짜(dateRange)도 여기 포함해서 URL에 반영한다. 현재 /api/v1/spaces
+// Swagger에는 날짜 필터 파라미터가 없어 getSpaces 요청에는 실어 보내지 않지만,
+// URL에 안 담으면 검색 실행 직후·새로고침·뒤로가기마다 사용자가 고른 날짜가
+// 화면에서 조용히 사라져버린다.
 const SEARCH_FLAG_PARAM = "search";
 const DATE_START_PARAM = "dateStart";
 const DATE_END_PARAM = "dateEnd";

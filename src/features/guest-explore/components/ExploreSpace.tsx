@@ -113,14 +113,7 @@ const ExploreSpace = ({
   const user = useAuthStore((state) => state.user);
   const { handleWishToggle } = useWishGuard();
 
-  const { keyword, spaceCategory, district, dateRange } = filters;
-  // 쿼리 전송 여부와 같은 기준(둘 다 있어야 유효)으로 filterKey에 반영한다.
-  // 하나만 선택된 중간 상태는 getSpaces에도 실어 보내지 않으므로(둘 다 없는
-  // 것과 동일하게 처리) 여기서도 재조회 트리거로 취급하지 않는다.
-  const dateKey =
-    dateRange.start && dateRange.end
-      ? `${dateRange.start.getTime()}~${dateRange.end.getTime()}`
-      : "";
+  const { keyword, spaceCategory, district } = filters;
 
   // 상위(HeroSearchBar)에서 새 검색 조건이 확정되거나(검색 실행 등) 결과 화면
   // 모드가 바뀌면 처음부터 다시 불러와야 한다. 이걸 별도 useEffect로 하면(예전
@@ -131,7 +124,7 @@ const ExploreSpace = ({
   // 않기 때문). 그래서 effect 대신 렌더 도중에 바로 리셋해서(React가 안내하는
   // "prop이 바뀌면 렌더 중에 state를 조정하는" 패턴) 아래 조회 effect가 항상
   // 리셋이 끝난 값으로만 실행되게 한다.
-  const filterKey = `${keyword}|${spaceCategory}|${district}|${dateKey}|${resultsMode}`;
+  const filterKey = `${keyword}|${spaceCategory}|${district}|${resultsMode}`;
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
   if (filterKey !== prevFilterKey) {
     setPrevFilterKey(filterKey);
@@ -178,8 +171,6 @@ const ExploreSpace = ({
           keyword: keyword || undefined,
           spaceCategory: spaceCategory || undefined,
           district: district || undefined,
-          startDate: dateRange.start ?? undefined,
-          endDate: dateRange.end ?? undefined,
           page: pageToFetch,
           size: DEFAULT_PAGE_SIZE,
         });
@@ -239,7 +230,6 @@ const ExploreSpace = ({
     keyword,
     spaceCategory,
     district,
-    dateKey,
     currentPage,
     infinitePage,
     resultsMode,
