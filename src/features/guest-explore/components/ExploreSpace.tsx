@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SpaceCard from "@/shared/components/SpaceCard";
 import LoadingSparkles from "@/shared/components/LoadingSparkles";
+import Spinner from "@/shared/components/Spinner";
 import ExplorePagination from "./ExplorePagination";
 import ExploreSpaceMap from "./ExploreSpaceMap";
 import ExploreSpaceEmptyState from "./ExploreSpaceEmptyState";
@@ -367,11 +368,13 @@ const ExploreSpace = ({
         </button>
       </div>
 
-      {/* 최초 로딩도 무한스크롤 "더 불러오는 중" 상태(LoadingSparkles)와 같은
-          디자인을 쓴다 - 문구만 다르다(피그마 스펙 문장 부호까지 맞춰 마침표 포함). */}
+      {/* 검색(최초 로딩) 중에는 회색 박스나 안내 문구 없이 400ms 넘게 걸릴 때만
+          작은 스피너만 보여준다 - 무한스크롤 "더 불러오는 중" 상태(LoadingSparkles,
+          아래 isLoadingMore)와는 별개로, 최초 로딩에서는 회색 박스·문구 노출 자체를
+          없애 달라는 요청에 따른 처리(#275). */}
       {status === "loading" && showInitialLoading && (
-        <div className="bg-tag-bg mt-6 flex h-[400px] w-full items-center justify-center rounded-xl">
-          <LoadingSparkles label="공간을 불러오는 중이에요." />
+        <div className="mt-6 flex h-[400px] w-full items-center justify-center">
+          <Spinner aria-label="공간 목록을 불러오는 중" />
         </div>
       )}
 
