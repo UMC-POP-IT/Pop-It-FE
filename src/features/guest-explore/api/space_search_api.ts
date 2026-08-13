@@ -3,6 +3,7 @@ import type { Space } from "@/types";
 import { SPACE_CATEGORY_OPTIONS } from "@/shared/utils/spaceCategory";
 import type { SpaceCategory } from "@/shared/utils/spaceCategory";
 import { normalizeKeywords } from "@/shared/utils/keyword";
+import { toApiDateString } from "@/shared/utils/date";
 
 // ============================================================
 // GET /api/v1/spaces - 공간 탐색 (검색/필터)
@@ -54,13 +55,6 @@ export const DEFAULT_PAGE_SIZE = 16;
  * 어느 경로로 들어오든 같은 상한이 적용되게 한다.
  */
 export const MAX_KEYWORD_LENGTH = 100;
-
-const toApiDateString = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
 
 export interface SpaceSearchParams {
   keyword?: string;

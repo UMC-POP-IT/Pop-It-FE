@@ -11,6 +11,7 @@ import ReservationRequestModal from "@/features/guest-explore/components/Reserva
 import Modal from "@/shared/components/Modal";
 import calendarIcon from "@/assets/icons/icon_calendar.svg";
 import CalendarMonthGrid from "@/shared/components/calendar/CalendarMonthGrid";
+import { toApiDateString } from "@/shared/utils/date";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -22,13 +23,6 @@ interface ExploreReservationCardProps {
   availableEndDate: string;
   onLoginRequired?: () => void;
 }
-
-const toApiDateString = (date: Date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-};
 
 const formatDate = (date: Date) => {
   const y = date.getFullYear();
