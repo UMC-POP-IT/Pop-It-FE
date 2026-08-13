@@ -158,7 +158,8 @@ const Select = ({
         disabled={disabled}
         onClick={() => (isOpen ? close() : open())}
         onKeyDown={handleKeyDown}
-        className={`border-divider focus:border-primary focus:ring-primary flex h-14 w-full items-center justify-between rounded-lg border bg-white px-5 text-left text-lg font-medium transition-colors focus:ring-2 focus:outline-none ${
+        // focus는 테두리 색만 바꾼다 (Input.tsx와 동일 기준 — ring을 쓰면 두꺼워 보인다)
+        className={`border-divider focus:border-primary flex h-14 w-full items-center justify-between rounded-lg border bg-white px-5 text-left text-lg font-medium transition-colors focus:outline-none ${
           disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer"
         } ${selected ? "text-text-primary" : "text-text-placeholder"} ${className}`}
       >

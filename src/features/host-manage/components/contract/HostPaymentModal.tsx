@@ -13,8 +13,6 @@ interface HostPaymentModalProps {
   space: SpaceBasicInfo;
   agreedToGuide: boolean;
   onAgreedToGuideChange: (agreed: boolean) => void;
-  isSubmitting?: boolean;
-  submitError?: boolean;
   onClose: () => void;
   onSignContract: () => void;
 }
@@ -25,8 +23,6 @@ const HostPaymentModal = ({
   space,
   agreedToGuide,
   onAgreedToGuideChange,
-  isSubmitting = false,
-  submitError = false,
   onClose,
   onSignContract,
 }: HostPaymentModalProps) => {
@@ -39,7 +35,7 @@ const HostPaymentModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={isSubmitting ? undefined : onClose} />
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative z-10 flex w-full max-w-[420px] flex-col gap-4 rounded-2xl bg-white p-6 shadow-xl">
         <h3 className="text-text-primary text-lg font-bold">입금 예정</h3>
 
@@ -86,7 +82,7 @@ const HostPaymentModal = ({
         <label className="text-text-secondary flex items-start gap-2 text-xs break-keep">
           <input
             type="checkbox"
-            className="border-[#808080] checked:bg-primary mt-0.5 h-4 w-4 shrink-0 appearance-none rounded-full border"
+            className="border-[#808080] checked:border-primary checked:bg-primary checked:ring-white checked:ring-inset checked:ring-[2px] mt-0.5 h-4 w-4 shrink-0 appearance-none rounded-full border"
             checked={agreedToGuide}
             onChange={(e) => onAgreedToGuideChange(e.target.checked)}
           />
@@ -94,19 +90,12 @@ const HostPaymentModal = ({
           정책을 확인했습니다.)
         </label>
 
-        {submitError && (
-          <p role="alert" className="text-sm font-medium text-text-danger">
-            예약 승인에 실패했습니다. 잠시 후 다시 시도해주세요.
-          </p>
-        )}
-
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="md"
-            className="flex-1 border-none! bg-secure-payment-bg! text-text-secondary! font-normal"
+            className="flex-1 border-none! bg-surface-blue! text-text-primary! font-normal"
             onClick={onClose}
-            disabled={isSubmitting}
           >
             돌아가기
           </Button>
@@ -114,10 +103,10 @@ const HostPaymentModal = ({
             variant="primary"
             size="md"
             className="flex-1 font-normal"
-            disabled={!agreedToGuide || isSubmitting}
+            disabled={!agreedToGuide}
             onClick={onSignContract}
           >
-            {isSubmitting ? "승인 중..." : "계약서 서명하기"}
+            계약서 서명하기
           </Button>
         </div>
       </div>

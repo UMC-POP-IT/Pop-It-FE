@@ -243,9 +243,13 @@ export const DateRangePicker = ({
       );
     }
     if (isSameDay(date, todayStart)) {
-      // 오늘 — 연파랑 테두리 원. 선택은 못 하지만 위치는 보여준다
+      // 오늘 — 회색 테두리 원 + 취소선.
+      // 이 달력에서 오늘은 항상 선택 불가다(handleSelectDate에서 내일부터만 허용).
+      // 연파랑 테두리는 이 앱에서 "선택 가능한 오늘"을 뜻하는 색이라, 그대로 두면
+      // 고를 수 있는 줄 알고 눌렀다가 에러 문구를 보고서야 알게 된다.
+      // 게스트 예약 달력(ExploreReservationCard)의 "오늘·선택 불가"와 같은 클래스 조합.
       return (
-        <span className="border-primary-100 text-text-primary relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border">
+        <span className="border-text-disabled text-text-disabled relative z-10 flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border line-through">
           {day}
         </span>
       );

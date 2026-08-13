@@ -93,7 +93,7 @@ const PaymentModal = ({
         <label className="text-text-secondary flex items-start gap-2 text-xs">
           <input
             type="checkbox"
-            className="border-[#808080] checked:bg-primary mt-0.5 h-4 w-4 shrink-0 appearance-none rounded-full border"
+            className="border-[#808080] checked:border-primary checked:bg-primary checked:ring-white checked:ring-inset checked:ring-[2px] mt-0.5 h-4 w-4 shrink-0 appearance-none rounded-full border"
             checked={agreedToGuide}
             onChange={(e) => onAgreedToGuideChange(e.target.checked)}
           />

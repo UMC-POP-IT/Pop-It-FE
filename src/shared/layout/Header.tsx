@@ -1,4 +1,4 @@
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useNavigate, useLocation, useMatch } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import Logo from "@/shared/components/Logo";
 import iconProfileMobile from "@/assets/icons/icon_profile_mobile.svg";
@@ -96,7 +96,10 @@ const Header = () => {
   // 축소 검색바 pill이 실제로 보이는 동안에만 우측 액션(모드 전환/프로필)을 숨긴다.
   // pill을 눌러 원래 검색바를 펼친 상태에서는 pill이 사라지므로 액션도 다시 접근 가능해야 한다.
   const hideHeaderActions = Boolean(scrollBarSummary) && isScrollBarVisible;
-  const hideModeToggle = mode === "GUEST" && pathname === "/reservations";
+  const shouldHideModeToggle = mode === "GUEST" && pathname !== "/";
+  const spaceDetailMatch = useMatch("/spaces/:spaceId");
+  const hostSpaceDetailMatch = useMatch("/host/spaces/:spaceId");
+  const isSpaceDetail = Boolean(spaceDetailMatch || hostSpaceDetailMatch);
   const [modeError, setModeError] = useState(""); // 모드 전환 실패 사유
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -175,8 +178,21 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white drop-shadow-[0px_4px_5px_rgba(0,0,0,0.12)]">
-      {/* 피그마: 전체 px-[40px], 좌측 gap-[32px](로고↔nav), 우측 gap-[20px] */}
-      <div className="relative flex h-[74px] w-full items-center px-4 md:px-10 lg:px-24">
+      {/* 공간상세 모바일/태블릿 전용 뒤로가기 헤더 */}
+      {isSpaceDetail && (
+        <div className="flex h-[74px] w-full items-center px-4 lg:hidden">
+          <button
+            onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/")}
+            className="flex h-10 w-10 items-center justify-center"
+            aria-label="뒤로가기"
+          >
+            <svg width="10" height="17" viewBox="0 0 10 17" fill="none" aria-hidden="true">
+              <path d="M9 1L1 8.5L9 16" stroke="#121212" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      )}
+      <div className={`relative mx-auto flex h-[74px] w-full max-w-[1200px] items-center px-4 md:px-6 ${isSpaceDetail ? "hidden lg:flex" : ""}`}>
         {/* 좌측: 로고 + nav (gap-[32px]) */}
         <div className="flex items-center gap-8">
           <NavLink
@@ -359,7 +375,7 @@ const Header = () => {
           }`}
         >
           {/* 모드 전환 버튼 — 게스트 모드 나의 예약 탭에서는 숨김 */}
-          {!hideModeToggle && (
+          {!shouldHideModeToggle && (
             <>
               {/* 태블릿/데스크탑: 아이콘 포함 pill */}
               <button

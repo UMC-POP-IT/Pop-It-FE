@@ -31,6 +31,10 @@ const FACILITY_CATEGORY_LABEL: Record<FacilityCategory, string> = {
   ETC: "기타",
 };
 
+// 서버 허용 범위 (스웨거 SpaceCreateReq.exclusiveArea: minimum 1.0 / maximum 10000.0)
+const MIN_AREA = 1;
+const MAX_AREA = 10_000;
+
 export const RegisterStep3 = () => {
   const isEdit = useRegisterStore((s) => s.isEdit);
   const navigate = useNavigate();
@@ -68,10 +72,11 @@ export const RegisterStep3 = () => {
   const needsFloorNumber =
     form.floorType !== "반지층" && form.floorType !== "옥탑";
 
-  // 서버 exclusiveArea엔 하한 검증이 없어 0·음수도 그대로 저장된다 → FE가 막는다
+  // 범위를 벗어나면 최종 제출에서 서버가 400을 준다 → 입력 단계에서 막는다
+  const areaNumber = Number(form.area);
   const areaError =
-    form.area !== "" && !(Number(form.area) > 0)
-      ? "전용 면적은 0보다 큰 값으로 입력해 주세요"
+    form.area !== "" && !(areaNumber >= MIN_AREA && areaNumber <= MAX_AREA)
+      ? `전용 면적은 ${MIN_AREA}㎡ 이상 ${MAX_AREA.toLocaleString()}㎡ 이하로 입력해 주세요`
       : "";
 
   const isValid =
@@ -151,7 +156,7 @@ export const RegisterStep3 = () => {
                   // focus:outline-none은 브라우저 기본 포커스 링을 지운다. 대체 표시가 없으면
                   // 키보드로 이동했을 때 지금 어느 칸에 있는지 알 수 없다.
                   // 공통 Input(shared/components/Input.tsx)과 같은 조합을 쓴다
-                  className="text-text-primary placeholder:text-text-secondary border-divider focus:border-primary focus:ring-primary h-14 w-full [appearance:textfield] rounded-lg border bg-white pr-12 pl-5 text-right text-lg font-medium transition-colors focus:ring-2 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  className="text-text-primary placeholder:text-text-secondary border-divider focus:border-primary h-14 w-full [appearance:textfield] rounded-lg border bg-white pr-12 pl-5 text-right text-lg font-medium transition-colors focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 <span className="text-text-secondary pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 text-lg font-medium">
                   ㎡
@@ -171,7 +176,7 @@ export const RegisterStep3 = () => {
                   readOnly
                   // readOnly는 disabled와 달리 포커스를 받는다 — Tab이 여기 들어오므로
                   // 위 ㎡ 칸과 같은 포커스 표시가 필요하다
-                  className="text-text-primary placeholder:text-text-secondary border-divider focus:border-primary focus:ring-primary h-14 w-full [appearance:textfield] rounded-lg border bg-white pr-12 pl-5 text-right text-lg font-medium transition-colors focus:ring-2 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  className="text-text-primary placeholder:text-text-secondary border-divider focus:border-primary h-14 w-full [appearance:textfield] rounded-lg border bg-white pr-12 pl-5 text-right text-lg font-medium transition-colors focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 <span className="text-text-secondary pointer-events-none absolute top-1/2 right-5 -translate-y-1/2 text-lg font-medium">
                   평
