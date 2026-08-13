@@ -110,10 +110,15 @@ const ReservationRequestModal = ({
             aria-required="true"
             aria-invalid={showValidationError}
             aria-describedby={describedByIds}
-            className={`text-text-primary placeholder:text-text-placeholder resize-none rounded-lg border-2 bg-white p-3 text-sm transition-colors focus:outline-none focus:ring-2 ${
+            // Focus 시 테두리 색만 파란색(primary)으로 바꾸고 두께(border-2)는 Default와 동일하게
+            // 유지한다. ring을 쓰면 테두리 바깥에 링이 추가로 그려져 Default보다 두꺼워 보이므로
+            // (Input.tsx와 동일한 이유로) 여기서는 border 색상 전환만 사용한다.
+            // 다만 오류 상태는 테두리 색이 focus 전후로 그대로(danger)라 색 변화만으로는 포커스
+            // 위치를 알 수 없어, 그 경우에만 예외적으로 ring을 남긴다.
+            className={`text-text-primary placeholder:text-text-placeholder resize-none rounded-lg border-2 bg-white p-3 text-sm transition-colors focus:outline-none ${
               showValidationError
-                ? "border-danger focus:ring-danger"
-                : "border-divider focus:border-primary focus:ring-primary"
+                ? "border-danger focus:ring-danger focus:ring-2"
+                : "border-divider focus:border-primary"
             }`}
           />
           {showValidationError && (
