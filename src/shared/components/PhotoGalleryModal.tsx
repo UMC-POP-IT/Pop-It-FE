@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDialogA11y } from "@/shared/hooks/useDialogA11y";
 import iconNavChevron from "@/assets/icons/icon_nav_chevron.svg";
-import iconClose from "@/assets/icons/icon_close.svg";
+import iconClose from "@/assets/icons/icon_close_circle_blue.svg";
 
 interface PhotoGalleryModalProps {
   isOpen: boolean;
@@ -62,11 +62,11 @@ const PhotoGalleryModal = ({
       >
         {/* 닫기 버튼 */}
         <button
-          className="absolute top-4 right-4 flex h-6 w-6 items-center justify-center rounded-full bg-white md:top-6 md:right-6 lg:top-8 lg:right-8"
+          className="absolute top-4 right-4 md:top-6 md:right-6 lg:top-8 lg:right-8"
           onClick={onClose}
           aria-label="닫기"
         >
-          <img src={iconClose} alt="" className="h-3 w-3" />
+          <img src={iconClose} alt="" className="h-6 w-6" />
         </button>
 
         {isLoading ? (

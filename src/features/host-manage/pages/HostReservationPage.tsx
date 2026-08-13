@@ -8,7 +8,6 @@ import HostPaymentModal from "@/features/host-manage/components/contract/HostPay
 import HostContractModal from "@/features/host-manage/components/contract/HostContractModal";
 import {
   fetchHostReservations,
-  approveReservation,
   rejectReservation,
   approveCheckout,
   rejectCheckout,
@@ -54,8 +53,6 @@ export const HostReservationPage = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [agreedToGuide, setAgreedToGuide] = useState(false);
-  const [isApproving, setIsApproving] = useState(false);
-  const [approveError, setApproveError] = useState(false);
 
   // 계약서 모달에서 PASS 인증 중 모바일 리다이렉트로 페이지가 새로고침된 경우,
   // 돌아왔을 때 다시 열어줘야 할 예약(Authentication이 리다이렉트 전 남겨둔 값)
@@ -206,32 +203,18 @@ export const HostReservationPage = () => {
     setApproveTargetId(approveConfirmTargetId);
     setApproveConfirmTargetId(null);
     setAgreedToGuide(false);
-    setApproveError(false);
     setIsPaymentModalOpen(true);
   };
 
-  const handleSignContract = async () => {
-    if (approveTargetId === null) return;
-    setIsApproving(true);
-    setApproveError(false);
-    try {
-      await approveReservation(approveTargetId);
-      setIsPaymentModalOpen(false);
-      setIsContractModalOpen(true);
-    } catch (err) {
-      console.error("[HostReservationPage] 예약 승인 실패:", err);
-      setApproveError(true);
-      await loadReservations();
-    } finally {
-      setIsApproving(false);
-    }
+  const handleSignContract = () => {
+    setIsPaymentModalOpen(false);
+    setIsContractModalOpen(true);
   };
 
   const closeContractModal = () => {
     setIsContractModalOpen(false);
     setApproveTargetId(null);
-    // 서명 없이 닫아도 서버는 이미 APPROVED로 전환됐으므로 목록을 재조회해 로컬 상태를 동기화한다
-    loadReservations();
+    // 서명 전이라 서버 상태가 바뀌지 않았으므로 재조회하지 않는다
   };
 
   const completeContractModal = () => {
@@ -429,12 +412,9 @@ export const HostReservationPage = () => {
             }}
             agreedToGuide={agreedToGuide}
             onAgreedToGuideChange={setAgreedToGuide}
-            isSubmitting={isApproving}
-            submitError={approveError}
             onClose={() => {
               setIsPaymentModalOpen(false);
               setApproveTargetId(null);
-              setApproveError(false);
             }}
             onSignContract={handleSignContract}
           />

@@ -45,7 +45,18 @@ export const HostRegisterGuard = ({
     );
   }
 
-  if (hostStatus === "registered") {
+  // 등록 화면(start/step1/step2)은 hostStatus만으로 막지 않고 통과권도 함께 본다.
+  //
+  // step2에서 등록이 끝나면 setHostStatus("registered") → setJustRegistered(true) →
+  // navigate("/host/host-register/complete")가 잇따라 실행된다. zustand의 상태 변경은
+  // 곧바로 리렌더를 부르는 반면 createBrowserRouter의 navigate는 주소만 먼저 바꾸고
+  // 경로 매칭을 비동기로 끝내기 때문에, 그 사이 한 번의 렌더에서는 화면이 아직 step2다.
+  // hostStatus만 보면 이 가드가 그 렌더에서 등록 완료를 감지해 /host/spaces로 replace 해버리고,
+  // 아직 정착하지 않은 완료 화면 이동을 덮어써 완료 화면이 영영 뜨지 않는다.
+  //
+  // 통과권은 완료 화면에서 [확인]을 눌러 reset()이 돌 때 꺼지므로,
+  // 그 뒤 뒤로가기로 돌아오는 재제출은 원래대로 막힌다.
+  if (hostStatus === "registered" && !isJustRegistered) {
     return (
       <Navigate
         to="/host/spaces"

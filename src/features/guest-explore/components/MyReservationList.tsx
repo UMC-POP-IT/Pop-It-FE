@@ -8,7 +8,7 @@ import Modal from "@/shared/components/Modal";
 import { pollVerificationStatus } from "@/features/guest-explore/utils/verificationPolling";
 import { PENDING_CONTRACT_RESERVATION_KEY } from "@/features/guest-explore/utils/contractSession";
 
-const TAB_STATUSES = ["예약 예정", "승인 완료", "계약 완료", "사용 중", "지난 예약"];
+export const TAB_STATUSES = ["예약 예정", "승인 완료", "계약 완료", "사용 중", "지난 예약"] as const;
 
 // TAB_STATUSES와 순서를 맞춘 탭별 매칭 상태값
 // 계약(서명)·결제 중 하나라도 안 끝난 상태(APPROVED, CONTRACT_COMPLETED - 결제 전/취소/실패)는
@@ -129,8 +129,8 @@ export const MyReservationList = () => {
 
   return (
     <section className="flex flex-col gap-4 mt-20">
-      <h2 className="text-text-primary text-2xl font-bold">내 예약 내역</h2>
-      <span className="text-text-secondary text-sm max-[1024px]:mb-[28px]">예정 • 진행 중 • 지난 예약을 한 곳에서 관리해 보세요!</span>
+      <h2 className="text-text-primary text-2xl font-bold mb-[-12px]">내 예약 내역</h2>
+      <span className="text-text-secondary text-sm min-[1024px]:max-[1024px]:mb-[28px] max-[1023px]:mb-[-3px]">예정 • 진행 중 • 지난 예약을 한 곳에서 관리해 보세요!</span>
 
       <Tab
         tabs={TAB_STATUSES.map((status, i) => ({ label: status, count: grouped[i].length }))}
@@ -141,7 +141,7 @@ export const MyReservationList = () => {
 
       <div className="flex flex-col">
         {activeReservations.length === 0 ? (
-          <MyReservationListEmptyState />
+          <MyReservationListEmptyState status={TAB_STATUSES[activeIndex]} />
         ) : (
           activeReservations.map((reservation) => (
             <ReservationCard
