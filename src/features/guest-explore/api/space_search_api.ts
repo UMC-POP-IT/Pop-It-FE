@@ -66,9 +66,9 @@ export interface SpaceSearchParams {
 
 /**
  * 히어로 검색바(HeroSearchBar)에서 사용자가 확정(검색 실행)한 검색 조건.
- * 날짜(dateRange)는 현재 /api/v1/spaces가 지원하지 않아 화면 표시 용도로만
- * 들고 있고, getSpaces 요청에는 실어 보내지 않는다. 백엔드에 날짜 파라미터가
- * 추가되면 이 타입에 필드를 더하고 getSpaces 호출부만 연결하면 된다.
+ * 날짜(dateRange)는 현재 /api/v1/spaces Swagger에 지원 파라미터가 없어
+ * URL/화면 표시 용도로만 유지한다. 백엔드 명세와 배포가 확정되면 getSpaces
+ * 요청 파라미터와 ExploreSpace 재조회 키를 함께 연결한다(#305).
  */
 export interface ExploreSearchFilters {
   keyword: string;

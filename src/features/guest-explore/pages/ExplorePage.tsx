@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import AiRecommendSpace from "@/features/guest-explore/components/AiRecommendSpace";
 import ExploreSpace from "@/features/guest-explore/components/ExploreSpace";
 import RealTimeRecommendSpace from "@/features/guest-explore/components/RealTimeRecommendSpace";
-import Banner, { RESULTS_MODE_TOP_OFFSET_PX } from "@/shared/layout/Banner";
+import Banner from "@/shared/layout/Banner";
 import { HEADER_HEIGHT_PX } from "@/shared/layout/Header";
 import HeroSearchBar from "@/features/guest-explore/components/HeroSearchBar";
 import {
@@ -23,11 +23,10 @@ import {
 // 검색 실행 여부/조건을 URL 쿼리스트링에 반영한다 - 새로고침해도 결과 화면이
 // 유지되고, URL을 복사/공유하면 같은 검색 결과로 다시 진입할 수 있고, 브라우저
 // 뒤로가기를 누르면 검색 전 화면으로 자연스럽게 돌아간다.
-// 날짜(dateRange)도 여기 포함해서 URL에 반영한다 - 백엔드 /api/v1/spaces가
-// 날짜 필터를 지원하지 않아 getSpaces 요청에는 여전히 실어 보내지 않지만
-// (ExploreSpace는 filters.dateRange를 아예 읽지 않는다), URL에 안 담으면
-// 검색 실행 직후·새로고침·뒤로가기마다 사용자가 고른 날짜가 화면에서 조용히
-// 사라져버리는 문제가 있었다.
+// 날짜(dateRange)도 여기 포함해서 URL에 반영한다. 현재 /api/v1/spaces
+// Swagger에는 날짜 필터 파라미터가 없어 getSpaces 요청에는 실어 보내지 않지만,
+// URL에 안 담으면 검색 실행 직후·새로고침·뒤로가기마다 사용자가 고른 날짜가
+// 화면에서 조용히 사라져버린다.
 const SEARCH_FLAG_PARAM = "search";
 const DATE_START_PARAM = "dateStart";
 const DATE_END_PARAM = "dateEnd";
@@ -104,16 +103,13 @@ export const ExplorePage = () => {
   const searchFilters = filtersFromSearchParams(searchParams);
   const { keyword, spaceCategory, district, dateRange } = searchFilters;
 
-  // 검색 결과 화면에서 스크롤을 내리면 검색바가 헤더의 축소된 pill로 바뀌고,
-  // pill을 클릭하면 헤더 바로 아래에 원래 검색바가 오버레이로 다시 펼쳐진다
-  // (에어비앤비 참고). hasActiveSearch가 아닐 때(검색 전 브라우징 화면)는
-  // 이 로직 전체가 관여하지 않는다.
+  // 스크롤을 내리면 검색바가 헤더의 축소된 pill로 바뀌고, pill을 클릭하면
+  // 헤더 바로 아래에 원래 검색바가 오버레이로 다시 펼쳐진다(에어비앤비 참고).
+  // 검색을 실행했는지(hasActiveSearch), 결과가 있는지와 무관하게 - 게스트
+  // 홈(브라우징 화면)이든 검색 결과 화면이든, 검색 버튼을 눌렀든 안 눌렀든 -
+  // 스크롤로 검색바가 헤더 뒤로 넘어가면 항상 pill로 바뀐다(#301).
   const [isScrolledPastBar, setIsScrolledPastBar] = useState(false);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
-  // 검색 결과가 실제로 있을 때만(카드가 있어야 스크롤할 내용도 있다) 축소 pill
-  // 모핑 기능을 켠다 - "조건에 맞는 공간이 없어요" 빈 결과 화면에서는 이 기능
-  // 자체가 필요 없다(ExploreSpace가 결과 유무를 알려준다).
-  const [hasResults, setHasResults] = useState(false);
   const [summary, setSummary] = useState<ScrollSearchBarSummary | null>(null);
   // pill의 특정 세그먼트를 클릭했을 때, 검색창이 펼쳐짐과 동시에 그 세그먼트의
   // 드롭다운/캘린더/검색어 입력도 자동으로 열기 위해 HeroSearchBar에 내려주는
@@ -128,7 +124,6 @@ export const ExplorePage = () => {
   const [pendingFocusRestore, setPendingFocusRestore] = useState(false);
 
   const handleSearch = (filters: ExploreSearchFilters) => {
-    setHasResults(false);
     setAutoOpenRequest(null);
     const next = new URLSearchParams();
     next.set(SEARCH_FLAG_PARAM, "1");
@@ -150,7 +145,6 @@ export const ExplorePage = () => {
   const handleResetFilters = () => {
     const next = new URLSearchParams();
     next.set(SEARCH_FLAG_PARAM, "1"); // 결과 화면 자체는 유지하고 필터만 비운다
-    setHasResults(false);
     setAutoOpenRequest(null);
     setSearchParams(next, { replace: true });
   };
@@ -163,18 +157,12 @@ export const ExplorePage = () => {
     );
   }, []);
 
-  useEffect(() => {
-    if (!hasActiveSearch) setHasResults(false);
-  }, [hasActiveSearch]);
-
-  // 검색바가 원래 있던 자리(페이지 맨 위, sentinel)가 헤더 뒤로 넘어가면
+  // 검색바가 원래 있던 자리(Banner 안, sentinel)가 헤더 뒤로 넘어가면
   // "스크롤됨"으로 표시한다. rootMargin으로 헤더 높이만큼 보정해서, 실제로
-  // 헤더 뒤에 가려지는 시점과 최대한 맞춘다.
+  // 헤더 뒤에 가려지는 시점과 최대한 맞춘다. hasActiveSearch/결과 유무와
+  // 무관하게 항상 감지한다 - 게스트 홈(브라우징 화면)에서도 스크롤을 내리면
+  // 무조건 검색바가 헤더의 작은 pill로 올라가야 한다(#301).
   useEffect(() => {
-    if (!hasActiveSearch || !hasResults) {
-      setIsScrolledPastBar(false);
-      return;
-    }
     const node = sentinelRef.current;
     if (!node) return;
     const observer = new IntersectionObserver(
@@ -188,7 +176,7 @@ export const ExplorePage = () => {
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [hasActiveSearch, hasResults]);
+  }, []);
 
   // 스크롤을 다시 올려 원래 검색바가 보이게 되면, 열려있던 오버레이도 접는다.
   useEffect(() => {
@@ -198,23 +186,17 @@ export const ExplorePage = () => {
   // Escape로 오버레이를 닫았을 때 저장한 포커스 복원 요청을 실행한다.
   // 오버레이가 닫히고 pill 세그먼트 버튼이 실제로 렌더된 뒤에야 포커스를
   // 옮겨야 한다 - 그 전에 focus()를 호출하면 버튼이 아직 없어서 실패한다.
-  // pill은 hasActiveSearch && isScrolledPastBar && !isOverlayOpen일 때만
-  // 마운트되므로, 이 세 조건이 모두 참일 때 requestAnimationFrame으로 렌더
-  // 이후 시점을 보장하고 포커스를 복원한다.
+  // pill은 isScrolledPastBar && !isOverlayOpen일 때만 마운트되므로, 이 두
+  // 조건이 모두 참일 때 requestAnimationFrame으로 렌더 이후 시점을 보장하고
+  // 포커스를 복원한다.
   useEffect(() => {
-    if (
-      !pendingFocusRestore ||
-      !hasActiveSearch ||
-      !isScrolledPastBar ||
-      isOverlayOpen
-    )
-      return;
+    if (!pendingFocusRestore || !isScrolledPastBar || isOverlayOpen) return;
     const handle = requestAnimationFrame(() => {
       useScrollSearchBarStore.getState().focusTrigger?.();
       setPendingFocusRestore(false);
     });
     return () => cancelAnimationFrame(handle);
-  }, [pendingFocusRestore, hasActiveSearch, isScrolledPastBar, isOverlayOpen]);
+  }, [pendingFocusRestore, isScrolledPastBar, isOverlayOpen]);
 
   // 오버레이가 펼쳐져 있을 때 Escape로 닫는다(바깥 클릭 닫기와 동일한 동작).
   // 닫은 뒤에는 포커스가 사라지지 않도록 헤더의 pill 트리거로 되돌린다 -
@@ -234,9 +216,11 @@ export const ExplorePage = () => {
   }, [isOverlayOpen]);
 
   // 위 상태들을 종합해서 헤더(전역 컴포넌트)가 구독하는 스토어에 반영한다.
-  // 이 화면을 벗어나거나 스크롤이 위로 돌아가면 pill을 숨긴다.
+  // 이 화면을 벗어나거나 스크롤이 위로 돌아가면 pill을 숨긴다. hasActiveSearch와
+  // 무관하게 isScrolledPastBar만으로 판단한다 - 게스트 홈에서도 스크롤로 pill이
+  // 떠야 한다(#301).
   useEffect(() => {
-    if (!hasActiveSearch || !isScrolledPastBar) {
+    if (!isScrolledPastBar) {
       resetScrollSearchBar();
       return;
     }
@@ -256,7 +240,6 @@ export const ExplorePage = () => {
         }),
     });
   }, [
-    hasActiveSearch,
     isScrolledPastBar,
     isOverlayOpen,
     summary,
@@ -267,12 +250,11 @@ export const ExplorePage = () => {
   // 페이지를 떠날 때(라우트 이동)도 헤더에 남아있는 pill 상태를 정리한다.
   useEffect(() => resetScrollSearchBar, [resetScrollSearchBar]);
 
-  const searchBarPosition =
-    hasActiveSearch && hasResults && isScrolledPastBar
-      ? isOverlayOpen
-        ? "pinned-open"
-        : "pinned-hidden"
-      : "inline";
+  const searchBarPosition = isScrolledPastBar
+    ? isOverlayOpen
+      ? "pinned-open"
+      : "pinned-hidden"
+    : "inline";
 
   // 검색 직후 최상단(아직 스크롤 안 함)에서는 결과화면 전용 스타일(굵은 파란
   // 테두리, 피그마 node 5019:73539)을 쓰고, 스크롤해서 헤더 pill로 축소됐다가
@@ -287,28 +269,19 @@ export const ExplorePage = () => {
 
   return (
     <div>
-      {/* 스크롤 감지용 - 검색바가 원래 있던 지점을 표시하는 빈 sentinel.
-          Banner보다 앞(형제)에 있어서 그냥 두면 Banner 자신의 상단 여백
-          (RESULTS_MODE_TOP_OFFSET_PX)만큼 실제 검색바 시작 위치보다 위에
-          찍힌다 - marginTop으로 같은 값을 더해서 정확히 검색바 상단과
-          맞춘다(값 자체는 Banner.tsx가 export하는 상수 하나만 참조하므로,
-          그쪽 여백이 바뀌어도 여기 값이 조용히 어긋나지 않는다). */}
-      {hasActiveSearch && (
-        <div
-          ref={sentinelRef}
-          aria-hidden="true"
-          style={{ marginTop: RESULTS_MODE_TOP_OFFSET_PX }}
-        />
-      )}
-
       {/* showImage=false여도 Banner는 항상 렌더링해서 HeroSearchBar가 리마운트되지
           않게 한다(리마운트되면 방금 검색한 조건이 검색바 표시에서 날아간다).
           HeroSearchBar 자체는 searchParams.toString()이 바뀔 때만(검색 실행/
           초기화/뒤로가기 등으로 URL이 실제로 바뀔 때만) key가 바뀌어 새로
-          마운트되고, 그때마다 URL이 담고 있는 값으로 표시가 다시 맞춰진다. */}
+          마운트되고, 그때마다 URL이 담고 있는 값으로 표시가 다시 맞춰진다.
+          스크롤 감지용 sentinel(검색바가 원래 있던 지점 마커)은 Banner 내부의
+          실제 검색바 바로 앞에 심어서 searchBarTopRef로 넘긴다 - 브라우징
+          화면(히어로, 세로 중앙 정렬)과 검색 결과 화면(상단 정렬)의 레이아웃이
+          서로 달라 바깥에서 픽셀 오프셋을 하드코딩할 수 없다(#301). */}
       <Banner
         showImage={!hasActiveSearch}
         searchBarPosition={searchBarPosition}
+        searchBarTopRef={sentinelRef}
       >
         <HeroSearchBar
           key={searchParams.toString()}
@@ -318,7 +291,7 @@ export const ExplorePage = () => {
           initialCategory={spaceCategory}
           initialDistrict={district}
           initialDateRange={dateRange}
-          onSummaryChange={hasActiveSearch ? setSummary : undefined}
+          onSummaryChange={setSummary}
           isMorphTarget={searchBarPosition !== "pinned-hidden"}
           autoOpenRequest={autoOpenRequest}
           onAutoOpenComplete={handleAutoOpenComplete}
@@ -361,13 +334,6 @@ export const ExplorePage = () => {
           filters={searchFilters}
           onResetFilters={handleResetFilters}
           resultsMode={hasActiveSearch}
-          // ExploreSpace는 hasActiveSearch일 때만 마운트되므로, 이 콜백도
-          // 검색 결과 화면에서만 호출된다 - 검색 결과 유무에 따라 검색바가
-          // pinned⇄inline으로 실제 자리를 옮길 때만 트랜지션이 걸리고, 화면
-          // 밖(브라우징 모드)에서 조용히 트랜지션이 발생하는 경우는 없다.
-          onHasResultsChange={(next) =>
-            withSearchBarTransition(() => setHasResults(next))
-          }
         />
       )}
     </div>
