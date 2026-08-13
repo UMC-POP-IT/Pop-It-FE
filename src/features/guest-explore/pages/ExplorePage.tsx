@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useSearchParams } from "react-router-dom";
 import AiRecommendSpace from "@/features/guest-explore/components/AiRecommendSpace";
 import ExploreSpace from "@/features/guest-explore/components/ExploreSpace";
@@ -96,10 +102,10 @@ const filtersFromSearchParams = (
 export const ExplorePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // 검색을 실제로 실행했는지는 "search=1" 쿼리 존재 여부로 판단한다(필터 값이
-  // 전부 비어있어도 - 예: 조건 초기화 후에도 - 결과 화면 자체는 유지되어야 하므로
-  // 개별 필터 값 유무만으로는 판단할 수 없다). true면 배너 이미지/AI 추천/실시간
-  // 추천이 사라지고 검색 결과 전용 화면(무한스크롤)으로 바뀐다.
+  // 검색 결과 화면 여부는 URL의 "search=1" 쿼리로 판단한다. 필터 값이 전부
+  // 비어있어도(예: 조건 초기화 후) 결과 화면 자체는 유지되어야 하므로 개별 필터
+  // 값 유무만으로 판단하지 않는다. URL 공유/직접 진입도 지원하므로 사용자가
+  // "/"에 "?search=1"을 붙여 들어오면 의도적으로 검색 결과 화면으로 취급한다.
   const hasActiveSearch = searchParams.get(SEARCH_FLAG_PARAM) === "1";
   const searchFilters = filtersFromSearchParams(searchParams);
   const { keyword, spaceCategory, district, dateRange } = searchFilters;
@@ -157,17 +163,21 @@ export const ExplorePage = () => {
     );
   }, []);
 
-  // 검색 결과 화면에서 검색바가 원래 있던 자리(Banner 안, sentinel)가 헤더 뒤로
-  // 넘어가면 "스크롤됨"으로 표시한다. rootMargin으로 헤더 높이만큼 보정해서,
-  // 실제로 헤더 뒤에 가려지는 시점과 최대한 맞춘다. 게스트 첫 화면에서는 이
-  // 감지를 끄고 상태도 리셋해서 스크롤만으로 pill이 뜨는 일을 막는다.
+  // 검색 결과 화면에서 빠져나온 렌더는 paint 전에 헤더 pill 상태를 정리한다.
+  // useEffect로만 처리하면 같은 ExplorePage 안에서 "?search=1" → "/"로 URL만
+  // 바뀌는 순간 이전 store 상태가 한 프레임 보일 수 있다.
+  useLayoutEffect(() => {
+    if (hasActiveSearch) return;
+    setIsScrolledPastBar(false);
+    setIsOverlayOpen(false);
+    resetScrollSearchBar();
+  }, [hasActiveSearch, resetScrollSearchBar]);
+
+  // 검색 결과 화면에서만 검색바가 원래 있던 자리(Banner 안, sentinel)를 감지한다.
+  // 게스트 첫 화면에서는 IntersectionObserver 자체를 등록하지 않아 스크롤마다
+  // 축소 검색바 조건을 확인하는 일이 없다.
   useEffect(() => {
-    if (!hasActiveSearch) {
-      setIsScrolledPastBar(false);
-      setIsOverlayOpen(false);
-      resetScrollSearchBar();
-      return;
-    }
+    if (!hasActiveSearch) return;
     const node = sentinelRef.current;
     if (!node) return;
     const observer = new IntersectionObserver(
