@@ -20,6 +20,9 @@ import { useDelayedLoading } from "@/shared/hooks/useDelayedLoading";
 
 type FetchStatus = "loading" | "success" | "error";
 
+const toDateKeyPart = (date: Date) =>
+  `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+
 /**
  * 새로 받아온 목록(summaries)에 로컬 찜 상태로 인한 낙관적 heartCount 보정을
  * 다시 적용한다. 찜 API가 아직 연동되지 않아 서버는 항상 예전 wishCount를
@@ -113,7 +116,12 @@ const ExploreSpace = ({
   const user = useAuthStore((state) => state.user);
   const { handleWishToggle } = useWishGuard();
 
-  const { keyword, spaceCategory, district } = filters;
+  const { keyword, spaceCategory, district, dateRange } = filters;
+  // getSpaces 전송 조건과 같은 기준(둘 다 있어야 유효)으로 filterKey에 반영한다.
+  const dateKey =
+    dateRange.start && dateRange.end
+      ? `${toDateKeyPart(dateRange.start)}~${toDateKeyPart(dateRange.end)}`
+      : "";
 
   // 상위(HeroSearchBar)에서 새 검색 조건이 확정되거나(검색 실행 등) 결과 화면
   // 모드가 바뀌면 처음부터 다시 불러와야 한다. 이걸 별도 useEffect로 하면(예전
@@ -124,7 +132,7 @@ const ExploreSpace = ({
   // 않기 때문). 그래서 effect 대신 렌더 도중에 바로 리셋해서(React가 안내하는
   // "prop이 바뀌면 렌더 중에 state를 조정하는" 패턴) 아래 조회 effect가 항상
   // 리셋이 끝난 값으로만 실행되게 한다.
-  const filterKey = `${keyword}|${spaceCategory}|${district}|${resultsMode}`;
+  const filterKey = `${keyword}|${spaceCategory}|${district}|${dateKey}|${resultsMode}`;
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
   if (filterKey !== prevFilterKey) {
     setPrevFilterKey(filterKey);
@@ -171,6 +179,8 @@ const ExploreSpace = ({
           keyword: keyword || undefined,
           spaceCategory: spaceCategory || undefined,
           district: district || undefined,
+          startDate: dateRange.start ?? undefined,
+          endDate: dateRange.end ?? undefined,
           page: pageToFetch,
           size: DEFAULT_PAGE_SIZE,
         });
@@ -230,6 +240,7 @@ const ExploreSpace = ({
     keyword,
     spaceCategory,
     district,
+    dateKey,
     currentPage,
     infinitePage,
     resultsMode,

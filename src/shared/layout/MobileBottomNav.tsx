@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
+import { isHostRegisterPath } from "@/shared/constants/routes";
 
 // <img src="*.svg">로 불러오면 currentColor가 페이지 CSS를 상속받지 못해 active/inactive
 // 색 전환이 안 먹는다 - fill="currentColor"가 실제로 동작하도록 SVG를 인라인으로 그린다.
@@ -43,6 +44,16 @@ const MobileBottomNav = () => {
   const isExploreActive = pathname === exploreTo || pathname.startsWith(exploreTo + "/");
   const isReservationActive = pathname === reservationTo || pathname.startsWith(reservationTo + "/");
 
+  // 호스트 등록 흐름에서는 탭바를 통째로 감춘다 (#302).
+  // 이 탭바는 위 주석대로 모바일에서 헤더 nav를 대신하는 같은 메뉴다. 헤더에서만
+  // [내 공간]·[예약 관리]를 빼면 767 이하에서는 그대로 남아 아무것도 달라지지 않는다.
+  // 두 항목이 이 흐름에서 왜 곤란한지는 Header.tsx의 같은 플래그 주석에 적어뒀다.
+  // 이 흐름을 빠져나갈 [게스트 전환]은 모바일 헤더에도 있다(md:hidden 쪽 pill).
+  //
+  // Footer.tsx가 이 탭바에 가려지지 않으려고 두는 pb-[70px]도 같은 판정을 쓴다 —
+  // 여기서만 숨기면 767 이하에서 빈 70px 띠가 남는다.
+  const isHostRegisterFlow = isHostRegisterPath(pathname);
+
   const handleExploreClick = () => {
     navigate(exploreTo);
     window.scrollTo({ top: 0 });
@@ -56,6 +67,8 @@ const MobileBottomNav = () => {
     navigate(reservationTo);
     window.scrollTo({ top: 0 });
   };
+
+  if (isHostRegisterFlow) return null;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex w-full items-start border-t-[0.5px] border-[#c5c5c5] bg-white px-[16px] py-[8px] md:hidden">

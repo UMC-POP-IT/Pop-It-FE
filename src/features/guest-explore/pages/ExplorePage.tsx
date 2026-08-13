@@ -29,14 +29,12 @@ import {
 // 검색 실행 여부/조건을 URL 쿼리스트링에 반영한다 - 새로고침해도 결과 화면이
 // 유지되고, URL을 복사/공유하면 같은 검색 결과로 다시 진입할 수 있고, 브라우저
 // 뒤로가기를 누르면 검색 전 화면으로 자연스럽게 돌아간다.
-// 날짜(dateRange)도 여기 포함해서 URL에 반영한다 - 백엔드 /api/v1/spaces가
-// 날짜 필터를 지원하지 않아 getSpaces 요청에는 여전히 실어 보내지 않지만
-// (ExploreSpace는 filters.dateRange를 아예 읽지 않는다), URL에 안 담으면
-// 검색 실행 직후·새로고침·뒤로가기마다 사용자가 고른 날짜가 화면에서 조용히
-// 사라져버리는 문제가 있었다.
+// 날짜(dateRange)도 여기 포함해서 URL에 반영한다. /api/v1/spaces가 쓰는
+// startDate/endDate 이름과 맞춰두면 화면 URL과 실제 API 요청을 같은 기준으로
+// 추적할 수 있고, 새로고침·뒤로가기 때 사용자가 고른 날짜도 유지된다.
 const SEARCH_FLAG_PARAM = "search";
-const DATE_START_PARAM = "dateStart";
-const DATE_END_PARAM = "dateEnd";
+const DATE_START_PARAM = "startDate";
+const DATE_END_PARAM = "endDate";
 
 const VALID_SPACE_CATEGORIES = new Set<string>(
   SPACE_CATEGORY_OPTIONS.map((option) => option.value),

@@ -40,10 +40,11 @@
 | Language | TypeScript |
 | Library/Framework | React 19, React Router 7, Vite 6 |
 | Styling | Tailwind CSS 4, @toss/tds-mobile |
-| State Management | Zustand 5 |
-| 지도 | Kakao Maps JavaScript SDK |
+| State Management | Zustand 5 (클라이언트 상태), TanStack Query 5 (서버 상태/캐싱) |
+| 지도/주소 | Kakao Maps JavaScript SDK, react-daum-postcode |
 | 3D 큐레이션 | Three.js, @react-three/fiber, @react-three/drei |
-| 결제/본인인증 | PortOne(@portone/browser-sdk), TossPayments |
+| 로그인 | 카카오/구글 소셜 로그인 (OAuth + PKCE) |
+| 결제/본인인증 | PortOne(@portone/browser-sdk, PASS 본인인증), TossPayments |
 | 패키지 매니저 | pnpm, npm |
 | Lint/Format | ESLint, Prettier (+ prettier-plugin-tailwindcss) |
 | 협업 도구 | GitHub, Notion, Figma |
@@ -208,7 +209,7 @@ pnpm format
 | 홈 (추천+탐색) | HomePage → AiRecommendSpace, RealTimeRecommendSpace, ExploreSpace | `/` | 고태현 / 강민경 |
 | 공간 탐색 | ExplorePage | `/explore` | 강민경 |
 | 공간 상세 | SpaceDetailPage | `/spaces/:spaceId` | 강민경 |
-| 3D 큐레이션 | SpaceViewPage (CurationViewer) | `/spaces/:spaceId/view` | 고태현 |
+| 3D 큐레이션 | SpaceDetailPage (Modal) | `/spaces/:spaceId` | 고태현 |
 | 전자계약/결제 | ContractModal, Authentication, SignatureBoard, PaymentModal, TossPayments | 공간 상세 내 모달 | 강민경 |
 | 나의 예약 | MyReservationPage | `/reservations` | 고태현 |
 | 공간 등록 (1~5단계) | RegisterStep1~5 | `/host/register`, `/host/register/step2 ~ /host/register/step5` | 이수빈 |
