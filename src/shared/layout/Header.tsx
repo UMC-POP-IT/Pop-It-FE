@@ -5,8 +5,12 @@ import iconProfileMobile from "@/assets/icons/icon_profile_mobile.svg";
 import { useAuthStore } from "@/store/authStore";
 import { logoutApi, switchMode } from "@/shared/utils/oauth";
 import { useHostModeSwitch } from "@/shared/hooks/useHostModeSwitch";
-import { useScrollSearchBarStore } from "@/store/scrollSearchBarStore";
 import {
+  useScrollSearchBarStore,
+  type SearchBarSegment,
+} from "@/store/scrollSearchBarStore";
+import {
+  isSearchBarTransitionPending,
   SEARCH_BAR_VIEW_TRANSITION_NAME,
   type MorphTransitionStyle,
 } from "@/shared/utils/viewTransition";
@@ -46,15 +50,43 @@ const Header = () => {
   const scrollBarSummary = useScrollSearchBarStore((s) => s.summary);
   const expandScrollBar = useScrollSearchBarStore((s) => s.onExpand);
   const setFocusTrigger = useScrollSearchBarStore((s) => s.setFocusTrigger);
-  const pillButtonRef = useRef<HTMLButtonElement>(null);
+  // pill이 세그먼트별 버튼 4개로 나뉘어 있어서(#275 - 세그먼트를 클릭하면 그
+  // 세그먼트의 드롭다운까지 함께 열려야 한다), Escape로 오버레이를 닫았을 때
+  // 포커스를 되돌릴 단일 버튼이 없다. 마지막으로 클릭된 세그먼트 버튼을
+  // 기억해뒀다가 그쪽으로 되돌리고, 키보드로 열었거나(클릭 기록이 없음)
+  // 기록된 버튼이 이미 사라졌다면 첫 세그먼트(공간유형)로 대신 되돌린다.
+  const categorySegmentRef = useRef<HTMLButtonElement>(null);
+  const lastActiveSegmentRef = useRef<HTMLButtonElement | null>(null);
+  const pendingFocusRestoreRef = useRef(false);
 
-  // ExplorePage가 오버레이를 닫을 때(Escape 등) 포커스를 이 버튼으로 되돌릴 수
-  // 있도록 등록해둔다 - 스토어를 통해서만 접근 가능하다(ExplorePage는 이 버튼의
+  // ExplorePage가 오버레이를 닫을 때(Escape 등) 포커스를 되돌릴 수 있도록
+  // 등록해둔다 - 스토어를 통해서만 접근 가능하다(ExplorePage는 이 버튼들의
   // DOM을 직접 알 수 없다).
   useEffect(() => {
-    setFocusTrigger(() => pillButtonRef.current?.focus());
+    setFocusTrigger(() => {
+      pendingFocusRestoreRef.current = true;
+    });
     return () => setFocusTrigger(null);
   }, [setFocusTrigger]);
+
+  useEffect(() => {
+    if (
+      !isScrollBarVisible ||
+      !scrollBarSummary ||
+      !pendingFocusRestoreRef.current
+    ) {
+      return;
+    }
+    const frameId = requestAnimationFrame(() => {
+      if (!pendingFocusRestoreRef.current) return;
+      const target = lastActiveSegmentRef.current?.isConnected
+        ? lastActiveSegmentRef.current
+        : categorySegmentRef.current;
+      target?.focus();
+      pendingFocusRestoreRef.current = false;
+    });
+    return () => cancelAnimationFrame(frameId);
+  }, [isScrollBarVisible, scrollBarSummary]);
   // 이 pill이 지금 화면에 실제로 보일 때만 큰 검색바와 같은 view-transition-name을
   // 부여한다 - 그래야 스크롤로 접히거나 pill을 눌러 펼칠 때 브라우저가 둘을 같은
   // 대상으로 보고 모핑 애니메이션을 만들어준다(둘 다 동시에 이 이름을 가지면 안 됨).
@@ -256,39 +288,89 @@ const Header = () => {
               isScrollBarVisible ? "" : "opacity-0"
             }`}
           >
-            <button
-              ref={pillButtonRef}
-              type="button"
-              onClick={() => expandScrollBar?.()}
-              aria-label="검색 조건 펼치기"
-              disabled={!isScrollBarVisible}
+            {/* view-transition-name은 모핑 대상 전체(pill 하나)에 딱 하나만
+                붙어야 하므로 이 바깥 래퍼에 둔다 - 안의 세그먼트 버튼 각각에
+                붙이면 안 된다. 세그먼트별로 나뉘어 있는 이유(#275): pill의
+                "서울 전체" 같은 개별 세그먼트를 클릭하면 검색창이 펼쳐짐과
+                동시에 그 세그먼트의 드롭다운/캘린더까지 함께 열려야 한다. */}
+            <div
+              role="group"
+              aria-label="현재 검색 조건"
               style={pillMorphStyle}
-              className={`border-divider pointer-events-auto flex max-w-[calc(100vw-104px)] items-center gap-1 rounded-full border bg-white px-2.5 py-2 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] md:max-w-[420px] md:gap-3 md:px-5 lg:max-w-[520px] ${
-                isScrollBarVisible ? "cursor-pointer" : "cursor-default"
-              }`}
+              className={`border-divider pointer-events-auto flex max-w-[calc(100vw-104px)] items-center gap-1 rounded-full border bg-white px-2.5 py-2 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0px_4px_12px_0px_rgba(0,0,0,0.15)] md:max-w-[420px] md:gap-3 md:px-5 lg:max-w-[520px]`}
             >
-              <span className="text-text-primary min-w-0 truncate text-[10px] font-medium whitespace-nowrap md:text-sm md:font-bold">
-                {scrollBarSummary.categoryLabel}
-              </span>
-              <span aria-hidden="true" className="bg-divider h-3 w-px shrink-0 md:h-4" />
-              <span className="text-text-primary min-w-0 truncate text-[10px] font-medium whitespace-nowrap md:text-sm md:font-bold">
-                {scrollBarSummary.dateLabel}
-              </span>
-              <span aria-hidden="true" className="bg-divider h-3 w-px shrink-0 md:h-4" />
-              <span className="text-text-primary min-w-0 truncate text-[10px] font-medium whitespace-nowrap md:text-sm md:font-bold">
-                {scrollBarSummary.districtLabel}
-              </span>
-              <span aria-hidden="true" className="bg-divider h-3 w-px shrink-0 md:h-4" />
-              <span className="text-text-secondary min-w-0 max-w-[64px] shrink truncate text-[10px] whitespace-nowrap md:max-w-[120px] md:text-sm">
-                {scrollBarSummary.keywordLabel}
-              </span>
-            </button>
+              {(
+                [
+                  {
+                    segment: "category",
+                    label: scrollBarSummary.categoryLabel,
+                    ariaLabel: "공간 유형 검색창 펼치기",
+                    secondary: false,
+                  },
+                  {
+                    segment: "date",
+                    label: scrollBarSummary.dateLabel,
+                    ariaLabel: "날짜 검색창 펼치기",
+                    secondary: false,
+                  },
+                  {
+                    segment: "district",
+                    label: scrollBarSummary.districtLabel,
+                    ariaLabel: "지역 검색창 펼치기",
+                    secondary: false,
+                  },
+                  {
+                    segment: "keyword",
+                    label: scrollBarSummary.keywordLabel,
+                    ariaLabel: "검색어 검색창 펼치기",
+                    secondary: true,
+                  },
+                ] satisfies {
+                  segment: SearchBarSegment;
+                  label: string;
+                  ariaLabel: string;
+                  secondary: boolean;
+                }[]
+              ).map(({ segment, label, ariaLabel, secondary }, index) => (
+                <div
+                  key={segment}
+                  className="flex min-w-0 items-center gap-1 md:gap-3"
+                >
+                  {index > 0 && (
+                    <span
+                      aria-hidden="true"
+                      className="bg-divider h-3 w-px shrink-0 md:h-4"
+                    />
+                  )}
+                  <button
+                    ref={
+                      segment === "category" ? categorySegmentRef : undefined
+                    }
+                    type="button"
+                    onClick={(e) => {
+                      if (isSearchBarTransitionPending()) return;
+                      lastActiveSegmentRef.current = e.currentTarget;
+                      expandScrollBar?.(segment);
+                    }}
+                    aria-label={ariaLabel}
+                    disabled={!isScrollBarVisible}
+                    className={`min-w-0 truncate text-[10px] font-medium whitespace-nowrap md:text-sm ${
+                      secondary
+                        ? "text-text-secondary max-w-[64px] shrink md:max-w-[120px]"
+                        : "text-text-primary md:font-bold"
+                    } ${isScrollBarVisible ? "cursor-pointer" : "cursor-default"}`}
+                  >
+                    {label}
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {/* 우측: 모드전환 + 프로필 (gap-[20px]) */}
         <div
-          className={`ml-auto flex items-center gap-4 md:max-lg:-mr-[32px] md:gap-5 ${
+          className={`ml-auto flex items-center gap-4 md:gap-5 md:max-lg:-mr-[32px] ${
             hideHeaderActions ? "hidden" : ""
           }`}
         >
@@ -331,7 +413,10 @@ const Header = () => {
 
           {/* 로그인 상태에 따라 분기 */}
           {user ? (
-            <div className="relative flex items-center" ref={profileMenuRef}>
+            <div
+              className="relative flex items-center"
+              ref={profileMenuRef}
+            >
               <button
                 ref={profileButtonRef}
                 onClick={() => setIsProfileMenuOpen((prev) => !prev)}
@@ -342,7 +427,11 @@ const Header = () => {
                 className="text-text-primary flex h-[74px] w-auto items-center justify-center gap-3 py-[14px] text-base md:max-lg:w-[164px] lg:w-[164px]"
               >
                 {/* 모바일: 프로필 아이콘만 (Figma 5664:56229) */}
-                <img src={iconProfileMobile} alt="" className="h-7 w-7 md:hidden" />
+                <img
+                  src={iconProfileMobile}
+                  alt=""
+                  className="h-7 w-7 md:hidden"
+                />
                 {/* 태블릿/데스크탑: 아이콘 + 이름 */}
                 <div className="bg-primary-light hidden h-9 w-9 flex-shrink-0 items-center justify-center rounded-full p-[8px] md:flex">
                   <svg
@@ -389,7 +478,7 @@ const Header = () => {
             <div className="flex h-[74px] w-auto items-center justify-center md:w-[164px]">
               <button
                 onClick={() => openLoginModal()}
-                className="flex h-auto w-full items-center justify-center rounded border border-[#3783f7] bg-white px-[8px] py-[6px] text-xs leading-[1.4] font-bold text-[#0564f5] whitespace-nowrap md:h-[40px] md:rounded-[8px] md:px-[24px] md:text-base"
+                className="flex h-auto w-full items-center justify-center rounded border border-[#3783f7] bg-white px-[8px] py-[6px] text-xs leading-[1.4] font-bold whitespace-nowrap text-[#0564f5] md:h-[40px] md:rounded-[8px] md:px-[24px] md:text-base"
               >
                 로그인/회원가입
               </button>

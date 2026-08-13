@@ -48,6 +48,14 @@ interface FilterDropdownProps<T extends string> {
    * 켠다. ExploreSearchFilterBar 등 다른 사용처는 영향받지 않는다.
    */
   mobileBottomSheet?: boolean;
+  /**
+   * 값이 바뀔 때마다(같은 값이 다시 와도 매번 새 값이어야 함 - 호출부는 보통
+   * 증가하는 카운터나 Date.now()를 넘긴다) 이 드롭다운을 외부에서 강제로 연다.
+   * 축소된 검색바 pill의 세그먼트를 클릭했을 때, 검색창이 펼쳐짐과 동시에
+   * 해당 드롭다운도 자동으로 열려야 하는 경우에 쓴다(#275) - 그 외에는 항상
+   * undefined로 두고 트리거 클릭으로만 열고 닫는다.
+   */
+  openSignal?: number;
 }
 
 // 옵션 버튼 한 줄의 실제 높이(px) - py-3(24px) + text-lg 기본 줄높이(28px).
@@ -86,6 +94,7 @@ const FilterDropdown = function <T extends string>({
   renderTrigger,
   triggerClassName,
   mobileBottomSheet = false,
+  openSignal,
 }: FilterDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   // 키보드로 옵션 사이를 이동할 때 현재 포커스가 가 있는 옵션의 인덱스.
@@ -126,6 +135,16 @@ const FilterDropdown = function <T extends string>({
     setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
     setIsOpen(true);
   };
+
+  // openSignal이 바뀔 때마다(호출부가 매번 새 값을 넘긴다는 전제) 외부에서
+  // 강제로 연다 - 축소된 검색바 pill의 세그먼트 클릭 → 검색창 확장과 동시에
+  // 이 드롭다운도 자동으로 열리는 흐름(#275)에서만 쓰인다.
+  useEffect(() => {
+    if (openSignal !== undefined) openDropdown();
+    // openDropdown은 options/value가 바뀔 때마다 새로 만들어지는 함수라 deps에
+    // 넣지 않는다 - openSignal이 실제로 바뀔 때만 반응해야 한다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openSignal]);
 
   const closeAndReturnFocus = () => {
     setIsOpen(false);

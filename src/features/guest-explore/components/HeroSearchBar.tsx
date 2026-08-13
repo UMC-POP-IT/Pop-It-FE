@@ -7,7 +7,10 @@ import BottomSheet from "@/shared/components/BottomSheet";
 import { useOutsideClick } from "@/shared/hooks/useOutsideClick";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import { useSearchHistoryStore } from "@/store/searchHistoryStore";
-import type { ScrollSearchBarSummary } from "@/store/scrollSearchBarStore";
+import type {
+  SearchBarAutoOpenRequest,
+  ScrollSearchBarSummary,
+} from "@/store/scrollSearchBarStore";
 import {
   SEARCH_BAR_VIEW_TRANSITION_NAME,
   type MorphTransitionStyle,
@@ -163,6 +166,21 @@ interface HeroSearchBarProps {
    * 헤더의 축소 pill도 같은 이름을 쓰므로, 항상 둘 중 하나만 true여야 한다.
    */
   isMorphTarget?: boolean;
+  /**
+   * 축소된 검색바 pill의 특정 세그먼트를 클릭해서 검색창이 펼쳐질 때, 그
+   * 세그먼트에 해당하는 드롭다운/캘린더/검색어 입력을 동시에 열기 위한 요청.
+   * token은 같은 segment를 연달아 클릭해도(예: 닫은 뒤 다시 같은 세그먼트
+   * 클릭) 매번 새로 반응하도록 호출부(ExplorePage)가 매번 다른 값을 넣는다
+   * (#275). 세그먼트 없이 그냥 pill 배경을 클릭했을 때는 segment가
+   * undefined라 아무 것도 자동으로 열리지 않는다.
+   */
+  autoOpenRequest?: SearchBarAutoOpenRequest | null;
+  /**
+   * autoOpenRequest의 각 token이 처리되었을 때 호출된다. 부모는 이 콜백에서
+   * 완료된 token이 현재 요청의 token과 일치할 때만 autoOpenRequest를 지워야
+   * 한다(그 사이에 새 요청이 왔다면 보존).
+   */
+  onAutoOpenComplete?: (completedToken: number) => void;
 }
 
 /**
@@ -181,6 +199,8 @@ const HeroSearchBar = ({
   initialDateRange = { start: null, end: null },
   onSummaryChange,
   isMorphTarget = false,
+  autoOpenRequest,
+  onAutoOpenComplete,
 }: HeroSearchBarProps) => {
   const [keywordInput, setKeywordInput] = useState(initialKeyword);
   const [category, setCategory] = useState<SpaceCategory | "">(initialCategory);
@@ -188,6 +208,40 @@ const HeroSearchBar = ({
   const [dateRange, setDateRange] = useState<DateRange>(initialDateRange);
   const [isDateOpen, setIsDateOpen] = useState(false);
   const dateContainerRef = useRef<HTMLDivElement>(null);
+  const keywordInputRef = useRef<HTMLInputElement>(null);
+  // FilterDropdown에 openSignal로 넘길 카운터 - 값 자체가 아니라 "바뀜"이
+  // 신호이므로 세그먼트별로 매번 증가시킨다(공간유형/지역 드롭다운 전용,
+  // 날짜는 isDateOpen을 그대로 쓰고 검색어는 포커스만 주면 된다).
+  const [categoryOpenSignal, setCategoryOpenSignal] = useState<number>();
+  const [districtOpenSignal, setDistrictOpenSignal] = useState<number>();
+
+  // 축소된 pill의 세그먼트를 클릭해 검색창이 펼쳐질 때, 그 세그먼트의
+  // 드롭다운/캘린더/검색어 입력을 동시에 연다(#275). autoOpenRequest.token이
+  // 실제로 바뀔 때만 반응한다 - 같은 세그먼트를 다시 눌러도 token이 매번
+  // 새 값이라 정상적으로 재반응한다.
+  useEffect(() => {
+    if (!autoOpenRequest) return;
+    const { segment, token } = autoOpenRequest;
+    if (segment) {
+      switch (segment) {
+        case "category":
+          setCategoryOpenSignal(token);
+          break;
+        case "district":
+          setDistrictOpenSignal(token);
+          break;
+        case "date":
+          setIsDateOpen(true);
+          break;
+        case "keyword":
+          keywordInputRef.current?.focus();
+          break;
+      }
+    }
+    // 각 token을 처리했음을 즉시 알린다. 부모는 이 token이 현재 요청과 일치할
+    // 때만 autoOpenRequest를 지운다(그 사이 새 요청이 왔다면 보존).
+    onAutoOpenComplete?.(token);
+  }, [autoOpenRequest, onAutoOpenComplete]);
 
   // 모바일(360~767)에서는 캘린더가 BottomSheet(portal, document.body 자식)로
   // 뜨기 때문에 dateContainerRef 바깥으로 취급돼 useOutsideClick이 시트 안
@@ -210,6 +264,20 @@ const HeroSearchBar = ({
 
   const markSearched = useSearchHistoryStore((s) => s.markSearched);
 
+  // onSummaryChange를 ref로 감싸서 항상 최신 콜백을 참조한다. 요약 재계산
+  // effect의 deps에 onSummaryChange를 직접 넣으면 상위(ExplorePage)가 매
+  // 렌더 새로 만드는 함수라 category/dateRange/district/keywordInput이
+  // 그대로여도 불필요하게 재실행되고, 반대로 eslint-disable로 아예 deps에서
+  // 빼버리면(예전 방식) 이 effect가 실제로 실행될 때 그 시점에 이미 최신이
+  // 아닌(예: undefined였던) onSummaryChange가 클로저에 갇혀 호출되는 stale
+  // closure 위험이 있다(코드리뷰 지적) - ref는 두 문제를 동시에 피한다: 값이
+  // 바뀔 때만(아래 4개) effect가 실행되면서도, 실행 시점엔 항상 최신 콜백을
+  // 읽는다.
+  const onSummaryChangeRef = useRef(onSummaryChange);
+  useEffect(() => {
+    onSummaryChangeRef.current = onSummaryChange;
+  }, [onSummaryChange]);
+
   useEffect(() => {
     // 축소된 pill은 "공간유형 라벨 / 값" 처럼 2줄로 구분되지 않고 한 줄에
     // 이어 붙기 때문에, 기본값일 때 그냥 "전체"만 쓰면 뭐가 전체인지 구분이
@@ -218,7 +286,7 @@ const HeroSearchBar = ({
     // 곳)에 쓰이는 CATEGORY_OPTIONS 기본 라벨/formatDateRangeLabel은 그대로 둔다.
     const isDefaultCategory = category === "";
     const isDefaultDate = !dateRange.start;
-    onSummaryChange?.({
+    onSummaryChangeRef.current?.({
       categoryLabel: isDefaultCategory
         ? "공간 전체"
         : (CATEGORY_OPTIONS.find((option) => option.value === category)
@@ -229,9 +297,8 @@ const HeroSearchBar = ({
         "서울 전체",
       keywordLabel: keywordInput.trim() || "검색어 추가",
     });
-    // onSummaryChange는 상위에서 매 렌더 새로 만들어질 수 있어 deps에 넣지 않는다
-    // (넣으면 상위 리렌더마다 불필요하게 재계산된다 - 값 자체는 아래 4개에만 의존한다).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // ref로 읽으므로 onSummaryChange 자체는 deps에 없어도 안전하다 - 이 effect는
+    // 실제로 요약이 바뀌어야 하는 4개 값이 바뀔 때만 실행된다.
   }, [category, dateRange, district, keywordInput]);
 
   const isCompact = variant === "compact";
@@ -277,6 +344,7 @@ const HeroSearchBar = ({
         </label>
         <input
           id="hero-search-keyword"
+          ref={keywordInputRef}
           type="text"
           value={keywordInput}
           onChange={(e) => setKeywordInput(e.target.value)}
@@ -377,6 +445,7 @@ const HeroSearchBar = ({
             // 이슈 #287: 모바일(360~767)에서는 날짜 필터와 동일하게 바텀시트로
             // 통일한다.
             mobileBottomSheet
+            openSignal={categoryOpenSignal}
             // 맨 왼쪽 세그먼트라 열렸을 때 배경(bg-primary-light)이 pill의 둥근
             // 왼쪽 모서리 밖으로 각지게 삐져나오지 않도록 그때만 왼쪽을 둥글린다.
             triggerClassName={(isOpen) =>
@@ -464,6 +533,7 @@ const HeroSearchBar = ({
             // 이슈 #287: 모바일(360~767)에서는 날짜 필터와 동일하게 바텀시트로
             // 통일한다.
             mobileBottomSheet
+            openSignal={districtOpenSignal}
             // 태블릿 두 줄 레이아웃에서는 Box A(3세그먼트 pill)의 맨 오른쪽
             // 세그먼트가 지역이라, 열렸을 때 배경(bg-primary-light)이 pill의
             // 둥근 오른쪽 모서리 밖으로 각지게 삐져나온다 - 공간유형(맨 왼쪽)에
