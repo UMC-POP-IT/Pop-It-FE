@@ -251,6 +251,20 @@ const HeroSearchBar = ({
 
   const markSearched = useSearchHistoryStore((s) => s.markSearched);
 
+  // onSummaryChange를 ref로 감싸서 항상 최신 콜백을 참조한다. 요약 재계산
+  // effect의 deps에 onSummaryChange를 직접 넣으면 상위(ExplorePage)가 매
+  // 렌더 새로 만드는 함수라 category/dateRange/district/keywordInput이
+  // 그대로여도 불필요하게 재실행되고, 반대로 eslint-disable로 아예 deps에서
+  // 빼버리면(예전 방식) 이 effect가 실제로 실행될 때 그 시점에 이미 최신이
+  // 아닌(예: undefined였던) onSummaryChange가 클로저에 갇혀 호출되는 stale
+  // closure 위험이 있다(코드리뷰 지적) - ref는 두 문제를 동시에 피한다: 값이
+  // 바뀔 때만(아래 4개) effect가 실행되면서도, 실행 시점엔 항상 최신 콜백을
+  // 읽는다.
+  const onSummaryChangeRef = useRef(onSummaryChange);
+  useEffect(() => {
+    onSummaryChangeRef.current = onSummaryChange;
+  }, [onSummaryChange]);
+
   useEffect(() => {
     // 축소된 pill은 "공간유형 라벨 / 값" 처럼 2줄로 구분되지 않고 한 줄에
     // 이어 붙기 때문에, 기본값일 때 그냥 "전체"만 쓰면 뭐가 전체인지 구분이
@@ -259,7 +273,7 @@ const HeroSearchBar = ({
     // 곳)에 쓰이는 CATEGORY_OPTIONS 기본 라벨/formatDateRangeLabel은 그대로 둔다.
     const isDefaultCategory = category === "";
     const isDefaultDate = !dateRange.start;
-    onSummaryChange?.({
+    onSummaryChangeRef.current?.({
       categoryLabel: isDefaultCategory
         ? "공간 전체"
         : (CATEGORY_OPTIONS.find((option) => option.value === category)
@@ -270,9 +284,8 @@ const HeroSearchBar = ({
         "서울 전체",
       keywordLabel: keywordInput.trim() || "검색어 추가",
     });
-    // onSummaryChange는 상위에서 매 렌더 새로 만들어질 수 있어 deps에 넣지 않는다
-    // (넣으면 상위 리렌더마다 불필요하게 재계산된다 - 값 자체는 아래 4개에만 의존한다).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // ref로 읽으므로 onSummaryChange 자체는 deps에 없어도 안전하다 - 이 effect는
+    // 실제로 요약이 바뀌어야 하는 4개 값이 바뀔 때만 실행된다.
   }, [category, dateRange, district, keywordInput]);
 
   const isCompact = variant === "compact";
