@@ -40,10 +40,11 @@
 | Language | TypeScript |
 | Library/Framework | React 19, React Router 7, Vite 6 |
 | Styling | Tailwind CSS 4, @toss/tds-mobile |
-| State Management | Zustand 5 |
-| 지도 | Kakao Maps JavaScript SDK |
+| State Management | Zustand 5 (클라이언트 상태), TanStack Query 5 (서버 상태/캐싱) |
+| 지도/주소 | Kakao Maps JavaScript SDK, react-daum-postcode |
 | 3D 큐레이션 | Three.js, @react-three/fiber, @react-three/drei |
-| 결제/본인인증 | PortOne(@portone/browser-sdk), TossPayments |
+| 로그인 | 카카오/구글 소셜 로그인 (OAuth + PKCE) |
+| 결제/본인인증 | PortOne(@portone/browser-sdk, PASS 본인인증), TossPayments |
 | 패키지 매니저 | pnpm, npm |
 | Lint/Format | ESLint, Prettier (+ prettier-plugin-tailwindcss) |
 | 협업 도구 | GitHub, Notion, Figma |
