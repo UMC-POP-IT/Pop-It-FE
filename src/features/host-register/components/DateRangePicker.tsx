@@ -251,6 +251,8 @@ export const DateRangePicker = ({
   // 스크린 리더용 날짜 라벨. 오늘은 disabled 속성을 안 쓰는 대신(클릭은 받아야
   // 해서) 라벨에 "선택할 수 없다"는 사실을 직접 알려준다 - 예전엔 aria-disabled로
   // 전달했는데, 공용 CalendarMonthGrid는 그 prop을 따로 받지 않아 라벨 쪽으로 옮겼다.
+  // dev에 병합된 "오늘 = 회색 테두리 원 + 취소선" 스타일은 CalendarMonthGrid의
+  // isToday 분기가 공통으로 그린다.
   const getDayAriaLabel = (date: Date) => {
     const base = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
     return isSameDay(date, todayStart)
