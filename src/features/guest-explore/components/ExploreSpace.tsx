@@ -306,174 +306,191 @@ const ExploreSpace = ({
   };
 
   return (
-    <section className="mt-6 w-full md:mt-14">
-      <div
-        className={`mb-4 flex items-center md:mb-6 ${resultsMode ? "justify-end" : "justify-between"}`}
-      >
-        {!resultsMode && (
-          <h2 className="text-text-primary text-2xl font-bold">공간 탐색</h2>
-        )}
+    // <main>(MainLayout.tsx)의 padding(px-4 md:px-6, max-w-[1200px])과
+    // Banner/HeroSearchBar가 쓰는 padding(px-4 md:px-10 lg:px-[76px],
+    // max-w-screen-xl)이 서로 달라서, 이 섹션을 그냥 <main> 안에 두면 검색
+    // 결과가 없을 때 뜨는 회색 박스나 지도 버튼의 오른쪽 끝이 검색창보다 살짝
+    // 더 바깥으로 삐져나와 어긋나 보인다(디자인 QA 지적). Banner와 똑같은
+    // full-bleed 트릭(-mx-[50vw] w-screen)으로 <main>의 padding을 무시하고
+    // Banner가 쓰는 것과 정확히 같은 공식(max-w-screen-xl, px-4 md:px-10
+    // lg:px-[76px], 그 안에 다시 max-w-[1200px])을 그대로 재현해서 뷰포트
+    // 폭과 무관하게 검색창과 항상 픽셀 단위로 같은 폭/오른쪽 끝을 갖도록 맞춘다.
+    <div className="relative right-1/2 left-1/2 -mx-[50vw] w-screen">
+      <div className="mx-auto w-full max-w-screen-xl px-4 md:px-10 lg:px-[76px]">
+        <div className="mx-auto w-full max-w-[1200px]">
+          <section className="mt-6 w-full md:mt-14">
+            <div
+              className={`mb-4 flex items-center md:mb-6 ${resultsMode ? "justify-end" : "justify-between"}`}
+            >
+              {!resultsMode && (
+                <h2 className="text-text-primary text-2xl font-bold">
+                  공간 탐색
+                </h2>
+              )}
 
-        <button
-          type="button"
-          aria-pressed={isMapView}
-          onClick={() => setIsMapView((prev) => !prev)}
-          className={`flex cursor-pointer items-center justify-center gap-[6px] rounded-full px-4 py-[10px] text-lg transition-colors ${
-            isMapView
-              ? "bg-primary text-white"
-              : "bg-primary-light text-text-primary hover:bg-primary-light/80"
-          }`}
-        >
-          {isMapView ? (
-            <>
-              <span>지도</span>
-              {/* 지도가 열려있을 때는 같은 버튼이 닫기(X) 역할도 겸한다 - 피그마
-                  node 5019:73566의 btn_close 스타일(흰 원 배경 + 파란 X)과 동일. */}
-              <span className="flex shrink-0 items-center justify-center rounded-full bg-white p-[2px]">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M5.5 5.5L14.5 14.5M14.5 5.5L5.5 14.5"
-                    stroke="#3783F7"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </span>
-            </>
-          ) : (
-            // 켜짐 상태(지도 텍스트 → 닫기 아이콘)와 순서를 통일한다 - 텍스트가
-            // 항상 아이콘보다 먼저 오도록(#275 디자인 QA).
-            <>
-              <span>지도</span>
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 28 28"
-                fill="none"
-                aria-hidden="true"
+              <button
+                type="button"
+                aria-pressed={isMapView}
+                onClick={() => setIsMapView((prev) => !prev)}
+                className={`flex cursor-pointer items-center justify-center gap-[6px] rounded-full px-4 py-[10px] text-lg transition-colors ${
+                  isMapView
+                    ? "bg-primary text-white"
+                    : "bg-primary-light text-text-primary hover:bg-primary-light/80"
+                }`}
               >
-                <path
-                  d="M11.5334 5.26611C11.6648 5.23524 11.8043 5.25006 11.9276 5.31169L17.5 8.09733L23.0724 5.31169C23.2531 5.22134 23.4679 5.23069 23.6398 5.33675C23.8118 5.44304 23.9167 5.63133 23.9167 5.8335V20.4168C23.9167 20.6378 23.7919 20.8398 23.5942 20.9386L17.7609 23.8553C17.5967 23.9374 17.4033 23.9374 17.2391 23.8553L11.6667 21.0685L6.09424 23.8553C5.91355 23.9457 5.69877 23.9363 5.52686 23.8302C5.35488 23.724 5.25 23.5357 5.25 23.3335V8.75016C5.25 8.52921 5.3748 8.32717 5.57243 8.22835L11.4058 5.31169L11.5334 5.26611ZM6.41667 9.11019V22.389L11.0833 20.0557V6.77686L6.41667 9.11019ZM12.25 20.0557L16.9167 22.389V9.11019L12.25 6.77686V20.0557ZM18.0833 9.11019V22.389L22.75 20.0557V6.77686L18.0833 9.11019Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </>
-          )}
-        </button>
-      </div>
+                {isMapView ? (
+                  <>
+                    <span>지도</span>
+                    {/* 지도가 열려있을 때는 같은 버튼이 닫기(X) 역할도 겸한다 - 피그마
+                  node 5019:73566의 btn_close 스타일(흰 원 배경 + 파란 X)과 동일. */}
+                    <span className="flex shrink-0 items-center justify-center rounded-full bg-white p-[2px]">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M5.5 5.5L14.5 14.5M14.5 5.5L5.5 14.5"
+                          stroke="#3783F7"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </span>
+                  </>
+                ) : (
+                  // 켜짐 상태(지도 텍스트 → 닫기 아이콘)와 순서를 통일한다 - 텍스트가
+                  // 항상 아이콘보다 먼저 오도록(#275 디자인 QA).
+                  <>
+                    <span>지도</span>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 28 28"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M11.5334 5.26611C11.6648 5.23524 11.8043 5.25006 11.9276 5.31169L17.5 8.09733L23.0724 5.31169C23.2531 5.22134 23.4679 5.23069 23.6398 5.33675C23.8118 5.44304 23.9167 5.63133 23.9167 5.8335V20.4168C23.9167 20.6378 23.7919 20.8398 23.5942 20.9386L17.7609 23.8553C17.5967 23.9374 17.4033 23.9374 17.2391 23.8553L11.6667 21.0685L6.09424 23.8553C5.91355 23.9457 5.69877 23.9363 5.52686 23.8302C5.35488 23.724 5.25 23.5357 5.25 23.3335V8.75016C5.25 8.52921 5.3748 8.32717 5.57243 8.22835L11.4058 5.31169L11.5334 5.26611ZM6.41667 9.11019V22.389L11.0833 20.0557V6.77686L6.41667 9.11019ZM12.25 20.0557L16.9167 22.389V9.11019L12.25 6.77686V20.0557ZM18.0833 9.11019V22.389L22.75 20.0557V6.77686L18.0833 9.11019Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </>
+                )}
+              </button>
+            </div>
 
-      {/* 검색(최초 로딩) 중에는 회색 박스나 안내 문구 없이 400ms 넘게 걸릴 때만
+            {/* 검색(최초 로딩) 중에는 회색 박스나 안내 문구 없이 400ms 넘게 걸릴 때만
           작은 스피너만 보여준다 - 무한스크롤 "더 불러오는 중" 상태(LoadingSparkles,
           아래 isLoadingMore)와는 별개로, 최초 로딩에서는 회색 박스·문구 노출 자체를
           없애 달라는 요청에 따른 처리(#275). */}
-      {status === "loading" && showInitialLoading && (
-        <div className="mt-6 flex h-[400px] w-full items-center justify-center">
-          <Spinner aria-label="공간 목록을 불러오는 중" />
-        </div>
-      )}
+            {status === "loading" && showInitialLoading && (
+              <div className="mt-6 flex h-[400px] w-full items-center justify-center">
+                <Spinner aria-label="공간 목록을 불러오는 중" />
+              </div>
+            )}
 
-      {status === "error" && (
-        <div className="mt-6 flex flex-col items-center gap-4 py-20">
-          <p className="text-text-secondary text-sm">
-            공간 목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.
-          </p>
-          <button
-            type="button"
-            onClick={() => setRetryKey((k) => k + 1)}
-            className="text-primary cursor-pointer text-sm font-medium"
-          >
-            다시 시도
-          </button>
-        </div>
-      )}
-
-      {status === "success" && isMapView && spaces.length === 0 && (
-        <ExploreSpaceEmptyState onResetFilters={onResetFilters} />
-      )}
-
-      {status === "success" && isMapView && spaces.length > 0 && (
-        <ExploreSpaceMap
-          spaces={spaces}
-          onSelectSpace={(spaceId) => navigate(`/spaces/${spaceId}`)}
-          onWishToggle={onWishToggle}
-        />
-      )}
-
-      {status === "success" && !isMapView && spaces.length === 0 && (
-        <ExploreSpaceEmptyState onResetFilters={onResetFilters} />
-      )}
-
-      {status === "success" && !isMapView && spaces.length > 0 && (
-        <>
-          <div
-            className={`mt-4 grid grid-cols-1 gap-x-6 gap-y-8 transition-opacity md:mt-6 md:grid-cols-2 md:gap-y-10 lg:grid-cols-4 ${
-              isRefetching ? "pointer-events-none opacity-50" : ""
-            }`}
-          >
-            {spaces.map((space) => (
-              <SpaceCard
-                key={space.spaceId}
-                space={space}
-                categoryTag={space.category}
-                onClick={() => navigate(`/spaces/${space.spaceId}`)}
-                isWished={wishedIds.includes(space.spaceId)}
-                onWishToggle={() => onWishToggle(space)}
-                hoverEffect="dim"
-              />
-            ))}
-          </div>
-
-          {resultsMode ? (
-            <>
-              {/* IntersectionObserver가 관찰하는 빈 sentinel - 화면에 보이면 다음 페이지를 이어붙인다 */}
-              <div
-                ref={sentinelRef}
-                aria-hidden="true"
-                className="h-px w-full"
-              />
-              {/* 피그마 스펙(node 5299:32782) - 별 5개가 웨이브로 밝아지는 애니메이션 +
-                  "새로운 공간을 불러오고 있습니다." 문구(LoadingSparkles 참고). */}
-              {isLoadingMore && (
-                <div className="py-8">
-                  <LoadingSparkles />
-                </div>
-              )}
-              {hasLoadMoreError && (
-                <div className="flex flex-col items-center gap-2 py-8">
-                  <p className="text-text-secondary text-sm">
-                    추가 공간을 불러오지 못했어요.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setRetryKey((k) => k + 1)}
-                    className="text-primary cursor-pointer text-sm font-medium"
-                  >
-                    다시 시도
-                  </button>
-                </div>
-              )}
-              {!hasNextPage && !hasLoadMoreError && (
-                <p className="text-text-secondary py-8 text-center text-sm">
-                  모든 공간을 다 보여드렸어요
+            {status === "error" && (
+              <div className="mt-6 flex flex-col items-center gap-4 py-20">
+                <p className="text-text-secondary text-sm">
+                  공간 목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.
                 </p>
-              )}
-            </>
-          ) : (
-            <ExplorePagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          )}
-        </>
-      )}
-    </section>
+                <button
+                  type="button"
+                  onClick={() => setRetryKey((k) => k + 1)}
+                  className="text-primary cursor-pointer text-sm font-medium"
+                >
+                  다시 시도
+                </button>
+              </div>
+            )}
+
+            {status === "success" && isMapView && spaces.length === 0 && (
+              <ExploreSpaceEmptyState onResetFilters={onResetFilters} />
+            )}
+
+            {status === "success" && isMapView && spaces.length > 0 && (
+              <ExploreSpaceMap
+                spaces={spaces}
+                onSelectSpace={(spaceId) => navigate(`/spaces/${spaceId}`)}
+                onWishToggle={onWishToggle}
+              />
+            )}
+
+            {status === "success" && !isMapView && spaces.length === 0 && (
+              <ExploreSpaceEmptyState onResetFilters={onResetFilters} />
+            )}
+
+            {status === "success" && !isMapView && spaces.length > 0 && (
+              <>
+                <div
+                  className={`mt-4 grid grid-cols-1 gap-x-6 gap-y-8 transition-opacity md:mt-6 md:grid-cols-2 md:gap-y-10 lg:grid-cols-4 ${
+                    isRefetching ? "pointer-events-none opacity-50" : ""
+                  }`}
+                >
+                  {spaces.map((space) => (
+                    <SpaceCard
+                      key={space.spaceId}
+                      space={space}
+                      categoryTag={space.category}
+                      onClick={() => navigate(`/spaces/${space.spaceId}`)}
+                      isWished={wishedIds.includes(space.spaceId)}
+                      onWishToggle={() => onWishToggle(space)}
+                      hoverEffect="dim"
+                    />
+                  ))}
+                </div>
+
+                {resultsMode ? (
+                  <>
+                    {/* IntersectionObserver가 관찰하는 빈 sentinel - 화면에 보이면 다음 페이지를 이어붙인다 */}
+                    <div
+                      ref={sentinelRef}
+                      aria-hidden="true"
+                      className="h-px w-full"
+                    />
+                    {/* 피그마 스펙(node 5299:32782) - 별 5개가 웨이브로 밝아지는 애니메이션 +
+                  "새로운 공간을 불러오고 있습니다." 문구(LoadingSparkles 참고). */}
+                    {isLoadingMore && (
+                      <div className="py-8">
+                        <LoadingSparkles />
+                      </div>
+                    )}
+                    {hasLoadMoreError && (
+                      <div className="flex flex-col items-center gap-2 py-8">
+                        <p className="text-text-secondary text-sm">
+                          추가 공간을 불러오지 못했어요.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setRetryKey((k) => k + 1)}
+                          className="text-primary cursor-pointer text-sm font-medium"
+                        >
+                          다시 시도
+                        </button>
+                      </div>
+                    )}
+                    {!hasNextPage && !hasLoadMoreError && (
+                      <p className="text-text-secondary py-8 text-center text-sm">
+                        모든 공간을 다 보여드렸어요
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <ExplorePagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                )}
+              </>
+            )}
+          </section>
+        </div>
+      </div>
+    </div>
   );
 };
 
