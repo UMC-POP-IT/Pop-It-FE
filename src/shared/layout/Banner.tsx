@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useState, useRef, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useRef,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import background1 from "@/assets/banner/background_1.jpg";
 import background2 from "@/assets/banner/background_2.jpg";
 import background3 from "@/assets/banner/background_3.jpg";
@@ -37,10 +44,9 @@ const AUTOPLAY_INTERVAL_MS = 10000;
 const SWIPE_THRESHOLD_PX = 50;
 /**
  * !showImage(검색 결과 화면)일 때 배너 상단에 주는 여백(예전엔 pt-8 클래스로만
- * 줬었다). ExplorePage.tsx가 스크롤 감지용 sentinel을 검색바의 실제 시작
- * 위치에 맞추려고 이 값을 그대로 가져다 쓴다 - 값이 두 파일에 각각 하드코딩돼
- * 있으면 여기가 바뀔 때 sentinel 위치가 조용히 어긋날 수 있어서, 한 곳에서만
- * 정의하고 export한다.
+ * 줬었다). 스크롤 감지용 sentinel(searchBarTopRef)은 이제 검색바 바로 앞에
+ * 직접 심어서 이 값을 참조하지 않지만, 배너 자체의 상단 padding 값이라 계속
+ * export해서 다른 화면에서도 재사용할 수 있게 둔다.
  */
 export const RESULTS_MODE_TOP_OFFSET_PX = 8;
 
@@ -69,9 +75,25 @@ interface BannerProps {
    * 내부 입력 상태가 보존된다(showImage와 같은 원리).
    */
   searchBarPosition?: "inline" | "pinned-hidden" | "pinned-open";
+  /**
+   * 검색바가 원래(inline) 있는 실제 위치 바로 위에 찍는 높이 0짜리 마커의 ref.
+   * ExplorePage가 이걸로 스크롤에 따라 검색바가 헤더 뒤로 넘어갔는지를
+   * IntersectionObserver로 감지한다(#301). 이 마커는 outerWrapper(핀 고정 시
+   * fixed로 빠지는 래퍼) 밖의 일반 문서 흐름에 둬서, 검색바 자체가 pinned로
+   * 바뀌어도 항상 원래 위치에 그대로 남아있다 - showImage(히어로 배너, 배경
+   * 이미지 있고 세로 중앙 정렬) / !showImage(검색 결과 화면, 상단 정렬) 두
+   * 레이아웃이 서로 달라서 픽셀 오프셋을 밖에서 하드코딩할 수 없기 때문에,
+   * 실제 검색바 바로 앞에 심어서 레이아웃이 뭐든 항상 맞는 위치를 잡는다.
+   */
+  searchBarTopRef?: RefObject<HTMLDivElement | null>;
 }
 
-const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: BannerProps) => {
+const Banner = ({
+  children,
+  showImage = true,
+  searchBarPosition = "inline",
+  searchBarTopRef,
+}: BannerProps) => {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const total = slides.length;
@@ -84,13 +106,19 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
   // View Transition이 아닌 경우(라우트 이동 등)에만 한 프레임 지연해서 반영하고,
   // 나머지는 즉시 반영한다. 이렇게 하면 outerWrapper가 opacity-0을 유지하는 동안
   // children이 화면에 보이지 않아 flash가 없다.
-  const [actualPosition, setActualPosition] = useState<"inline" | "pinned-hidden" | "pinned-open">(searchBarPosition);
+  const [actualPosition, setActualPosition] = useState<
+    "inline" | "pinned-hidden" | "pinned-open"
+  >(searchBarPosition);
   const prevPositionRef = useRef(searchBarPosition);
 
   useLayoutEffect(() => {
     const prev = prevPositionRef.current;
     prevPositionRef.current = searchBarPosition;
-    if (prev === "pinned-hidden" && searchBarPosition === "inline" && !searchBarTransitionActive) {
+    if (
+      prev === "pinned-hidden" &&
+      searchBarPosition === "inline" &&
+      !searchBarTransitionActive
+    ) {
       const id = requestAnimationFrame(() => setActualPosition("inline"));
       return () => cancelAnimationFrame(id);
     } else {
@@ -117,7 +145,8 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
     if (touchStartX.current !== null && touchStartY.current !== null) {
       const deltaX = e.changedTouches[0].clientX - touchStartX.current;
       const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-      if (Math.abs(deltaY) < Math.abs(deltaX)) { // 수평 스와이프 감지
+      if (Math.abs(deltaY) < Math.abs(deltaX)) {
+        // 수평 스와이프 감지
         if (deltaX > SWIPE_THRESHOLD_PX) {
           goTo(current - 1);
         } else if (deltaX < -SWIPE_THRESHOLD_PX) {
@@ -173,7 +202,7 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
 
   return (
     <div
-      className={`group relative left-1/2 right-1/2 -mx-[50vw] w-screen bg-cover bg-center transition-[background-image] duration-500 ${
+      className={`group relative right-1/2 left-1/2 -mx-[50vw] w-screen bg-cover bg-center transition-[background-image] duration-500 ${
         showImage ? `-mt-8 ${hasHero ? "h-[483px]" : "h-[300px]"}` : ""
       }`}
       style={
@@ -194,17 +223,33 @@ const Banner = ({ children, showImage = true, searchBarPosition = "inline" }: Ba
           {/* 피그마 모바일(360~767) 스펙: 제목 24px(text-2xl) - 이전엔 이 구간도
               태블릿과 같은 text-3xl(30px)을 그대로 썼는데, 모바일 노드에
               "(배너 텍스트) 폰트 크기 바뀜" 주석이 따로 붙어있어 별도 크기다. */}
-          <h2 className={`leading-snug font-bold whitespace-pre-line ${hasHero ? "text-2xl md:text-4xl lg:text-[40px] lg:font-extrabold" : "text-2xl md:text-3xl"}`}>
+          <h2
+            className={`leading-snug font-bold whitespace-pre-line ${hasHero ? "text-2xl md:text-4xl lg:text-[40px] lg:font-extrabold" : "text-2xl md:text-3xl"}`}
+          >
             {slide.title}
           </h2>
-          <p className={`opacity-80 ${hasHero ? "text-sm md:text-base lg:text-[20px]" : "text-sm md:text-base"}`}>
+          <p
+            className={`opacity-80 ${hasHero ? "text-sm md:text-base lg:text-[20px]" : "text-sm md:text-base"}`}
+          >
             {slide.subtitle}
           </p>
         </div>
         {children && (
-          <div className={outerWrapperClassName} style={outerWrapperStyle}>
-            <div className={innerWrapperClassName}>{children}</div>
-          </div>
+          <>
+            {/* 스크롤 감지용 마커 - 일부러 outerWrapperClassName(핀 고정 시
+                fixed로 빠지는 래퍼) 밖에 둔다. 검색바가 pinned로 바뀌어도
+                이 형제 엘리먼트는 문서 흐름에서 원래 자리를 그대로 지킨다. */}
+            <div
+              ref={searchBarTopRef}
+              aria-hidden="true"
+            />
+            <div
+              className={outerWrapperClassName}
+              style={outerWrapperStyle}
+            >
+              <div className={innerWrapperClassName}>{children}</div>
+            </div>
+          </>
         )}
       </div>
     </div>

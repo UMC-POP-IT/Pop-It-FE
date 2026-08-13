@@ -22,8 +22,10 @@ export interface SearchBarAutoOpenRequest {
 interface ScrollSearchBarState {
   /**
    * 헤더(Header.tsx)에 축소된 검색바 pill을 보여줄지 여부.
-   * 검색 결과 화면(ExplorePage, resultsMode)에서 스크롤을 내려 원래 검색바가
-   * 헤더 뒤로 넘어갔을 때만 true가 된다 - 다른 화면/스크롤 위치에서는 항상 false.
+   * ExplorePage(게스트 홈/검색 결과 화면 모두)에서 스크롤을 내려 원래 검색바가
+   * 헤더 뒤로 넘어가면 true가 된다 - 검색을 실행했는지(hasActiveSearch)나
+   * 검색 결과 유무와 무관하게, 스크롤 위치만으로 결정된다(#301). 스크롤이
+   * 다시 위로 올라가면 항상 false.
    */
   isVisible: boolean;
   /** pill에 표시할 현재 검색 조건 요약(라벨은 HeroSearchBar가 쓰는 것과 동일). */
