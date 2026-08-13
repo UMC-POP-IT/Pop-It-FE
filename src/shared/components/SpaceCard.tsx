@@ -29,7 +29,7 @@ const SpaceCard = ({
 }: SpaceCardProps) => (
   <div
     onClick={onClick}
-    className={`border-border group w-full cursor-pointer overflow-hidden border border-transparent bg-white transition-all duration-300 ease-out ${
+    className={`border-border group w-auto cursor-pointer overflow-hidden border border-transparent bg-white transition-all duration-300 ease-out ${
       hoverEffect === "dim" ? "" : "hover:-translate-y-1 hover:shadow-xl"
     }`}
     role="button"
@@ -80,14 +80,10 @@ const SpaceCard = ({
     {/* 텍스트 */}
     <div className="mx-1 flex flex-col gap-1.5 py-3">
       {matchReason ? ( // AI 추천 이유가 있으면(AI 맞춤형 공간) Badge+하트, 없으면(찜한 공간) 이름+하트 나란히
-        // 360~767px(모바일)에서는 Badge가 사진 밑 영역을 전부 차지하고, 하트는 이름과 같은 줄 우측으로 이동한다 (768px 이상은 기존 배치 그대로)
+        // 모바일에서도 Badge는 텍스트 길이만큼만 차지(hug)하고 좌측 정렬되며, 하트는 이름과 같은 줄 우측으로 이동한다 (768px 이상은 기존 배치 그대로)
         <>
           <div className="flex items-center justify-between gap-2">
-            <Badge
-              variant="highlight"
-              label={matchReason}
-              className="w-full text-center md:w-auto"
-            />
+            <Badge variant="highlight" label={matchReason} className="w-auto" />
             <span className="text-text-secondary hidden shrink-0 items-center gap-0.5 text-xs md:flex">
               ♡ {space.heartCount}
             </span>
