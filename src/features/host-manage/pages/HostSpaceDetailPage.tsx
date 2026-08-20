@@ -105,7 +105,11 @@ export const HostSpaceDetailPage = () => {
         <div className="w-full min-[1024px]:w-[clamp(468px,53.125vw_-_76px,689px)] min-[1024px]:shrink-0">
           <ExploreDetailInfo space={space} variant="host" />
         </div>
-        <HostReservationCalendar unavailablePeriods={unavailablePeriods} />
+        <HostReservationCalendar
+          unavailablePeriods={unavailablePeriods}
+          availableStartDate={space.availableStartDate}
+          availableEndDate={space.availableEndDate}
+        />
       </div>
 
       <PhotoGalleryModal
