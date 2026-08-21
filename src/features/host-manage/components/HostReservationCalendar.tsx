@@ -9,6 +9,8 @@ export interface UnavailablePeriod {
 
 interface HostReservationCalendarProps {
   unavailablePeriods?: UnavailablePeriod[];
+  availableStartDate?: string; // "YYYY-MM-DD" — 호스트가 설정한 예약 가능 시작일
+  availableEndDate?: string;   // "YYYY-MM-DD" — 호스트가 설정한 예약 가능 종료일
 }
 
 const parseDate = (str: string) => {
@@ -21,18 +23,25 @@ const isSameDay = (a: Date, b: Date) =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 
-const BOOKING_WINDOW_DAYS = 90;
-
 const toDateOnly = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
-const isUnavailable = (date: Date, periods: UnavailablePeriod[], today: Date) => {
+const isUnavailable = (
+  date: Date,
+  periods: UnavailablePeriod[],
+  today: Date,
+  availableStart: Date | null,
+  availableEnd: Date | null,
+) => {
   const todayOnly = toDateOnly(today);
-  const maxDate = new Date(todayOnly);
-  maxDate.setDate(maxDate.getDate() + BOOKING_WINDOW_DAYS);
 
-  // 오늘 포함 이전 날짜, 90일 이후는 예약 불가
-  if (date <= todayOnly || date > maxDate) return true;
+  // 오늘 이전은 예약 불가
+  if (date <= todayOnly) return true;
 
+  // 호스트 설정 예약 가능 기간 외부는 예약 불가
+  if (availableStart && date < availableStart) return true;
+  if (availableEnd && date > availableEnd) return true;
+
+  // 이미 예약된 기간
   return periods.some(({ startDate, endDate }) => {
     const start = parseDate(startDate);
     const end = parseDate(endDate);
@@ -42,8 +51,18 @@ const isUnavailable = (date: Date, periods: UnavailablePeriod[], today: Date) =>
 
 const HostReservationCalendar = ({
   unavailablePeriods = [],
+  availableStartDate,
+  availableEndDate,
 }: HostReservationCalendarProps) => {
   const today = useMemo(() => new Date(), []);
+  const availableStart = useMemo(
+    () => (availableStartDate ? parseDate(availableStartDate) : null),
+    [availableStartDate],
+  );
+  const availableEnd = useMemo(
+    () => (availableEndDate ? parseDate(availableEndDate) : null),
+    [availableEndDate],
+  );
   const [viewDate, setViewDate] = useState(
     new Date(today.getFullYear(), today.getMonth(), 1),
   );
@@ -132,7 +151,7 @@ const HostReservationCalendar = ({
                 );
               }
 
-              const unavailable = isUnavailable(date, unavailablePeriods, today);
+              const unavailable = isUnavailable(date, unavailablePeriods, today, availableStart, availableEnd);
               const isToday = isSameDay(date, today);
 
               // 오늘 날짜: 원형 테두리
