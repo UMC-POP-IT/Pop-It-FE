@@ -23,6 +23,9 @@ importers:
       '@toss/tds-mobile':
         specifier: ^2.5.0
         version: 2.5.0(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      lottie-react:
+        specifier: ^3.1.0
+        version: 3.1.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react:
         specifier: ^19.1.0
         version: 19.2.7
@@ -1071,6 +1074,7 @@ packages:
   eslint@9.39.4:
     resolution: {integrity: sha512-XoMjdBOwe/esVgEvLmNsD3IRHkm7fbKIUGvrleloJXUZgDHig2IPWNniv+GwjyJXzuNqVjlr5+4yVUZjycJwfQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -1358,6 +1362,15 @@ packages:
 
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
+
+  lottie-react@3.1.0:
+    resolution: {integrity: sha512-1iEQnS0UlCIHk5ogctWOPmGagxnxGv+XmIDLlztHS8Eohcmm8Jw/vNKMYMo/CkKtKdeUotyjGyd4ue+wZ5rZqg==}
+    peerDependencies:
+      react: ^18.2.0 || ^19.0.0
+      react-dom: ^18.2.0 || ^19.0.0
+
+  lottie-web@5.13.0:
+    resolution: {integrity: sha512-+gfBXl6sxXMPe8tKQm7qzLnUy5DUPJPKIyRHwtpCpyUEYjHYRJC/5gjUvdkuO2c3JllrPtHXH5UJJK8LRYl5yQ==}
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
@@ -3001,6 +3014,14 @@ snapshots:
       p-locate: 5.0.0
 
   lodash.merge@4.6.2: {}
+
+  lottie-react@3.1.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+    dependencies:
+      lottie-web: 5.13.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+
+  lottie-web@5.13.0: {}
 
   lru-cache@5.1.1:
     dependencies:
